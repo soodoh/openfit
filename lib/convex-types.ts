@@ -25,6 +25,7 @@ export const ListView = {
 export type ListView = (typeof ListView)[keyof typeof ListView];
 
 // Document types
+export type UserProfile = Doc<"userProfiles">;
 export type Exercise = Doc<"exercises">;
 export type Routine = Doc<"routines">;
 export type RoutineDay = Doc<"routineDays">;

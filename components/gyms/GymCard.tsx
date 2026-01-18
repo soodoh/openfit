@@ -11,7 +11,12 @@ interface GymCardProps {
   onDelete?: () => void;
 }
 
-export function GymCard({ gym, isDefault = false, onEdit, onDelete }: GymCardProps) {
+export function GymCard({
+  gym,
+  isDefault = false,
+  onEdit,
+  onDelete,
+}: GymCardProps) {
   const equipmentCount = gym.equipmentIds.length;
 
   return (
@@ -35,7 +40,12 @@ export function GymCard({ gym, isDefault = false, onEdit, onDelete }: GymCardPro
               )}
             </div>
           </div>
-          <GymMenu gym={gym} isDefault={isDefault} onEdit={onEdit} onDelete={onDelete} />
+          <GymMenu
+            gym={gym}
+            isDefault={isDefault}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         </div>
 
         {/* Meta info */}

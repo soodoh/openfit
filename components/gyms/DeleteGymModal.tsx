@@ -21,7 +21,11 @@ interface DeleteGymModalProps {
   onClose: () => void;
 }
 
-export function DeleteGymModal({ gym, isLastGym = false, onClose }: DeleteGymModalProps) {
+export function DeleteGymModal({
+  gym,
+  isLastGym = false,
+  onClose,
+}: DeleteGymModalProps) {
   const open = gym !== null;
   const removeGym = useMutation(api.mutations.gyms.remove);
   const [error, setError] = useState<string | null>(null);
@@ -79,13 +83,17 @@ export function DeleteGymModal({ gym, isLastGym = false, onClose }: DeleteGymMod
           ) : isLastGym ? (
             <div className="flex items-start gap-3 p-3 rounded-lg bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300">
               <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" />
-              <p className="text-sm">You cannot delete your only gym. Create another gym first.</p>
+              <p className="text-sm">
+                You cannot delete your only gym. Create another gym first.
+              </p>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
               Are you sure you want to delete{" "}
-              <span className="font-medium text-foreground">"{gym?.name}"</span>?
-              This will permanently remove the gym and its equipment
+              <span className="font-medium text-foreground">
+                &quot;{gym?.name}&quot;
+              </span>
+              ? This will permanently remove the gym and its equipment
               configuration.
             </p>
           )}

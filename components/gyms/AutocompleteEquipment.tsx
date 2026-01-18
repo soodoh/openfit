@@ -14,9 +14,9 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { api } from "@/convex/_generated/api";
-import type { EquipmentId } from "@/lib/convex-types";
 import { useQuery } from "convex/react";
 import { useMemo, useRef, useState } from "react";
+import type { EquipmentId } from "@/lib/convex-types";
 
 interface AutocompleteEquipmentProps {
   selectedIds: EquipmentId[];
@@ -86,7 +86,9 @@ export function AutocompleteEquipment({
           onFocus={() => !disabled && !allSelected && setOpen(true)}
           onBlur={(e) => {
             // Don't close if clicking inside popover
-            if (!e.relatedTarget?.closest("[data-radix-popper-content-wrapper]")) {
+            if (
+              !e.relatedTarget?.closest("[data-radix-popper-content-wrapper]")
+            ) {
               setOpen(false);
             }
           }}

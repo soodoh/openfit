@@ -28,7 +28,12 @@ interface GymMenuProps {
   onDelete?: () => void;
 }
 
-export function GymMenu({ gym, isDefault = false, onEdit, onDelete }: GymMenuProps) {
+export function GymMenu({
+  gym,
+  isDefault = false,
+  onEdit,
+  onDelete,
+}: GymMenuProps) {
   const [modal, setModal] = useState<Modal | null>(null);
   const handleClose = () => setModal(null);
   const setDefaultGym = useMutation(api.mutations.userProfiles.setDefaultGym);
