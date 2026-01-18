@@ -1,3 +1,4 @@
+import { ExerciseDetailModal } from "@/components/exercises/ExerciseDetailModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,6 +8,7 @@ import {
 } from "@/components/ui/collapsible";
 import { api } from "@/convex/_generated/api";
 import {
+  type Exercise,
   ListView,
   type SetGroupWithRelations,
   SetType,
@@ -34,6 +36,7 @@ import {
   AlertCircle,
   GripVertical,
   Image as ImageIcon,
+  Info,
   Plus,
 } from "lucide-react";
 import {
@@ -68,6 +71,9 @@ export const WorkoutSetGroup = ({
   >(setGroup.sets, (_, newSets) => newSets);
   const [expanded, setExpanded] = useState(
     view === ListView.CurrentSession && sets.some((set) => !set.completed),
+  );
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
+    null,
   );
 
   const createSet = useMutation(api.mutations.sets.create);
@@ -130,119 +136,142 @@ export const WorkoutSetGroup = ({
   const isCompleted = setGroup.sets.every((set) => set.completed);
 
   return (
-    <Collapsible open={!isReorderActive && expanded} className="w-full">
-      <div
-        ref={setNodeRef}
-        style={{ transform: CSS.Transform.toString(transform), transition }}
-        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
-      >
-        <CollapsibleTrigger
-          onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-3 flex-1 text-left"
+    <>
+      {selectedExercise && (
+        <ExerciseDetailModal
+          exercise={selectedExercise}
+          open={!!selectedExercise}
+          onClose={() => setSelectedExercise(null)}
+        />
+      )}
+      <Collapsible open={!isReorderActive && expanded} className="w-full">
+        <div
+          ref={setNodeRef}
+          style={{ transform: CSS.Transform.toString(transform), transition }}
+          className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
         >
-          {isReorderActive && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="touch-manipulation h-8 w-8 text-muted-foreground hover:text-foreground"
-              {...attributes}
-              {...listeners}
-            >
-              <GripVertical className="h-4 w-4" />
-            </Button>
-          )}
-
-          <Avatar className="h-10 w-10 rounded-lg">
-            {exercise ? (
-              <>
-                <AvatarImage
-                  src={`/exercises/${exercise.images[0]}`}
-                  alt={`${exercise.name} set item`}
-                  className="object-cover"
-                />
-                <AvatarFallback className="rounded-lg bg-muted">
-                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                </AvatarFallback>
-              </>
-            ) : (
-              <AvatarFallback className="rounded-lg bg-destructive/10">
-                <AlertCircle className="h-4 w-4 text-destructive" />
-              </AvatarFallback>
-            )}
-          </Avatar>
-
-          <div className="flex-1 min-w-0">
-            <div
-              className={`font-medium text-sm truncate ${
-                isCompleted
-                  ? "line-through text-muted-foreground"
-                  : "text-foreground"
-              }`}
-            >
-              {exercise?.name ?? "Unknown exercise"}
-            </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>
-                {sets.length} {sets.length === 1 ? "set" : "sets"}
-              </span>
-              {isCompleted && (
-                <span className="px-1.5 py-0.5 rounded bg-green-500/10 text-green-600 text-[10px] font-medium">
-                  Done
-                </span>
-              )}
-            </div>
-          </div>
-        </CollapsibleTrigger>
-
-        {!isReorderActive && (
-          <EditSetGroupMenu setGroup={setGroup} units={units} />
-        )}
-      </div>
-
-      <CollapsibleContent>
-        <div className="bg-muted/20">
-          {setGroup.comment && (
-            <div className="px-4 py-3 text-sm text-muted-foreground border-b border-border/50 bg-muted/30">
-              <span className="font-medium text-foreground/80">Note:</span>{" "}
-              {setGroup.comment}
-            </div>
-          )}
-
-          <div className="divide-y divide-border/50">
-            <DndContext id="sets" onDragEnd={handleSort} sensors={sensors}>
-              <SortableContext
-                items={sets.map((s) => s._id)}
-                strategy={verticalListSortingStrategy}
+          <CollapsibleTrigger
+            onClick={() => setExpanded(!expanded)}
+            className="flex items-center gap-3 flex-1 text-left"
+          >
+            {isReorderActive && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="touch-manipulation h-8 w-8 text-muted-foreground hover:text-foreground"
+                {...attributes}
+                {...listeners}
               >
-                {setsWithNumber.map(({ set, setNum }) => {
-                  return (
-                    <WorkoutSetRow
-                      key={`set-row-${set._id}`}
-                      view={view}
-                      set={set}
-                      setNum={setNum}
-                      units={units}
-                      startRestTimer={startRestTimer}
-                    />
-                  );
-                })}
-              </SortableContext>
-            </DndContext>
-          </div>
+                <GripVertical className="h-4 w-4" />
+              </Button>
+            )}
 
-          <div className="p-3 border-t border-border/50">
-            <Button
-              onClick={handleAdd}
-              variant="ghost"
-              size="sm"
-              className="w-full text-muted-foreground hover:text-foreground"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Set
-            </Button>
-          </div>
+            <Avatar className="h-10 w-10 rounded-lg">
+              {exercise ? (
+                <>
+                  <AvatarImage
+                    src={`/exercises/${exercise.images[0]}`}
+                    alt={`${exercise.name} set item`}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="rounded-lg bg-muted">
+                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                  </AvatarFallback>
+                </>
+              ) : (
+                <AvatarFallback className="rounded-lg bg-destructive/10">
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                </AvatarFallback>
+              )}
+            </Avatar>
+
+            <div className="flex-1 min-w-0">
+              <div
+                className={`font-medium text-sm truncate ${
+                  isCompleted
+                    ? "line-through text-muted-foreground"
+                    : "text-foreground"
+                }`}
+              >
+                {exercise?.name ?? "Unknown exercise"}
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>
+                  {sets.length} {sets.length === 1 ? "set" : "sets"}
+                </span>
+                {isCompleted && (
+                  <span className="px-1.5 py-0.5 rounded bg-green-500/10 text-green-600 text-[10px] font-medium">
+                    Done
+                  </span>
+                )}
+              </div>
+            </div>
+          </CollapsibleTrigger>
+
+          {!isReorderActive && (
+            <div className="flex items-center gap-1">
+              {exercise && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="View exercise details"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  onClick={() => setSelectedExercise(exercise)}
+                >
+                  <Info className="h-4 w-4" />
+                </Button>
+              )}
+              <EditSetGroupMenu setGroup={setGroup} units={units} />
+            </div>
+          )}
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+
+        <CollapsibleContent>
+          <div className="bg-muted/20">
+            {setGroup.comment && (
+              <div className="px-4 py-3 text-sm text-muted-foreground border-b border-border/50 bg-muted/30">
+                <span className="font-medium text-foreground/80">Note:</span>{" "}
+                {setGroup.comment}
+              </div>
+            )}
+
+            <div className="divide-y divide-border/50">
+              <DndContext id="sets" onDragEnd={handleSort} sensors={sensors}>
+                <SortableContext
+                  items={sets.map((s) => s._id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {setsWithNumber.map(({ set, setNum }) => {
+                    return (
+                      <WorkoutSetRow
+                        key={`set-row-${set._id}`}
+                        view={view}
+                        set={set}
+                        setNum={setNum}
+                        units={units}
+                        startRestTimer={startRestTimer}
+                      />
+                    );
+                  })}
+                </SortableContext>
+              </DndContext>
+            </div>
+
+            <div className="p-3 border-t border-border/50">
+              <Button
+                onClick={handleAdd}
+                variant="ghost"
+                size="sm"
+                className="w-full text-muted-foreground hover:text-foreground"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Set
+              </Button>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </>
   );
 };
