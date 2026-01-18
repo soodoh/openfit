@@ -217,20 +217,44 @@ export const list = query({
 
 // Simple search for autocomplete (returns array, not paginated)
 export const searchSimple = query({
-  args: { searchTerm: v.string() },
+  args: {
+    searchTerm: v.optional(v.string()),
+    equipmentIds: v.optional(v.array(v.id("equipment"))),
+  },
   handler: async (ctx, args) => {
-    if (!args.searchTerm.trim()) {
-      return [];
+    let results;
+
+    if (args.searchTerm?.trim()) {
+      // Search by name
+      results = await ctx.db
+        .query("exercises")
+        .withSearchIndex("search_exercise", (q) =>
+          q.search("name", args.searchTerm!),
+        )
+        .take(50); // Fetch more to account for filtering
+    } else {
+      // No search term - return exercises sorted by name
+      results = await ctx.db
+        .query("exercises")
+        .withIndex("by_name")
+        .take(50);
     }
 
-    const results = await ctx.db
-      .query("exercises")
-      .withSearchIndex("search_exercise", (q) =>
-        q.search("name", args.searchTerm),
-      )
-      .take(20);
+    // Apply equipment filter if provided
+    // NOTE: Bodyweight exercises (equipmentId === undefined) are always included
+    if (args.equipmentIds !== undefined && args.equipmentIds.length > 0) {
+      return results
+        .filter((exercise) => {
+          // Bodyweight exercises are always included
+          if (exercise.equipmentId === undefined) {
+            return true;
+          }
+          return args.equipmentIds!.includes(exercise.equipmentId);
+        })
+        .slice(0, 20);
+    }
 
-    return results;
+    return results.slice(0, 20);
   },
 });
 
