@@ -1,6 +1,6 @@
 # Story 1.3: Edit Gym Name and Equipment
 
-Status: review
+Status: done
 
 ## Story
 
@@ -194,6 +194,9 @@ N/A
 - Updated GymFormModal to support edit mode with pre-populated values
 - Integrated GymMenu into GymCard header
 - All ACs satisfied: menu, pre-populated edit modal, save/cancel functionality
+
+**Code Review Fixes Applied:**
+- Fixed GymMenu aria-label from "Edit gym" to "Actions for gym" (button has multiple actions)
 
 ### File List
 

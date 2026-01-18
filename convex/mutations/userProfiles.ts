@@ -66,11 +66,13 @@ export const setDefaultGym = mutation({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
-    if (profile) {
-      await ctx.db.patch(profile._id, {
-        defaultGymId: args.gymId ?? undefined,
-      });
+    if (!profile) {
+      throw new Error("User profile not found");
     }
+
+    await ctx.db.patch(profile._id, {
+      defaultGymId: args.gymId ?? undefined,
+    });
 
     return args.gymId;
   },

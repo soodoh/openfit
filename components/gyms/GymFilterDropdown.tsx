@@ -10,12 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Id } from "@/convex/_generated/dataModel";
 import { Check, ChevronDown, Dumbbell, Loader2 } from "lucide-react";
-
-export interface Gym {
-  _id: Id<"gyms">;
-  name: string;
-  equipmentIds: Id<"equipment">[];
-}
+import type { Gym } from "@/lib/convex-types";
 
 interface GymFilterDropdownProps {
   selectedGymId: Id<"gyms"> | null;

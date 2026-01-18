@@ -41,17 +41,17 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 1: Gym Management & Configuration
-  epic-1: in-progress
-  1-1-display-my-gyms-in-profile-settings: review
-  1-2-create-new-gym-with-equipment-selection: review
-  1-3-edit-gym-name-and-equipment: review
-  1-4-delete-gym-with-last-gym-protection: review
-  1-5-set-default-gym-with-all-equipment-fallback: review
+  epic-1: done
+  1-1-display-my-gyms-in-profile-settings: done
+  1-2-create-new-gym-with-equipment-selection: done
+  1-3-edit-gym-name-and-equipment: done
+  1-4-delete-gym-with-last-gym-protection: done
+  1-5-set-default-gym-with-all-equipment-fallback: done
   epic-1-retrospective: optional
 
   # Epic 2: Exercise Filtering by Gym Equipment
-  epic-2: in-progress
-  2-1-filter-exercises-by-gym-equipment: review
-  2-2-display-gym-filter-indicator: review
-  2-3-switch-gym-filter-via-dropdown: review
+  epic-2: done
+  2-1-filter-exercises-by-gym-equipment: done
+  2-2-display-gym-filter-indicator: done
+  2-3-switch-gym-filter-via-dropdown: done
   epic-2-retrospective: optional

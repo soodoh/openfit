@@ -80,7 +80,7 @@ export function GymFormModal({ open, onClose, gym }: GymFormModalProps) {
       setError(
         err instanceof Error
           ? err.message
-          : `Failed to ${gym ? "update" : "create"} gym`
+          : `Failed to ${gym ? "update" : "create"} gym`,
       );
     } finally {
       setIsPending(false);
@@ -147,7 +147,11 @@ export function GymFormModal({ open, onClose, gym }: GymFormModalProps) {
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending} className="min-w-[100px]">
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="min-w-[100px]"
+            >
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

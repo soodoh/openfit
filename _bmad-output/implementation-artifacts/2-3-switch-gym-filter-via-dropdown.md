@@ -1,6 +1,6 @@
 # Story 2.3: Switch Gym Filter via Dropdown
 
-Status: review
+Status: done
 
 ## Story
 

@@ -119,7 +119,7 @@ function ExercisesContent() {
   // Fetch selected gym's equipment
   const selectedGym = useQuery(
     api.queries.gyms.get,
-    selectedGymId ? { id: selectedGymId } : "skip"
+    selectedGymId ? { id: selectedGymId } : "skip",
   );
 
   // Handle gym filter change

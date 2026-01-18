@@ -1,6 +1,6 @@
 # Story 1.5: Set Default Gym with All-Equipment Fallback
 
-Status: review
+Status: done
 
 ## Story
 
@@ -202,6 +202,9 @@ N/A
 - Updated ProfileModal to pass isDefault based on profile.defaultGymId
 - Updated remove mutation to reset defaultGymId when deleting default gym
 - All ACs satisfied: default indicator, set as default, new user default, fallback
+
+**Code Review Fixes Applied:**
+- Fixed setDefaultGym mutation to throw error if profile doesn't exist (was silently failing)
 
 ### File List
 

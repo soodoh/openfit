@@ -1,6 +1,6 @@
 # Story 1.2: Create New Gym with Equipment Selection
 
-Status: review
+Status: done
 
 ## Story
 
@@ -219,6 +219,9 @@ N/A
 - Wired Add Gym button in ProfileModal to open GymFormModal
 - Convex reactive queries auto-refresh gym list after creation
 - All ACs satisfied: Add Gym button, name validation, categorized equipment, search, checkboxes, save
+
+**Code Review Fixes Applied:**
+- Added debounce to EquipmentSelector search for NFR3 performance compliance (150ms debounce)
 
 ### File List
 

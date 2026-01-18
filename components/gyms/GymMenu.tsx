@@ -53,7 +53,7 @@ export function GymMenu({ gym, isDefault = false }: GymMenuProps) {
           <Button
             variant="ghost"
             size="icon"
-            aria-label={`Edit gym: ${gym.name}`}
+            aria-label={`Actions for gym: ${gym.name}`}
             className="h-8 w-8 opacity-70 hover:opacity-100 transition-opacity"
           >
             <MoreVertical className="h-4 w-4" />

@@ -1,6 +1,6 @@
 # Story 1.1: Display My Gyms in Profile Settings
 
-Status: review
+Status: done
 
 ## Story
 

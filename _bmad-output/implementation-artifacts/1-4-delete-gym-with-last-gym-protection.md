@@ -1,6 +1,6 @@
 # Story 1.4: Delete Gym with Last-Gym Protection
 
-Status: review
+Status: done
 
 ## Story
 

@@ -1,6 +1,6 @@
 # Story 2.2: Display Gym Filter Indicator
 
-Status: review
+Status: done
 
 ## Story
 
@@ -184,6 +184,9 @@ N/A
 - Loading state shows spinner with disabled button
 - Fallback to "All Equipment" when no gym selected or gym deleted
 - Vertical separator added between gym filter and other filters for visual clarity
+
+**Code Review Fixes Applied:**
+- Replaced duplicate Gym interface with import from @/lib/convex-types for type consistency
 
 ### File List
 

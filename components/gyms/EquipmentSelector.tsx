@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { ChevronDown, ChevronRight, Loader2, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { EquipmentId } from "@/lib/convex-types";
 
 // Equipment category mappings based on common gym equipment names
@@ -64,16 +64,25 @@ export function EquipmentSelector({
 }: EquipmentSelectorProps) {
   const equipment = useQuery(api.queries.lookups.getEquipment);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(["Free Weights", "Machines"])
+    new Set(["Free Weights", "Machines"]),
   );
+
+  // Debounce search for performance (NFR3: 200ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const groupedEquipment = useMemo(() => {
     if (!equipment) return {};
 
-    const filtered = searchTerm
+    const filtered = debouncedSearch
       ? equipment.filter((e) =>
-          e.name.toLowerCase().includes(searchTerm.toLowerCase())
+          e.name.toLowerCase().includes(debouncedSearch.toLowerCase()),
         )
       : equipment;
 
@@ -93,7 +102,7 @@ export function EquipmentSelector({
     }
 
     return groups;
-  }, [equipment, searchTerm]);
+  }, [equipment, debouncedSearch]);
 
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => {
@@ -153,7 +162,7 @@ export function EquipmentSelector({
 
           const isExpanded = expandedCategories.has(category);
           const selectedCount = items.filter((item) =>
-            selectedIds.includes(item._id)
+            selectedIds.includes(item._id),
           ).length;
 
           return (
@@ -192,9 +201,9 @@ export function EquipmentSelector({
           );
         })}
 
-        {Object.keys(groupedEquipment).length === 0 && searchTerm && (
+        {Object.keys(groupedEquipment).length === 0 && debouncedSearch && (
           <p className="text-sm text-muted-foreground text-center py-4">
-            No equipment found matching "{searchTerm}"
+            No equipment found matching "{debouncedSearch}"
           </p>
         )}
       </div>

@@ -1,6 +1,6 @@
 # Story 2.1: Filter Exercises by Gym Equipment
 
-Status: review
+Status: done
 
 ## Story
 
@@ -203,6 +203,9 @@ N/A
 - Gym's equipmentIds passed to exercise queries for server-side filtering
 - Null gymId = "All Equipment" (no filtering applied)
 - Build verified successfully
+
+**Code Review Fixes Applied:**
+- Added documentation comments explaining that bodyweight exercises (equipmentId undefined) are always included in results
 
 ### File List
 

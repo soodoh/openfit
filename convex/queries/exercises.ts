@@ -172,8 +172,9 @@ export const list = query({
     if (hasFilters) {
       const filteredPage = paginatedExercises.page.filter((exercise) => {
         // Gym equipment filter (multiple equipment IDs)
+        // NOTE: Bodyweight exercises (equipmentId === undefined) are always included
+        // regardless of gym equipment selection, as they require no equipment
         if (args.equipmentIds !== undefined && args.equipmentIds.length > 0) {
-          // Include bodyweight exercises (no equipment) and exercises with matching equipment
           if (
             exercise.equipmentId !== undefined &&
             !args.equipmentIds.includes(exercise.equipmentId)
@@ -267,6 +268,8 @@ export const listCount = query({
 
     const filtered = exercises.filter((exercise) => {
       // Gym equipment filter (multiple equipment IDs)
+      // NOTE: Bodyweight exercises (equipmentId === undefined) are always included
+      // regardless of gym equipment selection, as they require no equipment
       if (args.equipmentIds !== undefined && args.equipmentIds.length > 0) {
         if (
           exercise.equipmentId !== undefined &&
