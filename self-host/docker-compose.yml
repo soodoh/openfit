@@ -1,20 +1,17 @@
 services:
   openfit:
     image: ghcr.io/soodoh/open-fit:latest
-    # Or build locally:
-    # build:
-    #   context: ./
-    #   dockerfile: Dockerfile
     container_name: openfit
     restart: unless-stopped
-    env_file: ./.env.local
+    env_file: .env
     environment:
+      # Internal URL for server-side communication
       - CONVEX_SITE_URL=http://convex-backend:3210
       - CONVEX_SELF_HOSTED_URL=http://convex-backend:3210
-      - NEXT_PUBLIC_CONVEX_URL=http://convex-backend:3210
       - INSTANCE_NAME=convex-self-hosted
+      # NEXT_PUBLIC_CONVEX_URL comes from .env file (browser-accessible URL)
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:3000"
     depends_on:
       convex-backend:
         condition: service_healthy
@@ -27,23 +24,21 @@ services:
     restart: unless-stopped
     stop_grace_period: 10s
     stop_signal: SIGINT
-    # Expose Convex port for browser access (required for NEXT_PUBLIC_CONVEX_URL)
+    # Expose Convex port for browser access
     ports:
       - "3210:3210"
-      # Optional: expose dashboard port
-      # - "3211:3211"
-    volumes:
-      - data:/convex/data
-    env_file: ./.env.local
+    env_file: .env
     environment:
       - CONVEX_CLOUD_ORIGIN=http://127.0.0.1:3210
       - CONVEX_SITE_ORIGIN=http://127.0.0.1:3211
       - CONVEX_SITE_URL=http://127.0.0.1:3210
       - CONVEX_SELF_HOSTED_URL=http://127.0.0.1:3210
-      - NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:3210
       - DOCUMENT_RETENTION_DELAY=172800
       - INSTANCE_NAME=convex-self-hosted
+    volumes:
+      - convex-data:/convex/data
     healthcheck:
+      # F4: Using CMD-SHELL format for better compatibility
       test: ["CMD-SHELL", "curl -sf http://localhost:3210/version || wget -q --spider http://localhost:3210/version || exit 1"]
       interval: 5s
       timeout: 5s
@@ -53,7 +48,7 @@ services:
       - openfit-net
 
 volumes:
-  data:
+  convex-data:
 
 networks:
   openfit-net:

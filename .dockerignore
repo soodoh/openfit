@@ -1,2 +1,26 @@
+# Environment files (may contain secrets)
 .env
+.env.*
+*.local
+
+# Dependencies
 node_modules
+
+# Build artifacts
+.next
+out
+build
+
+# Development
+.git
+.github
+.vscode
+.idea
+
+# BMAD workflow files
+_bmad
+_bmad-output
+
+# Misc
+.DS_Store
+*.log
