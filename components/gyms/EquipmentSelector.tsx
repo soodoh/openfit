@@ -1,57 +1,12 @@
 "use client";
 
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
-import { ChevronDown, ChevronRight, Loader2, Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { AlertCircle, Loader2, X } from "lucide-react";
+import { useMemo } from "react";
+import { AutocompleteEquipment } from "./AutocompleteEquipment";
 import type { EquipmentId } from "@/lib/convex-types";
-
-// Equipment category mappings based on common gym equipment names
-const EQUIPMENT_CATEGORIES: Record<string, string[]> = {
-  "Free Weights": [
-    "dumbbell",
-    "barbell",
-    "ez curl bar",
-    "kettlebell",
-    "weight plate",
-  ],
-  Machines: [
-    "machine",
-    "press",
-    "leg extension",
-    "leg curl",
-    "lat pulldown",
-    "row machine",
-    "smith",
-    "hack squat",
-    "pec deck",
-  ],
-  Cables: ["cable", "pulley"],
-  Benches: ["bench", "preacher"],
-  Cardio: ["treadmill", "bike", "rowing", "elliptical", "stair"],
-  Bodyweight: ["body only", "pull-up bar", "dip", "parallel bars"],
-  Other: [],
-};
-
-function categorizeEquipment(equipmentName: string): string {
-  const lowerName = equipmentName.toLowerCase();
-
-  for (const [category, keywords] of Object.entries(EQUIPMENT_CATEGORIES)) {
-    if (category === "Other") continue;
-    if (keywords.some((keyword) => lowerName.includes(keyword))) {
-      return category;
-    }
-  }
-
-  return "Other";
-}
 
 interface EquipmentSelectorProps {
   selectedIds: EquipmentId[];
@@ -63,77 +18,22 @@ export function EquipmentSelector({
   onSelectionChange,
 }: EquipmentSelectorProps) {
   const equipment = useQuery(api.queries.lookups.getEquipment);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(["Free Weights", "Machines"]),
-  );
 
-  // Debounce search for performance (NFR3: 200ms)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+  // Get selected equipment details sorted alphabetically
+  const selectedEquipment = useMemo(() => {
+    if (!equipment) return [];
+    return equipment
+      .filter((e) => selectedIds.includes(e._id))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [equipment, selectedIds]);
 
-  const groupedEquipment = useMemo(() => {
-    if (!equipment) return {};
-
-    const filtered = debouncedSearch
-      ? equipment.filter((e) =>
-          e.name.toLowerCase().includes(debouncedSearch.toLowerCase()),
-        )
-      : equipment;
-
-    const groups: Record<string, typeof equipment> = {};
-
-    for (const item of filtered) {
-      const category = categorizeEquipment(item.name);
-      if (!groups[category]) {
-        groups[category] = [];
-      }
-      groups[category].push(item);
-    }
-
-    // Sort items within each category
-    for (const category of Object.keys(groups)) {
-      groups[category].sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    return groups;
-  }, [equipment, debouncedSearch]);
-
-  const toggleCategory = (category: string) => {
-    setExpandedCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(category)) {
-        next.delete(category);
-      } else {
-        next.add(category);
-      }
-      return next;
-    });
+  const handleSelect = (equipmentId: EquipmentId) => {
+    onSelectionChange([...selectedIds, equipmentId]);
   };
 
-  const toggleEquipment = (equipmentId: EquipmentId) => {
-    const isSelected = selectedIds.includes(equipmentId);
-    if (isSelected) {
-      onSelectionChange(selectedIds.filter((id) => id !== equipmentId));
-    } else {
-      onSelectionChange([...selectedIds, equipmentId]);
-    }
+  const handleRemove = (equipmentId: EquipmentId) => {
+    onSelectionChange(selectedIds.filter((id) => id !== equipmentId));
   };
-
-  const categoryOrder = [
-    "Free Weights",
-    "Machines",
-    "Cables",
-    "Benches",
-    "Cardio",
-    "Bodyweight",
-    "Other",
-  ];
 
   if (equipment === undefined) {
     return (
@@ -143,70 +43,52 @@ export function EquipmentSelector({
     );
   }
 
+  const hasValidSelection = selectedIds.length > 0;
+
   return (
     <div className="space-y-3">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search equipment..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-9"
-        />
+      {/* Aria live region for screen reader announcements */}
+      <div aria-live="polite" className="sr-only">
+        {selectedIds.length} equipment selected
       </div>
 
-      <div className="max-h-[300px] overflow-y-auto space-y-1 pr-1">
-        {categoryOrder.map((category) => {
-          const items = groupedEquipment[category];
-          if (!items || items.length === 0) return null;
+      {/* Autocomplete input */}
+      <AutocompleteEquipment
+        selectedIds={selectedIds}
+        onSelect={handleSelect}
+      />
 
-          const isExpanded = expandedCategories.has(category);
-          const selectedCount = items.filter((item) =>
-            selectedIds.includes(item._id),
-          ).length;
-
-          return (
-            <Collapsible
-              key={category}
-              open={isExpanded}
-              onOpenChange={() => toggleCategory(category)}
+      {/* Selected equipment list */}
+      {selectedEquipment.length > 0 && (
+        <div className="space-y-1 max-h-[250px] overflow-y-auto">
+          {selectedEquipment.map((item) => (
+            <div
+              key={item._id}
+              className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted/50 text-sm"
             >
-              <CollapsibleTrigger className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-muted/50 transition-colors text-sm font-medium">
-                {isExpanded ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-                <span className="flex-1 text-left">{category}</span>
-                <span className="text-xs text-muted-foreground">
-                  {selectedCount > 0 && `${selectedCount}/`}
-                  {items.length}
-                </span>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pl-6 space-y-1">
-                {items.map((item) => (
-                  <label
-                    key={item._id}
-                    className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted/30 cursor-pointer transition-colors"
-                  >
-                    <Checkbox
-                      checked={selectedIds.includes(item._id)}
-                      onCheckedChange={() => toggleEquipment(item._id)}
-                    />
-                    <span className="text-sm">{item.name}</span>
-                  </label>
-                ))}
-              </CollapsibleContent>
-            </Collapsible>
-          );
-        })}
+              <span>{item.name}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                onClick={() => handleRemove(item._id)}
+                aria-label={`Remove ${item.name}`}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
 
-        {Object.keys(groupedEquipment).length === 0 && debouncedSearch && (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No equipment found matching "{debouncedSearch}"
-          </p>
-        )}
-      </div>
+      {/* Validation message */}
+      {!hasValidSelection && (
+        <p className="text-sm text-destructive flex items-center gap-1.5">
+          <AlertCircle className="h-3.5 w-3.5" />
+          Select at least one piece of equipment
+        </p>
+      )}
 
       <p className="text-xs text-muted-foreground">
         {selectedIds.length} equipment selected

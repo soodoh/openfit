@@ -42,12 +42,32 @@ export const create = mutation({
       throw new Error("Gym name is required");
     }
 
+    // Check if user has any existing gyms
+    const existingGyms = await ctx.db
+      .query("gyms")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
     const gymId = await ctx.db.insert("gyms", {
       userId,
       name: args.name.trim(),
       equipmentIds: args.equipmentIds,
       updatedAt: Date.now(),
     });
+
+    // If this is the first gym, set it as default
+    if (!existingGyms) {
+      const profile = await ctx.db
+        .query("userProfiles")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .first();
+
+      if (profile) {
+        await ctx.db.patch(profile._id, {
+          defaultGymId: gymId,
+        });
+      }
+    }
 
     return gymId;
   },

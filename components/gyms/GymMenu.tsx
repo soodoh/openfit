@@ -24,9 +24,11 @@ enum Modal {
 interface GymMenuProps {
   gym: Gym;
   isDefault?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export function GymMenu({ gym, isDefault = false }: GymMenuProps) {
+export function GymMenu({ gym, isDefault = false, onEdit, onDelete }: GymMenuProps) {
   const [modal, setModal] = useState<Modal | null>(null);
   const handleClose = () => setModal(null);
   const setDefaultGym = useMutation(api.mutations.userProfiles.setDefaultGym);
@@ -35,18 +37,38 @@ export function GymMenu({ gym, isDefault = false }: GymMenuProps) {
     await setDefaultGym({ gymId: gym._id });
   };
 
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit();
+    } else {
+      setModal(Modal.EDIT);
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete();
+    } else {
+      setModal(Modal.DELETE);
+    }
+  };
+
   return (
     <>
-      <GymFormModal
-        open={modal === Modal.EDIT}
-        onClose={handleClose}
-        gym={gym}
-      />
-      <DeleteGymModal
-        open={modal === Modal.DELETE}
-        onClose={handleClose}
-        gym={gym}
-      />
+      {/* Only render internal modals if no external callbacks provided */}
+      {!onEdit && (
+        <GymFormModal
+          open={modal === Modal.EDIT}
+          onClose={handleClose}
+          gym={gym}
+        />
+      )}
+      {!onDelete && (
+        <DeleteGymModal
+          gym={modal === Modal.DELETE ? gym : null}
+          onClose={handleClose}
+        />
+      )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -70,7 +92,7 @@ export function GymMenu({ gym, isDefault = false }: GymMenuProps) {
             </DropdownMenuItem>
           )}
           <DropdownMenuItem
-            onClick={() => setModal(Modal.EDIT)}
+            onClick={handleEdit}
             className="cursor-pointer gap-2"
           >
             <Edit className="h-4 w-4" />
@@ -78,7 +100,7 @@ export function GymMenu({ gym, isDefault = false }: GymMenuProps) {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => setModal(Modal.DELETE)}
+            onClick={handleDelete}
             className="cursor-pointer gap-2 text-destructive focus:text-destructive"
           >
             <Trash2 className="h-4 w-4" />

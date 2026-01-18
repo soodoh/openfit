@@ -16,17 +16,19 @@ import { useState } from "react";
 import type { Gym } from "@/lib/convex-types";
 
 interface DeleteGymModalProps {
-  open: boolean;
+  gym: Gym | null;
+  isLastGym?: boolean;
   onClose: () => void;
-  gym: Gym;
 }
 
-export function DeleteGymModal({ open, onClose, gym }: DeleteGymModalProps) {
+export function DeleteGymModal({ gym, isLastGym = false, onClose }: DeleteGymModalProps) {
+  const open = gym !== null;
   const removeGym = useMutation(api.mutations.gyms.remove);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
   const handleDelete = async () => {
+    if (!gym) return;
     setError(null);
     setIsPending(true);
 
@@ -56,8 +58,8 @@ export function DeleteGymModal({ open, onClose, gym }: DeleteGymModalProps) {
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
-              <Trash2 className="h-5 w-5 text-destructive" />
+            <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950 flex items-center justify-center">
+              <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <DialogTitle className="text-xl">Delete Gym</DialogTitle>
@@ -70,14 +72,19 @@ export function DeleteGymModal({ open, onClose, gym }: DeleteGymModalProps) {
 
         <div className="py-4">
           {error ? (
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-destructive/10 text-destructive">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300">
               <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" />
               <p className="text-sm">{error}</p>
+            </div>
+          ) : isLastGym ? (
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300">
+              <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" />
+              <p className="text-sm">You cannot delete your only gym. Create another gym first.</p>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
               Are you sure you want to delete{" "}
-              <span className="font-medium text-foreground">"{gym.name}"</span>?
+              <span className="font-medium text-foreground">"{gym?.name}"</span>?
               This will permanently remove the gym and its equipment
               configuration.
             </p>
@@ -86,9 +93,9 @@ export function DeleteGymModal({ open, onClose, gym }: DeleteGymModalProps) {
 
         <DialogFooter>
           <Button type="button" variant="ghost" onClick={handleClose}>
-            {error ? "Close" : "Cancel"}
+            {error || isLastGym ? "Close" : "Cancel"}
           </Button>
-          {!error && (
+          {!error && !isLastGym && (
             <Button
               type="button"
               variant="destructive"

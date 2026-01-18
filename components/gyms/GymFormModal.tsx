@@ -60,6 +60,11 @@ export function GymFormModal({ open, onClose, gym }: GymFormModalProps) {
       return;
     }
 
+    if (selectedEquipmentIds.length === 0) {
+      setError("Select at least one piece of equipment");
+      return;
+    }
+
     setIsPending(true);
 
     try {

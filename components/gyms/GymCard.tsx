@@ -7,9 +7,11 @@ import type { Gym } from "@/lib/convex-types";
 interface GymCardProps {
   gym: Gym;
   isDefault?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export function GymCard({ gym, isDefault = false }: GymCardProps) {
+export function GymCard({ gym, isDefault = false, onEdit, onDelete }: GymCardProps) {
   const equipmentCount = gym.equipmentIds.length;
 
   return (
@@ -33,7 +35,7 @@ export function GymCard({ gym, isDefault = false }: GymCardProps) {
               )}
             </div>
           </div>
-          <GymMenu gym={gym} isDefault={isDefault} />
+          <GymMenu gym={gym} isDefault={isDefault} onEdit={onEdit} onDelete={onDelete} />
         </div>
 
         {/* Meta info */}

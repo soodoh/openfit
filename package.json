@@ -37,6 +37,7 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-switch": "^1.2.6",
+    "@radix-ui/react-tabs": "^1.1.13",
     "cmdk": "^1.1.1",
     "convex": "^1.31.3",
     "date-fns": "^4.1.0",
