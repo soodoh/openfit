@@ -4,56 +4,57 @@ A fitness tracking application built with Next.js and Convex.
 
 ## Self-Host with Docker
 
-The easiest way to self-host Open Fit on your home server or VPS. No need to clone the repo.
+Deploy Open Fit on your home server or VPS in minutes.
 
 ### Requirements
 
 - Docker with Compose plugin
-- `curl` and `openssl` (for setup script)
 
 ### Quick Start
 
+**1. Download the compose file:**
+
 ```bash
-# 1. Create a directory and download the setup files
 mkdir openfit && cd openfit
 curl -LO https://raw.githubusercontent.com/soodoh/open-fit/main/self-host/docker-compose.yml
-curl -LO https://raw.githubusercontent.com/soodoh/open-fit/main/self-host/setup.sh
+```
 
-# 2. Generate environment variables (creates .env file)
-bash setup.sh
+**2. Generate environment variables:**
 
-# 3. Start the application
+```bash
+docker run --rm ghcr.io/soodoh/open-fit pnpm generate:keys
+```
+
+This outputs all required keys and a command to generate the admin key. Run the admin key command shown in the output.
+
+**3. Create your `.env` file:**
+
+Copy all the generated values into a `.env` file:
+
+```env
+INSTANCE_SECRET='...'
+JWT_PRIVATE_KEY='...'
+JWKS='...'
+NEXT_PUBLIC_CONVEX_URL=http://localhost:3210
+CONVEX_SELF_HOSTED_ADMIN_KEY='...'
+```
+
+**4. Start the application:**
+
+```bash
 docker compose up -d
 ```
 
-That's it! Open http://localhost:3000 to create your account.
-
-### What Happens Automatically
-
-1. **Key Generation** - `setup.sh` generates all required secrets:
-   - `INSTANCE_SECRET` - Convex instance secret
-   - `CONVEX_SELF_HOSTED_ADMIN_KEY` - Admin key for Convex operations
-   - `JWT_PRIVATE_KEY` / `JWKS` - Authentication keys
-
-2. **Database Initialization** - On first boot, the app automatically:
-   - Deploys the Convex schema
-   - Configures authentication
-   - Seeds the exercise database (873 exercises)
-
-3. **Runtime Configuration** - Environment variables are injected at container startup
+The database initializes automatically on first boot. Open http://localhost:3000 to create your account.
 
 ### Configuration
 
-Edit the `.env` file to customize your deployment:
-
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `NEXT_PUBLIC_CONVEX_URL` | `http://localhost:3210` | URL browsers use to connect to Convex. Change if using a reverse proxy. |
+| `NEXT_PUBLIC_CONVEX_URL` | `http://localhost:3210` | URL browsers use to connect to Convex |
 | `APP_PORT` | `3000` | Port for the web application |
 
-**Example: Exposing via reverse proxy**
-
-If you're running behind a reverse proxy (e.g., Traefik, Caddy, nginx) with a domain:
+**Using a reverse proxy?** Update `NEXT_PUBLIC_CONVEX_URL` to your public Convex URL:
 
 ```env
 NEXT_PUBLIC_CONVEX_URL=https://convex.yourdomain.com
@@ -66,9 +67,7 @@ docker compose pull
 docker compose up -d
 ```
 
-### Data Persistence
-
-Convex data is stored in a Docker volume. To backup:
+### Data Backup
 
 ```bash
 docker run --rm -v openfit_convex-data:/data -v $(pwd):/backup alpine tar czf /backup/convex-backup.tar.gz /data
@@ -81,30 +80,23 @@ docker run --rm -v openfit_convex-data:/data -v $(pwd):/backup alpine tar czf /b
 docker exec openfit pnpm initdb
 ```
 
-**Need to regenerate keys?**
+**Regenerate keys?**
 ```bash
-rm .env && bash setup.sh
+docker run --rm ghcr.io/soodoh/open-fit pnpm generate:keys
+# Update .env with new values, then:
 docker compose down && docker compose up -d
 ```
 
 **Check logs:**
 ```bash
-docker compose logs -f openfit      # App logs
-docker compose logs -f convex-backend  # Convex logs
-```
-
-**Container won't start?**
-```bash
-docker compose down
-docker volume rm openfit_convex-data  # Warning: deletes all data
-docker compose up -d
+docker compose logs -f
 ```
 
 ---
 
 ## Development Setup
 
-For contributors and developers who want to run the full development environment.
+For contributors who want to run the full development environment.
 
 ### Prerequisites
 
@@ -129,43 +121,24 @@ docker compose up -d
 ### 3. Generate Environment Variables
 
 ```bash
-# Generate keys
 pnpm generate:keys
 ```
 
-Copy the output to a new `.env.local` file and add:
+Copy the output to `.env.local` and run the admin key command shown.
 
+Add the remaining config:
 ```env
-NEXT_PUBLIC_CONVEX_URL='http://localhost:3210'
 CONVEX_SELF_HOSTED_URL='http://localhost:3210'
 INSTANCE_NAME='convex-self-hosted'
-
-# Paste generated values below
-JWT_PRIVATE_KEY='...'
-JWKS='...'
-INSTANCE_SECRET='...'
 ```
 
-### 4. Generate Admin Key
-
-```bash
-docker run --rm -e INSTANCE_SECRET="your-instance-secret" \
-  --entrypoint ./generate_admin_key.sh \
-  ghcr.io/get-convex/convex-backend:latest
-```
-
-Add to `.env.local`:
-```env
-CONVEX_SELF_HOSTED_ADMIN_KEY='...'
-```
-
-### 5. Initialize Database
+### 4. Initialize Database
 
 ```bash
 pnpm initdb
 ```
 
-### 6. Start Development Server
+### 5. Start Development Server
 
 ```bash
 pnpm dev
@@ -174,8 +147,6 @@ pnpm dev
 Open [http://localhost:3000](http://localhost:3000) to get started.
 
 ### Seed Test Data (Optional)
-
-After creating an account, seed 50 test routines:
 
 ```bash
 pnpm convex run seed:mockUserData '{"email": "your@email.com"}'
@@ -200,7 +171,7 @@ pnpm convex run seed:mockUserData '{"email": "your@email.com"}'
 │   ├── schema.ts          # Database schema
 │   └── seed.ts            # Database seeding
 ├── lib/                    # Utility functions and types
-├── self-host/             # Self-hosting files (compose, setup script)
+├── self-host/             # Self-hosting docker-compose
 └── public/                 # Static assets
 ```
 
