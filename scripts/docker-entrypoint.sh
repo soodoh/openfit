@@ -70,7 +70,7 @@ run_init() {
 
     if ! wait_for_convex; then
         echo "Skipping auto-init - Convex backend not available."
-        echo "You may need to run 'docker exec openfit pnpm initdb' manually when ready."
+        echo "You may need to run 'docker exec openfit ./scripts/init.sh' manually when ready."
         return
     fi
 
@@ -79,14 +79,14 @@ run_init() {
         echo "First run detected - initializing database..."
 
         # F5: Handle init failure gracefully - don't exit, just warn
-        if pnpm initdb; then
+        if ./scripts/init.sh; then
             echo "Database initialization complete!"
         else
             echo ""
             echo "========================================================"
             echo "  Warning: Database initialization failed."
             echo "  The app will start, but you may need to run:"
-            echo "    docker exec openfit pnpm initdb"
+            echo "    docker exec openfit ./scripts/init.sh"
             echo "========================================================"
             echo ""
         fi
