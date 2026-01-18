@@ -11,6 +11,7 @@
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as mutations_gyms from "../mutations/gyms.js";
 import type * as mutations_routineDays from "../mutations/routineDays.js";
 import type * as mutations_routines from "../mutations/routines.js";
 import type * as mutations_sessions from "../mutations/sessions.js";
@@ -18,6 +19,7 @@ import type * as mutations_setGroups from "../mutations/setGroups.js";
 import type * as mutations_sets from "../mutations/sets.js";
 import type * as mutations_userProfiles from "../mutations/userProfiles.js";
 import type * as queries_exercises from "../queries/exercises.js";
+import type * as queries_gyms from "../queries/gyms.js";
 import type * as queries_lookups from "../queries/lookups.js";
 import type * as queries_routineDays from "../queries/routineDays.js";
 import type * as queries_routines from "../queries/routines.js";
@@ -37,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   http: typeof http;
   "lib/auth": typeof lib_auth;
+  "mutations/gyms": typeof mutations_gyms;
   "mutations/routineDays": typeof mutations_routineDays;
   "mutations/routines": typeof mutations_routines;
   "mutations/sessions": typeof mutations_sessions;
@@ -44,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   "mutations/sets": typeof mutations_sets;
   "mutations/userProfiles": typeof mutations_userProfiles;
   "queries/exercises": typeof queries_exercises;
+  "queries/gyms": typeof queries_gyms;
   "queries/lookups": typeof queries_lookups;
   "queries/routineDays": typeof queries_routineDays;
   "queries/routines": typeof queries_routines;

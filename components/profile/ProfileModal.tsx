@@ -1,5 +1,7 @@
 "use client";
 
+import { GymCard } from "@/components/gyms/GymCard";
+import { GymFormModal } from "@/components/gyms/GymFormModal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,7 +22,7 @@ import {
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { AlertCircle, Loader2, User } from "lucide-react";
+import { AlertCircle, Dumbbell, Loader2, Plus, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
@@ -34,6 +36,7 @@ export const ProfileModal = ({
   onClose: () => void;
 }) => {
   const profileData = useQuery(api.queries.userProfiles.getCurrent);
+  const gymsData = useQuery(api.queries.gyms.list);
   const updateProfile = useMutation(api.mutations.userProfiles.update);
   const { setTheme } = useTheme();
 
@@ -42,6 +45,7 @@ export const ProfileModal = ({
   const [selectedTheme, setSelectedTheme] = useState<Theme>("system");
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isGymFormOpen, setIsGymFormOpen] = useState(false);
 
   // Reset form when modal opens or profile data changes
   useEffect(() => {
@@ -95,6 +99,7 @@ export const ProfileModal = ({
   };
 
   const isLoading = profileData === undefined;
+  const isGymsLoading = gymsData === undefined;
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
@@ -207,6 +212,61 @@ export const ProfileModal = ({
                     {error}
                   </p>
                 )}
+
+                {/* My Gyms Section */}
+                <div className="space-y-3 pt-2 border-t border-border/50">
+                  <div className="flex items-center gap-2">
+                    <Dumbbell className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-sm font-medium">My Gyms</Label>
+                  </div>
+
+                  {isGymsLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : gymsData && gymsData.length > 0 ? (
+                    <div className="space-y-2">
+                      {gymsData.map((gym) => (
+                        <GymCard
+                          key={gym._id}
+                          gym={gym}
+                          isDefault={
+                            profileData?.profile?.defaultGymId === gym._id
+                          }
+                        />
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-2"
+                        onClick={() => setIsGymFormOpen(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Gym
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        No gyms created yet.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Create a gym to filter exercises by available equipment.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => setIsGymFormOpen(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Gym
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -238,6 +298,11 @@ export const ProfileModal = ({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <GymFormModal
+        open={isGymFormOpen}
+        onClose={() => setIsGymFormOpen(false)}
+      />
     </Dialog>
   );
 };

@@ -15,6 +15,7 @@ export const search = query({
     searchTerm: v.string(),
     paginationOpts: paginationOptsValidator,
     equipmentId: v.optional(v.id("equipment")),
+    equipmentIds: v.optional(v.array(v.id("equipment"))),
     level: v.optional(ExerciseLevelEnum),
     categoryId: v.optional(v.id("categories")),
     primaryMuscleId: v.optional(v.id("muscleGroups")),
@@ -47,11 +48,29 @@ export const search = query({
       })
       .paginate(args.paginationOpts);
 
-    // Apply client-side filtering for primaryMuscleId (array field)
-    if (args.primaryMuscleId !== undefined) {
-      const filteredPage = paginatedExercises.page.filter((exercise) =>
-        exercise.primaryMuscleIds.includes(args.primaryMuscleId!),
-      );
+    // Apply client-side filtering for primaryMuscleId and equipmentIds
+    const needsFiltering =
+      args.primaryMuscleId !== undefined ||
+      (args.equipmentIds !== undefined && args.equipmentIds.length > 0);
+
+    if (needsFiltering) {
+      const filteredPage = paginatedExercises.page.filter((exercise) => {
+        if (
+          args.primaryMuscleId !== undefined &&
+          !exercise.primaryMuscleIds.includes(args.primaryMuscleId)
+        ) {
+          return false;
+        }
+        if (args.equipmentIds !== undefined && args.equipmentIds.length > 0) {
+          if (
+            exercise.equipmentId !== undefined &&
+            !args.equipmentIds.includes(exercise.equipmentId)
+          ) {
+            return false;
+          }
+        }
+        return true;
+      });
       return {
         ...paginatedExercises,
         page: filteredPage,
@@ -67,6 +86,7 @@ export const searchCount = query({
   args: {
     searchTerm: v.string(),
     equipmentId: v.optional(v.id("equipment")),
+    equipmentIds: v.optional(v.array(v.id("equipment"))),
     level: v.optional(ExerciseLevelEnum),
     categoryId: v.optional(v.id("categories")),
     primaryMuscleId: v.optional(v.id("muscleGroups")),
@@ -95,11 +115,29 @@ export const searchCount = query({
       })
       .collect();
 
-    // Apply client-side filtering for primaryMuscleId (array field)
-    if (args.primaryMuscleId !== undefined) {
-      return results.filter((exercise) =>
-        exercise.primaryMuscleIds.includes(args.primaryMuscleId!),
-      ).length;
+    // Apply client-side filtering for primaryMuscleId and equipmentIds
+    const needsFiltering =
+      args.primaryMuscleId !== undefined ||
+      (args.equipmentIds !== undefined && args.equipmentIds.length > 0);
+
+    if (needsFiltering) {
+      return results.filter((exercise) => {
+        if (
+          args.primaryMuscleId !== undefined &&
+          !exercise.primaryMuscleIds.includes(args.primaryMuscleId)
+        ) {
+          return false;
+        }
+        if (args.equipmentIds !== undefined && args.equipmentIds.length > 0) {
+          if (
+            exercise.equipmentId !== undefined &&
+            !args.equipmentIds.includes(exercise.equipmentId)
+          ) {
+            return false;
+          }
+        }
+        return true;
+      }).length;
     }
 
     return results.length;
@@ -111,6 +149,7 @@ export const list = query({
   args: {
     paginationOpts: paginationOptsValidator,
     equipmentId: v.optional(v.id("equipment")),
+    equipmentIds: v.optional(v.array(v.id("equipment"))),
     level: v.optional(ExerciseLevelEnum),
     categoryId: v.optional(v.id("categories")),
     primaryMuscleId: v.optional(v.id("muscleGroups")),
@@ -125,12 +164,23 @@ export const list = query({
     // Apply client-side filtering (since regular indexes don't support multiple filter fields)
     const hasFilters =
       args.equipmentId !== undefined ||
+      args.equipmentIds !== undefined ||
       args.level !== undefined ||
       args.categoryId !== undefined ||
       args.primaryMuscleId !== undefined;
 
     if (hasFilters) {
       const filteredPage = paginatedExercises.page.filter((exercise) => {
+        // Gym equipment filter (multiple equipment IDs)
+        if (args.equipmentIds !== undefined && args.equipmentIds.length > 0) {
+          // Include bodyweight exercises (no equipment) and exercises with matching equipment
+          if (
+            exercise.equipmentId !== undefined &&
+            !args.equipmentIds.includes(exercise.equipmentId)
+          ) {
+            return false;
+          }
+        }
         if (
           args.equipmentId !== undefined &&
           exercise.equipmentId !== args.equipmentId
@@ -196,6 +246,7 @@ export const count = query({
 export const listCount = query({
   args: {
     equipmentId: v.optional(v.id("equipment")),
+    equipmentIds: v.optional(v.array(v.id("equipment"))),
     level: v.optional(ExerciseLevelEnum),
     categoryId: v.optional(v.id("categories")),
     primaryMuscleId: v.optional(v.id("muscleGroups")),
@@ -205,6 +256,7 @@ export const listCount = query({
 
     const hasFilters =
       args.equipmentId !== undefined ||
+      args.equipmentIds !== undefined ||
       args.level !== undefined ||
       args.categoryId !== undefined ||
       args.primaryMuscleId !== undefined;
@@ -214,6 +266,15 @@ export const listCount = query({
     }
 
     const filtered = exercises.filter((exercise) => {
+      // Gym equipment filter (multiple equipment IDs)
+      if (args.equipmentIds !== undefined && args.equipmentIds.length > 0) {
+        if (
+          exercise.equipmentId !== undefined &&
+          !args.equipmentIds.includes(exercise.equipmentId)
+        ) {
+          return false;
+        }
+      }
       if (
         args.equipmentId !== undefined &&
         exercise.equipmentId !== args.equipmentId

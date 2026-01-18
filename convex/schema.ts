@@ -48,6 +48,14 @@ export default defineSchema({
     defaultRepetitionUnitId: v.id("repetitionUnits"),
     defaultWeightUnitId: v.id("weightUnits"),
     theme: ThemeEnum,
+    defaultGymId: v.optional(v.id("gyms")),
+  }).index("by_user", ["userId"]),
+
+  gyms: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    equipmentIds: v.array(v.id("equipment")),
+    updatedAt: v.number(),
   }).index("by_user", ["userId"]),
 
   repetitionUnits: defineTable({

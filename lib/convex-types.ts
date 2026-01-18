@@ -36,6 +36,7 @@ export type WeightUnit = Doc<"weightUnits">;
 export type Equipment = Doc<"equipment">;
 export type MuscleGroup = Doc<"muscleGroups">;
 export type Category = Doc<"categories">;
+export type Gym = Doc<"gyms">;
 
 // ID types
 export type ExerciseId = Id<"exercises">;
@@ -49,6 +50,7 @@ export type WeightUnitId = Id<"weightUnits">;
 export type EquipmentId = Id<"equipment">;
 export type MuscleGroupId = Id<"muscleGroups">;
 export type CategoryId = Id<"categories">;
+export type GymId = Id<"gyms">;
 
 // Complex types with relations
 export type RoutineWithDays = Routine & {

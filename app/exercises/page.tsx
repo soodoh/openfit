@@ -2,6 +2,7 @@
 
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ExerciseCard } from "@/components/exercises/ExerciseCard";
+import { GymFilterDropdown } from "@/components/gyms/GymFilterDropdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { Dumbbell, Loader2, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -96,6 +98,35 @@ function ExercisesContent() {
     undefined,
   );
 
+  // Gym filter state
+  const [selectedGymId, setSelectedGymId] = useState<Id<"gyms"> | null>(null);
+  const [gymInitialized, setGymInitialized] = useState(false);
+
+  // Fetch user profile for default gym
+  const userProfile = useQuery(api.queries.userProfiles.getCurrent);
+
+  // Initialize selected gym from user's default
+  useEffect(() => {
+    if (userProfile && !gymInitialized) {
+      setSelectedGymId(userProfile.profile?.defaultGymId ?? null);
+      setGymInitialized(true);
+    }
+  }, [userProfile, gymInitialized]);
+
+  // Fetch user gyms for dropdown
+  const userGyms = useQuery(api.queries.gyms.list);
+
+  // Fetch selected gym's equipment
+  const selectedGym = useQuery(
+    api.queries.gyms.get,
+    selectedGymId ? { id: selectedGymId } : "skip"
+  );
+
+  // Handle gym filter change
+  const handleGymChange = (gymId: Id<"gyms"> | null) => {
+    setSelectedGymId(gymId);
+  };
+
   const hasFilters =
     equipment !== undefined ||
     level !== undefined ||
@@ -119,12 +150,13 @@ function ExercisesContent() {
 
   const isSearching = debouncedSearch.trim().length > 0;
 
-  // Build filter args for queries
+  // Build filter args for queries (including gym equipment filter)
   const filterArgs = {
     equipment,
     level,
     category,
     primaryMuscle,
+    equipmentIds: selectedGym?.equipmentIds,
   };
 
   // Get count of exercises with filters applied (for browse mode)
@@ -216,8 +248,17 @@ function ExercisesContent() {
             />
           </div>
 
-          {/* Filters */}
+          {/* Gym Filter & Filters */}
           <div className="mt-4 flex flex-wrap items-center gap-3">
+            <GymFilterDropdown
+              selectedGymId={selectedGymId}
+              userGyms={userGyms}
+              onGymChange={handleGymChange}
+              isLoading={!gymInitialized}
+            />
+
+            <div className="h-6 w-px bg-border" />
+
             <Select
               value={equipment ?? ""}
               onValueChange={(value) =>

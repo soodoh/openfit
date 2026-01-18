@@ -46,6 +46,36 @@ export const update = mutation({
   },
 });
 
+// Set default gym for exercise filtering
+export const setDefaultGym = mutation({
+  args: {
+    gymId: v.optional(v.id("gyms")),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthenticatedUserId(ctx);
+
+    if (args.gymId) {
+      const gym = await ctx.db.get(args.gymId);
+      if (!gym || gym.userId !== userId) {
+        throw new Error("Gym not found or unauthorized");
+      }
+    }
+
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (profile) {
+      await ctx.db.patch(profile._id, {
+        defaultGymId: args.gymId ?? undefined,
+      });
+    }
+
+    return args.gymId;
+  },
+});
+
 // Internal mutation to create profile for new users (called from auth callback)
 export const createForNewUser = internalMutation({
   args: {
