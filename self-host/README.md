@@ -25,17 +25,7 @@ Open http://localhost:3000 to create your account.
 ## Files
 
 - `docker-compose.yml` - Docker Compose configuration
-- `setup.sh` - Alternative: generates `.env` file automatically (requires `openssl`)
 - `.env.example` - Reference template
-
-## Alternative: Automated Setup
-
-If you have `openssl` installed locally:
-
-```bash
-bash setup.sh
-docker compose up -d
-```
 
 ## Configuration
 
