@@ -6,11 +6,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { api } from "@/convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth } from "convex/react";
-import { LogOut, Settings, User } from "lucide-react";
+import { useConvexAuth, useQuery } from "convex/react";
+import { LogOut, Settings, Shield, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -19,6 +21,7 @@ export const AccountNavItem = () => {
   const { signOut } = useAuthActions();
   const router = useRouter();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const isAdmin = useQuery(api.queries.userProfiles.isAdmin);
 
   // Don't render if not authenticated
   if (!isAuthenticated) {
@@ -43,6 +46,15 @@ export const AccountNavItem = () => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {isAdmin && (
+            <>
+              <DropdownMenuItem onClick={() => router.push("/admin")}>
+                <Shield className="mr-2 h-4 w-4" />
+                <span>Admin</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
           <DropdownMenuItem onClick={() => setProfileModalOpen(true)}>
             <Settings className="mr-2 h-4 w-4" />
             <span>Profile</span>

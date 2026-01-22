@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { WorkoutList } from "@/components/workoutSet/WorkoutList";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
 import { ListView, type Units } from "@/lib/convex-types";
 import { useQuery } from "convex/react";
 import dayjs from "dayjs";
@@ -22,6 +21,7 @@ import { EditDurationPopover } from "./EditDurationPopover";
 import { EditNamePopover } from "./EditNamePopover";
 import { EditNotesPopover } from "./EditNotesPopover";
 import { EditRatingPopover } from "./EditRatingPopover";
+import type { Id } from "@/convex/_generated/dataModel";
 
 export const SessionDetailModal = ({
   sessionId,

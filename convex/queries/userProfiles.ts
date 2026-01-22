@@ -1,5 +1,5 @@
 import { query } from "../_generated/server";
-import { getAuthenticatedUserId } from "../lib/auth";
+import { getAuthenticatedUserId, getOptionalUserId } from "../lib/auth";
 
 // Check if any users exist in the database (for initial admin setup)
 export const hasUsers = query({
@@ -39,5 +39,23 @@ export const getCurrent = query({
       weightUnits,
       themeOptions: THEME_OPTIONS,
     };
+  },
+});
+
+// Check if the current user is an admin
+export const isAdmin = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getOptionalUserId(ctx);
+    if (!userId) {
+      return false;
+    }
+
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    return profile?.role === "ADMIN";
   },
 });

@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
-import type { Id } from "@/convex/_generated/dataModel";
-import type { Units, WorkoutSessionSummary } from "@/lib/convex-types";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight, Clock, Play, Star } from "lucide-react";
 import { useState } from "react";
 import { SessionDetailModal } from "./SessionDetailModal";
+import type { Id } from "@/convex/_generated/dataModel";
+import type { Units, WorkoutSessionSummary } from "@/lib/convex-types";
 
 type DayData = {
   date: dayjs.Dayjs;
