@@ -114,7 +114,7 @@ export const AutocompleteExercise = ({
   const selectedGymName = selectedGymId && selectedGymId !== "all"
     ? userGyms?.find((g) => g._id === selectedGymId)?.name
     : null;
-  const gymDisplayName = selectedGymName ?? "All Equipment";
+  const gymDisplayName = selectedGymName ?? "All";
 
   return (
     <div className="w-full">
@@ -158,19 +158,17 @@ export const AutocompleteExercise = ({
           onPointerDownOutside={(e) => e.preventDefault()}
         >
           {/* Gym Filter Header */}
-          <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
+          <div className="flex items-center gap-1 px-3 py-2 border-b bg-muted/30">
             <span className="text-xs text-muted-foreground">
-              {selectedGymId === "all"
-                ? "Showing all equipment"
-                : `Filtering by: ${gymDisplayName}`}
+              Available equipment:
             </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded hover:bg-accent transition-colors"
+                  className="flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded hover:bg-accent transition-colors"
                 >
-                  <span>Change</span>
+                  <span>{gymDisplayName}</span>
                   <ChevronDown className="h-3 w-3" />
                 </button>
               </DropdownMenuTrigger>
