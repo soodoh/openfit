@@ -28,9 +28,9 @@ export const DeleteSetGroupModal = ({
     <Dialog open={open} onOpenChange={() => onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete Set</DialogTitle>
+          <DialogTitle>Delete Exercise</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this exercise set?
+            Are you sure you want to delete this exercise and its group of sets?
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

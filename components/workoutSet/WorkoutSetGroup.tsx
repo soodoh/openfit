@@ -34,10 +34,13 @@ import { CSS } from "@dnd-kit/utilities";
 import { useMutation } from "convex/react";
 import {
   AlertCircle,
+  Edit,
   GripVertical,
   Image as ImageIcon,
   Info,
+  MessageSquare,
   Plus,
+  Trash2,
 } from "lucide-react";
 import {
   useEffect,
@@ -46,7 +49,9 @@ import {
   useState,
   useTransition,
 } from "react";
-import { EditSetGroupMenu } from "./EditSetGroupMenu";
+import { DeleteSetGroupModal } from "@/components/routines/DeleteSetGroupModal";
+import { BulkEditSetModal } from "./BulkEditSetModal";
+import { EditSetCommentModal } from "./EditSetCommentModal";
 import { WorkoutSetRow } from "./WorkoutSetRow";
 
 export const WorkoutSetGroup = ({
@@ -75,6 +80,9 @@ export const WorkoutSetGroup = ({
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
     null,
   );
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
+  const [showComment, setShowComment] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   const createSet = useMutation(api.mutations.sets.create);
   const reorderSets = useMutation(api.mutations.sets.reorder);
@@ -144,6 +152,22 @@ export const WorkoutSetGroup = ({
           onClose={() => setSelectedExercise(null)}
         />
       )}
+      <BulkEditSetModal
+        open={showBulkEdit}
+        onClose={() => setShowBulkEdit(false)}
+        setGroup={setGroup}
+        units={units}
+      />
+      <EditSetCommentModal
+        open={showComment}
+        onClose={() => setShowComment(false)}
+        setGroup={setGroup}
+      />
+      <DeleteSetGroupModal
+        open={showDelete}
+        onClose={() => setShowDelete(false)}
+        setGroup={setGroup}
+      />
       <Collapsible open={!isReorderActive && expanded} className="w-full">
         <div
           ref={setNodeRef}
@@ -208,22 +232,17 @@ export const WorkoutSetGroup = ({
             </div>
           </CollapsibleTrigger>
 
-          {!isReorderActive && (
-            <div className="flex items-center gap-1">
-              {exercise && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label="View exercise details"
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  onClick={() => setSelectedExercise(exercise)}
-                >
-                  <Info className="h-4 w-4" />
-                </Button>
-              )}
-              <EditSetGroupMenu setGroup={setGroup} units={units} />
-            </div>
+          {!isReorderActive && exercise && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="View exercise details"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              onClick={() => setSelectedExercise(exercise)}
+            >
+              <Info className="h-4 w-4" />
+            </Button>
           )}
         </div>
 
@@ -258,16 +277,45 @@ export const WorkoutSetGroup = ({
               </DndContext>
             </div>
 
-            <div className="p-3 border-t border-border/50">
+            <div className="flex items-center justify-between p-3 border-t border-border/50">
               <Button
                 onClick={handleAdd}
                 variant="ghost"
                 size="sm"
-                className="w-full text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Set
               </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  onClick={() => setShowBulkEdit(true)}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  aria-label="Bulk edit sets"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={() => setShowComment(true)}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  aria-label="Add comment"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={() => setShowDelete(true)}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  aria-label="Delete exercise"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </CollapsibleContent>
