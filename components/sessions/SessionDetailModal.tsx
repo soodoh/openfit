@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -114,7 +112,10 @@ export const SessionDetailModal = ({
             {/* Stats Cards */}
             <div className="grid grid-cols-3 gap-3 py-4">
               {/* Duration Card */}
-              <EditDurationPopover session={session} formattedDuration={formatDuration()} />
+              <EditDurationPopover
+                session={session}
+                formattedDuration={formatDuration()}
+              />
 
               {/* Rating Card */}
               <EditRatingPopover session={session} />
@@ -216,7 +217,11 @@ const EditNamePopover = ({ session }: { session: WorkoutSessionWithData }) => {
               Cancel
             </Button>
             <Button size="sm" onClick={handleSave} disabled={isPending}>
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Save"
+              )}
             </Button>
           </div>
         </div>
@@ -252,9 +257,7 @@ const EditDurationPopover = ({
 
   useEffect(() => {
     if (open) {
-      setStartTime(
-        session.startTime ? new Date(session.startTime) : undefined,
-      );
+      setStartTime(session.startTime ? new Date(session.startTime) : undefined);
       setEndTime(session.endTime ? new Date(session.endTime) : undefined);
       setStartTimeValue(
         session.startTime ? format(session.startTime, "HH:mm") : "00:00",
@@ -383,7 +386,11 @@ const EditDurationPopover = ({
               Cancel
             </Button>
             <Button size="sm" onClick={handleSave} disabled={isPending}>
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Save"
+              )}
             </Button>
           </div>
         </div>
@@ -504,7 +511,11 @@ const EditRatingPopover = ({
               Cancel
             </Button>
             <Button size="sm" onClick={handleSave} disabled={isPending}>
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Save"
+              )}
             </Button>
           </div>
         </div>
@@ -514,11 +525,7 @@ const EditRatingPopover = ({
 };
 
 // Edit Notes Popover
-const EditNotesPopover = ({
-  session,
-}: {
-  session: WorkoutSessionWithData;
-}) => {
+const EditNotesPopover = ({ session }: { session: WorkoutSessionWithData }) => {
   const [open, setOpen] = useState(false);
   const [notes, setNotes] = useState(session.notes ?? "");
   const [isPending, setIsPending] = useState(false);
@@ -578,7 +585,11 @@ const EditNotesPopover = ({
               Cancel
             </Button>
             <Button size="sm" onClick={handleSave} disabled={isPending}>
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Save"
+              )}
             </Button>
           </div>
         </div>

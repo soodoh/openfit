@@ -118,7 +118,7 @@ export const AutocompleteExercise = ({
 
   return (
     <div className="w-full">
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={setOpen} modal={false}>
         <PopoverAnchor asChild>
           <Input
             ref={inputRef}
@@ -155,6 +155,7 @@ export const AutocompleteExercise = ({
               e.preventDefault();
             }
           }}
+          onPointerDownOutside={(e) => e.preventDefault()}
         >
           {/* Gym Filter Header */}
           <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
@@ -205,7 +206,10 @@ export const AutocompleteExercise = ({
           </div>
 
           <Command shouldFilter={false}>
-            <CommandList>
+            <CommandList
+              onWheel={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
+            >
               <CommandEmpty>
                 {isLoading ? "Loading exercises..." : "No exercises found"}
               </CommandEmpty>
