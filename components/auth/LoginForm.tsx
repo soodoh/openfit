@@ -42,7 +42,6 @@ export const LoginForm = ({ register }: { register?: boolean }) => {
       const message =
         error instanceof Error ? error.message : "Authentication failed";
       setPasswordError([message]);
-    } finally {
       setLoading(false);
     }
   };

@@ -1,6 +1,5 @@
 "use client";
 
-import { AuthGuard } from "@/components/auth/AuthGuard";
 import { CreateSessionButton } from "@/components/sessions/CreateSession";
 import { MonthlyCalendar } from "@/components/sessions/MonthlyCalendar";
 import { ResumeSessionButton } from "@/components/sessions/ResumeSessionButton";
@@ -11,11 +10,7 @@ import { CalendarDays, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 export default function Sessions() {
-  return (
-    <AuthGuard>
-      <SessionsContent />
-    </AuthGuard>
-  );
+  return <SessionsContent />;
 }
 
 function SessionsContent() {

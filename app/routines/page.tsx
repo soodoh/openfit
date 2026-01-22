@@ -1,6 +1,5 @@
 "use client";
 
-import { AuthGuard } from "@/components/auth/AuthGuard";
 import { CreateRoutine } from "@/components/routines/CreateRoutine";
 import { RoutineCard } from "@/components/routines/RoutineCard";
 import { ResumeSessionButton } from "@/components/sessions/ResumeSessionButton";
@@ -13,11 +12,7 @@ import { useEffect, useRef, useState } from "react";
 const ROUTINES_PAGE_SIZE = 12;
 
 export default function Routines() {
-  return (
-    <AuthGuard>
-      <RoutinesContent />
-    </AuthGuard>
-  );
+  return <RoutinesContent />;
 }
 
 function RoutinesSkeleton() {

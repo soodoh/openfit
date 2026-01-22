@@ -41,7 +41,6 @@ export const AdminSetupForm = () => {
       const message =
         error instanceof Error ? error.message : "Account creation failed";
       setPasswordError([message]);
-    } finally {
       setLoading(false);
     }
   };

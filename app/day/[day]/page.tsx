@@ -1,6 +1,5 @@
 "use client";
 
-import { AuthGuard } from "@/components/auth/AuthGuard";
 import { EditDayMenu } from "@/components/routines/EditDayMenu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,11 +15,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Page() {
-  return (
-    <AuthGuard>
-      <DayPageContent />
-    </AuthGuard>
-  );
+  return <DayPageContent />;
 }
 
 function DayPageContent() {

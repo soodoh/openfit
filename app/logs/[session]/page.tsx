@@ -1,6 +1,5 @@
 "use client";
 
-import { AuthGuard } from "@/components/auth/AuthGuard";
 import { CurrentSessionPage } from "@/components/sessions/CurrentSessionPage";
 import { SessionPage } from "@/components/sessions/SessionPage";
 import { api } from "@/convex/_generated/api";
@@ -10,11 +9,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Page() {
-  return (
-    <AuthGuard>
-      <SessionPageContent />
-    </AuthGuard>
-  );
+  return <SessionPageContent />;
 }
 
 function SessionPageContent() {

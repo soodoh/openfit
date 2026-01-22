@@ -1,6 +1,5 @@
 "use client";
 
-import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ExerciseCard } from "@/components/exercises/ExerciseCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,11 +75,7 @@ type Muscle = (typeof MUSCLE_OPTIONS)[number]["value"];
 const EXERCISES_PAGE_SIZE = 24;
 
 export default function Exercises() {
-  return (
-    <AuthGuard>
-      <ExercisesContent />
-    </AuthGuard>
-  );
+  return <ExercisesContent />;
 }
 
 function ExercisesContent() {
