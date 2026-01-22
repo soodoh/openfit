@@ -90,3 +90,43 @@ pnpm convex run seed:mockUserData '{"email": "your@email.com"}'
 - **Authentication**: Convex Auth with email/password
 - **Styling**: Tailwind CSS, shadcn/ui components
 - **Drag & Drop**: dnd-kit
+
+---
+
+## Contributing
+
+### Creating a Changeset
+
+This project uses [Changesets](https://github.com/changesets/changesets) for version management. When making changes that should be included in a release, create a changeset:
+
+```bash
+pnpm changeset
+```
+
+You'll be prompted to:
+1. Select the type of change: `patch` (bug fix), `minor` (new feature), or `major` (breaking change)
+2. Write a summary of your changes
+
+This creates a markdown file in `.changeset/` that should be committed with your PR.
+
+### Release Workflow
+
+Releases are automated via GitHub Actions:
+
+1. **Create changes** - Make your code changes and create a changeset
+2. **Open a PR** - Include the changeset file with your changes
+3. **Merge to main** - Once approved and merged, the release workflow detects pending changesets
+4. **Version PR created** - A "chore: release" PR is automatically created/updated with version bumps
+5. **Merge the release PR** - This triggers:
+   - `package.json` version is updated
+   - `CHANGELOG.md` is generated
+   - A git tag is created (e.g., `v1.2.0`)
+   - Docker image is built and pushed to `ghcr.io/soodoh/open-fit` with the version tag
+
+### Docker Image Tags
+
+Docker images are tagged with:
+- `latest` - Most recent main branch build
+- `x.y.z` - Semantic version from package.json (e.g., `1.2.0`)
+- `vx.y.z` - Version tags (e.g., `v1.2.0`)
+- `main` - Latest main branch commit
