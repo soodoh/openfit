@@ -323,6 +323,82 @@ export const searchCount = query({
   },
 });
 
+// List sessions within a date range (for calendar view)
+export const listByDateRange = query({
+  args: {
+    startDate: v.number(),
+    endDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Get sessions that started within the date range
+    const sessions = await ctx.db
+      .query("workoutSessions")
+      .withIndex("by_user_start", (q) => q.eq("userId", userId))
+      .filter((q) =>
+        q.and(
+          q.gte(q.field("startTime"), args.startDate),
+          q.lt(q.field("startTime"), args.endDate),
+        ),
+      )
+      .collect();
+
+    // Sort by start time descending
+    sessions.sort((a, b) => b.startTime - a.startTime);
+
+    // Fetch set groups with sets and exercises for each session
+    const sessionsWithData = await Promise.all(
+      sessions.map(async (session) => {
+        const setGroups = await ctx.db
+          .query("workoutSetGroups")
+          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+          .collect();
+
+        setGroups.sort((a, b) => a.order - b.order);
+
+        const setGroupsWithSets = await Promise.all(
+          setGroups.map(async (group) => {
+            const sets = await ctx.db
+              .query("workoutSets")
+              .withIndex("by_set_group", (q) => q.eq("setGroupId", group._id))
+              .collect();
+
+            sets.sort((a, b) => a.order - b.order);
+
+            const setsWithData = await Promise.all(
+              sets.map(async (set) => {
+                const exercise = await ctx.db.get(set.exerciseId);
+                const repetitionUnit = await ctx.db.get(set.repetitionUnitId);
+                const weightUnit = await ctx.db.get(set.weightUnitId);
+
+                return {
+                  ...set,
+                  exercise,
+                  repetitionUnit,
+                  weightUnit,
+                };
+              }),
+            );
+
+            return {
+              ...group,
+              sets: setsWithData,
+            };
+          }),
+        );
+
+        return {
+          ...session,
+          setGroups: setGroupsWithSets,
+        };
+      }),
+    );
+
+    return sessionsWithData;
+  },
+});
+
 // Get the current active session (one without an endTime)
 export const getCurrent = query({
   args: {},
