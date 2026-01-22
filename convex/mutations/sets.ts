@@ -30,6 +30,18 @@ export const create = mutation({
       throw new Error("Unauthorized");
     }
 
+    // Determine if set should be auto-completed:
+    // - Routine days: never auto-complete
+    // - Active session (no endTime): never auto-complete
+    // - Completed session (has endTime): auto-complete
+    let shouldAutoComplete = false;
+    if (setGroup.sessionId) {
+      const session = await ctx.db.get(setGroup.sessionId);
+      if (session?.endTime) {
+        shouldAutoComplete = true;
+      }
+    }
+
     // Get current max order for sets in this group
     const existingSets = await ctx.db
       .query("workoutSets")
@@ -56,7 +68,7 @@ export const create = mutation({
       weight: args.weight || 0,
       weightUnitId: args.weightUnitId || weightUnits[0]._id,
       restTime: args.restTime || 0,
-      completed: false,
+      completed: shouldAutoComplete,
       updatedAt: Date.now(),
     });
 
@@ -114,7 +126,7 @@ export const update = mutation({
   },
 });
 
-// Delete a workout set
+// Delete a workout set (also deletes the set group if this was the last set)
 export const remove = mutation({
   args: { id: v.id("workoutSets") },
   handler: async (ctx, args) => {
@@ -129,9 +141,24 @@ export const remove = mutation({
       throw new Error("Unauthorized");
     }
 
+    const setGroupId = set.setGroupId;
+
+    // Delete the set
     await ctx.db.delete(args.id);
 
-    return { success: true };
+    // Check if there are any remaining sets in the set group
+    const remainingSets = await ctx.db
+      .query("workoutSets")
+      .withIndex("by_set_group", (q) => q.eq("setGroupId", setGroupId))
+      .first();
+
+    // If no remaining sets, delete the set group
+    if (!remainingSets) {
+      await ctx.db.delete(setGroupId);
+      return { success: true, setGroupDeleted: true };
+    }
+
+    return { success: true, setGroupDeleted: false };
   },
 });
 

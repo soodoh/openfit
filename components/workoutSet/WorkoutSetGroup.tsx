@@ -91,11 +91,12 @@ export const WorkoutSetGroup = ({
   const reorderSets = useMutation(api.mutations.sets.reorder);
 
   useEffect(() => {
-    if (sets.every((set) => set.completed)) {
+    // Only auto-close when all sets are completed in the active session view
+    if (view === ListView.CurrentSession && sets.every((set) => set.completed)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpanded(false);
     }
-  }, [sets]);
+  }, [sets, view]);
 
   const exercise = sets[0]?.exercise;
   const setsWithNumber = useMemo(
