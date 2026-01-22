@@ -63,6 +63,14 @@ export const mockUserData = action({
 // Internal Actions
 // ============================================================================
 
+// Helper function to capitalize each word in a string
+function capitalize(str: string): string {
+  return str
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 // Lookup maps for IDs (populated during seeding)
 type LookupMaps = {
   equipment: Map<string, Id<"equipment">>;
@@ -186,9 +194,11 @@ export const seedDatabase = internalAction({
     console.log("Seeding equipment...");
     const equipmentMap = new Map<string, Id<"equipment">>();
     for (const name of EQUIPMENT_NAMES) {
-      const id = await ctx.runMutation(internal.seed.createEquipment, { name });
-      equipmentMap.set(name, id);
-      console.log(`Created equipment: ${name}`);
+      const id = await ctx.runMutation(internal.seed.createEquipment, {
+        name: capitalize(name),
+      });
+      equipmentMap.set(name, id); // Keep lowercase key for lookups
+      console.log(`Created equipment: ${capitalize(name)}`);
     }
 
     // 4. Seed muscle groups
@@ -196,19 +206,21 @@ export const seedDatabase = internalAction({
     const muscleGroupMap = new Map<string, Id<"muscleGroups">>();
     for (const name of MUSCLE_GROUP_NAMES) {
       const id = await ctx.runMutation(internal.seed.createMuscleGroup, {
-        name,
+        name: capitalize(name),
       });
-      muscleGroupMap.set(name, id);
-      console.log(`Created muscle group: ${name}`);
+      muscleGroupMap.set(name, id); // Keep lowercase key for lookups
+      console.log(`Created muscle group: ${capitalize(name)}`);
     }
 
     // 5. Seed categories
     console.log("Seeding categories...");
     const categoryMap = new Map<string, Id<"categories">>();
     for (const name of CATEGORY_NAMES) {
-      const id = await ctx.runMutation(internal.seed.createCategory, { name });
-      categoryMap.set(name, id);
-      console.log(`Created category: ${name}`);
+      const id = await ctx.runMutation(internal.seed.createCategory, {
+        name: capitalize(name),
+      });
+      categoryMap.set(name, id); // Keep lowercase key for lookups
+      console.log(`Created category: ${capitalize(name)}`);
     }
 
     // Build lookup maps for exercise transformation
