@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -48,6 +46,7 @@ export const SessionDetailModal = ({
     return (
       <Dialog open={open} onOpenChange={() => onClose()}>
         <DialogContent className="sm:max-w-[700px]">
+          <DialogTitle className="sr-only">Loading session</DialogTitle>
           <div className="flex items-center justify-center py-8">
             <p className="text-muted-foreground">Loading session...</p>
           </div>
