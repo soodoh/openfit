@@ -1,4 +1,5 @@
 import { ExerciseDetailModal } from "@/components/exercises/ExerciseDetailModal";
+import { ReplaceExerciseModal } from "@/components/exercises/ReplaceExerciseModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +41,7 @@ import {
   Info,
   MessageSquare,
   Plus,
+  RefreshCw,
   Trash2,
 } from "lucide-react";
 import {
@@ -83,6 +85,7 @@ export const WorkoutSetGroup = ({
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [showComment, setShowComment] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showReplace, setShowReplace] = useState(false);
 
   const createSet = useMutation(api.mutations.sets.create);
   const reorderSets = useMutation(api.mutations.sets.reorder);
@@ -168,6 +171,14 @@ export const WorkoutSetGroup = ({
         onClose={() => setShowDelete(false)}
         setGroup={setGroup}
       />
+      {exercise && (
+        <ReplaceExerciseModal
+          open={showReplace}
+          onClose={() => setShowReplace(false)}
+          currentExercise={exercise}
+          setGroupId={setGroup._id}
+        />
+      )}
       <Collapsible open={!isReorderActive && expanded} className="w-full">
         <div
           ref={setNodeRef}
@@ -233,16 +244,28 @@ export const WorkoutSetGroup = ({
           </CollapsibleTrigger>
 
           {!isReorderActive && exercise && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label="View exercise details"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={() => setSelectedExercise(exercise)}
-            >
-              <Info className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Replace with similar exercise"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowReplace(true)}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="View exercise details"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={() => setSelectedExercise(exercise)}
+              >
+                <Info className="h-4 w-4" />
+              </Button>
+            </div>
           )}
         </div>
 

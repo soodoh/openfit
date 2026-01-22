@@ -171,6 +171,42 @@ export const reorder = mutation({
   },
 });
 
+// Replace exercise in all sets of a set group
+export const replaceExercise = mutation({
+  args: {
+    id: v.id("workoutSetGroups"),
+    newExerciseId: v.id("exercises"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthenticatedUserId(ctx);
+
+    const setGroup = await ctx.db.get(args.id);
+    if (!setGroup) {
+      throw new Error("Set group not found");
+    }
+
+    if (setGroup.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    // Get all sets in this set group
+    const sets = await ctx.db
+      .query("workoutSets")
+      .withIndex("by_set_group", (q) => q.eq("setGroupId", args.id))
+      .collect();
+
+    // Update each set with the new exercise
+    for (const set of sets) {
+      await ctx.db.patch(set._id, {
+        exerciseId: args.newExerciseId,
+        updatedAt: Date.now(),
+      });
+    }
+
+    return { success: true };
+  },
+});
+
 // Bulk edit all sets in a set group
 export const bulkEdit = mutation({
   args: {

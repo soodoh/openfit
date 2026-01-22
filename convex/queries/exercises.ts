@@ -338,3 +338,58 @@ export const get = query({
     return exercise;
   },
 });
+
+// Search for similar exercises (same primary muscles, filtered by equipment)
+export const searchSimilar = query({
+  args: {
+    searchTerm: v.optional(v.string()),
+    equipmentIds: v.optional(v.array(v.id("equipment"))),
+    primaryMuscleIds: v.array(v.id("muscleGroups")),
+    excludeExerciseId: v.optional(v.id("exercises")),
+  },
+  handler: async (ctx, args) => {
+    let results;
+
+    if (args.searchTerm?.trim()) {
+      // Search by name
+      results = await ctx.db
+        .query("exercises")
+        .withSearchIndex("search_exercise", (q) =>
+          q.search("name", args.searchTerm!),
+        )
+        .take(100); // Fetch more to account for filtering
+    } else {
+      // No search term - return exercises sorted by name
+      results = await ctx.db
+        .query("exercises")
+        .withIndex("by_name")
+        .take(100);
+    }
+
+    // Filter by primary muscles - must share at least one primary muscle
+    let filtered = results.filter((exercise) => {
+      // Exclude the current exercise
+      if (args.excludeExerciseId && exercise._id === args.excludeExerciseId) {
+        return false;
+      }
+      // Must share at least one primary muscle
+      return exercise.primaryMuscleIds.some((muscleId) =>
+        args.primaryMuscleIds.includes(muscleId),
+      );
+    });
+
+    // Apply equipment filter if provided
+    // NOTE: Bodyweight exercises (equipmentId === undefined) are always included
+    if (args.equipmentIds !== undefined && args.equipmentIds.length > 0) {
+      filtered = filtered.filter((exercise) => {
+        // Bodyweight exercises are always included
+        if (exercise.equipmentId === undefined) {
+          return true;
+        }
+        return args.equipmentIds!.includes(exercise.equipmentId);
+      });
+    }
+
+    return filtered.slice(0, 20);
+  },
+});
