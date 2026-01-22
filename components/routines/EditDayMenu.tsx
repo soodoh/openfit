@@ -91,7 +91,7 @@ export const EditDayMenu = ({
 
           <DropdownMenuItem
             onClick={() => setModal(Modal.DELETE)}
-            className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+            className="cursor-pointer gap-2 text-destructive focus:text-destructive dark:text-red-400 dark:focus:text-red-400"
           >
             <Trash2 className="h-4 w-4" />
             Delete Day
