@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Modern stylized dumbbell with dynamic angle -->
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e0e7ff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Left weight plate -->
+  <rect x="6" y="14" width="8" height="20" rx="2" fill="url(#logoGradient)"/>
+
+  <!-- Right weight plate -->
+  <rect x="34" y="14" width="8" height="20" rx="2" fill="url(#logoGradient)"/>
+
+  <!-- Bar connecting -->
+  <rect x="12" y="21" width="24" height="6" rx="1" fill="url(#logoGradient)"/>
+
+  <!-- Accent lines for motion/energy -->
+  <path d="M4 18L2 22L4 26" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  <path d="M44 18L46 22L44 26" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+</svg>

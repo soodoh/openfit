@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Compact dumbbell favicon - optimized for small sizes -->
+  <defs>
+    <linearGradient id="favGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="15" fill="url(#favGradient)"/>
+
+  <!-- Stylized dumbbell in white -->
+  <rect x="6" y="12" width="5" height="8" rx="1.5" fill="white"/>
+  <rect x="21" y="12" width="5" height="8" rx="1.5" fill="white"/>
+  <rect x="10" y="14" width="12" height="4" rx="1" fill="white"/>
+</svg>

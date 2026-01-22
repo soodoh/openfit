@@ -9,8 +9,8 @@ export const Header = () => {
         <nav className="flex items-center py-4">
           <Link href="/">
             <Image
-              src="/logo-bg-white.png"
-              alt="logo"
+              src="/logo.svg"
+              alt="OpenFit logo"
               priority
               width={40}
               height={40}

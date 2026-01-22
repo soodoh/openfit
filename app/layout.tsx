@@ -17,7 +17,7 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "OpenFit",
   description: "Open source fitness app",
-  icons: "/favicon.png",
+  icons: "/favicon.svg",
 };
 
 export default function RootLayout({
