@@ -80,8 +80,7 @@ export function DateTimePicker({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <Calendar mode="single" selected={date} onSelect={handleDateSelect} />
-          <div className="border-t p-3">
+          <div className="border-b p-3">
             <Input
               type="time"
               value={timeValue}
@@ -89,6 +88,7 @@ export function DateTimePicker({
               disabled={disabled}
             />
           </div>
+          <Calendar mode="single" selected={date} onSelect={handleDateSelect} />
         </PopoverContent>
       </Popover>
     </div>

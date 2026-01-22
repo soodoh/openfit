@@ -11,7 +11,7 @@ import { api } from "@/convex/_generated/api";
 import { ListView, type Units } from "@/lib/convex-types";
 import { useQuery } from "convex/react";
 import dayjs from "dayjs";
-import { Calendar as CalendarIcon, CheckCircle2, Trash2 } from "lucide-react";
+import { Activity, Calendar as CalendarIcon, CheckCircle2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { DeleteSessionModal } from "./DeleteSessionModal";
@@ -122,6 +122,23 @@ export const SessionDetailModal = ({
               {/* Notes Card */}
               <EditNotesPopover session={session} />
             </div>
+
+            {/* Exercise/Set Stats Card */}
+            {session.setGroups.length > 0 && (
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-card border mb-4">
+                <div className="w-9 h-9 rounded-lg bg-primary/10 dark:bg-foreground/10 flex items-center justify-center shrink-0">
+                  <Activity className="h-4 w-4 text-primary dark:text-foreground" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground leading-none mb-1">
+                    Workout
+                  </p>
+                  <p className="text-sm font-semibold leading-none">
+                    {session.setGroups.length} {session.setGroups.length === 1 ? "exercise" : "exercises"} • {session.setGroups.reduce((acc, group) => acc + group.sets.length, 0)} {session.setGroups.reduce((acc, group) => acc + group.sets.length, 0) === 1 ? "set" : "sets"}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Continue Workout for active sessions */}
             {isActive && (
