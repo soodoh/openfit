@@ -41,7 +41,7 @@ export const DeleteRoutineModal = ({
     <Dialog open={open} onOpenChange={() => onClose()}>
       <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden">
         {/* Header with warning styling */}
-        <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-br from-destructive/10 via-transparent to-transparent">
+        <DialogHeader className="px-6 pt-6 pb-4 bg-linear-to-br from-destructive/10 via-transparent to-transparent">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
               <AlertTriangle className="h-5 w-5 text-destructive" />

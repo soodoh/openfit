@@ -43,7 +43,7 @@ export const SessionSummaryCard = ({
       >
         {/* Active Session Indicator */}
         {isActive && (
-          <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full shadow-sm">
+          <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full shadow-xs">
             <Play className="w-3 h-3 fill-current" />
             <span>In Progress</span>
           </div>
@@ -56,7 +56,7 @@ export const SessionSummaryCard = ({
               {session.name}
             </h3>
             <div className="flex items-center gap-1.5 mt-1.5 text-muted-foreground">
-              <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+              <Calendar className="w-3.5 h-3.5 shrink-0" />
               <span className="text-sm">
                 {dayjs(session.startTime).format("MMM D, YYYY")}
               </span>
@@ -102,7 +102,7 @@ export const SessionSummaryCard = ({
         {/* Notes Preview */}
         {session.notes && (
           <div className="flex items-start gap-2 pt-3 border-t border-border/50">
-            <MessageSquare className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <MessageSquare className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
             <p className="text-sm text-muted-foreground line-clamp-2">
               {session.notes}
             </p>

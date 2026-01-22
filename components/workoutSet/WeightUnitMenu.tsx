@@ -25,7 +25,7 @@ export const WeightUnitMenu = ({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground flex-shrink-0 underline decoration-dashed decoration-muted-foreground/50 underline-offset-2 hover:decoration-foreground/50 transition-colors"
+          className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0 underline decoration-dashed decoration-muted-foreground/50 underline-offset-2 hover:decoration-foreground/50 transition-colors"
         >
           {label}
         </button>

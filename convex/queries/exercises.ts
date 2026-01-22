@@ -234,10 +234,7 @@ export const searchSimple = query({
         .take(50); // Fetch more to account for filtering
     } else {
       // No search term - return exercises sorted by name
-      results = await ctx.db
-        .query("exercises")
-        .withIndex("by_name")
-        .take(50);
+      results = await ctx.db.query("exercises").withIndex("by_name").take(50);
     }
 
     // Apply equipment filter if provided
@@ -360,10 +357,7 @@ export const searchSimilar = query({
         .take(100); // Fetch more to account for filtering
     } else {
       // No search term - return exercises sorted by name
-      results = await ctx.db
-        .query("exercises")
-        .withIndex("by_name")
-        .take(100);
+      results = await ctx.db.query("exercises").withIndex("by_name").take(100);
     }
 
     // Filter by primary muscles - must share at least one primary muscle

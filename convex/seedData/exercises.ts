@@ -1486,7 +1486,7 @@ export const exercises: RawExercise[] = [
     secondaryMuscles: ["chest", "forearms", "lats", "shoulders"],
     instructions: [
       "Begin by lying on the bench, getting your head beyond the bar if possible. Tuck your feet underneath you and arch your back. Using the bar to help support your weight, lift your shoulder off the bench and retract them, squeezing the shoulder blades together. Use your feet to drive your traps into the bench. Maintain this tight body position throughout the movement.",
-      "However wide your grip, it should cover the ring on the bar. Pull the bar out of the rack without protracting your shoulders. Focus on squeezing the bar and trying to pull it apart.",
+      "However wide your grip, it should cover the ring-3 on the bar. Pull the bar out of the rack without protracting your shoulders. Focus on squeezing the bar and trying to pull it apart.",
       "Lower the bar to your lower chest or upper stomach. The bar, wrist, and elbow should stay in line at all times.",
       "Pause when the barbell touches your torso, and then drive the bar up with as much force as possible. The elbows should be tucked in until lockout.",
     ],
@@ -1531,7 +1531,7 @@ export const exercises: RawExercise[] = [
     secondaryMuscles: ["chest", "lats", "shoulders"],
     instructions: [
       "Adjust the leader chain, shortening it to the desired length.Place the chains on the sleeves of the bar.",
-      "Lying on the bench, get your head beyond the bar if possible. Tuck your feet underneath you and arch your back. Using the bar to help support your weight, lift your shoulder off the bench and retract them, squeezing the shoulder blades together. Use your feet to drive your traps into the bench. Maintain this tight body position throughout the movement. However wide your grip, it should cover the ring on the bar.",
+      "Lying on the bench, get your head beyond the bar if possible. Tuck your feet underneath you and arch your back. Using the bar to help support your weight, lift your shoulder off the bench and retract them, squeezing the shoulder blades together. Use your feet to drive your traps into the bench. Maintain this tight body position throughout the movement. However wide your grip, it should cover the ring-3 on the bar.",
       "Pull the bar out of the rack without protracting your shoulders. Focus on squeezing the bar and trying to pull it apart. Lower the bar to your lower chest or upper stomach. The bar, wrist, and elbow should stay in line at all times.",
       "Pause when the barbell touches your torso, and then drive the bar up with as much force as possible. The elbows should be tucked in until lockout.",
     ],
@@ -11689,7 +11689,7 @@ export const exercises: RawExercise[] = [
     secondaryMuscles: ["chest", "forearms", "lats", "middle back", "shoulders"],
     instructions: [
       "Position a bench inside a power rack, with the bar set to the correct height. Begin by anchoring bands either to band pegs or to the top of the rack. Ensure that you will be position properly under the bands. Attach the other end to the barbell.",
-      "Lie on the bench, tuck your feet underneath you and arch your back. Using the bar to help support your weight, lift your shoulder off the bench and retract them, squeezing the shoulder blades together. Use your feet to drive your traps into the bench. Maintain this tight body position throughout the movement. However wide your grip, it should cover the ring on the bar.",
+      "Lie on the bench, tuck your feet underneath you and arch your back. Using the bar to help support your weight, lift your shoulder off the bench and retract them, squeezing the shoulder blades together. Use your feet to drive your traps into the bench. Maintain this tight body position throughout the movement. However wide your grip, it should cover the ring-3 on the bar.",
       "Pull the bar out of the rack without protracting your shoulders. Focus on squeezing the bar and trying to pull it apart. Lower the bar to your lower chest or upper stomach. The bar, wrist, and elbow should stay in line at all times.",
       "Pause when the barbell touches your torso, and then drive the bar up with as much force as possible. The elbows should be tucked in until lockout.",
     ],
@@ -12125,7 +12125,7 @@ export const exercises: RawExercise[] = [
     primaryMuscles: ["triceps"],
     secondaryMuscles: ["chest", "shoulders"],
     instructions: [
-      "Grip a ring in each hand, and then take a small jump to help you get into the starting position with your arms locked out.",
+      "Grip a ring-3 in each hand, and then take a small jump to help you get into the starting position with your arms locked out.",
       "Begin by flexing the elbow, lowering your body until your arms break 90 degrees. Avoid swinging, and maintain good posture throughout the descent.",
       "Reverse the motion by extending the elbow, pushing yourself back up into the starting position.",
       "Repeat for the desired number of repetitions.",

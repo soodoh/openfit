@@ -20,12 +20,12 @@ export const ResumeSessionButton = ({
   return (
     <Link
       href={`/logs/${session._id}`}
-      className="group block w-full rounded-xl bg-gradient-to-r from-primary to-primary/80 p-[1px] shadow-lg hover:shadow-xl transition-all duration-300"
+      className="group block w-full rounded-xl bg-linear-to-r from-primary to-primary/80 p-px shadow-lg hover:shadow-xl transition-all duration-300"
     >
-      <div className="flex items-center justify-between gap-4 rounded-[11px] bg-gradient-to-r from-primary to-primary/90 px-5 py-4 text-primary-foreground">
+      <div className="flex items-center justify-between gap-4 rounded-[11px] bg-linear-to-r from-primary to-primary/90 px-5 py-4 text-primary-foreground">
         <div className="flex items-center gap-4">
           {/* Animated Play Icon */}
-          <div className="relative flex-shrink-0">
+          <div className="relative shrink-0">
             <div className="absolute inset-0 rounded-full bg-primary-foreground/20 animate-ping" />
             <div className="relative w-12 h-12 rounded-full bg-primary-foreground/20 flex items-center justify-center">
               <Play className="h-5 w-5 ml-0.5" fill="currentColor" />

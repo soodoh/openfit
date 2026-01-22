@@ -174,7 +174,7 @@ Create a gym to filter exercises by available equipment.
 **Card Pattern** (`components/routines/RoutineCard.tsx`):
 - `Card` with `group` class for hover effects
 - `CardHeader` with relative positioning for menu button
-- Gradient overlay: `bg-gradient-to-br from-primary/5 via-transparent to-accent/5`
+- Gradient overlay: `bg-linear-to-br from-primary/5 via-transparent to-accent/5`
 - Metadata row with icons and `text-xs text-muted-foreground`
 
 **Query Pattern** (`convex/queries/userProfiles.ts`):

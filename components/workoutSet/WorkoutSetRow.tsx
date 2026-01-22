@@ -49,7 +49,7 @@ export const WorkoutSetRow = ({
       <Button
         variant="ghost"
         size="icon"
-        className="touch-manipulation h-8 w-8 text-muted-foreground hover:text-foreground flex-shrink-0"
+        className="touch-manipulation h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
         {...attributes}
         {...listeners}
       >
@@ -128,7 +128,7 @@ export const WorkoutSetRow = ({
               }}
             />
           ) : (
-            <div className="flex items-center justify-center w-8 flex-shrink-0">
+            <div className="flex items-center justify-center w-8 shrink-0">
               <Checkbox
                 aria-label="Mark as Completed"
                 checked={set.completed}
@@ -150,7 +150,7 @@ export const WorkoutSetRow = ({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
+        className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
         onClick={() => deleteSet({ id: set._id })}
         aria-label="Delete set"
       >

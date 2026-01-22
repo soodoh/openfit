@@ -188,7 +188,7 @@ export const ProfileModal = ({
     <Dialog open={open} onOpenChange={() => onClose()}>
       <DialogContent className="sm:max-w-[520px] p-0 overflow-hidden max-h-[85vh] flex flex-col">
         {/* Header */}
-        <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-br from-accent/10 via-transparent to-primary/5 shrink-0">
+        <DialogHeader className="px-6 pt-6 pb-4 bg-linear-to-br from-accent/10 via-transparent to-primary/5 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-foreground/10 flex items-center justify-center">
               {activeTab === "settings" ? (

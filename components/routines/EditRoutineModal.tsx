@@ -74,7 +74,7 @@ export const EditRoutineModal = ({
       <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden">
         <form onSubmit={handleSubmit}>
           {/* Header with gradient */}
-          <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-br from-accent/10 via-transparent to-primary/5">
+          <DialogHeader className="px-6 pt-6 pb-4 bg-linear-to-br from-accent/10 via-transparent to-primary/5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-foreground/10 flex items-center justify-center">
                 <Dumbbell className="h-5 w-5 text-primary dark:text-foreground" />
@@ -132,7 +132,7 @@ export const EditRoutineModal = ({
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className={`flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none ${
+                className={`flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none ${
                   errors.description
                     ? "border-destructive focus-visible:ring-destructive"
                     : ""

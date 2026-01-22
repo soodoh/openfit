@@ -20,9 +20,9 @@ export function GymCard({
   const equipmentCount = gym.equipmentIds.length;
 
   return (
-    <Card className="group flex flex-col overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm shadow-sm hover:shadow-lg hover:border-border transition-all duration-300">
+    <Card className="group flex flex-col overflow-hidden border-border/50 bg-card/50 backdrop-blur-xs shadow-xs hover:shadow-lg hover:border-border transition-all duration-300">
       <CardHeader className="relative pb-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">

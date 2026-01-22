@@ -1,5 +1,6 @@
 import { ExerciseDetailModal } from "@/components/exercises/ExerciseDetailModal";
 import { ReplaceExerciseModal } from "@/components/exercises/ReplaceExerciseModal";
+import { DeleteSetGroupModal } from "@/components/routines/DeleteSetGroupModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,7 +52,6 @@ import {
   useState,
   useTransition,
 } from "react";
-import { DeleteSetGroupModal } from "@/components/routines/DeleteSetGroupModal";
 import { BulkEditSetModal } from "./BulkEditSetModal";
 import { EditSetCommentModal } from "./EditSetCommentModal";
 import { WorkoutSetRow } from "./WorkoutSetRow";
@@ -92,7 +92,10 @@ export const WorkoutSetGroup = ({
 
   useEffect(() => {
     // Only auto-close when all sets are completed in the active session view
-    if (view === ListView.CurrentSession && sets.every((set) => set.completed)) {
+    if (
+      view === ListView.CurrentSession &&
+      sets.every((set) => set.completed)
+    ) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpanded(false);
     }

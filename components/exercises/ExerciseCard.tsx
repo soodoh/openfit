@@ -40,7 +40,7 @@ export const ExerciseCard = ({ exercise }: { exercise: Exercise }) => {
         <div className="relative h-full rounded-xl border bg-card p-4 transition-all duration-200 hover:shadow-lg hover:border-foreground/20 hover:-translate-y-0.5">
           {/* Header with image and name */}
           <div className="flex items-start gap-3 mb-3">
-            <Avatar className="h-12 w-12 rounded-lg flex-shrink-0">
+            <Avatar className="h-12 w-12 rounded-lg shrink-0">
               {exercise.images[0] ? (
                 <AvatarImage
                   src={`/exercises/${exercise.images[0]}`}

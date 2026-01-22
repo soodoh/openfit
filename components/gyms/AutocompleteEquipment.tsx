@@ -98,7 +98,7 @@ export function AutocompleteEquipment({
         />
       </PopoverAnchor>
       <PopoverContent
-        className="w-[--radix-popover-trigger-width] p-0"
+        className="w-(--radix-popover-trigger-width) p-0"
         align="start"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onInteractOutside={(e) => {

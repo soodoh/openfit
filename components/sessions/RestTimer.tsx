@@ -36,7 +36,7 @@ export const RestTimer = ({
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm p-0 overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-br from-primary/10 via-transparent to-accent/5">
+          <DialogHeader className="px-6 pt-6 pb-4 bg-linear-to-br from-primary/10 via-transparent to-accent/5">
             <DialogTitle className="flex items-center gap-2">
               <Timer className="h-5 w-5 text-primary" />
               Rest Timer
@@ -173,7 +173,7 @@ export const RestTimer = ({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 h-9 px-3 rounded-full bg-card border shadow-sm hover:shadow-md transition-shadow"
+        className="flex items-center gap-2 h-9 px-3 rounded-full bg-card border shadow-xs hover:shadow-md transition-shadow"
       >
         <Timer className="h-4 w-4 text-muted-foreground" />
         {remainingSeconds > 0 && (

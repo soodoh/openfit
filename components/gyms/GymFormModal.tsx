@@ -96,7 +96,7 @@ export function GymFormModal({ open, onClose, gym }: GymFormModalProps) {
     <Dialog open={open} onOpenChange={() => onClose()}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col">
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <DialogHeader className="pb-4 bg-gradient-to-br from-accent/10 via-transparent to-primary/5 -mx-6 -mt-6 px-6 pt-6">
+          <DialogHeader className="pb-4 bg-linear-to-br from-accent/10 via-transparent to-primary/5 -mx-6 -mt-6 px-6 pt-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-foreground/10 flex items-center justify-center">
                 <Dumbbell className="h-5 w-5 text-primary dark:text-foreground" />

@@ -14,7 +14,7 @@ export const CreateSessionButton = () => {
 
       <Button
         onClick={() => setOpen(true)}
-        className="gap-2 shadow-sm hover:shadow-md transition-shadow"
+        className="gap-2 shadow-xs hover:shadow-md transition-shadow"
       >
         <Plus className="h-4 w-4" />
         New Session

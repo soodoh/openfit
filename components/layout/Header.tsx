@@ -5,7 +5,7 @@ import { AccountNavItem } from "./AccountNavItem";
 export const Header = () => {
   return (
     <header className="bg-primary text-primary-foreground">
-      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-(--breakpoint-xl)">
         <nav className="flex items-center py-4">
           <Link href="/">
             <Image

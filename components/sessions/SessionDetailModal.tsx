@@ -13,11 +13,7 @@ import {
   type WorkoutSessionWithData,
 } from "@/lib/convex-types";
 import dayjs from "dayjs";
-import {
-  Calendar as CalendarIcon,
-  CheckCircle2,
-  Trash2,
-} from "lucide-react";
+import { Calendar as CalendarIcon, CheckCircle2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { DeleteSessionModal } from "./DeleteSessionModal";
@@ -66,9 +62,9 @@ export const SessionDetailModal = ({
       <Dialog open={open} onOpenChange={() => onClose()}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] p-0 overflow-hidden flex flex-col">
           {/* Header */}
-          <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-br from-accent/10 via-transparent to-primary/5 shrink-0">
+          <DialogHeader className="px-6 pt-6 pb-4 bg-linear-to-br from-accent/10 via-transparent to-primary/5 shrink-0">
             <div className="flex items-start gap-4 pr-8">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-foreground/10 flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-foreground/10 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="h-6 w-6 text-primary dark:text-foreground" />
               </div>
               <div className="flex-1 min-w-0">

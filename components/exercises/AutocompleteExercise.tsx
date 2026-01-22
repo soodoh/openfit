@@ -1,5 +1,3 @@
-"use client";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Command,
@@ -39,7 +37,9 @@ export const AutocompleteExercise = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
-  const [selectedGymId, setSelectedGymId] = useState<Id<"gyms"> | "all" | null>(null);
+  const [selectedGymId, setSelectedGymId] = useState<Id<"gyms"> | "all" | null>(
+    null,
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const { getMuscleGroupNames } = useExerciseLookups();
 
@@ -56,6 +56,7 @@ export const AutocompleteExercise = ({
   // Set selected gym to user's default gym on initial load only
   useEffect(() => {
     if (userProfile?.profile?.defaultGymId && selectedGymId === null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedGymId(userProfile.profile.defaultGymId);
     }
   }, [selectedGymId, userProfile?.profile?.defaultGymId]);
@@ -64,7 +65,8 @@ export const AutocompleteExercise = ({
   // - null: not initialized yet, don't filter
   // - "all": user selected all equipment, don't filter
   // - gym ID: filter by that gym's equipment
-  const equipmentIdsForFilter = selectedGymId === "all" ? undefined : selectedGym?.equipmentIds;
+  const equipmentIdsForFilter =
+    selectedGymId === "all" ? undefined : selectedGym?.equipmentIds;
 
   // Search with gym equipment filter (always query, even without search term)
   const options = useQuery(api.queries.exercises.searchSimple, {
@@ -111,9 +113,10 @@ export const AutocompleteExercise = ({
     setSelectedGymId(gymId);
   };
 
-  const selectedGymName = selectedGymId && selectedGymId !== "all"
-    ? userGyms?.find((g) => g._id === selectedGymId)?.name
-    : null;
+  const selectedGymName =
+    selectedGymId && selectedGymId !== "all"
+      ? userGyms?.find((g) => g._id === selectedGymId)?.name
+      : null;
   const gymDisplayName = selectedGymName ?? "All";
 
   return (
@@ -146,7 +149,7 @@ export const AutocompleteExercise = ({
           />
         </PopoverAnchor>
         <PopoverContent
-          className="w-[--radix-popover-trigger-width] p-0"
+          className="w-(--radix-popover-trigger-width) p-0"
           align="start"
           onOpenAutoFocus={(e) => e.preventDefault()}
           onInteractOutside={(e) => {

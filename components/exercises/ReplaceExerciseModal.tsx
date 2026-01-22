@@ -28,7 +28,12 @@ import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
 import { useMutation, useQuery } from "convex/react";
-import { Check, ChevronDown, Image as FallbackImage, Loader2 } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Image as FallbackImage,
+  Loader2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Exercise = Doc<"exercises">;
@@ -45,8 +50,12 @@ export const ReplaceExerciseModal = ({
   setGroupId: Id<"workoutSetGroups">;
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedGymId, setSelectedGymId] = useState<Id<"gyms"> | "all" | null>(null);
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [selectedGymId, setSelectedGymId] = useState<Id<"gyms"> | "all" | null>(
+    null,
+  );
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
+    null,
+  );
   const [isPending, setIsPending] = useState(false);
   const { getMuscleGroupNames } = useExerciseLookups();
 
@@ -78,7 +87,8 @@ export const ReplaceExerciseModal = ({
   }, [open]);
 
   // Determine equipment IDs for filtering
-  const equipmentIdsForFilter = selectedGymId === "all" ? undefined : selectedGym?.equipmentIds;
+  const equipmentIdsForFilter =
+    selectedGymId === "all" ? undefined : selectedGym?.equipmentIds;
 
   // Search for similar exercises (same primary muscles, filtered by equipment)
   const options = useQuery(api.queries.exercises.searchSimilar, {
@@ -111,9 +121,10 @@ export const ReplaceExerciseModal = ({
     setSelectedGymId(gymId);
   };
 
-  const selectedGymName = selectedGymId && selectedGymId !== "all"
-    ? userGyms?.find((g) => g._id === selectedGymId)?.name
-    : null;
+  const selectedGymName =
+    selectedGymId && selectedGymId !== "all"
+      ? userGyms?.find((g) => g._id === selectedGymId)?.name
+      : null;
   const gymDisplayName = selectedGymName ?? "All";
 
   return (
@@ -122,7 +133,8 @@ export const ReplaceExerciseModal = ({
         <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
           <DialogTitle>Replace Exercise</DialogTitle>
           <DialogDescription>
-            Choose a similar exercise to replace &quot;{currentExercise.name}&quot;
+            Choose a similar exercise to replace &quot;{currentExercise.name}
+            &quot;
           </DialogDescription>
         </DialogHeader>
 
@@ -183,7 +195,8 @@ export const ReplaceExerciseModal = ({
 
           {/* Primary Muscles Info */}
           <div className="text-xs text-muted-foreground mb-3">
-            Showing exercises that target: {getMuscleGroupNames(currentExercise.primaryMuscleIds).join(", ")}
+            Showing exercises that target:{" "}
+            {getMuscleGroupNames(currentExercise.primaryMuscleIds).join(", ")}
           </div>
 
           {/* Exercise List */}
@@ -191,7 +204,9 @@ export const ReplaceExerciseModal = ({
             <Command shouldFilter={false} className="h-full">
               <CommandList className="max-h-[300px]">
                 <CommandEmpty>
-                  {isLoading ? "Loading exercises..." : "No similar exercises found"}
+                  {isLoading
+                    ? "Loading exercises..."
+                    : "No similar exercises found"}
                 </CommandEmpty>
                 <CommandGroup>
                   {options?.map((option) => {
@@ -219,7 +234,9 @@ export const ReplaceExerciseModal = ({
                           {option.primaryMuscleIds &&
                             option.primaryMuscleIds.length > 0 && (
                               <span className="text-sm text-muted-foreground">
-                                {getMuscleGroupNames(option.primaryMuscleIds).join(", ")}
+                                {getMuscleGroupNames(
+                                  option.primaryMuscleIds,
+                                ).join(", ")}
                               </span>
                             )}
                         </div>
@@ -239,7 +256,10 @@ export const ReplaceExerciseModal = ({
             <Button variant="ghost" onClick={onClose} disabled={isPending}>
               Cancel
             </Button>
-            <Button onClick={handleConfirm} disabled={!selectedExercise || isPending}>
+            <Button
+              onClick={handleConfirm}
+              disabled={!selectedExercise || isPending}
+            >
               {isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}

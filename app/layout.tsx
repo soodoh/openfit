@@ -1,8 +1,8 @@
 import { AppWrapper } from "@/components/layout/AppWrapper";
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
+import type { Metadata } from "next";
 
 import "./globals.css";
 

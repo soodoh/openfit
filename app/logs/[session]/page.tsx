@@ -35,7 +35,7 @@ function SessionPageContent() {
 
   if (session === undefined || units === undefined) {
     return (
-      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-screen-lg mt-8">
+      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-(--breakpoint-lg) mt-8">
         <p className="text-muted-foreground">Loading...</p>
       </div>
     );

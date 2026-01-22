@@ -57,7 +57,7 @@ export const EditDayMenu = ({
             variant="ghost"
             size="icon"
             aria-label={`Actions for ${routineDay.description}`}
-            className="h-8 w-8 opacity-0 group-hover/item:opacity-70 hover:!opacity-100 transition-opacity flex-shrink-0"
+            className="h-8 w-8 opacity-0 group-hover/item:opacity-70 hover:opacity-100! transition-opacity shrink-0"
           >
             {icon}
           </Button>

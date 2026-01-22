@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -25,28 +24,36 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 'lts/*'
-          cache: 'pnpm'
+          node-version: "lts/*"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Create Release Pull Request or Tag Release
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          version: pnpm changeset version
-          publish: pnpm run release
-          title: 'chore: release'
-          commit: 'chore: release'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Git Tag
-        if: steps.changesets.outputs.published == 'true'
+      - name: Configure Git
         run: |
-          VERSION=$(node -p "require('./package.json').version")
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Version packages
+        run: pnpm changeset version
+
+      - name: Commit and push changes
+        id: commit
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add .
+            git commit -m "chore: release"
+            git push
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changes to commit"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Git Tag
+        if: steps.commit.outputs.changed == 'true'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
           git tag -a "v${VERSION}" -m "Release v${VERSION}"
           git push origin "v${VERSION}"

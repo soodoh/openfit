@@ -34,7 +34,7 @@ export const MonthlyCalendar = ({
 
   // Look up the selected session from fresh query data
   const selectedSession = selectedSessionId
-    ? sessions.find((s) => s._id === selectedSessionId) ?? null
+    ? (sessions.find((s) => s._id === selectedSessionId) ?? null)
     : null;
 
   // Build calendar grid
@@ -236,17 +236,15 @@ const SessionCard = ({
       onClick={onClick}
       className={cn(
         "w-full text-left px-2 py-1.5 rounded-lg text-xs transition-all",
-        "hover:ring-2 hover:ring-primary/50 hover:shadow-sm",
-        "focus:outline-none focus:ring-2 focus:ring-primary",
+        "hover:ring-2 hover:ring-primary/50 hover:shadow-xs",
+        "focus:outline-hidden focus:ring-2 focus:ring-primary",
         isActive
           ? "bg-primary text-primary-foreground"
           : "bg-accent/50 hover:bg-accent",
       )}
     >
       <div className="flex items-center gap-1">
-        {isActive && (
-          <Play className="w-2.5 h-2.5 fill-current flex-shrink-0" />
-        )}
+        {isActive && <Play className="w-2.5 h-2.5 fill-current shrink-0" />}
         <span className="font-medium truncate">{session.name}</span>
       </div>
       <div

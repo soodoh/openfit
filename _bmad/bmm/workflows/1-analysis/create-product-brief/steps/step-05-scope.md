@@ -1,6 +1,6 @@
 ---
 name: 'step-05-scope'
-description: 'Define MVP scope with clear boundaries and outline future vision while managing scope creep'
+description: 'Define MVP scope with clear boundaries and outline-solid future vision while managing scope creep'
 
 # File References
 nextStepFile: './step-06-complete.md'

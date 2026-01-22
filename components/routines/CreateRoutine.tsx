@@ -36,7 +36,7 @@ export const CreateRoutine = ({ variant = "default" }: CreateRoutineProps) => {
     <>
       <Button
         onClick={() => setEditModal(true)}
-        className="gap-2 shadow-sm hover:shadow-md transition-all duration-200"
+        className="gap-2 shadow-xs hover:shadow-md transition-all duration-200"
       >
         <Plus className="h-4 w-4" />
         New Routine

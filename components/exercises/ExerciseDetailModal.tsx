@@ -53,9 +53,9 @@ export const ExerciseDetailModal = ({
     <Dialog open={open} onOpenChange={() => onClose()}>
       <DialogContent className="sm:max-w-[560px] p-0 overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header with gradient */}
-        <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-br from-accent/10 via-transparent to-primary/5 flex-shrink-0">
+        <DialogHeader className="px-6 pt-6 pb-4 bg-linear-to-br from-accent/10 via-transparent to-primary/5 shrink-0">
           <div className="flex items-center gap-3">
-            <Avatar className="w-12 h-12 rounded-xl flex-shrink-0">
+            <Avatar className="w-12 h-12 rounded-xl shrink-0">
               {exercise.images[0] ? (
                 <AvatarImage
                   src={`/exercises/${exercise.images[0]}`}
@@ -84,7 +84,7 @@ export const ExerciseDetailModal = ({
           {exercise.images.length > 0 && (
             <Carousel opts={{ loop: true }} className="w-full">
               <div className="relative">
-                <CarouselContent className="-ml-0">
+                <CarouselContent className="ml-0">
                   {exercise.images.map((image, index) => (
                     <CarouselItem key={index} className="pl-0">
                       <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
@@ -192,7 +192,7 @@ export const ExerciseDetailModal = ({
               <ol className="space-y-2">
                 {exercise.instructions.map((instruction, index) => (
                   <li key={index} className="flex gap-3 text-sm">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 dark:bg-foreground/10 text-primary dark:text-foreground text-xs font-medium flex items-center justify-center">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-primary/10 dark:bg-foreground/10 text-primary dark:text-foreground text-xs font-medium flex items-center justify-center">
                       {index + 1}
                     </span>
                     <span className="text-muted-foreground pt-0.5">
@@ -206,7 +206,7 @@ export const ExerciseDetailModal = ({
         </div>
 
         {/* Footer */}
-        <DialogFooter className="px-6 py-4 bg-muted/30 border-t border-border/50 flex-shrink-0">
+        <DialogFooter className="px-6 py-4 bg-muted/30 border-t border-border/50 shrink-0">
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>

@@ -124,7 +124,7 @@ export const EditSessionModal = ({
       <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden">
         <form onSubmit={handleSubmit}>
           {/* Header with gradient */}
-          <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-br from-accent/10 via-transparent to-primary/5">
+          <DialogHeader className="px-6 pt-6 pb-4 bg-linear-to-br from-accent/10 via-transparent to-primary/5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-foreground/10 flex items-center justify-center">
                 <CalendarPlus className="h-5 w-5 text-primary dark:text-foreground" />
@@ -213,7 +213,7 @@ export const EditSessionModal = ({
                       onClick={() => setImpression(starValue)}
                       onMouseEnter={() => setHoveredStar(starValue)}
                       onMouseLeave={() => setHoveredStar(null)}
-                      className="p-1 rounded-md transition-all duration-150 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                      className="p-1 rounded-md transition-all duration-150 hover:scale-110 focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-1"
                     >
                       <Star
                         className={`h-6 w-6 transition-colors ${
@@ -252,14 +252,14 @@ export const EditSessionModal = ({
                 rows={3}
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                className="flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                className="flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
               />
             </div>
 
             {/* Error Message */}
             {error && (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}

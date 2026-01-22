@@ -47,8 +47,8 @@ export const SessionPage = ({
   return (
     <div className="min-h-[calc(100vh-4rem)]">
       {/* Header Section */}
-      <div className="border-b border-border/50 bg-gradient-to-b from-accent/5 to-transparent">
-        <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-screen-lg py-6">
+      <div className="border-b border-border/50 bg-linear-to-b from-accent/5 to-transparent">
+        <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-(--breakpoint-lg) py-6">
           <div className="flex items-center justify-between mb-4">
             <Button variant="ghost" size="sm" asChild className="gap-2">
               <Link href="/logs">
@@ -60,7 +60,7 @@ export const SessionPage = ({
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-foreground/10 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-foreground/10 flex items-center justify-center shrink-0">
               <CheckCircle2 className="h-6 w-6 text-primary dark:text-foreground" />
             </div>
             <div className="flex-1 min-w-0">
@@ -77,7 +77,7 @@ export const SessionPage = ({
       </div>
 
       {/* Stats Cards */}
-      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-screen-lg py-6">
+      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-(--breakpoint-lg) py-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Duration Card */}
           <div className="flex items-center gap-3 p-4 rounded-xl bg-card border">
@@ -132,7 +132,7 @@ export const SessionPage = ({
           {/* Notes Card */}
           {session.notes ? (
             <div className="flex items-start gap-3 p-4 rounded-xl bg-card border">
-              <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
                 <MessageSquare className="h-5 w-5 text-muted-foreground" />
               </div>
               <div className="min-w-0">
@@ -155,7 +155,7 @@ export const SessionPage = ({
       </div>
 
       {/* Workout List */}
-      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-screen-lg">
+      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-(--breakpoint-lg)">
         <WorkoutList
           view={ListView.ViewSession}
           sessionOrDayId={session._id}

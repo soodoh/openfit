@@ -48,7 +48,7 @@ export const LoginForm = ({ register }: { register?: boolean }) => {
   };
 
   return (
-    <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-screen-sm flex flex-1 flex-col items-center justify-center gap-4">
+    <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-(--breakpoint-sm) flex flex-1 flex-col items-center justify-center gap-4">
       <form
         className="flex w-full max-w-sm flex-col gap-4"
         onSubmit={handleSubmit}
