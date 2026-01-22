@@ -145,9 +145,9 @@ export const SessionDetailModal = ({
             {/* Delete Button */}
             <div className="pt-4">
               <Button
-                variant="outline"
+                variant="destructive"
                 onClick={() => setShowDeleteModal(true)}
-                className="w-full gap-2 text-destructive hover:text-destructive-foreground hover:bg-destructive border-destructive/50 dark:border-destructive/70 dark:text-red-400 dark:hover:text-white dark:hover:bg-red-600"
+                className="w-full gap-2"
               >
                 <Trash2 className="h-4 w-4" />
                 Delete Session
