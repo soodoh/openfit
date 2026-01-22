@@ -81,6 +81,12 @@ export type WorkoutSessionWithData = WorkoutSession & {
   setGroups: WorkoutSetGroupWithSets[];
 };
 
+// Minimal session data for calendar cards
+export type WorkoutSessionSummary = Pick<
+  WorkoutSession,
+  "_id" | "_creationTime" | "name" | "startTime" | "endTime" | "impression"
+>;
+
 export type Units = {
   repetitionUnits: RepetitionUnit[];
   weightUnits: WeightUnit[];

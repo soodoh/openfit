@@ -1,18 +1,17 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
+import type { Id } from "@/convex/_generated/dataModel";
+import type { Units, WorkoutSessionSummary } from "@/lib/convex-types";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight, Clock, Play, Star } from "lucide-react";
 import { useState } from "react";
 import { SessionDetailModal } from "./SessionDetailModal";
-import type { Units, WorkoutSessionWithData } from "@/lib/convex-types";
 
 type DayData = {
   date: dayjs.Dayjs;
   isCurrentMonth: boolean;
   isToday: boolean;
-  sessions: WorkoutSessionWithData[];
+  sessions: WorkoutSessionSummary[];
 };
 
 export const MonthlyCalendar = ({
@@ -23,19 +22,13 @@ export const MonthlyCalendar = ({
   onMonthChange,
 }: {
   currentMonth: dayjs.Dayjs;
-  sessions: WorkoutSessionWithData[];
+  sessions: WorkoutSessionSummary[];
   currentSessionId?: string;
   units: Units;
   onMonthChange: (month: dayjs.Dayjs) => void;
 }) => {
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
-    null,
-  );
-
-  // Look up the selected session from fresh query data
-  const selectedSession = selectedSessionId
-    ? (sessions.find((s) => s._id === selectedSessionId) ?? null)
-    : null;
+  const [selectedSessionId, setSelectedSessionId] =
+    useState<Id<"workoutSessions"> | null>(null);
 
   // Build calendar grid
   const startOfMonth = currentMonth.startOf("month");
@@ -134,7 +127,7 @@ export const MonthlyCalendar = ({
               key={dayData.date.format("YYYY-MM-DD")}
               dayData={dayData}
               currentSessionId={currentSessionId}
-              onSessionClick={(session) => setSelectedSessionId(session._id)}
+              onSessionClick={(sessionId) => setSelectedSessionId(sessionId)}
               isLastRow={index >= days.length - 7}
             />
           ))}
@@ -143,11 +136,11 @@ export const MonthlyCalendar = ({
 
       {/* Session Detail Modal */}
       <SessionDetailModal
-        session={selectedSession}
+        sessionId={selectedSessionId}
         units={units}
-        open={!!selectedSession}
+        open={!!selectedSessionId}
         onClose={() => setSelectedSessionId(null)}
-        isActive={selectedSession?._id === currentSessionId}
+        isActive={selectedSessionId === currentSessionId}
       />
     </>
   );
@@ -161,7 +154,7 @@ const CalendarDay = ({
 }: {
   dayData: DayData;
   currentSessionId?: string;
-  onSessionClick: (session: WorkoutSessionWithData) => void;
+  onSessionClick: (sessionId: Id<"workoutSessions">) => void;
   isLastRow: boolean;
 }) => {
   const { date, isCurrentMonth, isToday, sessions } = dayData;
@@ -193,12 +186,12 @@ const CalendarDay = ({
             key={session._id}
             session={session}
             isActive={session._id === currentSessionId}
-            onClick={() => onSessionClick(session)}
+            onClick={() => onSessionClick(session._id)}
           />
         ))}
         {sessions.length > 3 && (
           <button
-            onClick={() => onSessionClick(sessions[3])}
+            onClick={() => onSessionClick(sessions[3]._id)}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-left px-1"
           >
             +{sessions.length - 3} more
@@ -214,7 +207,7 @@ const SessionCard = ({
   isActive,
   onClick,
 }: {
-  session: WorkoutSessionWithData;
+  session: WorkoutSessionSummary;
   isActive: boolean;
   onClick: () => void;
 }) => {

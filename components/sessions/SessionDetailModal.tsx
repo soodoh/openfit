@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -7,11 +9,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { WorkoutList } from "@/components/workoutSet/WorkoutList";
-import {
-  ListView,
-  type Units,
-  type WorkoutSessionWithData,
-} from "@/lib/convex-types";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { ListView, type Units } from "@/lib/convex-types";
+import { useQuery } from "convex/react";
 import dayjs from "dayjs";
 import { Calendar as CalendarIcon, CheckCircle2, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -23,13 +24,13 @@ import { EditNotesPopover } from "./EditNotesPopover";
 import { EditRatingPopover } from "./EditRatingPopover";
 
 export const SessionDetailModal = ({
-  session,
+  sessionId,
   units,
   open,
   onClose,
   isActive = false,
 }: {
-  session: WorkoutSessionWithData | null;
+  sessionId: Id<"workoutSessions"> | null;
   units: Units;
   open: boolean;
   onClose: () => void;
@@ -37,7 +38,23 @@ export const SessionDetailModal = ({
 }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  if (!session) return null;
+  // Fetch full session data when modal is open
+  const session = useQuery(
+    api.queries.sessions.get,
+    sessionId ? { id: sessionId } : "skip",
+  );
+
+  if (!sessionId || !session) {
+    return (
+      <Dialog open={open} onOpenChange={() => onClose()}>
+        <DialogContent className="sm:max-w-[700px]">
+          <div className="flex items-center justify-center py-8">
+            <p className="text-muted-foreground">Loading session...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const durationDate =
     session.startTime && session.endTime
