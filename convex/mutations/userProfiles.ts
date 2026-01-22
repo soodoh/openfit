@@ -111,10 +111,14 @@ export const createForNewUser = internalMutation({
       );
     }
 
+    // Check if this is the first user (should be admin)
+    const existingUsers = await ctx.db.query("userProfiles").first();
+    const isFirstUser = existingUsers === null;
+
     // Create user profile with defaults
     const profileId = await ctx.db.insert("userProfiles", {
       userId: args.userId,
-      role: "USER",
+      role: isFirstUser ? "ADMIN" : "USER",
       defaultRepetitionUnitId: defaultRepUnit._id,
       defaultWeightUnitId: defaultWeightUnit._id,
       theme: "system",

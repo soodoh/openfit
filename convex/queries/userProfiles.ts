@@ -1,6 +1,15 @@
 import { query } from "../_generated/server";
 import { getAuthenticatedUserId } from "../lib/auth";
 
+// Check if any users exist in the database (for initial admin setup)
+export const hasUsers = query({
+  args: {},
+  handler: async (ctx) => {
+    const firstUser = await ctx.db.query("userProfiles").first();
+    return firstUser !== null;
+  },
+});
+
 // Theme options for the settings dropdown
 const THEME_OPTIONS = [
   { value: "light", label: "Light" },

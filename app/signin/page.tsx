@@ -1,12 +1,15 @@
 "use client";
 
+import { AdminSetupForm } from "@/components/auth/AdminSetupForm";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { useConvexAuth } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useConvexAuth, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function SignInPage() {
   const { isLoading, isAuthenticated } = useConvexAuth();
+  const hasUsers = useQuery(api.queries.userProfiles.hasUsers);
   const router = useRouter();
 
   useEffect(() => {
@@ -15,7 +18,7 @@ export default function SignInPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  if (isLoading) {
+  if (isLoading || hasUsers === undefined) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
@@ -25,6 +28,15 @@ export default function SignInPage() {
 
   if (isAuthenticated) {
     return null;
+  }
+
+  // Show admin setup form if no users exist
+  if (!hasUsers) {
+    return (
+      <div className="flex flex-1">
+        <AdminSetupForm />
+      </div>
+    );
   }
 
   return (
