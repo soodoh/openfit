@@ -144,11 +144,11 @@ export const SessionDetailModal = ({
             </div>
 
             {/* Delete Button */}
-            <div className="pt-6 mt-6 border-t">
+            <div className="pt-4">
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteModal(true)}
-                className="w-full gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                className="w-full gap-2 text-destructive hover:text-destructive-foreground hover:bg-destructive border-destructive/50 dark:border-destructive/70 dark:text-red-400 dark:hover:text-white dark:hover:bg-red-600"
               >
                 <Trash2 className="h-4 w-4" />
                 Delete Session
@@ -321,13 +321,13 @@ const EditDurationPopover = ({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex items-center gap-3 p-3 rounded-xl bg-card border hover:bg-accent/50 transition-colors text-left w-full">
-          <div className="w-9 h-9 rounded-lg bg-primary/10 dark:bg-foreground/10 flex items-center justify-center">
+        <button className="flex items-center gap-3 p-3 rounded-xl bg-card border hover:bg-accent/50 transition-colors text-left w-full h-full">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 dark:bg-foreground/10 flex items-center justify-center shrink-0">
             <Clock className="h-4 w-4 text-primary dark:text-foreground" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground">Duration</p>
-            <p className="text-sm font-semibold">{formattedDuration ?? "—"}</p>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground leading-none mb-1">Duration</p>
+            <p className="text-sm font-semibold leading-none">{formattedDuration ?? "—"}</p>
           </div>
         </button>
       </PopoverTrigger>
@@ -438,14 +438,14 @@ const EditRatingPopover = ({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex items-center gap-3 p-3 rounded-xl bg-card border hover:bg-accent/50 transition-colors text-left w-full">
-          <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
+        <button className="flex items-center gap-3 p-3 rounded-xl bg-card border hover:bg-accent/50 transition-colors text-left w-full h-full">
+          <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
             <Star
               className={`h-4 w-4 ${session.impression ? "text-amber-500 fill-amber-500" : "text-muted-foreground"}`}
             />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground">Rating</p>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground leading-none mb-1">Rating</p>
             {session.impression ? (
               <div className="flex items-center gap-0.5">
                 {Array.from({ length: 5 }, (_, i) => (
@@ -460,7 +460,7 @@ const EditRatingPopover = ({
                 ))}
               </div>
             ) : (
-              <p className="text-sm font-semibold">—</p>
+              <p className="text-sm font-semibold leading-none">—</p>
             )}
           </div>
         </button>
@@ -550,16 +550,16 @@ const EditNotesPopover = ({ session }: { session: WorkoutSessionWithData }) => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex items-start gap-3 p-3 rounded-xl bg-card border hover:bg-accent/50 transition-colors text-left w-full">
-          <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
+        <button className="flex items-center gap-3 p-3 rounded-xl bg-card border hover:bg-accent/50 transition-colors text-left w-full h-full">
+          <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground">Notes</p>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground leading-none mb-1">Notes</p>
             {session.notes ? (
-              <p className="text-sm line-clamp-2">{session.notes}</p>
+              <p className="text-sm leading-tight line-clamp-2">{session.notes}</p>
             ) : (
-              <p className="text-sm font-semibold">—</p>
+              <p className="text-sm font-semibold leading-none">—</p>
             )}
           </div>
         </button>

@@ -112,12 +112,14 @@ export const CurrentSessionPage = ({
       </div>
 
       {/* Workout List */}
-      <WorkoutList
-        view={ListView.CurrentSession}
-        sessionOrDayId={session._id}
-        setGroups={session.setGroups}
-        units={units}
-      />
+      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-screen-lg">
+        <WorkoutList
+          view={ListView.CurrentSession}
+          sessionOrDayId={session._id}
+          setGroups={session.setGroups}
+          units={units}
+        />
+      </div>
     </div>
   );
 };

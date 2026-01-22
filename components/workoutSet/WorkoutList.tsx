@@ -91,9 +91,9 @@ export const WorkoutList = ({
   };
 
   return (
-    <div className="pb-8">
+    <div className="pb-4">
       {/* Add Exercise Section */}
-      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-screen-lg py-4">
+      <div className="py-4">
         <div className="rounded-xl border bg-card p-4">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 rounded-lg bg-primary/10 dark:bg-foreground/10 flex items-center justify-center">
@@ -114,7 +114,7 @@ export const WorkoutList = ({
       </div>
 
       {/* Controls Section */}
-      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-screen-lg py-2">
+      <div className="py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 px-1">
             <div className="flex items-center gap-2">
@@ -147,7 +147,7 @@ export const WorkoutList = ({
 
       {/* Exercise List */}
       {optimisticSetGroups.length > 0 ? (
-        <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-screen-lg py-4">
+        <div className="py-4">
           <div className="rounded-xl border bg-card overflow-hidden divide-y divide-border">
             <DndContext
               id="set-groups"
@@ -175,7 +175,7 @@ export const WorkoutList = ({
           </div>
         </div>
       ) : (
-        <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-screen-lg py-8">
+        <div className="py-8">
           <div className="text-center py-12 rounded-xl border border-dashed bg-muted/20">
             <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
               <Dumbbell className="h-6 w-6 text-muted-foreground" />
