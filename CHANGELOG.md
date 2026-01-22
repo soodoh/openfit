@@ -1,5 +1,11 @@
 # open-fit
 
+## 0.2.2
+
+### Patch Changes
+
+- cf03e04: More UI enhancements
+
 ## 0.2.1
 
 ### Patch Changes
