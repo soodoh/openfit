@@ -51,9 +51,10 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Git Tag
+      - name: Create GitHub Release
         if: steps.commit.outputs.changed == 'true'
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          git tag -a "v${VERSION}" -m "Release v${VERSION}"
-          git push origin "v${VERSION}"
+          gh release create "v${VERSION}" --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
