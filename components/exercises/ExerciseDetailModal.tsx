@@ -19,9 +19,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Exercise } from "@/lib/convex-types";
+import { api } from "@/convex/_generated/api";
+import { Exercise, ExerciseWithImageUrl } from "@/lib/convex-types";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
-import { Dumbbell, Flame, Gauge, Settings2, Target } from "lucide-react";
+import { useQuery } from "convex/react";
+import { Dumbbell, Flame, Gauge, Loader2, Settings2, Target } from "lucide-react";
 import Image from "next/image";
 
 // Helper to format display names (capitalize words)
@@ -32,15 +34,32 @@ function formatDisplayName(value: string): string {
     .join(" ");
 }
 
+type ExerciseWithAllImages = Exercise & { imageUrls: (string | null)[] };
+
 export const ExerciseDetailModal = ({
-  exercise,
+  exercise: exerciseProp,
   open,
   onClose,
 }: {
-  exercise: Exercise;
+  exercise: Exercise | ExerciseWithImageUrl;
   open: boolean;
   onClose: () => void;
 }) => {
+  // Fetch full exercise with image URLs when modal is open
+  const exerciseWithImages = useQuery(
+    api.queries.exercises.get,
+    open ? { id: exerciseProp._id } : "skip",
+  );
+
+  // Use fetched data if available, otherwise use prop
+  const exercise = exerciseWithImages || exerciseProp;
+
+  // Get image URLs safely
+  const imageUrls: (string | null)[] =
+    exerciseWithImages?.imageUrls || [];
+  const firstImageUrl: string | null =
+    imageUrls[0] ||
+    ("imageUrl" in exerciseProp ? (exerciseProp.imageUrl as string | null) : null);
   const { getEquipmentName, getMuscleGroupNames, getCategoryName } =
     useExerciseLookups();
 
@@ -56,9 +75,9 @@ export const ExerciseDetailModal = ({
         <DialogHeader className="px-6 pt-6 pb-4 bg-linear-to-br from-accent/10 via-transparent to-primary/5 shrink-0">
           <div className="flex items-center gap-3">
             <Avatar className="w-12 h-12 rounded-xl shrink-0">
-              {exercise.images[0] ? (
+              {firstImageUrl ? (
                 <AvatarImage
-                  src={`/exercises/${exercise.images[0]}`}
+                  src={firstImageUrl}
                   alt={exercise.name}
                   className="object-cover"
                 />
@@ -81,31 +100,35 @@ export const ExerciseDetailModal = ({
         {/* Scrollable Content */}
         <div className="px-6 py-5 space-y-6 overflow-y-auto flex-1">
           {/* Image Gallery */}
-          {exercise.images.length > 0 && (
+          {imageUrls.filter(Boolean).length > 0 && (
             <Carousel opts={{ loop: true }} className="w-full">
               <div className="relative">
                 <CarouselContent className="ml-0">
-                  {exercise.images.map((image, index) => (
-                    <CarouselItem key={index} className="pl-0">
-                      <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
-                        <Image
-                          src={`/exercises/${image}`}
-                          alt={`${exercise.name} - image ${index + 1}`}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                    </CarouselItem>
-                  ))}
+                  {imageUrls
+                    .filter((url): url is string => url !== null)
+                    .map((url, index) => (
+                      <CarouselItem key={index} className="pl-0">
+                        <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
+                          <Image
+                            src={url}
+                            alt={`${exercise.name} - image ${index + 1}`}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                      </CarouselItem>
+                    ))}
                 </CarouselContent>
-                {exercise.images.length > 1 && (
+                {imageUrls.filter(Boolean).length > 1 && (
                   <>
                     <CarouselPrevious className="left-2 bg-background/80 hover:bg-background border-0 shadow-md" />
                     <CarouselNext className="right-2 bg-background/80 hover:bg-background border-0 shadow-md" />
                   </>
                 )}
               </div>
-              {exercise.images.length > 1 && <CarouselDots className="mt-3" />}
+              {imageUrls.filter(Boolean).length > 1 && (
+                <CarouselDots className="mt-3" />
+              )}
             </Carousel>
           )}
 

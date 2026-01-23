@@ -27,6 +27,10 @@ export type ListView = (typeof ListView)[keyof typeof ListView];
 // Document types
 export type UserProfile = Doc<"userProfiles">;
 export type Exercise = Doc<"exercises">;
+// Exercise with first image URL (for list views)
+export type ExerciseWithImageUrl = Exercise & { imageUrl: string | null };
+// Exercise with all image URLs (for detail views)
+export type ExerciseWithImageUrls = Exercise & { imageUrls: (string | null)[] };
 export type Routine = Doc<"routines">;
 export type RoutineDay = Doc<"routineDays">;
 export type WorkoutSession = Doc<"workoutSessions">;

@@ -219,9 +219,9 @@ export const ReplaceExerciseModal = ({
                         className={`flex items-center gap-3 p-3 cursor-pointer ${isSelected ? "bg-accent" : ""}`}
                       >
                         <Avatar className="h-10 w-10">
-                          {option.images[0] ? (
+                          {option.imageUrl ? (
                             <AvatarImage
-                              src={`/exercises/${option.images[0]}`}
+                              src={option.imageUrl}
                               alt={`${option.name} thumbnail`}
                             />
                           ) : null}

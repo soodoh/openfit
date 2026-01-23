@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Exercise } from "@/lib/convex-types";
+import { ExerciseWithImageUrl } from "@/lib/convex-types";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
 import { Dumbbell } from "lucide-react";
 import { useState } from "react";
@@ -16,7 +16,11 @@ function formatDisplayName(value: string): string {
     .join(" ");
 }
 
-export const ExerciseCard = ({ exercise }: { exercise: Exercise }) => {
+export const ExerciseCard = ({
+  exercise,
+}: {
+  exercise: ExerciseWithImageUrl;
+}) => {
   const [showDetail, setShowDetail] = useState(false);
   const { getEquipmentName, getMuscleGroupNames, getCategoryName } =
     useExerciseLookups();
@@ -41,9 +45,9 @@ export const ExerciseCard = ({ exercise }: { exercise: Exercise }) => {
           {/* Header with image and name */}
           <div className="flex items-start gap-3 mb-3">
             <Avatar className="h-12 w-12 rounded-lg shrink-0">
-              {exercise.images[0] ? (
+              {exercise.imageUrl ? (
                 <AvatarImage
-                  src={`/exercises/${exercise.images[0]}`}
+                  src={exercise.imageUrl}
                   alt={exercise.name}
                   className="object-cover"
                 />

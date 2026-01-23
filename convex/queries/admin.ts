@@ -93,12 +93,18 @@ export const listExercises = query({
           exercise.secondaryMuscleIds.map((id) => ctx.db.get(id)),
         );
 
+        // Resolve image URLs
+        const imageUrls = await Promise.all(
+          exercise.imageIds.map((id) => ctx.storage.getUrl(id)),
+        );
+
         return {
           ...exercise,
           equipment,
           category,
           primaryMuscles: primaryMuscles.filter(Boolean),
           secondaryMuscles: secondaryMuscles.filter(Boolean),
+          imageUrls,
         };
       }),
     );

@@ -188,7 +188,7 @@ export default defineSchema({
     secondaryMuscleIds: v.array(v.id("muscleGroups")),
     instructions: v.array(v.string()),
     categoryId: v.id("categories"),
-    images: v.array(v.string()),
+    imageIds: v.array(v.id("_storage")),
   })
     .index("by_name", ["name"])
     .index("by_category", ["categoryId"])

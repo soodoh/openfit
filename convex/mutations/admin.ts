@@ -432,6 +432,14 @@ export const deleteRepetitionUnit = mutation({
 
 // ============ Exercises CRUD ============
 
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 export const createExercise = mutation({
   args: {
     name: v.string(),
@@ -443,7 +451,7 @@ export const createExercise = mutation({
     secondaryMuscleIds: v.array(v.id("muscleGroups")),
     instructions: v.array(v.string()),
     categoryId: v.id("categories"),
-    images: v.array(v.string()),
+    imageIds: v.array(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -487,7 +495,7 @@ export const createExercise = mutation({
       secondaryMuscleIds: args.secondaryMuscleIds,
       instructions: args.instructions,
       categoryId: args.categoryId,
-      images: args.images,
+      imageIds: args.imageIds,
     });
   },
 });
@@ -504,7 +512,7 @@ export const updateExercise = mutation({
     secondaryMuscleIds: v.array(v.id("muscleGroups")),
     instructions: v.array(v.string()),
     categoryId: v.id("categories"),
-    images: v.array(v.string()),
+    imageIds: v.array(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -529,6 +537,13 @@ export const updateExercise = mutation({
       throw new Error("Exercise with this name already exists");
     }
 
+    // Delete old images from storage if they're being replaced
+    for (const oldImageId of exercise.imageIds) {
+      if (!args.imageIds.includes(oldImageId)) {
+        await ctx.storage.delete(oldImageId);
+      }
+    }
+
     await ctx.db.patch(args.id, {
       name,
       equipmentId: args.equipmentId,
@@ -539,7 +554,7 @@ export const updateExercise = mutation({
       secondaryMuscleIds: args.secondaryMuscleIds,
       instructions: args.instructions,
       categoryId: args.categoryId,
-      images: args.images,
+      imageIds: args.imageIds,
     });
 
     return args.id;
@@ -551,6 +566,11 @@ export const deleteExercise = mutation({
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
 
+    const exercise = await ctx.db.get(args.id);
+    if (!exercise) {
+      throw new Error("Exercise not found");
+    }
+
     // Check if used by workout sets
     const usedBySets = await ctx.db
       .query("workoutSets")
@@ -559,6 +579,11 @@ export const deleteExercise = mutation({
 
     if (usedBySets) {
       throw new Error("Cannot delete exercise that is used in workout sets");
+    }
+
+    // Delete images from storage
+    for (const imageId of exercise.imageIds) {
+      await ctx.storage.delete(imageId);
     }
 
     await ctx.db.delete(args.id);

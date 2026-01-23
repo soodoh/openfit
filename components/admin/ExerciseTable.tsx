@@ -27,7 +27,8 @@ interface ExerciseWithRelations {
   primaryMuscleIds: string[];
   secondaryMuscleIds: string[];
   instructions: string[];
-  images: string[];
+  imageIds: string[];
+  imageUrls: (string | null)[];
   equipment: { _id: string; name: string } | null;
   category: { _id: string; name: string } | null;
   primaryMuscles: (MuscleInfo | null)[];

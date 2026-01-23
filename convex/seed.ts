@@ -127,7 +127,11 @@ const CATEGORY_NAMES = [
 ];
 
 // Helper function to transform exercise data to match schema using ID lookups
-function transformExercise(exercise: RawExercise, lookups: LookupMaps) {
+function transformExercise(
+  exercise: RawExercise,
+  lookups: LookupMaps,
+  imageIds: Id<"_storage">[],
+) {
   const equipmentId = exercise.equipment
     ? lookups.equipment.get(exercise.equipment)
     : undefined;
@@ -157,7 +161,7 @@ function transformExercise(exercise: RawExercise, lookups: LookupMaps) {
     secondaryMuscleIds,
     instructions: exercise.instructions,
     categoryId,
-    images: exercise.images,
+    imageIds,
   };
 }
 
@@ -230,13 +234,13 @@ export const seedDatabase = internalAction({
       categories: categoryMap,
     };
 
-    // 6. Seed exercises
-    console.log(`Seeding ${rawExercises.length} exercises...`);
+    // 6. Seed exercises (without images - use seedExercisesWithImages for images)
+    console.log(`Seeding ${rawExercises.length} exercises (without images)...`);
     let count = 0;
 
     for (const exercise of rawExercises) {
       try {
-        const transformed = transformExercise(exercise, lookups);
+        const transformed = transformExercise(exercise, lookups, []);
         await ctx.runMutation(internal.seed.createExercise, transformed);
         count++;
 
@@ -589,7 +593,7 @@ export const createExercise = internalMutation({
     secondaryMuscleIds: v.array(v.id("muscleGroups")),
     instructions: v.array(v.string()),
     categoryId: v.id("categories"),
-    images: v.array(v.string()),
+    imageIds: v.array(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -602,6 +606,33 @@ export const createExercise = internalMutation({
     }
 
     return await ctx.db.insert("exercises", args);
+  },
+});
+
+export const generateUploadUrl = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const updateExerciseImages = internalMutation({
+  args: {
+    exerciseName: v.string(),
+    imageIds: v.array(v.id("_storage")),
+  },
+  handler: async (ctx, { exerciseName, imageIds }) => {
+    const exercise = await ctx.db
+      .query("exercises")
+      .withIndex("by_name", (q) => q.eq("name", exerciseName))
+      .first();
+
+    if (!exercise) {
+      throw new Error(`Exercise not found: ${exerciseName}`);
+    }
+
+    await ctx.db.patch(exercise._id, { imageIds });
+    return exercise._id;
   },
 });
 

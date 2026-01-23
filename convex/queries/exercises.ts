@@ -1,6 +1,44 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import { query } from "../_generated/server";
+import { query, QueryCtx } from "../_generated/server";
+import { Doc, Id } from "../_generated/dataModel";
+
+// Helper to resolve image storage IDs to URLs
+async function getImageUrls(
+  ctx: QueryCtx,
+  imageIds: Id<"_storage">[],
+): Promise<(string | null)[]> {
+  return Promise.all(imageIds.map((id) => ctx.storage.getUrl(id)));
+}
+
+// Helper to add image URLs to an exercise
+async function withImageUrls<T extends Doc<"exercises">>(
+  ctx: QueryCtx,
+  exercise: T,
+): Promise<T & { imageUrls: (string | null)[] }> {
+  const imageUrls = await getImageUrls(ctx, exercise.imageIds);
+  return { ...exercise, imageUrls };
+}
+
+// Helper to add first image URL to exercises (for lists/thumbnails)
+async function withFirstImageUrl<T extends Doc<"exercises">>(
+  ctx: QueryCtx,
+  exercise: T,
+): Promise<T & { imageUrl: string | null }> {
+  const imageUrl =
+    exercise.imageIds.length > 0
+      ? await ctx.storage.getUrl(exercise.imageIds[0])
+      : null;
+  return { ...exercise, imageUrl };
+}
+
+// Helper to add first image URL to multiple exercises
+async function withFirstImageUrls<T extends Doc<"exercises">>(
+  ctx: QueryCtx,
+  exercises: T[],
+): Promise<(T & { imageUrl: string | null })[]> {
+  return Promise.all(exercises.map((e) => withFirstImageUrl(ctx, e)));
+}
 
 // Level enum (still used as a direct field)
 const ExerciseLevelEnum = v.union(
@@ -53,8 +91,9 @@ export const search = query({
       args.primaryMuscleId !== undefined ||
       (args.equipmentIds !== undefined && args.equipmentIds.length > 0);
 
+    let filteredPage = paginatedExercises.page;
     if (needsFiltering) {
-      const filteredPage = paginatedExercises.page.filter((exercise) => {
+      filteredPage = paginatedExercises.page.filter((exercise) => {
         if (
           args.primaryMuscleId !== undefined &&
           !exercise.primaryMuscleIds.includes(args.primaryMuscleId)
@@ -71,13 +110,15 @@ export const search = query({
         }
         return true;
       });
-      return {
-        ...paginatedExercises,
-        page: filteredPage,
-      };
     }
 
-    return paginatedExercises;
+    // Add image URLs
+    const pageWithImages = await withFirstImageUrls(ctx, filteredPage);
+
+    return {
+      ...paginatedExercises,
+      page: pageWithImages,
+    };
   },
 });
 
@@ -169,8 +210,9 @@ export const list = query({
       args.categoryId !== undefined ||
       args.primaryMuscleId !== undefined;
 
+    let filteredPage = paginatedExercises.page;
     if (hasFilters) {
-      const filteredPage = paginatedExercises.page.filter((exercise) => {
+      filteredPage = paginatedExercises.page.filter((exercise) => {
         // Gym equipment filter (multiple equipment IDs)
         // NOTE: Bodyweight exercises (equipmentId === undefined) are always included
         // regardless of gym equipment selection, as they require no equipment
@@ -205,13 +247,15 @@ export const list = query({
         }
         return true;
       });
-      return {
-        ...paginatedExercises,
-        page: filteredPage,
-      };
     }
 
-    return paginatedExercises;
+    // Add image URLs
+    const pageWithImages = await withFirstImageUrls(ctx, filteredPage);
+
+    return {
+      ...paginatedExercises,
+      page: pageWithImages,
+    };
   },
 });
 
@@ -239,19 +283,19 @@ export const searchSimple = query({
 
     // Apply equipment filter if provided
     // NOTE: Bodyweight exercises (equipmentId === undefined) are always included
+    let filtered = results;
     if (args.equipmentIds !== undefined && args.equipmentIds.length > 0) {
-      return results
-        .filter((exercise) => {
-          // Bodyweight exercises are always included
-          if (exercise.equipmentId === undefined) {
-            return true;
-          }
-          return args.equipmentIds!.includes(exercise.equipmentId);
-        })
-        .slice(0, 20);
+      filtered = results.filter((exercise) => {
+        // Bodyweight exercises are always included
+        if (exercise.equipmentId === undefined) {
+          return true;
+        }
+        return args.equipmentIds!.includes(exercise.equipmentId);
+      });
     }
 
-    return results.slice(0, 20);
+    // Add first image URL for thumbnails
+    return withFirstImageUrls(ctx, filtered.slice(0, 20));
   },
 });
 
@@ -327,12 +371,13 @@ export const listCount = query({
   },
 });
 
-// Get a single exercise by ID
+// Get a single exercise by ID (with image URLs)
 export const get = query({
   args: { id: v.id("exercises") },
   handler: async (ctx, args) => {
     const exercise = await ctx.db.get(args.id);
-    return exercise;
+    if (!exercise) return null;
+    return withImageUrls(ctx, exercise);
   },
 });
 
@@ -384,6 +429,7 @@ export const searchSimilar = query({
       });
     }
 
-    return filtered.slice(0, 20);
+    // Add first image URL for thumbnails
+    return withFirstImageUrls(ctx, filtered.slice(0, 20));
   },
 });

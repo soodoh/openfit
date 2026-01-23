@@ -36,12 +36,14 @@ import {
   Check,
   ChevronsUpDown,
   Dumbbell,
+  ImagePlus,
   Loader2,
   Plus,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
+import Image from "next/image";
 
 interface ExerciseWithRelations {
   _id: string;
@@ -54,7 +56,15 @@ interface ExerciseWithRelations {
   primaryMuscleIds: string[];
   secondaryMuscleIds: string[];
   instructions: string[];
-  images: string[];
+  imageIds: string[];
+  imageUrls: (string | null)[];
+}
+
+interface ImageItem {
+  type: "existing" | "new";
+  id?: string; // Storage ID for existing images
+  url?: string; // URL for existing images or blob URL for new
+  file?: File; // File object for new uploads
 }
 
 interface ExerciseFormModalProps {
@@ -70,10 +80,13 @@ export function ExerciseFormModal({
 }: ExerciseFormModalProps) {
   const createExercise = useMutation(api.mutations.admin.createExercise);
   const updateExercise = useMutation(api.mutations.admin.updateExercise);
+  const generateUploadUrl = useMutation(api.mutations.admin.generateUploadUrl);
 
   const equipment = useQuery(api.queries.admin.listEquipment);
   const categories = useQuery(api.queries.admin.listCategories);
   const muscleGroups = useQuery(api.queries.admin.listMuscleGroups);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
   const [equipmentId, setEquipmentId] = useState<string>("");
@@ -86,11 +99,11 @@ export function ExerciseFormModal({
   const [primaryMuscleIds, setPrimaryMuscleIds] = useState<string[]>([]);
   const [secondaryMuscleIds, setSecondaryMuscleIds] = useState<string[]>([]);
   const [instructions, setInstructions] = useState<string[]>([""]);
-  const [images, setImages] = useState<string[]>([]);
-  const [newImageUrl, setNewImageUrl] = useState("");
+  const [images, setImages] = useState<ImageItem[]>([]);
 
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
 
   const isEditMode = !!exercise;
 
@@ -109,7 +122,14 @@ export function ExerciseFormModal({
         setInstructions(
           exercise.instructions.length > 0 ? exercise.instructions : [""],
         );
-        setImages(exercise.images);
+        // Convert existing images to ImageItem format
+        setImages(
+          exercise.imageIds.map((id, index) => ({
+            type: "existing" as const,
+            id,
+            url: exercise.imageUrls[index] ?? undefined,
+          })),
+        );
       } else {
         setName("");
         setEquipmentId("");
@@ -122,8 +142,8 @@ export function ExerciseFormModal({
         setInstructions([""]);
         setImages([]);
       }
-      setNewImageUrl("");
       setError(null);
+      setUploadProgress(null);
     }
   }, [open, exercise]);
 
@@ -151,6 +171,40 @@ export function ExerciseFormModal({
     const cleanedInstructions = instructions.filter((i) => i.trim());
 
     try {
+      // Upload new images first
+      const imageIds: Id<"_storage">[] = [];
+      const newImages = images.filter((img) => img.type === "new" && img.file);
+
+      if (newImages.length > 0) {
+        setUploadProgress(`Uploading images (0/${newImages.length})...`);
+      }
+
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        if (img.type === "existing" && img.id) {
+          imageIds.push(img.id as Id<"_storage">);
+        } else if (img.type === "new" && img.file) {
+          const uploadUrl = await generateUploadUrl();
+          const response = await fetch(uploadUrl, {
+            method: "POST",
+            headers: { "Content-Type": img.file.type },
+            body: img.file,
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to upload image: ${img.file.name}`);
+          }
+
+          const { storageId } = await response.json();
+          imageIds.push(storageId as Id<"_storage">);
+
+          const uploadedCount = imageIds.length - images.filter((img) => img.type === "existing").length;
+          setUploadProgress(`Uploading images (${uploadedCount}/${newImages.length})...`);
+        }
+      }
+
+      setUploadProgress(null);
+
       const args = {
         name: name.trim(),
         equipmentId: equipmentId ? (equipmentId as Id<"equipment">) : undefined,
@@ -161,7 +215,7 @@ export function ExerciseFormModal({
         primaryMuscleIds: primaryMuscleIds as Id<"muscleGroups">[],
         secondaryMuscleIds: secondaryMuscleIds as Id<"muscleGroups">[],
         instructions: cleanedInstructions,
-        images,
+        imageIds,
       };
 
       if (exercise) {
@@ -181,6 +235,7 @@ export function ExerciseFormModal({
       );
     } finally {
       setIsPending(false);
+      setUploadProgress(null);
     }
   };
 
@@ -200,14 +255,30 @@ export function ExerciseFormModal({
     }
   };
 
-  const addImage = () => {
-    if (newImageUrl.trim()) {
-      setImages([...images, newImageUrl.trim()]);
-      setNewImageUrl("");
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newImageItems: ImageItem[] = Array.from(files).map((file) => ({
+      type: "new" as const,
+      file,
+      url: URL.createObjectURL(file),
+    }));
+
+    setImages([...images, ...newImageItems]);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
   const removeImage = (index: number) => {
+    const img = images[index];
+    // Revoke blob URL if it's a new image
+    if (img.type === "new" && img.url) {
+      URL.revokeObjectURL(img.url);
+    }
     setImages(images.filter((_, i) => i !== index));
   };
 
@@ -570,38 +641,57 @@ export function ExerciseFormModal({
               <div className="space-y-2">
                 <Label>Images</Label>
                 <div className="flex gap-2">
-                  <Input
-                    value={newImageUrl}
-                    onChange={(e) => setNewImageUrl(e.target.value)}
-                    placeholder="Enter image URL"
-                    className="flex-1"
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
                   />
                   <Button
                     type="button"
-                    variant="secondary"
-                    onClick={addImage}
-                    disabled={!newImageUrl.trim()}
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full"
                   >
-                    Add
+                    <ImagePlus className="h-4 w-4 mr-2" />
+                    Add Images
                   </Button>
                 </div>
                 {images.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {images.map((url, index) => (
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    {images.map((img, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-1 bg-muted rounded px-2 py-1 text-sm"
+                        className="relative aspect-square rounded-lg overflow-hidden border bg-muted"
                       >
-                        <span className="truncate max-w-[200px]">{url}</span>
+                        {img.url ? (
+                          <Image
+                            src={img.url}
+                            alt={`Exercise image ${index + 1}`}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
+                            No preview
+                          </div>
+                        )}
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="destructive"
                           size="icon"
-                          className="h-5 w-5"
+                          className="absolute top-1 right-1 h-6 w-6"
                           onClick={() => removeImage(index)}
                         >
                           <X className="h-3 w-3" />
                         </Button>
+                        {img.type === "new" && (
+                          <span className="absolute bottom-1 left-1 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded">
+                            New
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -629,7 +719,7 @@ export function ExerciseFormModal({
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  {uploadProgress || "Saving..."}
                 </>
               ) : isEditMode ? (
                 "Save Changes"
