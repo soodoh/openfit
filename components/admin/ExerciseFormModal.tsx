@@ -1,7 +1,16 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +31,15 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import { AlertCircle, Dumbbell, Loader2, Plus, X } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  ChevronsUpDown,
+  Dumbbell,
+  Loader2,
+  Plus,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -283,12 +300,17 @@ export function ExerciseFormModal({
                 </div>
                 <div className="space-y-2">
                   <Label>Equipment</Label>
-                  <Select value={equipmentId} onValueChange={setEquipmentId}>
+                  <Select
+                    value={equipmentId || "__none__"}
+                    onValueChange={(v) =>
+                      setEquipmentId(v === "__none__" ? "" : v)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="None" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="__none__">None</SelectItem>
                       {equipment?.map((eq) => (
                         <SelectItem key={eq._id} value={eq._id}>
                           {eq.name}
@@ -322,16 +344,18 @@ export function ExerciseFormModal({
                 <div className="space-y-2">
                   <Label>Force</Label>
                   <Select
-                    value={force}
+                    value={force || "__none__"}
                     onValueChange={(v) =>
-                      setForce(v as "push" | "pull" | "static" | "")
+                      setForce(
+                        v === "__none__" ? "" : (v as "push" | "pull" | "static"),
+                      )
                     }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="None" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="__none__">None</SelectItem>
                       <SelectItem value="push">Push</SelectItem>
                       <SelectItem value="pull">Pull</SelectItem>
                       <SelectItem value="static">Static</SelectItem>
@@ -341,16 +365,18 @@ export function ExerciseFormModal({
                 <div className="space-y-2">
                   <Label>Mechanic</Label>
                   <Select
-                    value={mechanic}
+                    value={mechanic || "__none__"}
                     onValueChange={(v) =>
-                      setMechanic(v as "compound" | "isolation" | "")
+                      setMechanic(
+                        v === "__none__" ? "" : (v as "compound" | "isolation"),
+                      )
                     }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="None" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="__none__">None</SelectItem>
                       <SelectItem value="compound">Compound</SelectItem>
                       <SelectItem value="isolation">Isolation</SelectItem>
                     </SelectContent>
@@ -358,36 +384,142 @@ export function ExerciseFormModal({
                 </div>
               </div>
 
-              {/* Muscles */}
+              {/* Primary Muscles */}
               <div className="space-y-2">
-                <Label>Muscles *</Label>
-                <p className="text-xs text-muted-foreground">
-                  Check primary muscles (left) or secondary muscles (right)
-                </p>
-                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-lg p-2">
-                  {muscleGroups?.map((muscle) => (
-                    <div
-                      key={muscle._id}
-                      className="flex items-center gap-2 text-sm"
+                <Label>Primary Muscles *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between font-normal"
                     >
-                      <Checkbox
-                        id={`primary-${muscle._id}`}
-                        checked={primaryMuscleIds.includes(muscle._id)}
-                        onCheckedChange={(checked) =>
-                          toggleMuscle(muscle._id, true, !!checked)
-                        }
-                      />
-                      <span className="flex-1 truncate">{muscle.name}</span>
-                      <Checkbox
-                        id={`secondary-${muscle._id}`}
-                        checked={secondaryMuscleIds.includes(muscle._id)}
-                        onCheckedChange={(checked) =>
-                          toggleMuscle(muscle._id, false, !!checked)
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
+                      {primaryMuscleIds.length > 0
+                        ? `${primaryMuscleIds.length} selected`
+                        : "Select primary muscles"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search muscles..." />
+                      <CommandList>
+                        <CommandEmpty>No muscle found.</CommandEmpty>
+                        <CommandGroup>
+                          {muscleGroups?.map((muscle) => (
+                            <CommandItem
+                              key={muscle._id}
+                              value={muscle.name}
+                              onSelect={() =>
+                                toggleMuscle(
+                                  muscle._id,
+                                  true,
+                                  !primaryMuscleIds.includes(muscle._id),
+                                )
+                              }
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  primaryMuscleIds.includes(muscle._id)
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                }`}
+                              />
+                              {muscle.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                {primaryMuscleIds.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {primaryMuscleIds.map((id) => {
+                      const muscle = muscleGroups?.find((m) => m._id === id);
+                      return (
+                        <Badge
+                          key={id}
+                          variant="secondary"
+                          className="cursor-pointer"
+                          onClick={() => toggleMuscle(id, true, false)}
+                        >
+                          {muscle?.name}
+                          <X className="ml-1 h-3 w-3" />
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Secondary Muscles */}
+              <div className="space-y-2">
+                <Label>Secondary Muscles</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between font-normal"
+                    >
+                      {secondaryMuscleIds.length > 0
+                        ? `${secondaryMuscleIds.length} selected`
+                        : "Select secondary muscles"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search muscles..." />
+                      <CommandList>
+                        <CommandEmpty>No muscle found.</CommandEmpty>
+                        <CommandGroup>
+                          {muscleGroups?.map((muscle) => (
+                            <CommandItem
+                              key={muscle._id}
+                              value={muscle.name}
+                              onSelect={() =>
+                                toggleMuscle(
+                                  muscle._id,
+                                  false,
+                                  !secondaryMuscleIds.includes(muscle._id),
+                                )
+                              }
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  secondaryMuscleIds.includes(muscle._id)
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                }`}
+                              />
+                              {muscle.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                {secondaryMuscleIds.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {secondaryMuscleIds.map((id) => {
+                      const muscle = muscleGroups?.find((m) => m._id === id);
+                      return (
+                        <Badge
+                          key={id}
+                          variant="secondary"
+                          className="cursor-pointer"
+                          onClick={() => toggleMuscle(id, false, false)}
+                        >
+                          {muscle?.name}
+                          <X className="ml-1 h-3 w-3" />
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Instructions */}
