@@ -23,7 +23,7 @@ import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
 import { useQuery } from "convex/react";
 import { Check, ChevronDown, Dumbbell } from "lucide-react";
-import Image from "next/image";
+import { ConvexImage } from "@/components/ui/convex-image";
 import { useEffect, useRef, useState } from "react";
 
 type Exercise = Doc<"exercises">;
@@ -224,7 +224,7 @@ export const AutocompleteExercise = ({
                   >
                     <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
                       {option.imageUrl ? (
-                        <Image
+                        <ConvexImage
                           src={option.imageUrl}
                           alt={`${option.name} thumbnail`}
                           width={40}

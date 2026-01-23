@@ -22,8 +22,8 @@ import { api } from "@/convex/_generated/api";
 import { Exercise, ExerciseWithImageUrl } from "@/lib/convex-types";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
 import { useQuery } from "convex/react";
-import { Dumbbell, Flame, Gauge, Loader2, Settings2, Target } from "lucide-react";
-import Image from "next/image";
+import { Dumbbell, Flame, Gauge, Settings2, Target } from "lucide-react";
+import { ConvexImage } from "@/components/ui/convex-image";
 
 // Helper to format display names (capitalize words)
 function formatDisplayName(value: string): string {
@@ -75,7 +75,7 @@ export const ExerciseDetailModal = ({
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl shrink-0 overflow-hidden bg-primary/10 dark:bg-foreground/10 flex items-center justify-center">
               {firstImageUrl ? (
-                <Image
+                <ConvexImage
                   src={firstImageUrl}
                   alt={exercise.name}
                   width={48}
@@ -109,7 +109,7 @@ export const ExerciseDetailModal = ({
                     .map((url, index) => (
                       <CarouselItem key={index} className="pl-0">
                         <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
-                          <Image
+                          <ConvexImage
                             src={url}
                             alt={`${exercise.name} - image ${index + 1}`}
                             fill
