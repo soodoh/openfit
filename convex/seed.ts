@@ -505,7 +505,16 @@ export const getExercisesWithoutImages = mutation({
     const exercises = await ctx.db.query("exercises").collect();
     return exercises
       .filter((e) => e.imageIds.length === 0)
-      .map((e) => ({ _id: e._id, name: e.name }));
+      .map((e) => {
+        // Find raw exercise to get folder name (id)
+        const rawExercise = rawExercises.find((r) => r.name === e.name);
+        return {
+          _id: e._id,
+          name: e.name,
+          folderId: rawExercise?.id ?? null,
+        };
+      })
+      .filter((e) => e.folderId !== null);
   },
 });
 

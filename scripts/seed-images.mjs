@@ -65,23 +65,11 @@ async function main() {
     return;
   }
 
-  // Load raw exercise data to map names to folder IDs
-  const exercisesModule = await import("../convex/seedData/exercises.js");
-  const rawExercises = exercisesModule.exercises;
-
   let successCount = 0;
   let errorCount = 0;
 
   for (const exercise of exercises) {
-    // Find raw exercise to get the folder name (id)
-    const rawExercise = rawExercises.find((e) => e.name === exercise.name);
-    if (!rawExercise) {
-      console.log(`No raw exercise data found for: ${exercise.name}`);
-      errorCount++;
-      continue;
-    }
-
-    const exerciseDir = path.join(IMAGES_DIR, rawExercise.id);
+    const exerciseDir = path.join(IMAGES_DIR, exercise.folderId);
 
     if (!fs.existsSync(exerciseDir)) {
       continue; // No images for this exercise
