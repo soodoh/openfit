@@ -19,6 +19,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "generate:keys": "node ./scripts/generateKeys.mjs",
+    "seed": "tsx scripts/seed.ts",
     "changeset": "changeset",
     "version": "changeset version"
   },

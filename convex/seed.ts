@@ -30,6 +30,34 @@ export const run = action({
 });
 
 /**
+ * Get an upload URL for seeding images.
+ * Called by scripts/seed.ts
+ */
+export const getUploadUrl = action({
+  args: {},
+  handler: async (ctx): Promise<string> => {
+    return await ctx.runMutation(internal.seed.generateUploadUrl);
+  },
+});
+
+/**
+ * Update exercise images by name.
+ * Called by scripts/seed.ts
+ */
+export const updateImages = action({
+  args: {
+    exerciseName: v.string(),
+    imageIds: v.array(v.string()),
+  },
+  handler: async (ctx, { exerciseName, imageIds }): Promise<void> => {
+    await ctx.runMutation(internal.seed.updateExerciseImages, {
+      exerciseName,
+      imageIds: imageIds as any, // Storage IDs come as strings from the upload response
+    });
+  },
+});
+
+/**
  * Seed mock user data (routines, days, sets) for testing.
  * Run: pnpm convex run seed:mockUserData '{"email": "your@email.com"}'
  */

@@ -1,12 +1,12 @@
 #!/usr/bin/env npx tsx
 /**
- * Script to upload exercise images to Convex storage and update exercises.
+ * Unified seed script that seeds the database and uploads exercise images.
  *
- * Run with: npx tsx scripts/seed-exercise-images.ts
+ * Run with: npx tsx scripts/seed.ts
  *
- * Prerequisites:
- * - Convex dev server running or deployed
- * - Exercises already seeded (run `pnpm convex run seed:run` first)
+ * This script will:
+ * 1. Seed exercises, equipment, muscle groups, categories, and units
+ * 2. Upload exercise images to Convex storage
  */
 
 import { ConvexHttpClient } from "convex/browser";
@@ -21,14 +21,15 @@ if (!CONVEX_URL) {
   console.error(
     "Error: CONVEX_URL or NEXT_PUBLIC_CONVEX_URL environment variable is required",
   );
+  console.log("Make sure you have a .env.local file with NEXT_PUBLIC_CONVEX_URL set.");
   process.exit(1);
 }
 
 const client = new ConvexHttpClient(CONVEX_URL);
 
 async function uploadImage(imagePath: string): Promise<string> {
-  // Get upload URL from Convex
-  const uploadUrl = await client.mutation(api.mutations.admin.generateUploadUrl);
+  // Get upload URL from Convex (using internal mutation via action)
+  const uploadUrl = await client.action(api.seed.getUploadUrl);
 
   // Read the image file
   const imageBuffer = fs.readFileSync(imagePath);
@@ -51,22 +52,35 @@ async function uploadImage(imagePath: string): Promise<string> {
   return storageId;
 }
 
-async function main() {
-  console.log("Starting exercise image upload...");
+// Import the raw exercises to get the name mapping
+import { exercises as rawExercises } from "../convex/seedData/exercises";
+
+function getExerciseNameFromId(exerciseId: string): string | undefined {
+  const exercise = rawExercises.find((e) => e.id === exerciseId);
+  return exercise?.name;
+}
+
+async function seedDatabase() {
+  console.log("=== Step 1: Seeding database ===\n");
+
+  const result = await client.action(api.seed.run);
+
+  console.log(`\nDatabase seeding complete!`);
+  console.log(`- ${result.exercisesSeeded} exercises`);
+  console.log(`- ${result.repUnitsSeeded} repetition units`);
+  console.log(`- ${result.weightUnitsSeeded} weight units`);
+
+  return result;
+}
+
+async function uploadImages() {
+  console.log("\n=== Step 2: Uploading exercise images ===\n");
   console.log(`Looking for images in: ${IMAGES_DIR}`);
 
   if (!fs.existsSync(IMAGES_DIR)) {
-    console.error(`Error: Images directory not found: ${IMAGES_DIR}`);
-    console.log("\nPlease move exercise images to convex/seedData/exerciseImages/");
-    console.log("Expected structure:");
-    console.log("  convex/seedData/exerciseImages/");
-    console.log("    3_4_Sit-Up/");
-    console.log("      0.jpg");
-    console.log("      1.jpg");
-    console.log("    90_90_Hamstring/");
-    console.log("      0.jpg");
-    console.log("      1.jpg");
-    process.exit(1);
+    console.log(`\nNo images directory found at: ${IMAGES_DIR}`);
+    console.log("Skipping image upload. You can add images later via the admin panel.");
+    return { successCount: 0, errorCount: 0 };
   }
 
   // Get all exercise directories
@@ -90,7 +104,6 @@ async function main() {
       .sort(); // Sort to maintain order (0.jpg, 1.jpg, etc.)
 
     if (imageFiles.length === 0) {
-      console.log(`Skipping ${exerciseDir}: no images found`);
       continue;
     }
 
@@ -103,20 +116,16 @@ async function main() {
         imageIds.push(storageId);
       }
 
-      // Convert exercise directory name to exercise name
-      // e.g., "3_4_Sit-Up" -> need to match with actual exercise name
-      // The exercise names in the database might be different, so we'll use
-      // the raw exercise data to find the mapping
+      // Get exercise name from directory name
       const exerciseName = getExerciseNameFromId(exerciseDir);
 
       if (!exerciseName) {
-        console.log(`Warning: Could not find exercise name for: ${exerciseDir}`);
         errorCount++;
         continue;
       }
 
       // Update exercise with image IDs
-      await client.mutation(internal.seed.updateExerciseImages as any, {
+      await client.action(api.seed.updateImages, {
         exerciseName,
         imageIds,
       });
@@ -131,17 +140,26 @@ async function main() {
     }
   }
 
-  console.log("\nUpload complete!");
-  console.log(`Success: ${successCount}`);
-  console.log(`Errors: ${errorCount}`);
+  console.log(`\nImage upload complete!`);
+  console.log(`- Success: ${successCount}`);
+  console.log(`- Errors: ${errorCount}`);
+
+  return { successCount, errorCount };
 }
 
-// Import the raw exercises to get the name mapping
-import { exercises as rawExercises } from "../convex/seedData/exercises";
+async function main() {
+  console.log("Starting unified seed process...\n");
 
-function getExerciseNameFromId(exerciseId: string): string | undefined {
-  const exercise = rawExercises.find((e) => e.id === exerciseId);
-  return exercise?.name;
+  // Step 1: Seed the database
+  await seedDatabase();
+
+  // Step 2: Upload images
+  await uploadImages();
+
+  console.log("\n=== Seed complete! ===");
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  console.error("Seed failed:", error);
+  process.exit(1);
+});
