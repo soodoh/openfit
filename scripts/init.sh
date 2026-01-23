@@ -11,8 +11,9 @@ if [ -z "$JWKS" ]; then
   exit 1
 fi
 
-if [ -z "$CONVEX_SITE_URL" ]; then
-  echo "Error: CONVEX_SITE_URL environment variable is not set (needed for image seeding)"
+if [ -z "$NEXTJS_URL" ]; then
+  echo "Error: NEXTJS_URL environment variable is not set (needed for image seeding)"
+  echo "This should be the URL where your Next.js app serves static files (e.g., https://your-app.vercel.app)"
   exit 1
 fi
 
@@ -29,6 +30,6 @@ echo "Running: npx convex run seed:run"
 npx convex run seed:run
 
 echo "Running: npx convex run seed:seedImages"
-npx convex run seed:seedImages "{\"baseUrl\": \"$CONVEX_SITE_URL\"}"
+npx convex run seed:seedImages "{\"baseUrl\": \"$NEXTJS_URL\"}"
 
 echo "Initialization complete!"

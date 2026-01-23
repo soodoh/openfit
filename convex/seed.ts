@@ -31,10 +31,11 @@ export const run = action({
 
 /**
  * Seed exercise images from a base URL.
- * Run: pnpm convex run seed:seedImages '{"baseUrl": "$CONVEX_SITE_URL"}'
+ * Run: pnpm convex run seed:seedImages '{"baseUrl": "https://your-nextjs-app.com"}'
  *
- * This fetches images from {baseUrl}/exercises/{exerciseName}/0.jpg, 1.jpg, etc.
- * and stores them in Convex storage.
+ * This fetches images from {baseUrl}/exercises/{exerciseId}/0.jpg, 1.jpg, etc.
+ * and stores them in Convex storage. The baseUrl should be where your Next.js
+ * app serves static files from the public/ directory.
  */
 export const seedImages = action({
   args: { baseUrl: v.string() },
@@ -303,8 +304,14 @@ export const seedExerciseImages = internalAction({
     let imagesUploaded = 0;
 
     for (const exercise of exercises) {
-      // Convert exercise name to folder name (replace spaces with underscores)
-      const folderName = exercise.name.replace(/ /g, "_");
+      // Find the raw exercise data to get the correct folder name (id)
+      const rawExercise = rawExercises.find((e) => e.name === exercise.name);
+      if (!rawExercise) {
+        console.log(`No raw exercise found for: ${exercise.name}`);
+        continue;
+      }
+
+      const folderName = rawExercise.id;
       const imageIds: Id<"_storage">[] = [];
 
       // Try to fetch images 0.jpg, 1.jpg, etc. until we get a 404
@@ -315,7 +322,11 @@ export const seedExerciseImages = internalAction({
           const response = await fetch(imageUrl);
 
           if (!response.ok) {
-            // No more images for this exercise
+            if (i === 0) {
+              console.log(
+                `No images found for ${exercise.name} at ${imageUrl} (status: ${response.status})`,
+              );
+            }
             break;
           }
 
@@ -323,8 +334,12 @@ export const seedExerciseImages = internalAction({
           const storageId = await ctx.storage.store(blob);
           imageIds.push(storageId);
           imagesUploaded++;
-        } catch {
-          // Failed to fetch, no more images
+        } catch (error) {
+          if (i === 0) {
+            console.log(
+              `Failed to fetch image for ${exercise.name}: ${error}`,
+            );
+          }
           break;
         }
       }
