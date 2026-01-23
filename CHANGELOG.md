@@ -1,5 +1,11 @@
 # open-fit
 
+## 0.2.3
+
+### Patch Changes
+
+- 41f5121: New logo/favicon assets
+
 ## 0.2.2
 
 ### Patch Changes
