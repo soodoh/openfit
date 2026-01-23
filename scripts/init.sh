@@ -23,4 +23,7 @@ npx convex env set JWKS "$JWKS"
 echo "Running: npx convex run seed:run"
 npx convex run seed:run
 
+echo "Running: npx tsx scripts/seed-exercise-images.ts"
+npx tsx scripts/seed-exercise-images.ts
+
 echo "Initialization complete!"
