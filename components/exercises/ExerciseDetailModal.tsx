@@ -1,6 +1,5 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -74,18 +73,19 @@ export const ExerciseDetailModal = ({
         {/* Header with gradient */}
         <DialogHeader className="px-6 pt-6 pb-4 bg-linear-to-br from-accent/10 via-transparent to-primary/5 shrink-0">
           <div className="flex items-center gap-3">
-            <Avatar className="w-12 h-12 rounded-xl shrink-0">
+            <div className="w-12 h-12 rounded-xl shrink-0 overflow-hidden bg-primary/10 dark:bg-foreground/10 flex items-center justify-center">
               {firstImageUrl ? (
-                <AvatarImage
+                <Image
                   src={firstImageUrl}
                   alt={exercise.name}
-                  className="object-cover"
+                  width={48}
+                  height={48}
+                  className="object-cover w-full h-full"
                 />
-              ) : null}
-              <AvatarFallback className="rounded-xl bg-primary/10 dark:bg-foreground/10">
+              ) : (
                 <Dumbbell className="h-6 w-6 text-primary dark:text-foreground" />
-              </AvatarFallback>
-            </Avatar>
+              )}
+            </div>
             <div className="min-w-0">
               <DialogTitle className="text-xl leading-tight">
                 {exercise.name}

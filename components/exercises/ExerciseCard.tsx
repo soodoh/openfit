@@ -1,10 +1,10 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ExerciseWithImageUrl } from "@/lib/convex-types";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
 import { Dumbbell } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { ExerciseDetailModal } from "./ExerciseDetailModal";
 
@@ -44,18 +44,19 @@ export const ExerciseCard = ({
         <div className="relative h-full rounded-xl border bg-card p-4 transition-all duration-200 hover:shadow-lg hover:border-foreground/20 hover:-translate-y-0.5">
           {/* Header with image and name */}
           <div className="flex items-start gap-3 mb-3">
-            <Avatar className="h-12 w-12 rounded-lg shrink-0">
+            <div className="h-12 w-12 rounded-lg shrink-0 overflow-hidden bg-primary/10 flex items-center justify-center">
               {exercise.imageUrl ? (
-                <AvatarImage
+                <Image
                   src={exercise.imageUrl}
                   alt={exercise.name}
-                  className="object-cover"
+                  width={48}
+                  height={48}
+                  className="object-cover w-full h-full"
                 />
-              ) : null}
-              <AvatarFallback className="rounded-lg bg-primary/10">
+              ) : (
                 <Dumbbell className="h-5 w-5 text-primary/60" />
-              </AvatarFallback>
-            </Avatar>
+              )}
+            </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm leading-tight line-clamp-2 group-hover:text-primary dark:group-hover:text-white transition-colors">
                 {exercise.name}

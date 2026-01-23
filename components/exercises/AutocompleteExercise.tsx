@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Command,
   CommandEmpty,
@@ -23,7 +22,8 @@ import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
 import { useQuery } from "convex/react";
-import { Check, ChevronDown, Image as FallbackImage } from "lucide-react";
+import { Check, ChevronDown, Dumbbell } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 type Exercise = Doc<"exercises">;
@@ -222,17 +222,19 @@ export const AutocompleteExercise = ({
                     onSelect={() => handleSelect(option)}
                     className={`flex items-center gap-3 p-3 cursor-pointer ${index === 0 ? "bg-accent" : ""}`}
                   >
-                    <Avatar className="h-10 w-10">
+                    <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
                       {option.imageUrl ? (
-                        <AvatarImage
+                        <Image
                           src={option.imageUrl}
                           alt={`${option.name} thumbnail`}
+                          width={40}
+                          height={40}
+                          className="object-cover w-full h-full"
                         />
-                      ) : null}
-                      <AvatarFallback className="flex items-center justify-center">
-                        <FallbackImage className="h-4 w-4" />
-                      </AvatarFallback>
-                    </Avatar>
+                      ) : (
+                        <Dumbbell className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
                     <div className="flex flex-col">
                       <span className="font-medium">{option.name}</span>
                       {option.primaryMuscleIds &&
