@@ -31,7 +31,7 @@ export const run = action({
 
 /**
  * Seed exercise images from a base URL.
- * Run: pnpm convex run seed:seedImages '{"baseUrl": "https://your-app.com"}'
+ * Run: pnpm convex run seed:seedImages '{"baseUrl": "$CONVEX_SITE_URL"}'
  *
  * This fetches images from {baseUrl}/exercises/{exerciseName}/0.jpg, 1.jpg, etc.
  * and stores them in Convex storage.
