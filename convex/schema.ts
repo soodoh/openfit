@@ -37,9 +37,34 @@ const ThemeEnum = v.union(
   v.literal("system"),
 );
 
+const AuthProviderTypeEnum = v.union(
+  v.literal("google"),
+  v.literal("github"),
+  v.literal("facebook"),
+  v.literal("discord"),
+  v.literal("apple"),
+  v.literal("microsoft"),
+  v.literal("oidc"),
+);
+
 export default defineSchema({
   // Include Convex Auth tables
   ...authTables,
+
+  // Auth providers configuration
+  authProviders: defineTable({
+    providerId: v.string(), // e.g., "google", "oidc-1"
+    type: AuthProviderTypeEnum,
+    displayName: v.string(), // Shown on login button
+    enabled: v.boolean(),
+    issuer: v.optional(v.string()), // For OIDC: https://auth.example.com
+    iconUrl: v.optional(v.string()),
+    order: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_providerId", ["providerId"])
+    .index("by_enabled", ["enabled"]),
 
   // Extended user profile (links to Convex Auth users table)
   userProfiles: defineTable({
