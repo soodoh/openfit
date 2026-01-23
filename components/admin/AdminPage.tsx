@@ -1,17 +1,9 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dumbbell,
-  FolderOpen,
-  PersonStanding,
-  Repeat,
-  Scale,
-  Users,
-  Wrench,
-} from "lucide-react";
-import { ExerciseTable } from "./ExerciseTable";
-import { LookupTable } from "./LookupTable";
+import { Database, KeyRound, Users } from "lucide-react";
+import { AuthProvidersTable } from "./AuthProvidersTable";
+import { SharedEntitiesView } from "./SharedEntitiesView";
 import { UserTable } from "./UserTable";
 
 export function AdminPage() {
@@ -24,99 +16,32 @@ export function AdminPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="exercises" className="w-full">
-        <TabsList className="grid w-full grid-cols-7 mb-6">
-          <TabsTrigger value="exercises" className="flex items-center gap-2">
-            <Dumbbell className="h-4 w-4" />
-            <span className="hidden sm:inline">Exercises</span>
-          </TabsTrigger>
-          <TabsTrigger value="equipment" className="flex items-center gap-2">
-            <Wrench className="h-4 w-4" />
-            <span className="hidden sm:inline">Equipment</span>
-          </TabsTrigger>
-          <TabsTrigger value="muscles" className="flex items-center gap-2">
-            <PersonStanding className="h-4 w-4" />
-            <span className="hidden sm:inline">Muscles</span>
-          </TabsTrigger>
-          <TabsTrigger value="categories" className="flex items-center gap-2">
-            <FolderOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Categories</span>
-          </TabsTrigger>
-          <TabsTrigger value="weightUnits" className="flex items-center gap-2">
-            <Scale className="h-4 w-4" />
-            <span className="hidden sm:inline">Weight</span>
-          </TabsTrigger>
-          <TabsTrigger value="repUnits" className="flex items-center gap-2">
-            <Repeat className="h-4 w-4" />
-            <span className="hidden sm:inline">Reps</span>
+      <Tabs defaultValue="entities" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="entities" className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            <span>Shared Entities</span>
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Users</span>
+            <span>Users</span>
+          </TabsTrigger>
+          <TabsTrigger value="auth" className="flex items-center gap-2">
+            <KeyRound className="h-4 w-4" />
+            <span>Auth</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="exercises">
-          <ExerciseTable />
-        </TabsContent>
-
-        <TabsContent value="equipment">
-          <LookupTable
-            title="Equipment"
-            singularTitle="Equipment"
-            queryKey="listEquipment"
-            createMutation="createEquipment"
-            updateMutation="updateEquipment"
-            deleteMutation="deleteEquipment"
-          />
-        </TabsContent>
-
-        <TabsContent value="muscles">
-          <LookupTable
-            title="Muscle Groups"
-            singularTitle="Muscle Group"
-            queryKey="listMuscleGroups"
-            createMutation="createMuscleGroup"
-            updateMutation="updateMuscleGroup"
-            deleteMutation="deleteMuscleGroup"
-          />
-        </TabsContent>
-
-        <TabsContent value="categories">
-          <LookupTable
-            title="Categories"
-            singularTitle="Category"
-            queryKey="listCategories"
-            createMutation="createCategory"
-            updateMutation="updateCategory"
-            deleteMutation="deleteCategory"
-          />
-        </TabsContent>
-
-        <TabsContent value="weightUnits">
-          <LookupTable
-            title="Weight Units"
-            singularTitle="Weight Unit"
-            queryKey="listWeightUnits"
-            createMutation="createWeightUnit"
-            updateMutation="updateWeightUnit"
-            deleteMutation="deleteWeightUnit"
-          />
-        </TabsContent>
-
-        <TabsContent value="repUnits">
-          <LookupTable
-            title="Repetition Units"
-            singularTitle="Repetition Unit"
-            queryKey="listRepetitionUnits"
-            createMutation="createRepetitionUnit"
-            updateMutation="updateRepetitionUnit"
-            deleteMutation="deleteRepetitionUnit"
-          />
+        <TabsContent value="entities">
+          <SharedEntitiesView />
         </TabsContent>
 
         <TabsContent value="users">
           <UserTable />
+        </TabsContent>
+
+        <TabsContent value="auth">
+          <AuthProvidersTable />
         </TabsContent>
       </Tabs>
     </div>
