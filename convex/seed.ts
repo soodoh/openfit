@@ -1,6 +1,11 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { action, internalAction, internalMutation } from "./_generated/server";
+import {
+  action,
+  internalAction,
+  internalMutation,
+  mutation,
+} from "./_generated/server";
 import {
   type RawExercise,
   exercises as rawExercises,
@@ -26,28 +31,6 @@ export const run = action({
     weightUnitsSeeded: number;
   }> => {
     return await ctx.runAction(internal.seed.seedDatabase, {});
-  },
-});
-
-/**
- * Seed exercise images from a base URL.
- * Run: pnpm convex run seed:seedImages '{"baseUrl": "https://your-nextjs-app.com"}'
- *
- * This fetches images from {baseUrl}/exercises/{exerciseId}/0.jpg, 1.jpg, etc.
- * and stores them in Convex storage. The baseUrl should be where your Next.js
- * app serves static files from the public/ directory.
- */
-export const seedImages = action({
-  args: { baseUrl: v.string() },
-  handler: async (
-    ctx,
-    { baseUrl },
-  ): Promise<{
-    success: boolean;
-    exercisesUpdated: number;
-    imagesUploaded: number;
-  }> => {
-    return await ctx.runAction(internal.seed.seedExerciseImages, { baseUrl });
   },
 });
 
@@ -287,88 +270,6 @@ export const seedDatabase = internalAction({
   },
 });
 
-export const seedExerciseImages = internalAction({
-  args: { baseUrl: v.string() },
-  handler: async (ctx, { baseUrl }) => {
-    console.log("Starting exercise image seed...");
-
-    // Get all exercises that don't have images yet
-    const exercises = await ctx.runMutation(
-      internal.seed.getExercisesWithoutImages,
-      {},
-    );
-
-    console.log(`Found ${exercises.length} exercises without images`);
-
-    let exercisesUpdated = 0;
-    let imagesUploaded = 0;
-
-    for (const exercise of exercises) {
-      // Find the raw exercise data to get the correct folder name (id)
-      const rawExercise = rawExercises.find((e) => e.name === exercise.name);
-      if (!rawExercise) {
-        console.log(`No raw exercise found for: ${exercise.name}`);
-        continue;
-      }
-
-      const folderName = rawExercise.id;
-      const imageIds: Id<"_storage">[] = [];
-
-      // Try to fetch images 0.jpg, 1.jpg, etc. until we get a 404
-      for (let i = 0; i < 10; i++) {
-        const imageUrl = `${baseUrl}/exercises/${folderName}/${i}.jpg`;
-
-        try {
-          const response = await fetch(imageUrl);
-
-          if (!response.ok) {
-            if (i === 0) {
-              console.log(
-                `No images found for ${exercise.name} at ${imageUrl} (status: ${response.status})`,
-              );
-            }
-            break;
-          }
-
-          const blob = await response.blob();
-          const storageId = await ctx.storage.store(blob);
-          imageIds.push(storageId);
-          imagesUploaded++;
-        } catch (error) {
-          if (i === 0) {
-            console.log(
-              `Failed to fetch image for ${exercise.name}: ${error}`,
-            );
-          }
-          break;
-        }
-      }
-
-      if (imageIds.length > 0) {
-        await ctx.runMutation(internal.seed.updateExerciseImages, {
-          exerciseName: exercise.name,
-          imageIds,
-        });
-        exercisesUpdated++;
-
-        if (exercisesUpdated % 50 === 0) {
-          console.log(`Updated ${exercisesUpdated} exercises with images...`);
-        }
-      }
-    }
-
-    console.log(
-      `Image seeding complete! Updated ${exercisesUpdated} exercises with ${imagesUploaded} images.`,
-    );
-
-    return {
-      success: true,
-      exercisesUpdated,
-      imagesUploaded,
-    };
-  },
-});
-
 const NUM_ROUTINES = 50;
 const NUM_SET_GROUPS = 10;
 const NUM_SETS = 4;
@@ -598,7 +499,7 @@ export const getAllExercises = internalMutation({
   },
 });
 
-export const getExercisesWithoutImages = internalMutation({
+export const getExercisesWithoutImages = mutation({
   args: {},
   handler: async (ctx) => {
     const exercises = await ctx.db.query("exercises").collect();
@@ -723,14 +624,14 @@ export const createExercise = internalMutation({
   },
 });
 
-export const generateUploadUrl = internalMutation({
+export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
     return await ctx.storage.generateUploadUrl();
   },
 });
 
-export const updateExerciseImages = internalMutation({
+export const updateExerciseImages = mutation({
   args: {
     exerciseName: v.string(),
     imageIds: v.array(v.id("_storage")),

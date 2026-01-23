@@ -33,6 +33,7 @@ import type * as queries_units from "../queries/units.js";
 import type * as queries_userProfiles from "../queries/userProfiles.js";
 import type * as seed from "../seed.js";
 import type * as seedData_exercises from "../seedData/exercises.js";
+import type * as utils_storage from "../utils/storage.js";
 
 import type {
   ApiFromModules,
@@ -66,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   "queries/userProfiles": typeof queries_userProfiles;
   seed: typeof seed;
   "seedData/exercises": typeof seedData_exercises;
+  "utils/storage": typeof utils_storage;
 }>;
 
 /**
