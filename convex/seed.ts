@@ -30,30 +30,23 @@ export const run = action({
 });
 
 /**
- * Get an upload URL for seeding images.
- * Called by scripts/seed.ts
+ * Seed exercise images from a base URL.
+ * Run: pnpm convex run seed:seedImages '{"baseUrl": "https://your-app.com"}'
+ *
+ * This fetches images from {baseUrl}/exercises/{exerciseName}/0.jpg, 1.jpg, etc.
+ * and stores them in Convex storage.
  */
-export const getUploadUrl = action({
-  args: {},
-  handler: async (ctx): Promise<string> => {
-    return await ctx.runMutation(internal.seed.generateUploadUrl);
-  },
-});
-
-/**
- * Update exercise images by name.
- * Called by scripts/seed.ts
- */
-export const updateImages = action({
-  args: {
-    exerciseName: v.string(),
-    imageIds: v.array(v.string()),
-  },
-  handler: async (ctx, { exerciseName, imageIds }): Promise<void> => {
-    await ctx.runMutation(internal.seed.updateExerciseImages, {
-      exerciseName,
-      imageIds: imageIds as any, // Storage IDs come as strings from the upload response
-    });
+export const seedImages = action({
+  args: { baseUrl: v.string() },
+  handler: async (
+    ctx,
+    { baseUrl },
+  ): Promise<{
+    success: boolean;
+    exercisesUpdated: number;
+    imagesUploaded: number;
+  }> => {
+    return await ctx.runAction(internal.seed.seedExerciseImages, { baseUrl });
   },
 });
 
@@ -293,6 +286,74 @@ export const seedDatabase = internalAction({
   },
 });
 
+export const seedExerciseImages = internalAction({
+  args: { baseUrl: v.string() },
+  handler: async (ctx, { baseUrl }) => {
+    console.log("Starting exercise image seed...");
+
+    // Get all exercises that don't have images yet
+    const exercises = await ctx.runMutation(
+      internal.seed.getExercisesWithoutImages,
+      {},
+    );
+
+    console.log(`Found ${exercises.length} exercises without images`);
+
+    let exercisesUpdated = 0;
+    let imagesUploaded = 0;
+
+    for (const exercise of exercises) {
+      // Convert exercise name to folder name (replace spaces with underscores)
+      const folderName = exercise.name.replace(/ /g, "_");
+      const imageIds: Id<"_storage">[] = [];
+
+      // Try to fetch images 0.jpg, 1.jpg, etc. until we get a 404
+      for (let i = 0; i < 10; i++) {
+        const imageUrl = `${baseUrl}/exercises/${folderName}/${i}.jpg`;
+
+        try {
+          const response = await fetch(imageUrl);
+
+          if (!response.ok) {
+            // No more images for this exercise
+            break;
+          }
+
+          const blob = await response.blob();
+          const storageId = await ctx.storage.store(blob);
+          imageIds.push(storageId);
+          imagesUploaded++;
+        } catch {
+          // Failed to fetch, no more images
+          break;
+        }
+      }
+
+      if (imageIds.length > 0) {
+        await ctx.runMutation(internal.seed.updateExerciseImages, {
+          exerciseName: exercise.name,
+          imageIds,
+        });
+        exercisesUpdated++;
+
+        if (exercisesUpdated % 50 === 0) {
+          console.log(`Updated ${exercisesUpdated} exercises with images...`);
+        }
+      }
+    }
+
+    console.log(
+      `Image seeding complete! Updated ${exercisesUpdated} exercises with ${imagesUploaded} images.`,
+    );
+
+    return {
+      success: true,
+      exercisesUpdated,
+      imagesUploaded,
+    };
+  },
+});
+
 const NUM_ROUTINES = 50;
 const NUM_SET_GROUPS = 10;
 const NUM_SETS = 4;
@@ -519,6 +580,16 @@ export const getAllExercises = internalMutation({
   args: {},
   handler: async (ctx) => {
     return await ctx.db.query("exercises").collect();
+  },
+});
+
+export const getExercisesWithoutImages = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const exercises = await ctx.db.query("exercises").collect();
+    return exercises
+      .filter((e) => e.imageIds.length === 0)
+      .map((e) => ({ _id: e._id, name: e.name }));
   },
 });
 

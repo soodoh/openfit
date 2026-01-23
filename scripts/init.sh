@@ -11,6 +11,11 @@ if [ -z "$JWKS" ]; then
   exit 1
 fi
 
+if [ -z "$APP_URL" ]; then
+  echo "Error: APP_URL environment variable is not set (needed for image seeding)"
+  exit 1
+fi
+
 echo "Running: npx convex deploy"
 npx convex deploy
 
@@ -23,7 +28,7 @@ npx convex env set JWKS "$JWKS"
 echo "Running: npx convex run seed:run"
 npx convex run seed:run
 
-echo "Running: npx tsx scripts/seed-exercise-images.ts"
-npx tsx scripts/seed-exercise-images.ts
+echo "Running: npx convex run seed:seedImages"
+npx convex run seed:seedImages "{\"baseUrl\": \"$APP_URL\"}"
 
 echo "Initialization complete!"
