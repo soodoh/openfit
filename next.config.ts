@@ -9,6 +9,24 @@ const nextConfig: NextConfig = {
       process.env.NEXT_PUBLIC_CONVEX_URL ||
       "http://PLACEHOLDER_CONVEX_URL:3210",
   },
+  images: {
+    remotePatterns: [
+      // Convex cloud storage
+      {
+        protocol: "https",
+        hostname: "**.convex.cloud",
+      },
+      // Self-hosted Convex (uses same URL as API)
+      {
+        protocol: "http",
+        hostname: "localhost",
+      },
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
