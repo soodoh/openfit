@@ -14,18 +14,38 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const IMAGES_DIR = path.join(__dirname, "../convex/seedData/exerciseImages");
 
-const CONVEX_URL = process.env.CONVEX_URL || process.env.NEXT_PUBLIC_CONVEX_URL;
+const CONVEX_URL = process.env.CONVEX_SELF_HOSTED_URL || process.env.CONVEX_URL || process.env.NEXT_PUBLIC_CONVEX_URL;
 
 if (!CONVEX_URL) {
-  console.error("Error: CONVEX_URL or NEXT_PUBLIC_CONVEX_URL environment variable is required");
+  console.error(
+    "Error: CONVEX_URL or NEXT_PUBLIC_CONVEX_URL environment variable is required",
+  );
   process.exit(1);
 }
 
 const client = new ConvexHttpClient(CONVEX_URL);
 
+// Transform upload URL to be reachable from Docker container
+function transformUploadUrl(uploadUrl) {
+  // If we're using an internal Docker URL (CONVEX_SELF_HOSTED_URL), we need to
+  // replace loopback addresses with the Docker network hostname
+  if (process.env.CONVEX_SELF_HOSTED_URL) {
+    const internalUrl = new URL(process.env.CONVEX_SELF_HOSTED_URL);
+
+    // Replace 127.0.0.1 or localhost with the Docker network hostname
+    return uploadUrl
+      .replace(/http:\/\/127\.0\.0\.1:3210/g, `http://${internalUrl.host}`)
+      .replace(/http:\/\/localhost:3210/g, `http://${internalUrl.host}`);
+  }
+  return uploadUrl;
+}
+
 async function uploadImage(imagePath) {
   // Get upload URL from Convex
-  const uploadUrl = await client.mutation("seed:generateUploadUrl");
+  let uploadUrl = await client.mutation("seed:generateUploadUrl");
+
+  // Transform URL for Docker environment
+  uploadUrl = transformUploadUrl(uploadUrl);
 
   // Read the image file
   const imageBuffer = fs.readFileSync(imagePath);

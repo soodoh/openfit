@@ -19,7 +19,7 @@ services:
   nextjs:
     image: node:22-alpine
     working_dir: /app
-    command: sh -c "corepack enable && pnpm install && ./scripts/init.sh && pnpm dev --port 3001"
+    command: sh -c "corepack enable && pnpm install && sh scripts/init.sh && pnpm dev --port 3001"
     volumes:
       - .:/app
       - /app/node_modules
