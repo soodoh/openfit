@@ -3,8 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { ExerciseWithImageUrl } from "@/lib/convex-types";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
-import Image from "next/image";
 import { Dumbbell } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { ExerciseDetailModal } from "./ExerciseDetailModal";
 
@@ -49,8 +49,8 @@ export const ExerciseCard = ({
                 <Image
                   src={exercise.imageUrl}
                   alt={exercise.name}
-                  width={48}
-                  height={48}
+                  width={100}
+                  height={100}
                   className="object-cover w-full h-full"
                 />
               ) : (

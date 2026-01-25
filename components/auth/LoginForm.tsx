@@ -8,6 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { SignUpSchema } from "@/lib/authSchema";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { flattenError } from "zod";
@@ -127,7 +128,7 @@ export const LoginForm = ({ register }: { register?: boolean }) => {
             <div className="flex flex-col gap-2">
               {enabledProviders.map((provider) => {
                 const icon = provider.iconUrl ? (
-                  <img src={provider.iconUrl} alt="" className="h-5 w-5" />
+                  <Image src={provider.iconUrl} alt="" width={20} height={20} className="h-5 w-5" unoptimized />
                 ) : (
                   PROVIDER_ICONS[provider.type] || (
                     <span className="h-5 w-5 flex items-center justify-center text-xs font-bold">
