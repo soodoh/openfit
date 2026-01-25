@@ -14,7 +14,10 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const IMAGES_DIR = path.join(__dirname, "../convex/seedData/exerciseImages");
 
-const CONVEX_URL = process.env.CONVEX_SELF_HOSTED_URL || process.env.CONVEX_URL || process.env.NEXT_PUBLIC_CONVEX_URL;
+const CONVEX_URL =
+  process.env.CONVEX_SELF_HOSTED_URL ||
+  process.env.CONVEX_URL ||
+  process.env.NEXT_PUBLIC_CONVEX_URL;
 
 if (!CONVEX_URL) {
   console.error(
@@ -28,14 +31,20 @@ const client = new ConvexHttpClient(CONVEX_URL);
 // Transform upload URL to be reachable from Docker container
 function transformUploadUrl(uploadUrl) {
   // If we're using an internal Docker URL (CONVEX_SELF_HOSTED_URL), we need to
-  // replace loopback addresses with the Docker network hostname
+  // ensure the URL is absolute and reachable from within Docker
   if (process.env.CONVEX_SELF_HOSTED_URL) {
     const internalUrl = new URL(process.env.CONVEX_SELF_HOSTED_URL);
+    const baseUrl = `${internalUrl.protocol}//${internalUrl.host}`;
+
+    // If uploadUrl is a relative path (starts with /), prepend the base URL
+    if (uploadUrl.startsWith("/")) {
+      return `${baseUrl}${uploadUrl}`;
+    }
 
     // Replace 127.0.0.1 or localhost with the Docker network hostname
     return uploadUrl
-      .replace(/http:\/\/127\.0\.0\.1:3210/g, `http://${internalUrl.host}`)
-      .replace(/http:\/\/localhost:3210/g, `http://${internalUrl.host}`);
+      .replace(/http:\/\/127\.0\.0\.1:3210/g, baseUrl)
+      .replace(/http:\/\/localhost:3210/g, baseUrl);
   }
   return uploadUrl;
 }

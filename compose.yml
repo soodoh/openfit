@@ -1,25 +1,12 @@
 services:
-  # Nginx reverse proxy - single entry point on port 3000
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "${PORT:-3000}:3000"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      convex-backend:
-        condition: service_healthy
-      nextjs:
-        condition: service_started
-    networks:
-      - app-net
-
   # Next.js development server with hot reloading
   # Runs init.sh first to deploy Convex functions and seed data
   nextjs:
     image: node:22-alpine
     working_dir: /app
-    command: sh -c "corepack enable && pnpm install && sh scripts/init.sh && pnpm dev --port 3001"
+    command: sh -c "corepack enable && pnpm install && sh scripts/init.sh && pnpm dev --port 3000"
+    ports:
+      - 3000:3000
     volumes:
       - .:/app
       - /app/node_modules
@@ -34,21 +21,22 @@ services:
     networks:
       - app-net
 
-  # Convex backend
   convex-backend:
     image: ghcr.io/get-convex/convex-backend:latest
     stop_grace_period: 10s
     stop_signal: SIGINT
     ports:
-      - "3210:3210"
+      - 3210:3210
+      - 3211:3211  # HTTP actions port - exposed for OIDC discovery
     volumes:
       - convex-data:/convex/data
     env_file: ".env.local"
     environment:
-      - CONVEX_CLOUD_ORIGIN=${CONVEX_CLOUD_ORIGIN:-http://127.0.0.1:3210}
-      - CONVEX_SITE_ORIGIN=${CONVEX_SITE_ORIGIN:-http://127.0.0.1:3211}
-      # Storage URLs and auth domain - must be the public nginx URL
-      # - CONVEX_SITE_URL=http://localhost:${PORT:-3000}/convex
+      # CONVEX_SITE_ORIGIN makes process.env.CONVEX_SITE_URL available in Convex functions
+      - CONVEX_SITE_ORIGIN=http://localhost:3211
+    # Allow container to reach host's localhost for OIDC discovery
+    extra_hosts:
+      - "localhost:host-gateway"
     healthcheck:
       test: curl -f http://localhost:3210/version
       interval: 5s
@@ -62,9 +50,9 @@ services:
     stop_grace_period: 10s
     stop_signal: SIGINT
     ports:
-      - "${DASHBOARD_PORT:-6791}:6791"
+      - 6791:6791
     environment:
-      - NEXT_PUBLIC_DEPLOYMENT_URL=http://127.0.0.1:3210
+      - NEXT_PUBLIC_DEPLOYMENT_URL=http://convex-backend:3210
     depends_on:
       convex-backend:
         condition: service_healthy

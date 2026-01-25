@@ -10,8 +10,7 @@ const nextConfig: NextConfig = {
         hostname: "**.convex.cloud",
       },
     ],
-    // Images from /convex/* are same-origin (proxied through nginx)
-    // so no additional remotePatterns needed for self-hosted
+    // Self-hosted storage uses /api/storage/* proxy route (same-origin)
   },
 };
 

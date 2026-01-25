@@ -29,6 +29,10 @@ export default convexAuthNextjsMiddleware(
 );
 
 export const config = {
-  // Exclude /convex/* from middleware so proxy rewrites work without auth
-  matcher: ["/((?!.*\\..*|_next|convex).*)", "/", "/(api|trpc)(.*)"],
+  // Exclude static files, _next, convex, and api/storage from middleware
+  matcher: [
+    "/((?!.*\\..*|_next|convex|api/storage).*)",
+    "/",
+    "/(api/auth|trpc)(.*)",
+  ],
 };
