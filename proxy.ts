@@ -20,9 +20,15 @@ export default convexAuthNextjsMiddleware(
       return nextjsMiddlewareRedirect(request, "/signin");
     }
   },
-  { verbose: true },
+  {
+    verbose: true,
+    // Use internal Docker URL for server-side auth requests
+    // This differs from NEXT_PUBLIC_CONVEX_URL which is for client-side
+    convexUrl: process.env.CONVEX_SELF_HOSTED_URL,
+  },
 );
 
 export const config = {
-  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
+  // Exclude /convex/* from middleware so proxy rewrites work without auth
+  matcher: ["/((?!.*\\..*|_next|convex).*)", "/", "/(api|trpc)(.*)"],
 };

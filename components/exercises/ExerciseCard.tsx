@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { ExerciseWithImageUrl } from "@/lib/convex-types";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
-import { ConvexImage } from "@/components/ui/convex-image";
+import Image from "next/image";
 import { Dumbbell } from "lucide-react";
 import { useState } from "react";
 import { ExerciseDetailModal } from "./ExerciseDetailModal";
@@ -46,7 +46,7 @@ export const ExerciseCard = ({
           <div className="flex items-start gap-3 mb-3">
             <div className="h-12 w-12 rounded-lg shrink-0 overflow-hidden bg-primary/10 flex items-center justify-center">
               {exercise.imageUrl ? (
-                <ConvexImage
+                <Image
                   src={exercise.imageUrl}
                   alt={exercise.name}
                   width={48}

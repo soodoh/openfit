@@ -28,7 +28,7 @@ import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
 import { useMutation, useQuery } from "convex/react";
 import { Check, ChevronDown, Dumbbell, Loader2 } from "lucide-react";
-import { ConvexImage } from "@/components/ui/convex-image";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 type Exercise = Doc<"exercises">;
@@ -215,7 +215,7 @@ export const ReplaceExerciseModal = ({
                       >
                         <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
                           {option.imageUrl ? (
-                            <ConvexImage
+                            <Image
                               src={option.imageUrl}
                               alt={`${option.name} thumbnail`}
                               width={40}

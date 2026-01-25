@@ -11,6 +11,12 @@ if [ -n "$NEXT_PUBLIC_CONVEX_URL" ]; then
     find /app/.next -type f -name "*.js" -exec sed -i "s|http://PLACEHOLDER_CONVEX_URL:3210|$NEXT_PUBLIC_CONVEX_URL|g" {} \; 2>/dev/null || true
 fi
 
+# Replace CONVEX_BACKEND_URL placeholder for Next.js rewrites (server-side proxy)
+# Default to internal Docker network URL if not specified
+CONVEX_BACKEND_URL="${CONVEX_BACKEND_URL:-http://convex-backend:3210}"
+echo "Injecting CONVEX_BACKEND_URL: $CONVEX_BACKEND_URL"
+find /app/.next -type f -name "*.js" -exec sed -i "s|http://PLACEHOLDER_CONVEX_BACKEND:3210|$CONVEX_BACKEND_URL|g" {} \; 2>/dev/null || true
+
 # F6: Validate required environment variables
 validate_env() {
     local missing=""

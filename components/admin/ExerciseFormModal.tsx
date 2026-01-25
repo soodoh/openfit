@@ -43,7 +43,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
-import { ConvexImage } from "@/components/ui/convex-image";
+import Image from "next/image";
 
 interface ExerciseWithRelations {
   _id: string;
@@ -667,7 +667,7 @@ export function ExerciseFormModal({
                         className="relative aspect-square rounded-lg overflow-hidden border bg-muted"
                       >
                         {img.url ? (
-                          <ConvexImage
+                          <Image
                             src={img.url}
                             alt={`Exercise image ${index + 1}`}
                             fill

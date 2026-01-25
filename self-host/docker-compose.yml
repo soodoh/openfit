@@ -1,4 +1,22 @@
 services:
+  # Nginx reverse proxy - single entry point
+  nginx:
+    image: nginx:alpine
+    container_name: openfit-nginx
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      convex-backend:
+        condition: service_healthy
+      openfit:
+        condition: service_started
+    networks:
+      - openfit-net
+
+  # Next.js production app
   openfit:
     image: ghcr.io/soodoh/open-fit:latest
     container_name: openfit
@@ -6,39 +24,32 @@ services:
     env_file: .env
     environment:
       # Internal URL for server-side communication
-      - CONVEX_SITE_URL=http://convex-backend:3210
       - CONVEX_SELF_HOSTED_URL=http://convex-backend:3210
       - INSTANCE_NAME=convex-self-hosted
-      # NEXT_PUBLIC_CONVEX_URL comes from .env file (browser-accessible URL)
-    ports:
-      - "${APP_PORT:-3000}:3000"
-    depends_on:
-      convex-backend:
-        condition: service_healthy
+      # Public URL uses nginx proxy
+      - NEXT_PUBLIC_CONVEX_URL=http://localhost:${APP_PORT:-3000}/convex
     networks:
       - openfit-net
 
+  # Convex backend
   convex-backend:
     image: ghcr.io/get-convex/convex-backend:latest
     container_name: convex-backend
     restart: unless-stopped
     stop_grace_period: 10s
     stop_signal: SIGINT
-    # Expose Convex port for browser access
-    ports:
-      - "3210:3210"
     env_file: .env
     environment:
       - CONVEX_CLOUD_ORIGIN=http://127.0.0.1:3210
       - CONVEX_SITE_ORIGIN=http://127.0.0.1:3211
-      - CONVEX_SITE_URL=http://127.0.0.1:3210
+      # Storage URLs and auth domain - must be the public nginx URL
+      - CONVEX_SITE_URL=http://localhost:${APP_PORT:-3000}/convex
       - CONVEX_SELF_HOSTED_URL=http://127.0.0.1:3210
       - DOCUMENT_RETENTION_DELAY=172800
       - INSTANCE_NAME=convex-self-hosted
     volumes:
       - convex-data:/convex/data
     healthcheck:
-      # F4: Using CMD-SHELL format for better compatibility
       test: ["CMD-SHELL", "curl -sf http://localhost:3210/version || wget -q --spider http://localhost:3210/version || exit 1"]
       interval: 5s
       timeout: 5s
