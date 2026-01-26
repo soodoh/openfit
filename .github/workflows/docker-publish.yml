@@ -27,7 +27,11 @@ jobs:
 
       - name: Get package version
         id: package
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "major=$(echo $VERSION | cut -d. -f1)" >> $GITHUB_OUTPUT
+          echo "minor=$(echo $VERSION | cut -d. -f1-2)" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -50,7 +54,10 @@ jobs:
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
             type=raw,value=${{ steps.package.outputs.version }},enable={{is_default_branch}}
+            type=raw,value=${{ steps.package.outputs.minor }},enable={{is_default_branch}}
+            type=raw,value=${{ steps.package.outputs.major }},enable={{is_default_branch}}
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image

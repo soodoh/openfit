@@ -1,21 +1,4 @@
 services:
-  # Nginx reverse proxy - single entry point
-  nginx:
-    image: nginx:alpine
-    container_name: openfit-nginx
-    restart: unless-stopped
-    ports:
-      - "${APP_PORT:-3000}:3000"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      convex-backend:
-        condition: service_healthy
-      openfit:
-        condition: service_started
-    networks:
-      - openfit-net
-
   # Next.js production app
   openfit:
     image: ghcr.io/soodoh/open-fit:latest
@@ -50,7 +33,11 @@ services:
     volumes:
       - convex-data:/convex/data
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:3210/version || wget -q --spider http://localhost:3210/version || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -sf http://localhost:3210/version || wget -q --spider http://localhost:3210/version || exit 1",
+        ]
       interval: 5s
       timeout: 5s
       retries: 3
