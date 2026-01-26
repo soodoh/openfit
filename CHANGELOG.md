@@ -1,5 +1,13 @@
 # open-fit
 
+## 0.3.3
+
+### Patch Changes
+
+- 1c8d9e2: Fix missing NEXT_PUBLIC_CONVEX_URL in Docker builds
+  - Set placeholder URL during Docker build so Next.js bakes it into client JS
+  - Entrypoint script replaces placeholder with actual runtime value
+
 ## 0.3.2
 
 ### Patch Changes
