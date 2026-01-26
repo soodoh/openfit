@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { WorkoutList } from "@/components/workoutSet/WorkoutList";
 import {
@@ -7,9 +8,11 @@ import {
   type Units,
   type WorkoutSessionWithData,
 } from "@/lib/convex-types";
+import { useMutation } from "convex/react";
 import dayjs from "dayjs";
-import { ArrowLeft, Calendar, Clock, MessageSquare, Play } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, MessageSquare, Play, Square } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CurrentDuration } from "./CurrentDuration";
 import { EditSessionMenu } from "./EditSessionMenu";
 
@@ -20,6 +23,9 @@ export const CurrentSessionPage = ({
   session: WorkoutSessionWithData;
   units: Units;
 }) => {
+  const router = useRouter();
+  const updateSession = useMutation(api.mutations.sessions.update);
+
   const completedSets = session.setGroups.reduce(
     (acc, group) => acc + group.sets.filter((set) => set.completed).length,
     0,
@@ -28,6 +34,14 @@ export const CurrentSessionPage = ({
     (acc, group) => acc + group.sets.length,
     0,
   );
+
+  const handleEndSession = async () => {
+    await updateSession({
+      id: session._id,
+      endTime: Date.now(),
+    });
+    router.push("/logs");
+  };
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
@@ -119,6 +133,19 @@ export const CurrentSessionPage = ({
           setGroups={session.setGroups}
           units={units}
         />
+      </div>
+
+      {/* End Session Button */}
+      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-(--breakpoint-lg) py-6">
+        <Button
+          variant="destructive"
+          size="lg"
+          className="w-full"
+          onClick={handleEndSession}
+        >
+          <Square className="h-4 w-4" />
+          End Session
+        </Button>
       </div>
     </div>
   );
