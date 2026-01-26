@@ -18,6 +18,10 @@ RUN pnpm install
 # Build the app in standalone mode
 RUN pnpm build
 
+# Copy static assets to standalone output (required for standalone mode)
+RUN cp -r public .next/standalone/public
+RUN cp -r .next/static .next/standalone/.next/static
+
 # Make entrypoint script executable
 RUN chmod +x /app/scripts/docker-entrypoint.sh
 
