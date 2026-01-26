@@ -1,5 +1,13 @@
 # open-fit
 
+## 0.3.2
+
+### Patch Changes
+
+- 7d1190e: Fix missing CSS/static assets in Docker image
+  - Copy `public/` and `.next/static/` to standalone output directory
+  - Required for Next.js standalone mode to serve static assets correctly
+
 ## 0.3.1
 
 ### Patch Changes
