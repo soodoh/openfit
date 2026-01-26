@@ -15,6 +15,10 @@ COPY ./ ./
 # Install dependencies
 RUN pnpm install
 
+# Set placeholder for NEXT_PUBLIC_* vars that will be replaced at runtime by entrypoint
+# Next.js bakes these into client JS at build time, so we use placeholders
+ENV NEXT_PUBLIC_CONVEX_URL=http://PLACEHOLDER_CONVEX_URL:3210
+
 # Build the app in standalone mode
 RUN pnpm build
 
