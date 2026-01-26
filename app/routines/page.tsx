@@ -31,8 +31,8 @@ function RoutinesSkeleton() {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="w-20 h-20 rounded-full bg-linear-to-br from-primary/10 to-accent/20 flex items-center justify-center mb-6">
-        <Dumbbell className="w-10 h-10 text-primary/60" />
+      <div className="w-20 h-20 rounded-full bg-linear-to-br from-primary/10 to-accent/20 dark:from-primary/20 dark:to-accent/30 flex items-center justify-center mb-6">
+        <Dumbbell className="w-10 h-10 text-primary/70 dark:text-foreground" />
       </div>
       <h3 className="text-xl font-semibold text-foreground mb-2">
         No routines yet
