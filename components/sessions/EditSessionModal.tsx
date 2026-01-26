@@ -26,10 +26,12 @@ export const EditSessionModal = ({
   session,
   open,
   onClose,
+  defaultStartDate,
 }: {
   open: boolean;
   session?: WorkoutSessionWithData;
   onClose: () => void;
+  defaultStartDate?: Date;
 }) => {
   const [name, setName] = useState<string>(session?.name ?? "");
   const [notes, setNotes] = useState<string>(session?.notes ?? "");
@@ -58,14 +60,16 @@ export const EditSessionModal = ({
       setNotes(session?.notes ?? "");
       setImpression(session?.impression ?? null);
       setStartTime(
-        session?.startTime ? new Date(session.startTime) : new Date(),
+        session?.startTime
+          ? new Date(session.startTime)
+          : (defaultStartDate ?? new Date()),
       );
       setEndTime(session?.endTime ? new Date(session.endTime) : null);
       setWorkoutTemplate(null);
       setHoveredStar(null);
       setError(null);
     }
-  }, [open, session]);
+  }, [open, session, defaultStartDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

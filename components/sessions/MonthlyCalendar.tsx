@@ -1,8 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
-import { ChevronLeft, ChevronRight, Clock, Play, Star } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Play,
+  Plus,
+  Star,
+} from "lucide-react";
 import { useState } from "react";
+import { EditSessionModal } from "./EditSessionModal";
 import { SessionDetailModal } from "./SessionDetailModal";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { Units, WorkoutSessionSummary } from "@/lib/convex-types";
@@ -29,6 +37,8 @@ export const MonthlyCalendar = ({
 }) => {
   const [selectedSessionId, setSelectedSessionId] =
     useState<Id<"workoutSessions"> | null>(null);
+  const [createSessionDate, setCreateSessionDate] =
+    useState<dayjs.Dayjs | null>(null);
 
   // Build calendar grid
   const startOfMonth = currentMonth.startOf("month");
@@ -128,6 +138,7 @@ export const MonthlyCalendar = ({
               dayData={dayData}
               currentSessionId={currentSessionId}
               onSessionClick={(sessionId) => setSelectedSessionId(sessionId)}
+              onCreateClick={() => setCreateSessionDate(dayData.date)}
               isLastRow={index >= days.length - 7}
             />
           ))}
@@ -142,6 +153,17 @@ export const MonthlyCalendar = ({
         onClose={() => setSelectedSessionId(null)}
         isActive={selectedSessionId === currentSessionId}
       />
+
+      {/* Create Session Modal */}
+      <EditSessionModal
+        open={!!createSessionDate}
+        onClose={() => setCreateSessionDate(null)}
+        defaultStartDate={createSessionDate
+          ?.hour(9)
+          .minute(0)
+          .second(0)
+          .toDate()}
+      />
     </>
   );
 };
@@ -150,11 +172,13 @@ const CalendarDay = ({
   dayData,
   currentSessionId,
   onSessionClick,
+  onCreateClick,
   isLastRow,
 }: {
   dayData: DayData;
   currentSessionId?: string;
   onSessionClick: (sessionId: Id<"workoutSessions">) => void;
+  onCreateClick: () => void;
   isLastRow: boolean;
 }) => {
   const { date, isCurrentMonth, isToday, sessions } = dayData;
@@ -162,21 +186,38 @@ const CalendarDay = ({
   return (
     <div
       className={cn(
-        "min-h-[100px] sm:min-h-[120px] p-1.5 sm:p-2 border-r border-b last:border-r-0",
+        "group min-h-[100px] sm:min-h-[120px] p-1.5 sm:p-2 border-r border-b last:border-r-0",
         isLastRow && "border-b-0",
         !isCurrentMonth && "bg-muted/20",
       )}
     >
-      {/* Day number */}
-      <div
-        className={cn(
-          "w-7 h-7 flex items-center justify-center text-sm rounded-full mb-1",
-          isToday && "bg-primary text-primary-foreground font-semibold",
-          !isCurrentMonth && !isToday && "text-muted-foreground",
-          isCurrentMonth && !isToday && "font-medium",
-        )}
-      >
-        {date.date()}
+      {/* Day header with number and add button */}
+      <div className="flex items-center justify-between mb-1">
+        <div
+          className={cn(
+            "w-7 h-7 flex items-center justify-center text-sm rounded-full",
+            isToday && "bg-primary text-primary-foreground font-semibold",
+            !isCurrentMonth && !isToday && "text-muted-foreground",
+            isCurrentMonth && !isToday && "font-medium",
+          )}
+        >
+          {date.date()}
+        </div>
+        <button
+          onClick={onCreateClick}
+          aria-label={`Create session on ${date.format("MMMM D, YYYY")}`}
+          className={cn(
+            "w-6 h-6 flex items-center justify-center rounded-md transition-all",
+            "text-muted-foreground hover:text-primary hover:bg-primary/10",
+            "focus:outline-none focus:ring-2 focus:ring-primary focus:opacity-100",
+            // Mobile: always visible but reduced opacity
+            "opacity-50 sm:opacity-0",
+            // Desktop: visible on group hover
+            "sm:group-hover:opacity-100",
+          )}
+        >
+          <Plus className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Sessions */}
