@@ -10,7 +10,7 @@ const authFile = path.join(__dirname, ".auth/user.json");
  * It authenticates as the test user and saves the storage state
  * (cookies, local storage) to be reused by all authenticated tests.
  *
- * In CI, this signs up a fresh test user (database is empty).
+ * In CI, this creates an admin account via the admin setup form (database is empty).
  * Locally, this logs in with an existing test user.
  *
  * Test credentials are expected in .env.local or CI secrets:
@@ -29,21 +29,20 @@ setup("authenticate", async ({ page }) => {
   }
 
   if (process.env.CI) {
-    // In CI, sign up a fresh user (database starts empty)
-    await page.goto("/signup");
+    // In CI, database starts empty so /register shows the admin setup form
+    await page.goto("/register");
 
-    // Wait for signup form
+    // Wait for admin setup form (shown when no users exist)
     await expect(
-      page.getByRole("button", { name: /create account/i }),
+      page.getByRole("button", { name: /create admin account/i }),
     ).toBeVisible({ timeout: 15000 });
 
-    // Fill signup form
+    // Fill admin setup form (no confirm password field)
     await page.getByLabel(/email/i).fill(testUser);
-    await page.getByLabel(/^password$/i).fill(testPassword);
-    await page.getByLabel(/confirm password/i).fill(testPassword);
+    await page.getByLabel(/password/i).fill(testPassword);
 
     // Submit
-    await page.getByRole("button", { name: /create account/i }).click();
+    await page.getByRole("button", { name: /create admin account/i }).click();
 
     // Wait for redirect to dashboard
     await expect(page).toHaveURL("/", { timeout: 15000 });
