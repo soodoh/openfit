@@ -41,17 +41,15 @@ setup("authenticate", async ({ page }) => {
     await page.getByLabel(/email/i).fill(testUser);
     await page.getByLabel(/password/i).fill(testPassword);
 
-    // Submit
-    await page.getByRole("button", { name: /create admin account/i }).click();
-
-    // Wait for the button to show loading state then return to normal
-    // This indicates the signup request completed
-    await expect(
-      page.getByRole("button", { name: /creating account/i }),
-    ).toBeVisible({ timeout: 5000 });
-    await expect(
-      page.getByRole("button", { name: /create admin account/i }),
-    ).toBeVisible({ timeout: 15000 });
+    // Submit and wait for network to complete
+    await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.url().includes("/api/auth") && response.status() === 200,
+        { timeout: 15000 },
+      ),
+      page.getByRole("button", { name: /create admin account/i }).click(),
+    ]);
 
     // Navigate to dashboard - auth state should be set now
     await page.goto("/");
