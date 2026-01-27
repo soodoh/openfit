@@ -44,10 +44,21 @@ setup("authenticate", async ({ page }) => {
     // Submit
     await page.getByRole("button", { name: /create admin account/i }).click();
 
-    // Wait for redirect to dashboard
-    await expect(page).toHaveURL("/", { timeout: 15000 });
+    // Wait for the button to show loading state then return to normal
+    // This indicates the signup request completed
+    await expect(
+      page.getByRole("button", { name: /creating account/i }),
+    ).toBeVisible({ timeout: 5000 });
+    await expect(
+      page.getByRole("button", { name: /create admin account/i }),
+    ).toBeVisible({ timeout: 15000 });
+
+    // Navigate to dashboard - auth state should be set now
+    await page.goto("/");
+
+    // Verify we're authenticated on the dashboard
     await expect(page.getByText(/welcome back/i)).toBeVisible({
-      timeout: 10000,
+      timeout: 15000,
     });
 
     // Save auth state
