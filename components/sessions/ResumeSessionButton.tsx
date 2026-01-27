@@ -19,7 +19,7 @@ export const ResumeSessionButton = ({
 
   return (
     <Link
-      href={`/logs/${session._id}`}
+      href="/workout"
       className="group block w-full rounded-xl bg-linear-to-r from-primary to-primary/80 p-px shadow-lg hover:shadow-xl transition-all duration-300"
     >
       <div className="flex items-center justify-between gap-4 rounded-[11px] bg-linear-to-r from-primary to-primary/90 px-5 py-4 text-primary-foreground">

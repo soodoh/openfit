@@ -136,8 +136,9 @@ export const SessionSummaryCard = ({
     );
   }
 
+  // Active sessions go to /workout, completed sessions go to /logs (calendar view)
   return (
-    <Link href={`/logs/${session._id}`} className="group block">
+    <Link href={isActive ? "/workout" : "/logs"} className="group block">
       {cardContent}
     </Link>
   );

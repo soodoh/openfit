@@ -53,7 +53,7 @@ export const RoutineOverviewTab = ({
     try {
       const sessionId = await createSession({ templateId: dayId });
       if (sessionId) {
-        router.push(`/logs/${sessionId}`);
+        router.push("/workout");
       }
     } finally {
       setStartingDayId(null);

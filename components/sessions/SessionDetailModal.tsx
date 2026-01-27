@@ -161,7 +161,7 @@ export const SessionDetailModal = ({
             {isActive && (
               <div className="pb-4">
                 <Button asChild className="w-full">
-                  <Link href={`/logs/${session._id}`}>Continue Workout</Link>
+                  <Link href="/workout">Continue Workout</Link>
                 </Button>
               </div>
             )}
