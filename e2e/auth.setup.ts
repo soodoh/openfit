@@ -10,7 +10,9 @@ const authFile = path.join(__dirname, ".auth/user.json");
  * It authenticates as the test user and saves the storage state
  * (cookies, local storage) to be reused by all authenticated tests.
  *
- * Test credentials are expected in .env.local:
+ * In CI, this will first sign up the user (if not exists), then log in.
+ *
+ * Test credentials are expected in .env.local or CI secrets:
  * - TEST_USER: email address
  * - TEST_PASSWORD: password
  */
@@ -32,6 +34,44 @@ setup("authenticate", async ({ page }) => {
   await expect(page.getByRole("button", { name: /login/i })).toBeVisible({
     timeout: 15000,
   });
+
+  // In CI, first try to sign up the user (in case it doesn't exist yet)
+  if (process.env.CI) {
+    // Click sign up link
+    await page.getByRole("link", { name: /sign up/i }).click();
+    await expect(page).toHaveURL("/signup", { timeout: 5000 });
+
+    // Wait for sign up form
+    await expect(
+      page.getByRole("button", { name: /create account/i }),
+    ).toBeVisible({ timeout: 10000 });
+
+    // Fill in sign up form
+    await page.getByLabel(/email/i).fill(testUser);
+    await page.getByLabel(/^password$/i).fill(testPassword);
+    await page.getByLabel(/confirm password/i).fill(testPassword);
+
+    // Submit sign up
+    await page.getByRole("button", { name: /create account/i }).click();
+
+    // Wait briefly - either redirects to dashboard (new user) or shows error (existing)
+    await page.waitForTimeout(3000);
+
+    // If we're on dashboard, we're done - user was created and logged in
+    if (page.url().endsWith("/")) {
+      await expect(page.getByText(/welcome back/i)).toBeVisible({
+        timeout: 10000,
+      });
+      await page.context().storageState({ path: authFile });
+      return;
+    }
+
+    // Otherwise, go back to sign in page to log in
+    await page.goto("/signin");
+    await expect(page.getByRole("button", { name: /login/i })).toBeVisible({
+      timeout: 15000,
+    });
+  }
 
   // Fill in credentials
   await page.getByLabel(/email/i).fill(testUser);
