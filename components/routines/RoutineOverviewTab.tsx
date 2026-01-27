@@ -65,7 +65,7 @@ export const RoutineOverviewTab = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       {/* Routine Header */}
       <div className="px-6 py-5 border-b border-border/50">
         <div className="flex items-start justify-between gap-4">
@@ -103,7 +103,7 @@ export const RoutineOverviewTab = ({
       </div>
 
       {/* Days List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto min-h-0">
         {routine.routineDays.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-6">
             <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">

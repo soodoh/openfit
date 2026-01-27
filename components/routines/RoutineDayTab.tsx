@@ -86,7 +86,7 @@ export const RoutineDayTab = ({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       {/* Day Settings */}
       <div className="px-6 py-4 border-b border-border/50 space-y-4">
         <div className="space-y-2">
@@ -116,7 +116,7 @@ export const RoutineDayTab = ({
       </div>
 
       {/* Workout List */}
-      <div className="flex-1 overflow-y-auto px-6">
+      <div className="flex-1 overflow-y-auto px-6 min-h-0">
         <WorkoutList
           view={ListView.EditTemplate}
           sessionOrDayId={dayId}

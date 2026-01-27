@@ -73,7 +73,7 @@ export const RoutineModal = ({
         <Tabs
           value={validTab}
           onValueChange={setActiveTab}
-          className="flex flex-col h-full"
+          className="flex flex-col h-full min-h-0"
         >
           {/* Tab List - Horizontally scrollable */}
           <div className="border-b border-border/50 px-4 pt-4">
@@ -98,7 +98,7 @@ export const RoutineModal = ({
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden min-h-0">
             <TabsContent
               value={OVERVIEW_TAB}
               className="h-full m-0 data-[state=inactive]:hidden"
