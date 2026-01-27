@@ -33,8 +33,6 @@ function formatDisplayName(value: string): string {
     .join(" ");
 }
 
-type ExerciseWithAllImages = Exercise & { imageUrls: (string | null)[] };
-
 export const ExerciseDetailModal = ({
   exercise: exerciseProp,
   open,

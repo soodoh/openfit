@@ -32,9 +32,12 @@ import { convexAuth } from "@convex-dev/auth/server";
 import { internal } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
 
+// OAuth provider config - convexAuth accepts these provider configs
+// Each provider function returns an OAuthConfig that convexAuth knows how to handle
+type ConvexAuthProvider = Parameters<typeof convexAuth>[0]["providers"][number];
+
 // Build list of optional OAuth providers based on environment variables
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const optionalProviders: any[] = [];
+const optionalProviders: ConvexAuthProvider[] = [];
 
 // Built-in OAuth providers - auto-enabled when env vars present
 if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {

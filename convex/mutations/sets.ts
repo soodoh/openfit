@@ -146,7 +146,9 @@ export const remove = mutation({
     // Delete the set
     await ctx.db.delete(args.id);
 
-    // Check if there are any remaining sets in the set group
+    // Check if there are any remaining sets in the set group.
+    // Note: This is safe because Convex mutations are atomic/transactional -
+    // the entire mutation runs in isolation, so no race conditions can occur.
     const remainingSets = await ctx.db
       .query("workoutSets")
       .withIndex("by_set_group", (q) => q.eq("setGroupId", setGroupId))

@@ -8,10 +8,17 @@
 const CONVEX_URL =
   process.env.CONVEX_SELF_HOSTED_URL || "http://convex-backend:3210";
 
+// Security: Only allow this route in development
+const isDevelopment = process.env.NODE_ENV === "development";
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
+  if (!isDevelopment) {
+    return new Response("Not found", { status: 404 });
+  }
+
   const { path } = await params;
   const storagePath = path.join("/");
 
@@ -36,6 +43,10 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
+  if (!isDevelopment) {
+    return new Response("Not found", { status: 404 });
+  }
+
   const { path } = await params;
   const storagePath = path.join("/");
   const url = new URL(request.url);

@@ -29,8 +29,6 @@ export type UserProfile = Doc<"userProfiles">;
 export type Exercise = Doc<"exercises">;
 // Exercise with first image URL (for list views)
 export type ExerciseWithImageUrl = Exercise & { imageUrl: string | null };
-// Exercise with all image URLs (for detail views)
-export type ExerciseWithImageUrls = Exercise & { imageUrls: (string | null)[] };
 export type Routine = Doc<"routines">;
 export type RoutineDay = Doc<"routineDays">;
 export type WorkoutSession = Doc<"workoutSessions">;
@@ -99,13 +97,3 @@ export type Units = {
 // Aliases for backwards compatibility with old imports
 export type SetWithRelations = WorkoutSetWithRelations;
 export type SetGroupWithRelations = WorkoutSetGroupWithSets;
-export type RoutineDayWithRelations = RoutineDayWithData;
-export type SessionWithRelations = WorkoutSessionWithData & {
-  template?: RoutineDayWithRoutine | null;
-};
-
-// Helper type for set row numbering
-export type SetWithNumber = {
-  set: WorkoutSetWithRelations;
-  setNum: number;
-};

@@ -109,7 +109,9 @@ export const LoginForm = ({ register }: { register?: boolean }) => {
     try {
       await signIn(providerId);
     } catch (error) {
-      console.error("OAuth sign-in failed:", error);
+      const message =
+        error instanceof Error ? error.message : "OAuth sign-in failed";
+      setPasswordError([message]);
       setOauthLoading(null);
     }
   };

@@ -11,10 +11,15 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthenticatedUserId(ctx);
 
+    const name = args.name.trim();
+    if (!name) {
+      throw new Error("Name cannot be empty");
+    }
+
     const routineId = await ctx.db.insert("routines", {
       userId,
-      name: args.name,
-      description: args.description,
+      name,
+      description: args.description?.trim(),
       updatedAt: Date.now(),
     });
 
@@ -41,9 +46,16 @@ export const update = mutation({
       throw new Error("Unauthorized");
     }
 
+    const name = args.name?.trim();
+    if (args.name !== undefined && !name) {
+      throw new Error("Name cannot be empty");
+    }
+
     await ctx.db.patch(args.id, {
-      ...(args.name !== undefined && { name: args.name }),
-      ...(args.description !== undefined && { description: args.description }),
+      ...(name !== undefined && { name }),
+      ...(args.description !== undefined && {
+        description: args.description?.trim(),
+      }),
       updatedAt: Date.now(),
     });
 

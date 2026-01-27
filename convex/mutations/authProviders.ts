@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, mutation } from "../_generated/server";
+import { mutation } from "../_generated/server";
 import { requireAdmin } from "../lib/adminAuth";
 
 const AuthProviderTypeEnum = v.union(
@@ -141,70 +141,5 @@ export const toggleAuthProvider = mutation({
     });
 
     return args.id;
-  },
-});
-
-// Internal mutation to seed default provider entries
-export const seedDefaultProviders = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    // Check if any providers already exist
-    const existingProviders = await ctx.db.query("authProviders").collect();
-    if (existingProviders.length > 0) {
-      return; // Already seeded
-    }
-
-    const now = Date.now();
-    const defaultProviders = [
-      { providerId: "google", type: "google" as const, displayName: "Google" },
-      { providerId: "github", type: "github" as const, displayName: "GitHub" },
-      {
-        providerId: "facebook",
-        type: "facebook" as const,
-        displayName: "Facebook",
-      },
-      {
-        providerId: "discord",
-        type: "discord" as const,
-        displayName: "Discord",
-      },
-      { providerId: "apple", type: "apple" as const, displayName: "Apple" },
-      {
-        providerId: "microsoft",
-        type: "microsoft" as const,
-        displayName: "Microsoft",
-      },
-    ];
-
-    for (let i = 0; i < defaultProviders.length; i++) {
-      const provider = defaultProviders[i];
-      await ctx.db.insert("authProviders", {
-        providerId: provider.providerId,
-        type: provider.type,
-        displayName: provider.displayName,
-        enabled: false,
-        order: i,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
-  },
-});
-
-// Update provider order (for drag and drop reordering)
-export const updateProviderOrder = mutation({
-  args: {
-    providerIds: v.array(v.id("authProviders")),
-  },
-  handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-
-    const now = Date.now();
-    for (let i = 0; i < args.providerIds.length; i++) {
-      await ctx.db.patch(args.providerIds[i], {
-        order: i,
-        updatedAt: now,
-      });
-    }
   },
 });

@@ -24,11 +24,14 @@ export const create = mutation({
       }
     }
 
+    // Derive session name from template if not provided
+    const name = (args.name?.trim() || routineDay?.description || "").trim();
+
     // Create the session
     const sessionId = await ctx.db.insert("workoutSessions", {
       userId,
-      name: args.name || routineDay?.description || "",
-      notes: args.notes || "",
+      name,
+      notes: args.notes?.trim() || "",
       startTime: args.startTime || Date.now(),
       endTime: args.endTime,
       impression: args.impression,
@@ -119,8 +122,8 @@ export const update = mutation({
     }
 
     await ctx.db.patch(args.id, {
-      ...(args.name !== undefined && { name: args.name }),
-      ...(args.notes !== undefined && { notes: args.notes }),
+      ...(args.name !== undefined && { name: args.name.trim() }),
+      ...(args.notes !== undefined && { notes: args.notes.trim() }),
       ...(args.impression !== undefined && { impression: args.impression }),
       ...(args.startTime !== undefined && { startTime: args.startTime }),
       ...(args.endTime !== undefined && { endTime: args.endTime }),

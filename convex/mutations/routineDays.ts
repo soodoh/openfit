@@ -18,10 +18,22 @@ export const create = mutation({
       throw new Error("Unauthorized");
     }
 
+    const description = args.description.trim();
+    if (!description) {
+      throw new Error("Description cannot be empty");
+    }
+
+    // Validate weekdays are in valid range (0-6)
+    for (const day of args.weekdays) {
+      if (day < 0 || day > 6 || !Number.isInteger(day)) {
+        throw new Error("Weekdays must be integers between 0 and 6");
+      }
+    }
+
     const routineDayId = await ctx.db.insert("routineDays", {
       routineId: args.routineId,
       userId,
-      description: args.description,
+      description,
       weekdays: args.weekdays,
       updatedAt: Date.now(),
     });
@@ -49,8 +61,22 @@ export const update = mutation({
       throw new Error("Unauthorized");
     }
 
+    const description = args.description?.trim();
+    if (args.description !== undefined && !description) {
+      throw new Error("Description cannot be empty");
+    }
+
+    // Validate weekdays are in valid range (0-6)
+    if (args.weekdays) {
+      for (const day of args.weekdays) {
+        if (day < 0 || day > 6 || !Number.isInteger(day)) {
+          throw new Error("Weekdays must be integers between 0 and 6");
+        }
+      }
+    }
+
     await ctx.db.patch(args.id, {
-      ...(args.description !== undefined && { description: args.description }),
+      ...(description !== undefined && { description }),
       ...(args.weekdays !== undefined && { weekdays: args.weekdays }),
       updatedAt: Date.now(),
     });
