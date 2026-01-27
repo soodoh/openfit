@@ -42,7 +42,8 @@ export async function POST(
   const queryString = url.search;
 
   const body = await request.arrayBuffer();
-  const contentType = request.headers.get("content-type") || "application/octet-stream";
+  const contentType =
+    request.headers.get("content-type") || "application/octet-stream";
 
   const response = await fetch(
     `${CONVEX_URL}/api/storage/${storagePath}${queryString}`,

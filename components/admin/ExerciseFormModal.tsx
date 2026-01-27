@@ -10,7 +10,6 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +20,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -41,9 +45,9 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
-import Image from "next/image";
 
 interface ExerciseWithRelations {
   _id: string;
@@ -198,8 +202,12 @@ export function ExerciseFormModal({
           const { storageId } = await response.json();
           imageIds.push(storageId as Id<"_storage">);
 
-          const uploadedCount = imageIds.length - images.filter((img) => img.type === "existing").length;
-          setUploadProgress(`Uploading images (${uploadedCount}/${newImages.length})...`);
+          const uploadedCount =
+            imageIds.length -
+            images.filter((img) => img.type === "existing").length;
+          setUploadProgress(
+            `Uploading images (${uploadedCount}/${newImages.length})...`,
+          );
         }
       }
 
@@ -418,7 +426,9 @@ export function ExerciseFormModal({
                     value={force || "__none__"}
                     onValueChange={(v) =>
                       setForce(
-                        v === "__none__" ? "" : (v as "push" | "pull" | "static"),
+                        v === "__none__"
+                          ? ""
+                          : (v as "push" | "pull" | "static"),
                       )
                     }
                   >

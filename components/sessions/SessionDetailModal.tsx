@@ -11,7 +11,12 @@ import { api } from "@/convex/_generated/api";
 import { ListView, type Units } from "@/lib/convex-types";
 import { useQuery } from "convex/react";
 import dayjs from "dayjs";
-import { Activity, Calendar as CalendarIcon, CheckCircle2, Trash2 } from "lucide-react";
+import {
+  Activity,
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { DeleteSessionModal } from "./DeleteSessionModal";
@@ -134,7 +139,19 @@ export const SessionDetailModal = ({
                     Workout
                   </p>
                   <p className="text-sm font-semibold leading-none">
-                    {session.setGroups.length} {session.setGroups.length === 1 ? "exercise" : "exercises"} • {session.setGroups.reduce((acc, group) => acc + group.sets.length, 0)} {session.setGroups.reduce((acc, group) => acc + group.sets.length, 0) === 1 ? "set" : "sets"}
+                    {session.setGroups.length}{" "}
+                    {session.setGroups.length === 1 ? "exercise" : "exercises"}{" "}
+                    •{" "}
+                    {session.setGroups.reduce(
+                      (acc, group) => acc + group.sets.length,
+                      0,
+                    )}{" "}
+                    {session.setGroups.reduce(
+                      (acc, group) => acc + group.sets.length,
+                      0,
+                    ) === 1
+                      ? "set"
+                      : "sets"}
                   </p>
                 </div>
               </div>

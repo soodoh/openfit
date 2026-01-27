@@ -54,11 +54,12 @@ export const ExerciseDetailModal = ({
   const exercise = exerciseWithImages || exerciseProp;
 
   // Get image URLs safely
-  const imageUrls: (string | null)[] =
-    exerciseWithImages?.imageUrls || [];
+  const imageUrls: (string | null)[] = exerciseWithImages?.imageUrls || [];
   const firstImageUrl: string | null =
     imageUrls[0] ||
-    ("imageUrl" in exerciseProp ? (exerciseProp.imageUrl as string | null) : null);
+    ("imageUrl" in exerciseProp
+      ? (exerciseProp.imageUrl as string | null)
+      : null);
   const { getEquipmentName, getMuscleGroupNames, getCategoryName } =
     useExerciseLookups();
 

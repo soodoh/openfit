@@ -3,6 +3,7 @@
 # Claude Code
 .claude/
 .serena/
+.playwright-mcp/
 
 # dependencies
 /node_modules

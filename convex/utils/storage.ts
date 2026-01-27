@@ -1,5 +1,5 @@
-import type { ActionCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
+import type { ActionCtx } from "../_generated/server";
 
 /**
  * Fetch an image from a URL and store it in Convex storage.
@@ -11,7 +11,9 @@ export async function fetchAndStoreImage(
   // Fetch the image
   const response = await fetch(imageUrl);
   if (!response.ok) {
-    throw new Error(`Failed to fetch image: ${imageUrl} - ${response.statusText}`);
+    throw new Error(
+      `Failed to fetch image: ${imageUrl} - ${response.statusText}`,
+    );
   }
 
   const blob = await response.blob();

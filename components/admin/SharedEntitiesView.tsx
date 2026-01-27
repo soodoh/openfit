@@ -14,7 +14,11 @@ import { LookupTable } from "./LookupTable";
 
 export function SharedEntitiesView() {
   return (
-    <Tabs defaultValue="exercises" orientation="vertical" className="flex gap-6">
+    <Tabs
+      defaultValue="exercises"
+      orientation="vertical"
+      className="flex gap-6"
+    >
       <TabsList className="flex flex-col h-fit w-48 shrink-0">
         <TabsTrigger
           value="exercises"

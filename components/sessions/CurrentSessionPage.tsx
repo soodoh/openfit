@@ -1,8 +1,8 @@
 "use client";
 
-import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { WorkoutList } from "@/components/workoutSet/WorkoutList";
+import { api } from "@/convex/_generated/api";
 import {
   ListView,
   type Units,
@@ -10,7 +10,14 @@ import {
 } from "@/lib/convex-types";
 import { useMutation } from "convex/react";
 import dayjs from "dayjs";
-import { ArrowLeft, Calendar, Clock, MessageSquare, Play, Square } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  MessageSquare,
+  Play,
+  Square,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CurrentDuration } from "./CurrentDuration";
