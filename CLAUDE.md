@@ -1,249 +1,117 @@
-# OpenFit - Claude Development Guide
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
 OpenFit is an open-source fitness tracking application for logging workouts, managing routines, and tracking progress.
 
 **Tech Stack:**
-- Next.js 16 (App Router)
-- Convex (backend/database)
+- Next.js 16 (App Router) with React 19
+- Convex (self-hosted backend/database)
 - TypeScript
 - Tailwind CSS v4
 - Radix UI + shadcn/ui components
 - class-variance-authority (CVA)
+- dnd-kit for drag-and-drop
 
 ## Development Commands
 
 ```bash
-pnpm dev          # Start dev server
-pnpm build        # Production build
-pnpm lint         # Run ESLint
-pnpm lint:fix     # Auto-fix lint issues
-pnpm seed         # Seed database with exercises
-pnpm generate:keys # Generate JWT auth keys
+pnpm dev              # Start dev server (requires Convex backend running)
+pnpm build            # Production build
+pnpm lint             # Run ESLint
+pnpm lint:fix         # Auto-fix lint issues
+pnpm generate:keys    # Generate JWT auth keys for .env.local
+pnpm changeset        # Create a changeset for version management
+```
+
+### Initial Setup (requires Docker)
+
+```bash
+docker compose up -d           # Start Convex backend
+pnpm generate:keys             # Generate keys, copy output to .env.local
+./scripts/dev-init.sh          # Deploy schema and seed database
+pnpm dev                       # Start Next.js dev server
+```
+
+### Seeding Test Data
+
+```bash
+pnpm convex run seed:mockUserData '{"email": "your@email.com"}'
 ```
 
 ## Code Conventions
 
 ### Imports
 
-- **Always use absolute imports with `@/` prefix**
-- Never use relative imports (enforced by ESLint)
+- **Always use absolute imports with `@/` prefix** (enforced by ESLint)
+- Exception: Convex folder uses relative imports (has its own tsconfig)
 
 ```typescript
-// Correct
+// Correct (frontend)
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
-// Wrong
-import { Button } from "../ui/button";
+// Correct (convex folder)
+import { getAuthenticatedUserId } from "./lib/auth";
 ```
 
 ### Components
 
 - Use `"use client"` directive for client components
-- Follow Radix UI + CVA pattern for UI components
 - Use `cn()` utility from `@/lib/utils` for class merging
+- Follow CVA pattern for variants (see `components/ui/` for examples)
 
 ### Convex Backend
 
 - Queries: `convex/queries/*.ts`
 - Mutations: `convex/mutations/*.ts`
-- Always validate auth with `getAuthenticatedUserId(ctx)` from `@/convex/lib/auth`
-- Use `Doc<"tableName">` and `Id<"tableName">` types from generated types
-
-### TypeScript
-
-- Import type aliases from `@/lib/convex-types`
-- Use Zod for form validation
-- Convex schema provides database type safety
+- Always validate auth:
+  - `getAuthenticatedUserId(ctx)` - throws if not authenticated
+  - `getOptionalUserId(ctx)` - returns null if not authenticated
+- Use `Doc<"tableName">` and `Id<"tableName">` from generated types
 
 ## Architecture
 
-### Frontend Structure
+### Provider Hierarchy (app/layout.tsx)
 
 ```
-app/                    # Next.js App Router pages
-components/
-  ├── ui/              # Base shadcn/Radix components
-  ├── admin/           # Admin panel components
-  ├── auth/            # Authentication components
-  ├── exercises/       # Exercise-related components
-  ├── gyms/            # Gym management components
-  ├── layout/          # Layout components (Header, etc.)
-  ├── profile/         # User profile components
-  ├── providers/       # React context providers
-  ├── routines/        # Routine management components
-  ├── sessions/        # Workout session components
-  └── workoutSet/      # Set/rep tracking components
-lib/
-  ├── utils.ts         # Utility functions (cn, etc.)
-  └── convex-types.ts  # Type aliases for Convex documents
+ConvexAuthNextjsServerProvider
+  └── ThemeProvider
+        └── ConvexClientProvider
+              └── AppWrapper
 ```
 
-### Backend Structure
+### Data Flow
 
-```
-convex/
-  ├── schema.ts        # Database schema
-  ├── auth.ts          # Auth configuration
-  ├── auth.config.ts   # Auth providers
-  ├── queries/         # Read operations
-  ├── mutations/       # Write operations
-  ├── lib/             # Shared utilities (auth helpers)
-  ├── utils/           # Storage utilities
-  └── seedData/        # Seed data files
-```
-
-## Common Patterns
-
-### Data Fetching (Client-side)
-
+**Client-side queries:**
 ```typescript
 import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
-// Simple query
 const data = useQuery(api.queries.exercises.list);
+const { results, loadMore, status } = usePaginatedQuery(api.queries.exercises.list, {}, { initialNumItems: 12 });
 
-// Paginated query
-const { results, loadMore, status } = usePaginatedQuery(
-  api.queries.exercises.list,
-  {},
-  { initialNumItems: 12 }
-);
-
-// Conditional/skip pattern
-const data = useQuery(
-  api.queries.exercises.get,
-  exerciseId ? { id: exerciseId } : "skip"
-);
+// Skip pattern for conditional queries
+const data = useQuery(api.queries.exercises.get, exerciseId ? { id: exerciseId } : "skip");
 ```
 
-### Mutations
-
-```typescript
-const createExercise = useMutation(api.mutations.admin.createExercise);
-await createExercise({ name: "Bench Press", categoryId });
-```
-
-### Auth Check in Backend
-
-```typescript
-import { getAuthenticatedUserId } from "./lib/auth";
-
-export const myMutation = mutation({
-  args: { /* ... */ },
-  handler: async (ctx, args) => {
-    const userId = await getAuthenticatedUserId(ctx);
-    // userId is guaranteed to exist, throws if not authenticated
-  },
-});
-```
-
-### Server-side Data Fetching (Admin Routes)
-
+**Server-side queries (admin routes):**
 ```typescript
 import { fetchQuery } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
-
-const data = await fetchQuery(
-  api.queries.admin.getUsers,
-  {},
-  { token, url: process.env.NEXT_PUBLIC_CONVEX_URL }
-);
+const data = await fetchQuery(api.queries.admin.getUsers, {}, { token, url: process.env.NEXT_PUBLIC_CONVEX_URL });
 ```
 
-## Adding New Features
+### Type System
 
-1. Define/update schema in `convex/schema.ts` if needed
-2. Create queries in `convex/queries/`
-3. Create mutations in `convex/mutations/`
-4. Build page in `app/` directory
-5. Create components in `components/` organized by domain
-
-## Verifying Changes with Playwright
-
-**Always verify UI changes using Playwright in headless mode.**
-
-- Use the Playwright MCP tools to test changes in the browser
-- Always run in `--headless` mode (no visible browser window)
-- Login credentials are stored in `.env.local`:
-  - Username: `TEST_USER`
-  - Password: `TEST_PASSWORD`
-
-Verification workflow:
-1. Navigate to the relevant page
-2. Login using the test credentials from `.env.local`
-3. Verify the UI changes work as expected
-4. Check for console errors or unexpected behavior
-
-## UI Component Pattern
-
-```typescript
-import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils";
-
-const buttonVariants = cva("base-classes", {
-  variants: {
-    variant: { default: "...", secondary: "..." },
-    size: { sm: "...", md: "...", lg: "..." }
-  },
-  defaultVariants: { variant: "default", size: "md" }
-});
-
-interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
-
-export function Button({ variant, size, className, ...props }: ButtonProps) {
-  return (
-    <button
-      className={cn(buttonVariants({ variant, size }), className)}
-      {...props}
-    />
-  );
-}
-```
-
-## Key Files Reference
-
-| File | Purpose |
-|------|---------|
-| `convex/schema.ts` | Database schema definition |
-| `convex/auth.config.ts` | Auth provider configuration |
-| `convex/lib/auth.ts` | Auth helper functions |
-| `components/ui/` | Base UI components |
-| `lib/convex-types.ts` | Type aliases for documents/IDs |
-| `lib/utils.ts` | Utility functions (cn) |
-| `app/layout.tsx` | Root layout with providers |
-
-## Environment Setup
-
-Required environment variables:
-
-```bash
-NEXT_PUBLIC_CONVEX_URL    # Convex backend URL
-JWT_PRIVATE_KEY           # Auth private key (generate with pnpm generate:keys)
-JWKS                      # JSON Web Key Set (generate with pnpm generate:keys)
-
-# OAuth providers (as needed)
-AUTH_GITHUB_ID
-AUTH_GITHUB_SECRET
-AUTH_GOOGLE_ID
-AUTH_GOOGLE_SECRET
-```
-
-## Type System
-
-Common type imports from `@/lib/convex-types`:
+Import types from `@/lib/convex-types`:
 
 ```typescript
 // Document types
-import type { Exercise, Routine, WorkoutSession, WorkoutSet } from "@/lib/convex-types";
+import type { Exercise, Routine, WorkoutSession } from "@/lib/convex-types";
 
 // ID types
-import type { ExerciseId, RoutineId, WorkoutSessionId } from "@/lib/convex-types";
+import type { ExerciseId, RoutineId } from "@/lib/convex-types";
 
 // Complex types with relations
 import type { WorkoutSessionWithData, RoutineDayWithData } from "@/lib/convex-types";
@@ -251,3 +119,28 @@ import type { WorkoutSessionWithData, RoutineDayWithData } from "@/lib/convex-ty
 // Enums
 import { SetType, SetGroupType, ListView } from "@/lib/convex-types";
 ```
+
+## Verifying Changes with Playwright
+
+**Always verify UI changes using Playwright MCP tools in headless mode.**
+
+Test credentials are in `.env.local`:
+- Username: `TEST_USER`
+- Password: `TEST_PASSWORD`
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `convex/schema.ts` | Database schema definition |
+| `convex/lib/auth.ts` | Auth helper functions |
+| `lib/convex-types.ts` | Type aliases for Convex documents |
+| `app/layout.tsx` | Root layout with provider hierarchy |
+
+## Contributing
+
+When making changes for a release, create a changeset:
+```bash
+pnpm changeset  # Select patch/minor/major, write summary
+```
+The changeset file in `.changeset/` should be committed with your PR.
