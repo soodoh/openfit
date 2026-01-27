@@ -208,6 +208,11 @@ export const WorkoutSetGroup = ({
             <Avatar className="h-10 w-10 rounded-lg">
               {exercise ? (
                 <>
+                  <AvatarImage
+                    src={exercise.imageUrl ?? undefined}
+                    alt={exercise.name}
+                    className="rounded-lg object-cover"
+                  />
                   <AvatarFallback className="rounded-lg bg-muted">
                     <ImageIcon className="h-4 w-4 text-muted-foreground" />
                   </AvatarFallback>

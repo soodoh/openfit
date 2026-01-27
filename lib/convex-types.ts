@@ -67,7 +67,7 @@ export type RoutineDayWithRoutine = RoutineDay & {
 };
 
 export type WorkoutSetWithRelations = WorkoutSet & {
-  exercise: Exercise | null;
+  exercise: ExerciseWithImageUrl | null;
   repetitionUnit: RepetitionUnit | null;
   weightUnit: WeightUnit | null;
 };

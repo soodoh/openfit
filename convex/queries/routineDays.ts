@@ -49,9 +49,15 @@ export const get = query({
             const repetitionUnit = await ctx.db.get(set.repetitionUnitId);
             const weightUnit = await ctx.db.get(set.weightUnitId);
 
+            // Get first image URL for exercise
+            const imageUrl =
+              exercise && exercise.imageIds.length > 0
+                ? await ctx.storage.getUrl(exercise.imageIds[0])
+                : null;
+
             return {
               ...set,
-              exercise,
+              exercise: exercise ? { ...exercise, imageUrl } : null,
               repetitionUnit,
               weightUnit,
             };
