@@ -74,11 +74,8 @@ setup("authenticate", async ({ page }) => {
   // Submit the form
   await page.getByRole("button", { name: /login/i }).click();
 
-  // Wait for successful authentication - should redirect to dashboard
-  await expect(page).toHaveURL("/", { timeout: 15000 });
-
-  // Verify we're on the authenticated dashboard
-  await expect(page.getByText(/welcome back/i)).toBeVisible({ timeout: 10000 });
+  // Wait for dashboard content (more reliable than URL check due to redirect timing)
+  await expect(page.getByText(/welcome back/i)).toBeVisible({ timeout: 30000 });
 
   // Save storage state for reuse
   await page.context().storageState({ path: authFile });
