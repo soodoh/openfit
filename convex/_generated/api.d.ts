@@ -23,6 +23,7 @@ import type * as mutations_sets from "../mutations/sets.js";
 import type * as mutations_userProfiles from "../mutations/userProfiles.js";
 import type * as queries_admin from "../queries/admin.js";
 import type * as queries_authProviders from "../queries/authProviders.js";
+import type * as queries_dashboard from "../queries/dashboard.js";
 import type * as queries_exercises from "../queries/exercises.js";
 import type * as queries_gyms from "../queries/gyms.js";
 import type * as queries_lookups from "../queries/lookups.js";
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   "mutations/userProfiles": typeof mutations_userProfiles;
   "queries/admin": typeof queries_admin;
   "queries/authProviders": typeof queries_authProviders;
+  "queries/dashboard": typeof queries_dashboard;
   "queries/exercises": typeof queries_exercises;
   "queries/gyms": typeof queries_gyms;
   "queries/lookups": typeof queries_lookups;
