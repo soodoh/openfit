@@ -97,11 +97,11 @@ export const RoutineModal = ({
             </TabsList>
           </div>
 
-          {/* Tab Content */}
-          <div className="flex-1 overflow-hidden min-h-0">
+          {/* Tab Content - explicit height so children can use h-full */}
+          <div className="h-[calc(85vh-72px)] overflow-hidden">
             <TabsContent
               value={OVERVIEW_TAB}
-              className="h-full m-0 data-[state=inactive]:hidden"
+              className="h-full m-0 flex flex-col data-[state=inactive]:hidden"
             >
               <RoutineOverviewTab
                 routine={routine}
@@ -115,7 +115,7 @@ export const RoutineModal = ({
               <TabsContent
                 key={day._id}
                 value={`day-${day._id}`}
-                className="h-full m-0 data-[state=inactive]:hidden"
+                className="h-full m-0 flex flex-col data-[state=inactive]:hidden"
               >
                 <RoutineDayTab
                   dayId={day._id}
