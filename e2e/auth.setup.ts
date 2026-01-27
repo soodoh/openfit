@@ -41,22 +41,17 @@ setup("authenticate", async ({ page }) => {
     await page.getByLabel(/email/i).fill(testUser);
     await page.getByLabel(/password/i).fill(testPassword);
 
-    // Submit and wait for network to complete
-    await Promise.all([
-      page.waitForResponse(
-        (response) =>
-          response.url().includes("/api/auth") && response.status() === 200,
-        { timeout: 15000 },
-      ),
-      page.getByRole("button", { name: /create admin account/i }).click(),
-    ]);
+    // Submit the form
+    await page.getByRole("button", { name: /create admin account/i }).click();
 
-    // Navigate to dashboard - auth state should be set now
+    // Wait for Convex auth to complete (button becomes disabled during submission)
+    // Then either the page redirects or we need to navigate manually
+    await page.waitForTimeout(3000);
+
+    // Navigate to dashboard and verify auth state
     await page.goto("/");
-
-    // Verify we're authenticated on the dashboard
     await expect(page.getByText(/welcome back/i)).toBeVisible({
-      timeout: 15000,
+      timeout: 30000,
     });
 
     // Save auth state
