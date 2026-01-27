@@ -19,10 +19,12 @@ export const DeleteDayModal = ({
   open,
   onClose,
   dayId,
+  onSuccess,
 }: {
   open: boolean;
   onClose: () => void;
   dayId: RoutineDayId;
+  onSuccess?: () => void;
 }) => {
   const [isPending, setIsPending] = useState(false);
   const deleteDay = useMutation(api.mutations.routineDays.remove);
@@ -32,6 +34,7 @@ export const DeleteDayModal = ({
     try {
       await deleteDay({ id: dayId });
       onClose();
+      onSuccess?.();
     } finally {
       setIsPending(false);
     }

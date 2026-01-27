@@ -1,5 +1,6 @@
 "use client";
 
+import { WeekdaySelector } from "@/components/routines/WeekdaySelector";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,21 +14,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/convex/_generated/api";
 import { useMutation } from "convex/react";
-import dayjs from "dayjs";
 import { CalendarDays, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { RoutineDay, RoutineId } from "@/lib/convex-types";
+import type { RoutineDay, RoutineDayId, RoutineId } from "@/lib/convex-types";
 
 export const EditDayModal = ({
   open,
   onClose,
   routineId,
   routineDay,
+  onSuccess,
 }: {
   open: boolean;
   onClose: () => void;
   routineId: RoutineId;
   routineDay?: RoutineDay;
+  onSuccess?: (dayId: RoutineDayId) => void;
 }) => {
   const [selectedWeekdays, setWeekdays] = useState<number[]>(
     routineDay?.weekdays ?? [],
@@ -46,13 +48,6 @@ export const EditDayModal = ({
   const createDay = useMutation(api.mutations.routineDays.create);
   const updateDay = useMutation(api.mutations.routineDays.update);
 
-  const toggleWeekday = (weekday: number) => {
-    const newWeekdays = selectedWeekdays.includes(weekday)
-      ? selectedWeekdays.filter((d) => d !== weekday)
-      : [...selectedWeekdays, weekday].sort((a, b) => a - b);
-    setWeekdays(newWeekdays);
-  };
-
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsPending(true);
@@ -64,12 +59,16 @@ export const EditDayModal = ({
           description,
           weekdays: selectedWeekdays,
         });
+        onSuccess?.(routineDay._id);
       } else {
-        await createDay({
+        const newDayId = await createDay({
           routineId,
           description,
           weekdays: selectedWeekdays,
         });
+        if (newDayId) {
+          onSuccess?.(newDayId);
+        }
       }
 
       onClose();
@@ -79,17 +78,6 @@ export const EditDayModal = ({
       setIsPending(false);
     }
   };
-
-  // Weekday labels with full names for accessibility
-  const weekdayLabels = [
-    { short: "S", full: "Sunday", value: 0 },
-    { short: "M", full: "Monday", value: 1 },
-    { short: "T", full: "Tuesday", value: 2 },
-    { short: "W", full: "Wednesday", value: 3 },
-    { short: "T", full: "Thursday", value: 4 },
-    { short: "F", full: "Friday", value: 5 },
-    { short: "S", full: "Saturday", value: 6 },
-  ];
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
@@ -142,41 +130,10 @@ export const EditDayModal = ({
                 Select days of the week for this workout
               </p>
 
-              {/* Weekday Selector */}
-              <div className="flex gap-2 justify-between">
-                {weekdayLabels.map((day) => (
-                  <button
-                    key={`weekday-${day.value}`}
-                    type="button"
-                    onClick={() => toggleWeekday(day.value)}
-                    aria-label={day.full}
-                    aria-pressed={selectedWeekdays.includes(day.value)}
-                    className={`
-                      w-10 h-10 rounded-full text-sm font-medium transition-all duration-200
-                      flex items-center justify-center
-                      ${
-                        selectedWeekdays.includes(day.value)
-                          ? "bg-primary text-primary-foreground shadow-md scale-105"
-                          : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }
-                    `}
-                  >
-                    {day.short}
-                  </button>
-                ))}
-              </div>
-
-              {/* Selected days summary */}
-              {selectedWeekdays.length > 0 && (
-                <p className="text-xs text-muted-foreground pt-1">
-                  Selected:{" "}
-                  <span className="text-foreground">
-                    {selectedWeekdays
-                      .map((d) => dayjs().day(d).format("dddd"))
-                      .join(", ")}
-                  </span>
-                </p>
-              )}
+              <WeekdaySelector
+                selectedWeekdays={selectedWeekdays}
+                onChange={setWeekdays}
+              />
             </div>
           </div>
 
