@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -24,9 +24,11 @@ export class WorkoutPage extends BasePage {
     super(page);
 
     // No active session state
-    this.pageHeading = page.getByRole("heading", { name: /no active workout/i });
+    this.pageHeading = page.getByRole("heading", {
+      name: /no active workout/i,
+    });
     this.noActiveSessionMessage = page.getByText(
-      /start a new workout session to begin tracking/i
+      /start a new workout session to begin tracking/i,
     );
     this.startNewWorkoutButton = page.getByRole("button", {
       name: /start new workout/i,
@@ -67,7 +69,7 @@ export class WorkoutPage extends BasePage {
     await this.waitForLoadingComplete();
     // Either no active session or active session should be visible
     await expect(
-      this.page.locator("text=/no active workout|session|workout/i").first()
+      this.page.locator("text=/no active workout|session|workout/i").first(),
     ).toBeVisible({ timeout: 15000 });
   }
 
@@ -136,7 +138,7 @@ export class WorkoutPage extends BasePage {
    */
   async isFinishConfirmationOpen(): Promise<boolean> {
     return this.isVisible(
-      this.page.getByRole("dialog").filter({ hasText: /finish|end|complete/i })
+      this.page.getByRole("dialog").filter({ hasText: /finish|end|complete/i }),
     );
   }
 
@@ -163,7 +165,7 @@ export class WorkoutPage extends BasePage {
    */
   async isAddExerciseModalOpen(): Promise<boolean> {
     return this.isVisible(
-      this.page.getByRole("dialog").filter({ hasText: /exercise/i })
+      this.page.getByRole("dialog").filter({ hasText: /exercise/i }),
     );
   }
 

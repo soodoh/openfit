@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -19,7 +19,9 @@ export class LoginPage extends BasePage {
     this.passwordInput = page.getByLabel(/password/i);
     this.loginButton = page.getByRole("button", { name: /login/i });
     this.registerLink = page.getByRole("link", { name: /create an account/i });
-    this.backToSignInLink = page.getByRole("link", { name: /back to sign in/i });
+    this.backToSignInLink = page.getByRole("link", {
+      name: /back to sign in/i,
+    });
     this.emailError = page.locator("text=Invalid email");
     this.passwordError = page.locator(".text-destructive");
   }

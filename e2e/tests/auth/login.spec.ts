@@ -1,4 +1,4 @@
-import { test, expect } from "../../fixtures/base.fixture";
+import { expect, test } from "@/e2e/fixtures/base.fixture";
 
 /**
  * Login page E2E tests

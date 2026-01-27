@@ -1,4 +1,4 @@
-import { test, expect } from "../../fixtures/base.fixture";
+import { expect, test } from "@/e2e/fixtures/base.fixture";
 
 /**
  * Dashboard E2E tests
@@ -35,18 +35,18 @@ test.describe("Dashboard", () => {
 
     // Check quick access section
     await expect(
-      dashboardPage.page.getByRole("heading", { name: /quick access/i })
+      dashboardPage.page.getByRole("heading", { name: /quick access/i }),
     ).toBeVisible();
 
     // Verify links exist
     await expect(
-      dashboardPage.page.getByRole("link", { name: /routines/i }).first()
+      dashboardPage.page.getByRole("link", { name: /routines/i }).first(),
     ).toBeVisible();
     await expect(
-      dashboardPage.page.getByRole("link", { name: /exercises/i }).first()
+      dashboardPage.page.getByRole("link", { name: /exercises/i }).first(),
     ).toBeVisible();
     await expect(
-      dashboardPage.page.getByRole("link", { name: /workout logs/i }).first()
+      dashboardPage.page.getByRole("link", { name: /workout logs/i }).first(),
     ).toBeVisible();
   });
 
@@ -65,7 +65,7 @@ test.describe("Dashboard", () => {
     // Should be on routines page
     await expect(page).toHaveURL("/routines");
     await expect(
-      page.getByRole("heading", { name: /^routines$/i })
+      page.getByRole("heading", { name: /^routines$/i }),
     ).toBeVisible();
   });
 
@@ -84,7 +84,7 @@ test.describe("Dashboard", () => {
     // Should be on exercises page
     await expect(page).toHaveURL("/exercises");
     await expect(
-      page.getByRole("heading", { name: /^exercises$/i })
+      page.getByRole("heading", { name: /^exercises$/i }),
     ).toBeVisible();
   });
 
@@ -103,7 +103,7 @@ test.describe("Dashboard", () => {
     // Should be on logs page
     await expect(page).toHaveURL("/logs");
     await expect(
-      page.getByRole("heading", { name: /workout logs/i })
+      page.getByRole("heading", { name: /workout logs/i }),
     ).toBeVisible();
   });
 
@@ -151,8 +151,13 @@ test.describe("Dashboard", () => {
     const emptyState = page.getByText(/no workouts yet/i);
     const sessionCards = page.locator('[class*="cursor-pointer"]');
 
-    const hasEmpty = await emptyState.isVisible({ timeout: 2000 }).catch(() => false);
-    const hasCards = await sessionCards.first().isVisible({ timeout: 2000 }).catch(() => false);
+    const hasEmpty = await emptyState
+      .isVisible({ timeout: 2000 })
+      .catch(() => false);
+    const hasCards = await sessionCards
+      .first()
+      .isVisible({ timeout: 2000 })
+      .catch(() => false);
 
     // One of them should be visible
     expect(hasEmpty || hasCards).toBe(true);
@@ -166,7 +171,9 @@ test.describe("Dashboard", () => {
 
     // View all link is only visible when there are sessions
     const viewAllLink = page.getByRole("link", { name: /view all/i });
-    const isVisible = await viewAllLink.isVisible({ timeout: 2000 }).catch(() => false);
+    const isVisible = await viewAllLink
+      .isVisible({ timeout: 2000 })
+      .catch(() => false);
 
     if (isVisible) {
       await viewAllLink.click();

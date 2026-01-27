@@ -57,6 +57,13 @@ const eslintConfig = defineConfig([
       "no-relative-import-paths/no-relative-import-paths": "off",
     },
   },
+  // Disable react-hooks/rules-of-hooks for e2e folder (Playwright fixtures use `use()` which is not a React Hook)
+  {
+    files: ["e2e/**/*.{js,ts,tsx}"],
+    rules: {
+      "react-hooks/rules-of-hooks": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

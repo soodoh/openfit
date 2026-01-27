@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -23,7 +23,7 @@ export class ExercisesPage extends BasePage {
 
     this.pageHeading = page.getByRole("heading", { name: /^exercises$/i });
     this.pageSubtext = page.getByText(
-      /browse and discover exercises for your workouts/i
+      /browse and discover exercises for your workouts/i,
     );
     this.searchInput = page.getByPlaceholder(/search exercises/i);
 
@@ -100,7 +100,7 @@ export class ExercisesPage extends BasePage {
    */
   async selectFilter(
     filterType: "equipment" | "level" | "category" | "muscle",
-    value: string
+    value: string,
   ): Promise<void> {
     let trigger: Locator;
 
@@ -123,7 +123,9 @@ export class ExercisesPage extends BasePage {
     }
 
     await trigger.click();
-    await this.page.getByRole("option", { name: new RegExp(value, "i") }).click();
+    await this.page
+      .getByRole("option", { name: new RegExp(value, "i") })
+      .click();
     await this.waitForLoadingComplete();
   }
 
@@ -149,9 +151,7 @@ export class ExercisesPage extends BasePage {
    */
   async getExerciseCardsCount(): Promise<number> {
     await this.waitForConvexData();
-    const cards = this.page.locator(
-      ".grid > div[class*='rounded']"
-    );
+    const cards = this.page.locator(".grid > div[class*='rounded']");
     return await cards.count();
   }
 
@@ -220,7 +220,7 @@ export class ExercisesPage extends BasePage {
    */
   async isExerciseDetailOpen(): Promise<boolean> {
     return this.isVisible(
-      this.page.getByRole("dialog").filter({ hasText: /exercise/i })
+      this.page.getByRole("dialog").filter({ hasText: /exercise/i }),
     );
   }
 

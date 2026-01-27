@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -22,11 +22,13 @@ export class LogsPage extends BasePage {
 
     this.pageHeading = page.getByRole("heading", { name: /workout logs/i });
     this.pageSubtext = page.getByText(
-      /track your progress and review past sessions/i
+      /track your progress and review past sessions/i,
     );
 
     // Calendar elements
-    this.calendar = page.locator('[class*="calendar"], [class*="grid"]').first();
+    this.calendar = page
+      .locator('[class*="calendar"], [class*="grid"]')
+      .first();
     this.calendarHeader = page.locator("text=/\\w+ \\d{4}/i");
     this.previousMonthButton = page.getByRole("button", {
       name: /previous|prev|left|</i,
@@ -192,7 +194,7 @@ export class LogsPage extends BasePage {
    */
   async isNewSessionModalOpen(): Promise<boolean> {
     return this.isVisible(
-      this.page.getByRole("dialog").filter({ hasText: /session|workout/i })
+      this.page.getByRole("dialog").filter({ hasText: /session|workout/i }),
     );
   }
 
@@ -224,7 +226,7 @@ export class LogsPage extends BasePage {
     const days: number[] = [];
     // Find days that have session indicators
     const indicators = this.page.locator(
-      "[class*='indicator'], [class*='dot'], [class*='session']"
+      "[class*='indicator'], [class*='dot'], [class*='session']",
     );
     const count = await indicators.count();
 

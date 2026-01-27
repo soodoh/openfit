@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -149,7 +149,7 @@ export class DashboardPage extends BasePage {
    */
   async isNewSessionModalOpen(): Promise<boolean> {
     return this.isVisible(
-      this.page.getByRole("dialog").filter({ hasText: /new session|workout/i })
+      this.page.getByRole("dialog").filter({ hasText: /new session|workout/i }),
     );
   }
 
@@ -189,7 +189,7 @@ export class DashboardPage extends BasePage {
   async getRecentSessionsCount(): Promise<number> {
     await this.waitForConvexData();
     const cards = this.page.locator(
-      '[class*="group block"], [class*="cursor-pointer"]'
+      '[class*="group block"], [class*="cursor-pointer"]',
     );
     return await cards.count();
   }
@@ -206,7 +206,7 @@ export class DashboardPage extends BasePage {
    */
   async clickRecentSession(index: number): Promise<void> {
     const cards = this.page.locator(
-      '[class*="group block"], [class*="cursor-pointer"]'
+      '[class*="group block"], [class*="cursor-pointer"]',
     );
     await cards.nth(index).click();
   }

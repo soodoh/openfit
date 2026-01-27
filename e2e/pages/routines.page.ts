@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -19,7 +19,7 @@ export class RoutinesPage extends BasePage {
 
     this.pageHeading = page.getByRole("heading", { name: /^routines$/i });
     this.pageSubtext = page.getByText(
-      /manage your workout routines and training schedules/i
+      /manage your workout routines and training schedules/i,
     );
     this.searchInput = page.getByPlaceholder(/search routines/i);
     this.createRoutineButton = page.getByRole("button", {
@@ -95,7 +95,7 @@ export class RoutinesPage extends BasePage {
    */
   async isCreateRoutineModalOpen(): Promise<boolean> {
     return this.isVisible(
-      this.page.getByRole("dialog").filter({ hasText: /routine/i })
+      this.page.getByRole("dialog").filter({ hasText: /routine/i }),
     );
   }
 

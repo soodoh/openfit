@@ -1,4 +1,4 @@
-import { test, expect } from "../../fixtures/base.fixture";
+import { expect, test } from "@/e2e/fixtures/base.fixture";
 
 /**
  * Routine CRUD operations E2E tests
@@ -59,7 +59,9 @@ test.describe("Routine CRUD", () => {
     });
 
     // Check if our test routine exists
-    const exists = await routineCard.isVisible({ timeout: 5000 }).catch(() => false);
+    const exists = await routineCard
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
     if (!exists) {
       test.skip();
       return;
@@ -92,7 +94,8 @@ test.describe("Routine CRUD", () => {
       await routinesPage.waitForConvexData();
 
       // Verify update
-      const updatedExists = await routinesPage.routineExists(updatedRoutineName);
+      const updatedExists =
+        await routinesPage.routineExists(updatedRoutineName);
       expect(updatedExists).toBe(true);
     }
   });

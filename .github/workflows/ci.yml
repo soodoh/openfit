@@ -1,0 +1,176 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run lint
+        run: pnpm lint
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm test:run
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    services:
+      convex-backend:
+        image: ghcr.io/get-convex/convex-backend:latest
+        ports:
+          - 3210:3210
+          - 3211:3211
+        env:
+          CONVEX_SITE_ORIGIN: http://localhost:3211
+        options: >-
+          --health-cmd "curl -f http://localhost:3210/version"
+          --health-interval 5s
+          --health-timeout 10s
+          --health-retries 10
+          --health-start-period 30s
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate JWT keys and set Convex environment variables
+        env:
+          CONVEX_SELF_HOSTED_URL: http://localhost:3210
+        run: |
+          # Generate RS256 key pair and set Convex environment variables
+          node -e "
+            const { randomBytes } = require('crypto');
+            const { exportJWK, exportPKCS8, generateKeyPair } = require('jose');
+            const { execSync } = require('child_process');
+
+            (async () => {
+              const keys = await generateKeyPair('RS256', { extractable: true });
+              const privateKey = await exportPKCS8(keys.privateKey);
+              const publicKey = await exportJWK(keys.publicKey);
+              const jwks = JSON.stringify({ keys: [{ use: 'sig', ...publicKey }] });
+              const privateKeyOneLine = privateKey.trimEnd().replace(/\n/g, ' ');
+
+              const url = process.env.CONVEX_SELF_HOSTED_URL;
+
+              // Set environment variables on Convex backend
+              execSync(\`npx convex env set --url \"\${url}\" SITE_URL \"http://localhost:3211\"\`, { stdio: 'inherit' });
+              execSync(\`npx convex env set --url \"\${url}\" -- JWT_PRIVATE_KEY '\${privateKeyOneLine}'\`, { stdio: 'inherit' });
+              execSync(\`npx convex env set --url \"\${url}\" JWKS '\${jwks}'\`, { stdio: 'inherit' });
+
+              console.log('JWT keys generated and Convex environment variables set successfully');
+            })();
+          "
+
+      - name: Deploy Convex schema
+        env:
+          CONVEX_SELF_HOSTED_URL: http://localhost:3210
+        run: npx convex deploy --url "$CONVEX_SELF_HOSTED_URL"
+
+      - name: Seed database
+        env:
+          CONVEX_SELF_HOSTED_URL: http://localhost:3210
+        run: npx convex run --url "$CONVEX_SELF_HOSTED_URL" seed:run
+
+      - name: Create test user
+        env:
+          CONVEX_SELF_HOSTED_URL: http://localhost:3210
+          TEST_USER: ${{ secrets.TEST_USER }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+        run: |
+          npx convex run --url "$CONVEX_SELF_HOSTED_URL" seed:createTestUserAction \
+            '{"email": "'"$TEST_USER"'", "password": "'"$TEST_PASSWORD"'"}'
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+
+      - name: Start Next.js server
+        env:
+          NEXT_PUBLIC_CONVEX_URL: http://localhost:3210
+          TEST_USER: ${{ secrets.TEST_USER }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+        run: |
+          pnpm dev &
+          # Wait for Next.js to be ready
+          npx wait-on http://localhost:3000 --timeout 120000
+
+      - name: Run Playwright tests
+        env:
+          NEXT_PUBLIC_CONVEX_URL: http://localhost:3210
+          TEST_USER: ${{ secrets.TEST_USER }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          CI: true
+        run: pnpm test:e2e --project=chromium
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7

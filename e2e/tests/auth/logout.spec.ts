@@ -1,5 +1,5 @@
-import { test, expect } from "../../fixtures/base.fixture";
-import { logout } from "../../utils/auth.helper";
+import { expect, test } from "@/e2e/fixtures/base.fixture";
+import { logout } from "@/e2e/utils/auth.helper";
 
 /**
  * Logout E2E tests

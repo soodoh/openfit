@@ -1,4 +1,4 @@
-import { test, expect } from "../../fixtures/base.fixture";
+import { expect, test } from "@/e2e/fixtures/base.fixture";
 
 /**
  * Workout Logs Calendar E2E tests
@@ -133,7 +133,9 @@ test.describe("Workout Logs Calendar", () => {
     const newSessionBtn = logsPage.page.getByRole("button", {
       name: /new session/i,
     });
-    const isVisible = await newSessionBtn.isVisible({ timeout: 2000 }).catch(() => false);
+    const isVisible = await newSessionBtn
+      .isVisible({ timeout: 2000 })
+      .catch(() => false);
 
     if (!hasEmpty) {
       // If there are sessions, the button should be visible
@@ -148,7 +150,9 @@ test.describe("Workout Logs Calendar", () => {
 
     // Find new session button (could be in header or empty state)
     const newSessionBtn = page.getByRole("button", { name: /new session/i });
-    const isVisible = await newSessionBtn.isVisible({ timeout: 2000 }).catch(() => false);
+    const isVisible = await newSessionBtn
+      .isVisible({ timeout: 2000 })
+      .catch(() => false);
 
     if (isVisible) {
       await newSessionBtn.click();
@@ -174,14 +178,18 @@ test.describe("Workout Logs Calendar", () => {
     if (hasCalendar) {
       // Look for navigation buttons (chevron icons)
       const prevButton = logsPage.page.locator(
-        'button:has([class*="lucide-chevron-left"])'
+        'button:has([class*="lucide-chevron-left"])',
       );
       const nextButton = logsPage.page.locator(
-        'button:has([class*="lucide-chevron-right"])'
+        'button:has([class*="lucide-chevron-right"])',
       );
 
-      const hasPrev = await prevButton.isVisible({ timeout: 2000 }).catch(() => false);
-      const hasNext = await nextButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasPrev = await prevButton
+        .isVisible({ timeout: 2000 })
+        .catch(() => false);
+      const hasNext = await nextButton
+        .isVisible({ timeout: 2000 })
+        .catch(() => false);
 
       expect(hasPrev || hasNext).toBe(true);
     }
@@ -201,7 +209,9 @@ test.describe("Workout Logs Calendar", () => {
       const createButton = logsPage.page.getByRole("button", {
         name: /new session|start|create/i,
       });
-      const isVisible = await createButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const isVisible = await createButton
+        .isVisible({ timeout: 2000 })
+        .catch(() => false);
       expect(isVisible).toBe(true);
     }
   });
@@ -214,7 +224,9 @@ test.describe("Workout Logs Calendar", () => {
 
     // Find and click new session button
     const newSessionBtn = page.getByRole("button", { name: /new session/i });
-    const isVisible = await newSessionBtn.isVisible({ timeout: 2000 }).catch(() => false);
+    const isVisible = await newSessionBtn
+      .isVisible({ timeout: 2000 })
+      .catch(() => false);
 
     if (isVisible) {
       await newSessionBtn.click();

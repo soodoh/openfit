@@ -1,4 +1,4 @@
-import { Page, expect } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 
 /**
  * Authentication helper utilities for E2E tests
@@ -15,7 +15,7 @@ export async function loginAsTestUser(page: Page): Promise<void> {
 
   if (!testUser || !testPassword) {
     throw new Error(
-      "TEST_USER and TEST_PASSWORD environment variables are required"
+      "TEST_USER and TEST_PASSWORD environment variables are required",
     );
   }
 
@@ -49,7 +49,9 @@ export async function logout(page: Page): Promise<void> {
     await userMenu.click();
 
     // Click logout option
-    const logoutButton = page.getByRole("menuitem", { name: /logout|sign out/i });
+    const logoutButton = page.getByRole("menuitem", {
+      name: /logout|sign out/i,
+    });
     await logoutButton.click();
   } else {
     // Try direct navigation to logout
@@ -91,7 +93,7 @@ export function getTestCredentials(): { email: string; password: string } {
 
   if (!email || !password) {
     throw new Error(
-      "TEST_USER and TEST_PASSWORD environment variables are required"
+      "TEST_USER and TEST_PASSWORD environment variables are required",
     );
   }
 

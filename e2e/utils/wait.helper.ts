@@ -1,4 +1,4 @@
-import { Page, expect, Locator } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 
 /**
  * Wait utilities for handling Convex real-time updates and async operations
@@ -15,7 +15,7 @@ const DEFAULT_CONVEX_TIMEOUT = 10000;
  */
 export async function waitForConvexReady(
   page: Page,
-  timeout = DEFAULT_CONVEX_TIMEOUT
+  timeout = DEFAULT_CONVEX_TIMEOUT,
 ): Promise<void> {
   // Wait for any loading spinners to disappear
   const spinner = page.locator(".animate-spin").first();
@@ -39,7 +39,7 @@ export async function waitForConvexReady(
  */
 export async function waitForMutation(
   page: Page,
-  timeout = DEFAULT_CONVEX_TIMEOUT
+  timeout = DEFAULT_CONVEX_TIMEOUT,
 ): Promise<void> {
   // Wait for network to settle
   await page.waitForLoadState("networkidle");
@@ -53,7 +53,7 @@ export async function waitForMutation(
  */
 export async function waitForElement(
   locator: Locator,
-  timeout = DEFAULT_CONVEX_TIMEOUT
+  timeout = DEFAULT_CONVEX_TIMEOUT,
 ): Promise<void> {
   await expect(locator).toBeVisible({ timeout });
 }
@@ -63,7 +63,7 @@ export async function waitForElement(
  */
 export async function waitForElementHidden(
   locator: Locator,
-  timeout = DEFAULT_CONVEX_TIMEOUT
+  timeout = DEFAULT_CONVEX_TIMEOUT,
 ): Promise<void> {
   await expect(locator).toBeHidden({ timeout });
 }
@@ -74,7 +74,7 @@ export async function waitForElementHidden(
 export async function waitForCountChange(
   locator: Locator,
   expectedCount: number,
-  timeout = DEFAULT_CONVEX_TIMEOUT
+  timeout = DEFAULT_CONVEX_TIMEOUT,
 ): Promise<void> {
   await expect(locator).toHaveCount(expectedCount, { timeout });
 }
@@ -85,7 +85,7 @@ export async function waitForCountChange(
 export async function waitForText(
   page: Page,
   text: string | RegExp,
-  timeout = DEFAULT_CONVEX_TIMEOUT
+  timeout = DEFAULT_CONVEX_TIMEOUT,
 ): Promise<void> {
   if (typeof text === "string") {
     await expect(page.getByText(text)).toBeVisible({ timeout });
@@ -100,7 +100,7 @@ export async function waitForText(
 export async function waitForUrl(
   page: Page,
   url: string | RegExp,
-  timeout = DEFAULT_CONVEX_TIMEOUT
+  timeout = DEFAULT_CONVEX_TIMEOUT,
 ): Promise<void> {
   await expect(page).toHaveURL(url, { timeout });
 }
@@ -110,7 +110,7 @@ export async function waitForUrl(
  */
 export async function waitForModalOpen(
   page: Page,
-  timeout = DEFAULT_CONVEX_TIMEOUT
+  timeout = DEFAULT_CONVEX_TIMEOUT,
 ): Promise<void> {
   await expect(page.getByRole("dialog")).toBeVisible({ timeout });
 }
@@ -120,7 +120,7 @@ export async function waitForModalOpen(
  */
 export async function waitForModalClose(
   page: Page,
-  timeout = DEFAULT_CONVEX_TIMEOUT
+  timeout = DEFAULT_CONVEX_TIMEOUT,
 ): Promise<void> {
   await expect(page.getByRole("dialog")).toBeHidden({ timeout });
 }
@@ -131,7 +131,7 @@ export async function waitForModalClose(
 export async function waitForToast(
   page: Page,
   message?: string | RegExp,
-  timeout = DEFAULT_CONVEX_TIMEOUT
+  timeout = DEFAULT_CONVEX_TIMEOUT,
 ): Promise<void> {
   const toastLocator = message
     ? page.locator("[class*='toast']").filter({ hasText: message })
@@ -145,7 +145,7 @@ export async function waitForToast(
  */
 export async function waitForToastDismiss(
   page: Page,
-  timeout = DEFAULT_CONVEX_TIMEOUT
+  timeout = DEFAULT_CONVEX_TIMEOUT,
 ): Promise<void> {
   await expect(page.locator("[class*='toast']")).toBeHidden({ timeout });
 }
@@ -159,7 +159,7 @@ export async function retryUntilSuccess<T>(
     timeout?: number;
     interval?: number;
     errorMessage?: string;
-  } = {}
+  } = {},
 ): Promise<T> {
   const {
     timeout = DEFAULT_CONVEX_TIMEOUT,
@@ -185,7 +185,7 @@ export async function retryUntilSuccess<T>(
  */
 export async function waitForDebounce(
   page: Page,
-  debounceMs = 350
+  debounceMs = 350,
 ): Promise<void> {
   await page.waitForTimeout(debounceMs + 50);
 }
@@ -199,7 +199,7 @@ export async function pollUntil(
     timeout?: number;
     interval?: number;
     errorMessage?: string;
-  } = {}
+  } = {},
 ): Promise<void> {
   const {
     timeout = DEFAULT_CONVEX_TIMEOUT,

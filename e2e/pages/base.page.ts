@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 
 /**
  * Base page object with common utilities for all pages
@@ -94,6 +94,8 @@ export class BasePage {
    * Take a screenshot with a descriptive name
    */
   async screenshot(name: string): Promise<void> {
-    await this.page.screenshot({ path: `test-results/screenshots/${name}.png` });
+    await this.page.screenshot({
+      path: `test-results/screenshots/${name}.png`,
+    });
   }
 }

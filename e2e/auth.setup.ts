@@ -1,4 +1,4 @@
-import { test as setup, expect } from "@playwright/test";
+import { expect, test as setup } from "@playwright/test";
 import path from "path";
 
 const authFile = path.join(__dirname, ".auth/user.json");
@@ -21,7 +21,7 @@ setup("authenticate", async ({ page }) => {
   if (!testUser || !testPassword) {
     throw new Error(
       "TEST_USER and TEST_PASSWORD environment variables are required. " +
-        "Please set them in .env.local"
+        "Please set them in .env.local",
     );
   }
 

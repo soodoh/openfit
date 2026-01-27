@@ -1,10 +1,10 @@
+import { DashboardPage } from "@/e2e/pages/dashboard.page";
+import { ExercisesPage } from "@/e2e/pages/exercises.page";
+import { LoginPage } from "@/e2e/pages/login.page";
+import { LogsPage } from "@/e2e/pages/logs.page";
+import { RoutinesPage } from "@/e2e/pages/routines.page";
+import { WorkoutPage } from "@/e2e/pages/workout.page";
 import { test as base } from "@playwright/test";
-import { LoginPage } from "../pages/login.page";
-import { DashboardPage } from "../pages/dashboard.page";
-import { RoutinesPage } from "../pages/routines.page";
-import { ExercisesPage } from "../pages/exercises.page";
-import { WorkoutPage } from "../pages/workout.page";
-import { LogsPage } from "../pages/logs.page";
 
 /**
  * Type definitions for page fixtures

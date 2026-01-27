@@ -1,4 +1,4 @@
-import { test, expect } from "../../fixtures/base.fixture";
+import { expect, test } from "@/e2e/fixtures/base.fixture";
 
 /**
  * Routines List Page E2E tests
@@ -51,7 +51,7 @@ test.describe("Routines List", () => {
 
     // Either filtered results or no results
     expect(searchedNames.length !== initialNames.length || hasNoResults).toBe(
-      true
+      true,
     );
   });
 
