@@ -146,13 +146,14 @@ jobs:
 
       - name: Create test user
         env:
-          CONVEX_SELF_HOSTED_URL: http://localhost:3210
-          CONVEX_SELF_HOSTED_ADMIN_KEY: ${{ steps.admin-key.outputs.key }}
           TEST_USER: ${{ secrets.TEST_USER }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
         run: |
-          npx convex run --url "$CONVEX_SELF_HOSTED_URL" seed:createTestUserAction \
-            '{"email": "'"$TEST_USER"'", "password": "'"$TEST_PASSWORD"'"}'
+          # Sign up test user via the auth HTTP endpoint
+          curl -X POST "http://localhost:3211/api/auth/signin/password" \
+            -H "Content-Type: application/json" \
+            -d '{"flow": "signUp", "email": "'"$TEST_USER"'", "password": "'"$TEST_PASSWORD"'"}' \
+            -v || echo "User may already exist, continuing..."
 
       - name: Install Playwright Chromium
         run: npx playwright install chromium
