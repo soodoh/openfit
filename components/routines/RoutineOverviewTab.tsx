@@ -1,5 +1,6 @@
 "use client";
 
+import { DeleteDayModal } from "@/components/routines/DeleteDayModal";
 import { DeleteRoutineModal } from "@/components/routines/DeleteRoutineModal";
 import { EditDayModal } from "@/components/routines/EditDayModal";
 import { EditRoutineModal } from "@/components/routines/EditRoutineModal";
@@ -43,6 +44,7 @@ export const RoutineOverviewTab = ({
   const [isAddingDay, setIsAddingDay] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [startingDayId, setStartingDayId] = useState<RoutineDayId | null>(null);
+  const [deletingDayId, setDeletingDayId] = useState<RoutineDayId | null>(null);
 
   const createSession = useMutation(api.mutations.sessions.create);
 
@@ -129,6 +131,7 @@ export const RoutineOverviewTab = ({
                 isStarting={startingDayId === day._id}
                 onSelect={() => onSelectDay(day._id)}
                 onStartWorkout={() => handleStartWorkout(day._id)}
+                onDelete={() => setDeletingDayId(day._id)}
               />
             ))}
           </div>
@@ -177,6 +180,13 @@ export const RoutineOverviewTab = ({
         onClose={() => setIsDeleting(false)}
         routineId={routine._id}
       />
+      {deletingDayId && (
+        <DeleteDayModal
+          open={!!deletingDayId}
+          onClose={() => setDeletingDayId(null)}
+          dayId={deletingDayId}
+        />
+      )}
     </div>
   );
 };
@@ -188,6 +198,7 @@ const DayListItem = ({
   isStarting,
   onSelect,
   onStartWorkout,
+  onDelete,
 }: {
   day: RoutineDay;
   index: number;
@@ -195,6 +206,7 @@ const DayListItem = ({
   isStarting: boolean;
   onSelect: () => void;
   onStartWorkout: () => void;
+  onDelete: () => void;
 }) => {
   return (
     <div className="group flex items-center gap-3 p-4 hover:bg-accent/30 transition-colors">
@@ -230,26 +242,39 @@ const DayListItem = ({
         </div>
       </button>
 
-      {/* Start Workout Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={(e) => {
-          e.stopPropagation();
-          onStartWorkout();
-        }}
-        disabled={!!currentSession || isStarting}
-        className="gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        {isStarting ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <>
-            <Play className="h-4 w-4" />
-            Start
-          </>
-        )}
-      </Button>
+      {/* Action Buttons */}
+      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onStartWorkout();
+          }}
+          disabled={!!currentSession || isStarting}
+          className="gap-2"
+        >
+          {isStarting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <>
+              <Play className="h-4 w-4" />
+              Start
+            </>
+          )}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 };
