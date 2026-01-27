@@ -1,4 +1,3 @@
-import { createAccount } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import {
@@ -62,90 +61,6 @@ export const mockUserData = action({
     }
 
     return await ctx.runAction(internal.seed.seedMockData, { userId });
-  },
-});
-
-/**
- * Check if a test user already exists by email.
- */
-export const checkTestUserExists = internalMutation({
-  args: { email: v.string() },
-  handler: async (
-    ctx,
-    { email },
-  ): Promise<{ exists: boolean; userId: Id<"users"> | null }> => {
-    const existingAccount = await ctx.db
-      .query("authAccounts")
-      .filter((q) => q.eq(q.field("providerAccountId"), email))
-      .first();
-
-    if (existingAccount) {
-      return { exists: true, userId: existingAccount.userId };
-    }
-    return { exists: false, userId: null };
-  },
-});
-
-/**
- * Internal action to create a test user via createAccount.
- */
-export const createTestUserInternal = internalAction({
-  args: {
-    email: v.string(),
-    password: v.string(),
-  },
-  handler: async (
-    ctx,
-    { email, password },
-  ): Promise<{ userId: Id<"users"> }> => {
-    const { user } = await createAccount(ctx, {
-      provider: "password",
-      account: {
-        id: email,
-        secret: password,
-      },
-      profile: {
-        email,
-      },
-      shouldLinkViaEmail: false,
-      shouldLinkViaPhone: false,
-    });
-
-    console.log(`Created test user: ${email}`);
-    return { userId: user._id };
-  },
-});
-
-/**
- * Create a test user for CI/E2E testing.
- * Run: pnpm convex run seed:createTestUserAction '{"email": "test@example.com", "password": "password123"}'
- */
-export const createTestUserAction = action({
-  args: {
-    email: v.string(),
-    password: v.string(),
-  },
-  handler: async (
-    ctx,
-    { email, password },
-  ): Promise<{ userId: Id<"users"> | null; created: boolean }> => {
-    // Check if user already exists
-    const existing = await ctx.runMutation(internal.seed.checkTestUserExists, {
-      email,
-    });
-
-    if (existing.exists) {
-      console.log(`Test user already exists: ${email}`);
-      return { userId: existing.userId, created: false };
-    }
-
-    // Create new user via createAccount
-    const result = await ctx.runAction(internal.seed.createTestUserInternal, {
-      email,
-      password,
-    });
-
-    return { userId: result.userId, created: true };
   },
 });
 
