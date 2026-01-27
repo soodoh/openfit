@@ -70,7 +70,10 @@ export const mockUserData = action({
  */
 export const checkTestUserExists = internalMutation({
   args: { email: v.string() },
-  handler: async (ctx, { email }) => {
+  handler: async (
+    ctx,
+    { email },
+  ): Promise<{ exists: boolean; userId: Id<"users"> | null }> => {
     const existingAccount = await ctx.db
       .query("authAccounts")
       .filter((q) => q.eq(q.field("providerAccountId"), email))
@@ -91,7 +94,10 @@ export const createTestUserInternal = internalAction({
     email: v.string(),
     password: v.string(),
   },
-  handler: async (ctx, { email, password }) => {
+  handler: async (
+    ctx,
+    { email, password },
+  ): Promise<{ userId: Id<"users"> }> => {
     const { user } = await createAccount(ctx, {
       provider: "password",
       account: {
@@ -119,7 +125,10 @@ export const createTestUserAction = action({
     email: v.string(),
     password: v.string(),
   },
-  handler: async (ctx, { email, password }) => {
+  handler: async (
+    ctx,
+    { email, password },
+  ): Promise<{ userId: Id<"users"> | null; created: boolean }> => {
     // Check if user already exists
     const existing = await ctx.runMutation(internal.seed.checkTestUserExists, {
       email,
