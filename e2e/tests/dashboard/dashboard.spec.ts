@@ -6,30 +6,8 @@ import { expect, test } from "@/e2e/fixtures/base.fixture";
  * Tests for the main dashboard page (authenticated home page).
  */
 test.describe("Dashboard", () => {
-  test.beforeEach(async ({ dashboardPage, page, context }) => {
-    // Debug: Log auth state at test start
-    const cookies = await context.cookies();
-    const convexCookies = cookies.filter((c) => c.name.includes("convex"));
-    console.log("Test Start - Cookies:", convexCookies.length);
-    convexCookies.forEach((c) =>
-      console.log(`  ${c.name}: ${c.value.substring(0, 30)}...`),
-    );
-
-    // Check localStorage after page load
-    await page.goto("/");
-    const localStorage = await page.evaluate(() => {
-      const items: Record<string, string> = {};
-      for (let i = 0; i < window.localStorage.length; i++) {
-        const key = window.localStorage.key(i);
-        if (key?.includes("convex")) {
-          items[key] = window.localStorage.getItem(key)?.substring(0, 30) + "...";
-        }
-      }
-      return items;
-    });
-    console.log("Test Start - LocalStorage:", Object.keys(localStorage).length);
-    Object.entries(localStorage).forEach(([k, v]) => console.log(`  ${k}: ${v}`));
-    console.log("Test Start - Current URL:", page.url());
+  test.beforeEach(async ({ dashboardPage }) => {
+    await dashboardPage.goto();
   });
 
   test("should display welcome message", async ({ dashboardPage }) => {

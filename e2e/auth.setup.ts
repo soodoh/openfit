@@ -55,16 +55,7 @@ setup("authenticate", async ({ page }) => {
     });
 
     // Save auth state
-    const state = await page.context().storageState({ path: authFile });
-    console.log("CI Auth Setup - Saved storage state:");
-    console.log("  Cookies:", state.cookies.length);
-    console.log("  Origins:", state.origins.length);
-    if (state.origins[0]?.localStorage) {
-      console.log("  LocalStorage items:", state.origins[0].localStorage.length);
-      state.origins[0].localStorage.forEach((item) => {
-        console.log(`    ${item.name}: ${item.value.substring(0, 50)}...`);
-      });
-    }
+    await page.context().storageState({ path: authFile });
     return;
   }
 
@@ -87,11 +78,5 @@ setup("authenticate", async ({ page }) => {
   await expect(page.getByText(/welcome back/i)).toBeVisible({ timeout: 30000 });
 
   // Save storage state for reuse
-  const state = await page.context().storageState({ path: authFile });
-  console.log("Local Auth Setup - Saved storage state:");
-  console.log("  Cookies:", state.cookies.length);
-  console.log("  Origins:", state.origins.length);
-  if (state.origins[0]?.localStorage) {
-    console.log("  LocalStorage items:", state.origins[0].localStorage.length);
-  }
+  await page.context().storageState({ path: authFile });
 });
