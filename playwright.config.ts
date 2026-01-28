@@ -20,10 +20,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
 
   // Retry failed tests on CI
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
 
-  // Limit parallel workers on CI to avoid flakiness
-  workers: process.env.CI ? 1 : undefined,
+  // Use 50% of available CPU cores in CI for parallel execution
+  workers: process.env.CI ? "50%" : undefined,
 
   // Reporter configuration
   reporter: [
