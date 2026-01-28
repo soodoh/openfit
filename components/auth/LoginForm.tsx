@@ -10,6 +10,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { flattenError } from "zod";
 
@@ -64,6 +65,7 @@ const PROVIDER_ICONS: Record<string, React.ReactNode> = {
 
 export const LoginForm = ({ register }: { register?: boolean }) => {
   const { signIn } = useAuthActions();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -96,6 +98,8 @@ export const LoginForm = ({ register }: { register?: boolean }) => {
       formData.set("flow", register ? "signUp" : "signIn");
 
       await signIn("password", formData);
+      // Redirect to dashboard after successful auth
+      router.push("/");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Authentication failed";

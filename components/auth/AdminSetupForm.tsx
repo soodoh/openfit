@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SignUpSchema } from "@/lib/authSchema";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { flattenError } from "zod";
 
 export const AdminSetupForm = () => {
   const { signIn } = useAuthActions();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,6 +39,8 @@ export const AdminSetupForm = () => {
       formData.set("flow", "signUp");
 
       await signIn("password", formData);
+      // Redirect to dashboard after successful signup
+      router.push("/");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Account creation failed";

@@ -22,8 +22,8 @@ export default defineConfig({
   // Retry failed tests on CI
   retries: process.env.CI ? 1 : 0,
 
-  // Use 50% of available CPU cores in CI for parallel execution
-  workers: process.env.CI ? "50%" : undefined,
+  // Single worker in CI to avoid auth race conditions with Convex
+  workers: process.env.CI ? 1 : undefined,
 
   // Reporter configuration
   reporter: [
