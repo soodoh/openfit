@@ -163,7 +163,7 @@ jobs:
           TEST_USER: ${{ secrets.TEST_USER }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           CI: true
-        run: pnpm test:e2e --project=chromium
+        run: pnpm test:e2e --project=chromium --project=chromium-no-auth
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

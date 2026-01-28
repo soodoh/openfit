@@ -64,6 +64,8 @@ export default defineConfig({
         storageState: "e2e/.auth/user.json",
       },
       dependencies: ["setup"],
+      // Exclude login tests as they run under chromium-no-auth without auth state
+      testIgnore: /auth\/login\.spec\.ts/,
     },
     {
       name: "firefox",
@@ -105,8 +107,11 @@ export default defineConfig({
       name: "chromium-no-auth",
       use: {
         ...devices["Desktop Chrome"],
+        // Empty storage state means no auth cookies
         storageState: { cookies: [], origins: [] },
       },
+      // Depends on setup so the test user exists in the database
+      dependencies: ["setup"],
       testMatch: /auth\/login\.spec\.ts/,
     },
   ],
