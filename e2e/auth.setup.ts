@@ -44,12 +44,18 @@ setup("authenticate", async ({ page }) => {
     // Submit the form
     await page.getByRole("button", { name: /create admin account/i }).click();
 
-    // Wait for Convex auth to complete (button becomes disabled during submission)
-    // Then either the page redirects or we need to navigate manually
-    await page.waitForTimeout(3000);
+    // Wait for the app to redirect away from /register after successful account creation
+    // This is more reliable than a hardcoded timeout
+    await page.waitForURL((url) => !url.pathname.includes("/register"), {
+      timeout: 30000,
+    });
 
-    // Navigate to dashboard and verify auth state
-    await page.goto("/");
+    // If we're not on the dashboard yet, navigate there
+    if (!page.url().endsWith("/")) {
+      await page.goto("/");
+    }
+
+    // Verify auth state by checking for dashboard content
     await expect(page.getByText(/welcome back/i)).toBeVisible({
       timeout: 30000,
     });
