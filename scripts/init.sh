@@ -18,10 +18,11 @@ fi
 
 echo "Using Convex URL: $CONVEX_SELF_HOSTED_URL"
 
-# Set SITE_URL to match CONVEX_SITE_ORIGIN on the backend (http://localhost:3211)
+# Set SITE_URL to match CONVEX_SITE_ORIGIN on the backend
+# For nginx proxy setup, this should be the public URL (http://localhost:3000)
 # This ensures the token issuer matches what auth.config.ts expects
 echo "Running: npx convex env set SITE_URL"
-npx convex env set --url "$CONVEX_SELF_HOSTED_URL" SITE_URL "http://localhost:3211"
+npx convex env set --url "$CONVEX_SELF_HOSTED_URL" SITE_URL "${CONVEX_AUTH_SITE_URL:-http://localhost:3000}"
 
 echo "Running: npx convex env set -- JWT_PRIVATE_KEY"
 npx convex env set --url "$CONVEX_SELF_HOSTED_URL" -- JWT_PRIVATE_KEY "$JWT_PRIVATE_KEY"

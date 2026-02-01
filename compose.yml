@@ -1,12 +1,23 @@
 services:
+  # Nginx reverse proxy - the only exposed service
+  nginx:
+    image: nginx:alpine
+    ports:
+      - 3000:3000
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - nextjs
+      - convex-backend
+    networks:
+      - app-net
+
   # Next.js development server with hot reloading
   # Runs init.sh first to deploy Convex functions and seed data
   nextjs:
     image: node:22-alpine
     working_dir: /app
-    command: sh -c "corepack enable && pnpm install && sh scripts/init.sh && pnpm dev --port 3000"
-    ports:
-      - 3000:3000
+    command: sh -c "corepack enable && pnpm install && sh scripts/init.sh && pnpm dev --port 3001"
     volumes:
       - .:/app
       - /app/node_modules
@@ -25,15 +36,12 @@ services:
     image: ghcr.io/get-convex/convex-backend:latest
     stop_grace_period: 10s
     stop_signal: SIGINT
-    ports:
-      - 3210:3210
-      - 3211:3211  # HTTP actions port - exposed for OIDC discovery
     volumes:
       - convex-data:/convex/data
     env_file: ".env.local"
     environment:
-      # CONVEX_SITE_ORIGIN makes process.env.CONVEX_SITE_URL available in Convex functions
-      - CONVEX_SITE_ORIGIN=http://localhost:3211
+      # CONVEX_SITE_ORIGIN must match the browser's origin (the nginx proxy URL)
+      - CONVEX_SITE_ORIGIN=http://localhost:3000
     # Allow container to reach host's localhost for OIDC discovery
     extra_hosts:
       - "localhost:host-gateway"
