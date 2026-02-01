@@ -1,7 +1,7 @@
 services:
-  # Next.js production app
+  # Next.js production app (standalone - requires separate Convex backend)
   openfit:
-    image: ghcr.io/soodoh/openfit:latest
+    image: ghcr.io/soodoh/openfit-standalone:latest
     container_name: openfit
     restart: unless-stopped
     env_file: .env

@@ -1,0 +1,28 @@
+# OpenFit All-in-One Docker Compose
+# Simple single-container deployment
+
+services:
+  openfit:
+    image: ghcr.io/soodoh/openfit:latest
+    container_name: openfit
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - convex-data:/convex/data
+    env_file:
+      - .env
+    environment:
+      # Public URL for browser connections (change for external access)
+      - NEXT_PUBLIC_CONVEX_URL=http://localhost:${APP_PORT:-3000}/convex
+      # Auth callback URL (change for external access)
+      - CONVEX_AUTH_SITE_URL=http://localhost:${APP_PORT:-3000}
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
+volumes:
+  convex-data:
