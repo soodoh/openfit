@@ -15,8 +15,8 @@ For contributors who want to run the full development environment.
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/soodoh/open-fit.git
-cd open-fit
+git clone https://github.com/soodoh/openfit.git
+cd openfit
 pnpm install
 ```
 
@@ -121,7 +121,7 @@ Releases are automated via GitHub Actions:
    - `package.json` version is updated
    - `CHANGELOG.md` is generated
    - A git tag is created (e.g., `v1.2.0`)
-   - Docker image is built and pushed to `ghcr.io/soodoh/open-fit` with the version tag
+   - Docker image is built and pushed to `ghcr.io/soodoh/openfit` with the version tag
 
 ### Docker Image Tags
 

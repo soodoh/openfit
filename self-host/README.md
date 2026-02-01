@@ -12,13 +12,13 @@ Everything you need to self-host Open Fit.
 
 ```bash
 mkdir openfit && cd openfit
-curl -LO https://raw.githubusercontent.com/soodoh/open-fit/main/self-host/docker-compose.yml
+curl -LO https://raw.githubusercontent.com/soodoh/openfit/main/self-host/docker-compose.yml
 ```
 
 **2. Generate environment variables:**
 
 ```bash
-docker run --rm ghcr.io/soodoh/open-fit pnpm generate:keys
+docker run --rm ghcr.io/soodoh/openfit pnpm generate:keys
 ```
 
 This outputs all required keys and a command to generate the admin key. Run the admin key command shown in the output.
@@ -83,7 +83,7 @@ docker exec openfit ./scripts/init.sh
 
 **Regenerate keys?**
 ```bash
-docker run --rm ghcr.io/soodoh/open-fit pnpm generate:keys
+docker run --rm ghcr.io/soodoh/openfit pnpm generate:keys
 # Update .env with new values, then:
 docker compose down && docker compose up -d
 ```

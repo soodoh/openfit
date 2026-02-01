@@ -1,7 +1,7 @@
 services:
   # Next.js production app
   openfit:
-    image: ghcr.io/soodoh/open-fit:latest
+    image: ghcr.io/soodoh/openfit:latest
     container_name: openfit
     restart: unless-stopped
     env_file: .env

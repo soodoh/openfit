@@ -1,4 +1,4 @@
-# open-fit
+# openfit
 
 ## 0.3.3
 
