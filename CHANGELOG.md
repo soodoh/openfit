@@ -1,5 +1,11 @@
 # openfit
 
+## 0.4.1
+
+### Patch Changes
+
+- 0b82e7e: Fix all in one image
+
 ## 0.4.0
 
 ### Minor Changes
