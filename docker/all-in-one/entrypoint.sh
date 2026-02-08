@@ -165,4 +165,7 @@ echo "  - Next.js (port 3001)"
 echo "  - nginx (port 3000)"
 echo ""
 
+# Convex backend requires UTC and panics if TZ is set
+unset TZ
+
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
