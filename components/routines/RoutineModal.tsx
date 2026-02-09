@@ -5,11 +5,7 @@ import { RoutineOverviewTab } from "@/components/routines/RoutineOverviewTab";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMemo, useState } from "react";
-import type {
-  RoutineDayId,
-  RoutineWithDays,
-  WorkoutSessionWithData,
-} from "@/lib/convex-types";
+import type { RoutineWithDays, WorkoutSessionWithData } from "@/lib/types";
 
 const OVERVIEW_TAB = "overview";
 
@@ -32,16 +28,16 @@ export const RoutineModal = ({
   const validTab = useMemo(() => {
     if (activeTab === OVERVIEW_TAB) return OVERVIEW_TAB;
     const dayExists = routine.routineDays.some(
-      (day) => `day-${day._id}` === activeTab,
+      (day) => `day-${day.id}` === activeTab,
     );
     return dayExists ? activeTab : OVERVIEW_TAB;
   }, [activeTab, routine.routineDays]);
 
-  const handleSelectDay = (dayId: RoutineDayId) => {
+  const handleSelectDay = (dayId: string) => {
     setActiveTab(`day-${dayId}`);
   };
 
-  const handleDayAdded = (dayId: RoutineDayId) => {
+  const handleDayAdded = (dayId: string) => {
     // Auto-switch to the newly created day tab
     setActiveTab(`day-${dayId}`);
   };
@@ -87,8 +83,8 @@ export const RoutineModal = ({
 
               {routine.routineDays.map((day, index) => (
                 <TabsTrigger
-                  key={day._id}
-                  value={`day-${day._id}`}
+                  key={day.id}
+                  value={`day-${day.id}`}
                   className="shrink-0 data-[state=active]:bg-background"
                 >
                   Day {index + 1}: {truncateName(day.description)}
@@ -113,12 +109,12 @@ export const RoutineModal = ({
 
             {routine.routineDays.map((day) => (
               <TabsContent
-                key={day._id}
-                value={`day-${day._id}`}
+                key={day.id}
+                value={`day-${day.id}`}
                 className="h-full m-0 flex flex-col data-[state=inactive]:hidden"
               >
                 <RoutineDayTab
-                  dayId={day._id}
+                  dayId={day.id}
                   currentSession={currentSession}
                   onDeleted={handleDayDeleted}
                 />

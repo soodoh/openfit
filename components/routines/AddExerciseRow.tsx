@@ -3,15 +3,10 @@
 import { AutocompleteExercise } from "@/components/exercises/AutocompleteExercise";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useCreateSetGroup } from "@/hooks";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import type {
-  Exercise,
-  RoutineDayId,
-  WorkoutSessionId,
-} from "@/lib/convex-types";
+import type { Exercise, RoutineDayId, WorkoutSessionId } from "@/lib/types";
 
 export const AddExerciseRow = ({
   sessionOrDayId,
@@ -23,18 +18,18 @@ export const AddExerciseRow = ({
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [numSets, setNumSets] = useState<string>("1");
 
-  const createSetGroup = useMutation(api.mutations.setGroups.create);
+  const createSetGroupMutation = useCreateSetGroup();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!exercise) {
       return;
     }
-    await createSetGroup({
-      sessionOrDayId,
-      isSession,
+    await createSetGroupMutation.mutateAsync({
+      sessionId: isSession ? sessionOrDayId : undefined,
+      routineDayId: isSession ? undefined : sessionOrDayId,
       type: "NORMAL",
-      exerciseId: exercise._id,
+      exerciseId: exercise.id,
       numSets: parseInt(numSets, 10),
     });
     setExercise(null);

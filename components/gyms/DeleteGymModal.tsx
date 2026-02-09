@@ -9,11 +9,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useDeleteGym } from "@/hooks";
 import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { Gym } from "@/lib/convex-types";
+import type { Gym } from "@/lib/types";
 
 interface DeleteGymModalProps {
   gym: Gym | null;
@@ -27,7 +26,7 @@ export function DeleteGymModal({
   onClose,
 }: DeleteGymModalProps) {
   const open = gym !== null;
-  const removeGym = useMutation(api.mutations.gyms.remove);
+  const deleteGymMutation = useDeleteGym();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -37,7 +36,7 @@ export function DeleteGymModal({
     setIsPending(true);
 
     try {
-      await removeGym({ id: gym._id });
+      await deleteGymMutation.mutateAsync(gym.id);
       onClose();
     } catch (err) {
       const message =

@@ -12,10 +12,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Loader2, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface LookupItem {
-  _id: string;
+  id: string;
   name: string;
 }
 
@@ -24,8 +24,8 @@ interface LookupFormModalProps {
   onClose: () => void;
   title: string;
   item: LookupItem | null;
-  onCreate: (args: { name: string }) => Promise<unknown>;
-  onUpdate: (args: { id: unknown; name: string }) => Promise<unknown>;
+  onSubmit: (name: string) => Promise<void>;
+  isPending: boolean;
 }
 
 export function LookupFormModal({
@@ -33,22 +33,23 @@ export function LookupFormModal({
   onClose,
   title,
   item,
-  onCreate,
-  onUpdate,
+  onSubmit,
+  isPending,
 }: LookupFormModalProps) {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(item?.name ?? "");
   const [error, setError] = useState<string | null>(null);
-  const [isPending, setIsPending] = useState(false);
+  const [prevOpen, setPrevOpen] = useState(open);
+
+  // Reset form when modal opens (adjusting state during render)
+  if (open && !prevOpen) {
+    setName(item?.name ?? "");
+    setError(null);
+  }
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+  }
 
   const isEditMode = !!item;
-
-  // Reset form when modal opens
-  useEffect(() => {
-    if (open) {
-      setName(item?.name ?? "");
-      setError(null);
-    }
-  }, [open, item]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,23 +61,14 @@ export function LookupFormModal({
       return;
     }
 
-    setIsPending(true);
-
     try {
-      if (isEditMode && item) {
-        await onUpdate({ id: item._id, name: trimmedName });
-      } else {
-        await onCreate({ name: trimmedName });
-      }
-      onClose();
+      await onSubmit(trimmedName);
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
           : `Failed to ${isEditMode ? "update" : "create"} ${title.toLowerCase()}`,
       );
-    } finally {
-      setIsPending(false);
     }
   };
 

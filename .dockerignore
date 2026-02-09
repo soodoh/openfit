@@ -21,6 +21,9 @@ build
 _bmad
 _bmad-output
 
+# Data (SQLite DB and downloaded images - generated at runtime)
+data
+
 # Misc
 .DS_Store
 *.log

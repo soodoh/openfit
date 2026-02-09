@@ -23,15 +23,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { api } from "@/convex/_generated/api";
-import { Doc, Id } from "@/convex/_generated/dataModel";
+import {
+  useGym,
+  useGyms,
+  useReplaceExercise,
+  useSimilarExercises,
+  useUserProfile,
+} from "@/hooks";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
-import { useMutation, useQuery } from "convex/react";
 import { Check, ChevronDown, Dumbbell, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-type Exercise = Doc<"exercises">;
+interface Exercise {
+  id: string;
+  name: string;
+  imageUrl?: string | null;
+  primaryMuscleIds?: string[];
+}
 
 export const ReplaceExerciseModal = ({
   open,
@@ -42,10 +51,10 @@ export const ReplaceExerciseModal = ({
   open: boolean;
   onClose: () => void;
   currentExercise: Exercise;
-  setGroupId: Id<"workoutSetGroups">;
+  setGroupId: string;
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedGymId, setSelectedGymId] = useState<Id<"gyms"> | "all" | null>(
+  const [selectedGymId, setSelectedGymId] = useState<string | "all" | null>(
     null,
   );
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
@@ -54,24 +63,23 @@ export const ReplaceExerciseModal = ({
   const [isPending, setIsPending] = useState(false);
   const { getMuscleGroupNames } = useExerciseLookups();
 
-  const replaceExercise = useMutation(api.mutations.setGroups.replaceExercise);
+  const replaceExerciseMutation = useReplaceExercise();
 
   // Fetch user profile for default gym
-  const userProfile = useQuery(api.queries.userProfiles.getCurrent);
-  const userGyms = useQuery(api.queries.gyms.list);
+  const { data: userProfile } = useUserProfile();
+  const { data: userGyms } = useGyms();
 
   // Fetch selected gym's equipment
-  const selectedGym = useQuery(
-    api.queries.gyms.get,
-    selectedGymId && selectedGymId !== "all" ? { id: selectedGymId } : "skip",
+  const { data: selectedGym } = useGym(
+    selectedGymId && selectedGymId !== "all" ? selectedGymId : undefined,
   );
 
   // Set selected gym to user's default gym on initial load
   useEffect(() => {
-    if (userProfile?.profile?.defaultGymId && selectedGymId === null) {
-      setSelectedGymId(userProfile.profile.defaultGymId);
+    if (userProfile?.defaultGymId && selectedGymId === null) {
+      setSelectedGymId(userProfile.defaultGymId);
     }
-  }, [selectedGymId, userProfile?.profile?.defaultGymId]);
+  }, [selectedGymId, userProfile?.defaultGymId]);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -86,13 +94,14 @@ export const ReplaceExerciseModal = ({
     selectedGymId === "all" ? undefined : selectedGym?.equipmentIds;
 
   // Search for similar exercises (same primary muscles, filtered by equipment)
-  const options = useQuery(api.queries.exercises.searchSimilar, {
-    searchTerm: searchTerm || undefined,
-    equipmentIds: equipmentIdsForFilter,
-    primaryMuscleIds: currentExercise.primaryMuscleIds,
-    excludeExerciseId: currentExercise._id,
-  });
-  const isLoading = options === undefined;
+  const { data: options, isLoading } = useSimilarExercises(
+    currentExercise.primaryMuscleIds,
+    {
+      search: searchTerm || undefined,
+      equipmentIds: equipmentIdsForFilter,
+      excludeExerciseId: currentExercise.id,
+    },
+  );
 
   const handleSelect = (exercise: Exercise) => {
     setSelectedExercise(exercise);
@@ -102,9 +111,9 @@ export const ReplaceExerciseModal = ({
     if (!selectedExercise) return;
     setIsPending(true);
     try {
-      await replaceExercise({
+      await replaceExerciseMutation.mutateAsync({
         id: setGroupId,
-        newExerciseId: selectedExercise._id,
+        exerciseId: selectedExercise.id,
       });
       onClose();
     } finally {
@@ -112,13 +121,13 @@ export const ReplaceExerciseModal = ({
     }
   };
 
-  const handleGymChange = (gymId: Id<"gyms"> | "all") => {
+  const handleGymChange = (gymId: string | "all") => {
     setSelectedGymId(gymId);
   };
 
   const selectedGymName =
     selectedGymId && selectedGymId !== "all"
-      ? userGyms?.find((g) => g._id === selectedGymId)?.name
+      ? userGyms?.find((g) => g.id === selectedGymId)?.name
       : null;
   const gymDisplayName = selectedGymName ?? "All";
 
@@ -162,12 +171,12 @@ export const ReplaceExerciseModal = ({
                   <>
                     {userGyms.map((gym) => (
                       <DropdownMenuItem
-                        key={gym._id}
-                        onClick={() => handleGymChange(gym._id)}
+                        key={gym.id}
+                        onClick={() => handleGymChange(gym.id)}
                         className="flex items-center justify-between cursor-pointer"
                       >
                         <span>{gym.name}</span>
-                        {selectedGymId === gym._id && (
+                        {selectedGymId === gym.id && (
                           <Check className="h-4 w-4 text-primary" />
                         )}
                       </DropdownMenuItem>
@@ -205,11 +214,11 @@ export const ReplaceExerciseModal = ({
                 </CommandEmpty>
                 <CommandGroup>
                   {options?.map((option) => {
-                    const isSelected = selectedExercise?._id === option._id;
+                    const isSelected = selectedExercise?.id === option.id;
                     return (
                       <CommandItem
-                        key={option._id}
-                        value={option._id}
+                        key={option.id}
+                        value={option.id}
                         onSelect={() => handleSelect(option)}
                         className={`flex items-center gap-3 p-3 cursor-pointer ${isSelected ? "bg-accent" : ""}`}
                       >

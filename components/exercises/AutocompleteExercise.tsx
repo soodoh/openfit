@@ -18,15 +18,12 @@ import {
   PopoverAnchor,
   PopoverContent,
 } from "@/components/ui/popover";
-import { api } from "@/convex/_generated/api";
-import { Doc, Id } from "@/convex/_generated/dataModel";
+import { useExerciseSearch, useGym, useGyms, useUserProfile } from "@/hooks";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
-import { useQuery } from "convex/react";
 import { Check, ChevronDown, Dumbbell } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-
-type Exercise = Doc<"exercises">;
+import { useRef, useState } from "react";
+import type { Exercise } from "@/lib/types";
 
 export const AutocompleteExercise = ({
   value,
@@ -37,43 +34,37 @@ export const AutocompleteExercise = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
-  const [selectedGymId, setSelectedGymId] = useState<Id<"gyms"> | "all" | null>(
+  const [selectedGymId, setSelectedGymId] = useState<string | "all" | null>(
     null,
   );
   const inputRef = useRef<HTMLInputElement>(null);
   const { getMuscleGroupNames } = useExerciseLookups();
 
   // Fetch user profile for default gym
-  const userProfile = useQuery(api.queries.userProfiles.getCurrent);
-  const userGyms = useQuery(api.queries.gyms.list);
+  const { data: profile } = useUserProfile();
+  const { data: userGyms } = useGyms();
+
+  // Initialize selected gym from profile's default gym
+  const effectiveGymId =
+    selectedGymId === null ? (profile?.defaultGymId ?? null) : selectedGymId;
 
   // Fetch selected gym's equipment (skip if "all" or null/not yet initialized)
-  const selectedGym = useQuery(
-    api.queries.gyms.get,
-    selectedGymId && selectedGymId !== "all" ? { id: selectedGymId } : "skip",
+  const { data: selectedGym } = useGym(
+    effectiveGymId && effectiveGymId !== "all" ? effectiveGymId : undefined,
   );
-
-  // Set selected gym to user's default gym on initial load only
-  useEffect(() => {
-    if (userProfile?.profile?.defaultGymId && selectedGymId === null) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSelectedGymId(userProfile.profile.defaultGymId);
-    }
-  }, [selectedGymId, userProfile?.profile?.defaultGymId]);
 
   // Determine equipment IDs for filtering
   // - null: not initialized yet, don't filter
   // - "all": user selected all equipment, don't filter
   // - gym ID: filter by that gym's equipment
   const equipmentIdsForFilter =
-    selectedGymId === "all" ? undefined : selectedGym?.equipmentIds;
+    effectiveGymId === "all" ? undefined : selectedGym?.equipmentIds;
 
   // Search with gym equipment filter (always query, even without search term)
-  const options = useQuery(api.queries.exercises.searchSimple, {
-    searchTerm: searchTerm || undefined,
-    equipmentIds: equipmentIdsForFilter,
-  });
-  const isLoading = options === undefined;
+  const { data: options, isLoading } = useExerciseSearch(
+    searchTerm || "",
+    equipmentIdsForFilter,
+  );
 
   const handleSelect = (exercise: Exercise) => {
     onChange(exercise);
@@ -102,20 +93,20 @@ export const AutocompleteExercise = ({
 
     if (e.key === "Enter" && options && options.length > 0) {
       e.preventDefault();
-      handleSelect(options[0]);
+      handleSelect(options[0] as unknown as Exercise);
     }
     if (e.key === "Escape") {
       setOpen(false);
     }
   };
 
-  const handleGymChange = (gymId: Id<"gyms"> | "all") => {
+  const handleGymChange = (gymId: string | "all") => {
     setSelectedGymId(gymId);
   };
 
   const selectedGymName =
-    selectedGymId && selectedGymId !== "all"
-      ? userGyms?.find((g) => g._id === selectedGymId)?.name
+    effectiveGymId && effectiveGymId !== "all"
+      ? userGyms?.find((g) => g.id === effectiveGymId)?.name
       : null;
   const gymDisplayName = selectedGymName ?? "All";
 
@@ -180,12 +171,12 @@ export const AutocompleteExercise = ({
                   <>
                     {userGyms.map((gym) => (
                       <DropdownMenuItem
-                        key={gym._id}
-                        onClick={() => handleGymChange(gym._id)}
+                        key={gym.id}
+                        onClick={() => handleGymChange(gym.id)}
                         className="flex items-center justify-between cursor-pointer"
                       >
                         <span>{gym.name}</span>
-                        {selectedGymId === gym._id && (
+                        {effectiveGymId === gym.id && (
                           <Check className="h-4 w-4 text-primary" />
                         )}
                       </DropdownMenuItem>
@@ -198,7 +189,7 @@ export const AutocompleteExercise = ({
                   className="flex items-center justify-between cursor-pointer"
                 >
                   <span>All Equipment</span>
-                  {selectedGymId === "all" && (
+                  {effectiveGymId === "all" && (
                     <Check className="h-4 w-4 text-primary" />
                   )}
                 </DropdownMenuItem>
@@ -217,9 +208,9 @@ export const AutocompleteExercise = ({
               <CommandGroup>
                 {options?.map((option, index) => (
                   <CommandItem
-                    key={option._id}
-                    value={option._id}
-                    onSelect={() => handleSelect(option)}
+                    key={option.id}
+                    value={option.id}
+                    onSelect={() => handleSelect(option as unknown as Exercise)}
                     className={`flex items-center gap-3 p-3 cursor-pointer ${index === 0 ? "bg-accent" : ""}`}
                   >
                     <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">

@@ -73,10 +73,7 @@ export function SharedEntitiesView() {
           <LookupTable
             title="Equipment"
             singularTitle="Equipment"
-            queryKey="listEquipment"
-            createMutation="createEquipment"
-            updateMutation="updateEquipment"
-            deleteMutation="deleteEquipment"
+            lookupType="equipment"
           />
         </TabsContent>
 
@@ -84,10 +81,7 @@ export function SharedEntitiesView() {
           <LookupTable
             title="Muscle Groups"
             singularTitle="Muscle Group"
-            queryKey="listMuscleGroups"
-            createMutation="createMuscleGroup"
-            updateMutation="updateMuscleGroup"
-            deleteMutation="deleteMuscleGroup"
+            lookupType="muscleGroups"
           />
         </TabsContent>
 
@@ -95,10 +89,7 @@ export function SharedEntitiesView() {
           <LookupTable
             title="Categories"
             singularTitle="Category"
-            queryKey="listCategories"
-            createMutation="createCategory"
-            updateMutation="updateCategory"
-            deleteMutation="deleteCategory"
+            lookupType="categories"
           />
         </TabsContent>
 
@@ -106,10 +97,7 @@ export function SharedEntitiesView() {
           <LookupTable
             title="Weight Units"
             singularTitle="Weight Unit"
-            queryKey="listWeightUnits"
-            createMutation="createWeightUnit"
-            updateMutation="updateWeightUnit"
-            deleteMutation="deleteWeightUnit"
+            lookupType="weightUnits"
           />
         </TabsContent>
 
@@ -117,10 +105,7 @@ export function SharedEntitiesView() {
           <LookupTable
             title="Repetition Units"
             singularTitle="Repetition Unit"
-            queryKey="listRepetitionUnits"
-            createMutation="createRepetitionUnit"
-            updateMutation="updateRepetitionUnit"
-            deleteMutation="deleteRepetitionUnit"
+            lookupType="repetitionUnits"
           />
         </TabsContent>
       </div>

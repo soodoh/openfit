@@ -50,7 +50,7 @@ export class BasePage {
   /**
    * Wait for Convex real-time data to load
    */
-  async waitForConvexData(timeout = 10000): Promise<void> {
+  async waitForConvexData(): Promise<void> {
     // Convex uses real-time subscriptions, so we need to wait for initial data
     await this.page.waitForTimeout(500);
     await this.waitForLoadingComplete();

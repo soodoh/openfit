@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dumbbell, Star } from "lucide-react";
 import { GymMenu } from "./GymMenu";
-import type { Gym } from "@/lib/convex-types";
+import type { Gym } from "@/lib/types";
 
 interface GymCardProps {
   gym: Gym;

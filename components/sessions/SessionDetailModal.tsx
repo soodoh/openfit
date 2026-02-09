@@ -7,9 +7,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { WorkoutList } from "@/components/workoutSet/WorkoutList";
-import { api } from "@/convex/_generated/api";
-import { ListView, type Units } from "@/lib/convex-types";
-import { useQuery } from "convex/react";
+import { useSession } from "@/hooks";
+import { ListView, type Units } from "@/lib/types";
 import dayjs from "dayjs";
 import {
   Activity,
@@ -24,7 +23,6 @@ import { EditDurationPopover } from "./EditDurationPopover";
 import { EditNamePopover } from "./EditNamePopover";
 import { EditNotesPopover } from "./EditNotesPopover";
 import { EditRatingPopover } from "./EditRatingPopover";
-import type { Id } from "@/convex/_generated/dataModel";
 
 export const SessionDetailModal = ({
   sessionId,
@@ -33,7 +31,7 @@ export const SessionDetailModal = ({
   onClose,
   isActive = false,
 }: {
-  sessionId: Id<"workoutSessions"> | null;
+  sessionId: string | null;
   units: Units;
   open: boolean;
   onClose: () => void;
@@ -42,10 +40,7 @@ export const SessionDetailModal = ({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Fetch full session data when modal is open
-  const session = useQuery(
-    api.queries.sessions.get,
-    sessionId ? { id: sessionId } : "skip",
-  );
+  const { data: session } = useSession(sessionId ?? undefined);
 
   if (!sessionId || !session) {
     return (
@@ -170,7 +165,7 @@ export const SessionDetailModal = ({
             <div className="pt-2 border-t">
               <WorkoutList
                 view={isActive ? ListView.CurrentSession : ListView.ViewSession}
-                sessionOrDayId={session._id}
+                sessionOrDayId={session.id}
                 setGroups={session.setGroups}
                 units={units}
               />
@@ -195,7 +190,7 @@ export const SessionDetailModal = ({
       <DeleteSessionModal
         open={showDeleteModal}
         onClose={handleDeleteSuccess}
-        sessionId={session._id}
+        sessionId={session.id}
       />
     </>
   );

@@ -13,16 +13,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { api } from "@/convex/_generated/api";
-import { Doc } from "@/convex/_generated/dataModel";
+import { useRoutineDaySearch } from "@/hooks";
 import { cn } from "@/lib/utils";
-import { useQuery } from "convex/react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
-
-type RoutineDayWithRoutine = Doc<"routineDays"> & {
-  routine: Doc<"routines"> | null;
-};
+import type { RoutineDayWithRoutine } from "@/lib/types";
 
 export const SelectTemplate = ({
   value,
@@ -38,8 +33,7 @@ export const SelectTemplate = ({
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const options = useQuery(api.queries.routineDays.search, { searchTerm });
-  const isLoading = options === undefined;
+  const { data: options, isLoading } = useRoutineDaySearch(searchTerm);
 
   return (
     <div className="space-y-2">
@@ -72,25 +66,27 @@ export const SelectTemplate = ({
             <CommandList>
               {isLoading ? (
                 <CommandEmpty>Loading...</CommandEmpty>
-              ) : options?.length === 0 ? (
+              ) : !options || options.length === 0 ? (
                 <CommandEmpty>No workouts found.</CommandEmpty>
               ) : (
                 <CommandGroup>
-                  {options?.map((option) => (
+                  {options.map((option) => (
                     <CommandItem
-                      key={option._id}
+                      key={option.id}
                       value={option.description}
                       onSelect={() => {
-                        onChange(option._id === value?._id ? null : option);
+                        onChange(
+                          option.id === value?.id
+                            ? null
+                            : (option as unknown as RoutineDayWithRoutine),
+                        );
                         setOpen(false);
                       }}
                     >
                       <Check
                         className={cn(
                           "mr-2 h-4 w-4",
-                          value?._id === option._id
-                            ? "opacity-100"
-                            : "opacity-0",
+                          value?.id === option.id ? "opacity-100" : "opacity-0",
                         )}
                       />
                       <div className="flex flex-col">

@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { EditSessionMenu } from "./EditSessionMenu";
-import type { WorkoutSessionWithData } from "@/lib/convex-types";
+import type { WorkoutSessionWithData } from "@/lib/types";
 
 export const SessionSummaryCard = ({
   session,

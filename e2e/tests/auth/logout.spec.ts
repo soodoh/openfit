@@ -92,8 +92,8 @@ test.describe("Logout", () => {
     await logout(page);
 
     // Get test credentials
-    const email = process.env.TEST_USER;
-    const password = process.env.TEST_PASSWORD;
+    const email = process.env.ADMIN_USER;
+    const password = process.env.ADMIN_PASSWORD;
 
     if (!email || !password) {
       test.skip();

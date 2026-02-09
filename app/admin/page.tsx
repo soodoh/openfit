@@ -1,28 +1,26 @@
 import { AdminPage } from "@/components/admin/AdminPage";
-import { api } from "@/convex/_generated/api";
-import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
-import { fetchQuery } from "convex/nextjs";
+import { db } from "@/db";
+import * as schema from "@/db/schema";
+import { auth } from "@/lib/auth";
+import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-// Server-side URL for Convex (may differ from client URL in self-hosted setups)
-const convexUrl =
-  process.env.CONVEX_SELF_HOSTED_URL || process.env.NEXT_PUBLIC_CONVEX_URL!;
-
 export default async function AdminRoute() {
-  const token = await convexAuthNextjsToken();
+  const headersList = await headers();
+  const session = await auth.api.getSession({ headers: headersList });
 
-  // If no token, user is not authenticated
-  if (!token) {
-    redirect("/");
+  // If no session, user is not authenticated
+  if (!session) {
+    redirect("/signin");
   }
 
-  const isAdmin = await fetchQuery(
-    api.queries.userProfiles.isAdmin,
-    {},
-    { token, url: convexUrl },
-  );
+  // Check if user is admin
+  const profile = await db.query.userProfiles.findFirst({
+    where: eq(schema.userProfiles.userId, session.user.id),
+  });
 
-  if (!isAdmin) {
+  if (profile?.role !== "ADMIN") {
     redirect("/");
   }
 

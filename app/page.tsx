@@ -1,12 +1,17 @@
 "use client";
 
+import { useAuth } from "@/components/providers/AuthProvider";
 import { CreateSessionButton } from "@/components/sessions/CreateSession";
 import { ResumeSessionButton } from "@/components/sessions/ResumeSessionButton";
 import { SessionDetailModal } from "@/components/sessions/SessionDetailModal";
 import { SessionSummaryCard } from "@/components/sessions/SessionSummaryCard";
 import { Card } from "@/components/ui/card";
-import { api } from "@/convex/_generated/api";
-import { useConvexAuth, useQuery } from "convex/react";
+import {
+  useCurrentSession,
+  useDashboardStats,
+  useRecentSessions,
+  useUnits,
+} from "@/hooks";
 import {
   ArrowRight,
   CalendarDays,
@@ -21,11 +26,10 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { Id } from "@/convex/_generated/dataModel";
-import type { WorkoutSessionWithData } from "@/lib/convex-types";
+import type { WorkoutSessionWithData } from "@/lib/types";
 
 export default function Home() {
-  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -50,19 +54,19 @@ export default function Home() {
 }
 
 function DashboardContent() {
-  const [selectedSessionId, setSelectedSessionId] =
-    useState<Id<"workoutSessions"> | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null,
+  );
 
-  const stats = useQuery(api.queries.dashboard.getStats);
-  const recentSessions = useQuery(api.queries.dashboard.getRecentSessions);
-  const currentSession = useQuery(api.queries.sessions.getCurrent);
-  const units = useQuery(api.queries.units.list);
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: recentSessions, isLoading: recentLoading } =
+    useRecentSessions();
+  const { data: currentSession, isLoading: currentLoading } =
+    useCurrentSession();
+  const { data: units, isLoading: unitsLoading } = useUnits();
 
   const isLoading =
-    stats === undefined ||
-    recentSessions === undefined ||
-    currentSession === undefined ||
-    units === undefined;
+    statsLoading || recentLoading || currentLoading || unitsLoading;
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
@@ -90,7 +94,7 @@ function DashboardContent() {
           </div>
 
           {/* Stats Grid */}
-          {isLoading ? (
+          {isLoading || !stats ? (
             <StatsLoadingSkeleton />
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -163,15 +167,15 @@ function DashboardContent() {
 
           {isLoading ? (
             <RecentActivitySkeleton />
-          ) : recentSessions.length === 0 ? (
+          ) : !recentSessions || recentSessions.length === 0 ? (
             <EmptyActivity />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {recentSessions.map((session: WorkoutSessionWithData) => (
+              {recentSessions.map((session) => (
                 <SessionSummaryCard
-                  key={session._id}
-                  session={session}
-                  onClick={() => setSelectedSessionId(session._id)}
+                  key={session.id}
+                  session={session as unknown as WorkoutSessionWithData}
+                  onClick={() => setSelectedSessionId(session.id)}
                   showEditMenu={false}
                 />
               ))}

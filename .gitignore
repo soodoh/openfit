@@ -5,6 +5,9 @@
 .serena/
 .playwright-mcp/
 
+# Database
+/data/
+
 # dependencies
 /node_modules
 .pnpm-debug.log*

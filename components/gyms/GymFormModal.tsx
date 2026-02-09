@@ -11,12 +11,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useCreateGym, useUpdateGym } from "@/hooks";
 import { AlertCircle, Dumbbell, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { EquipmentSelector } from "./EquipmentSelector";
-import type { EquipmentId, Gym } from "@/lib/convex-types";
+import type { Gym } from "@/lib/types";
 
 interface GymFormModalProps {
   open: boolean;
@@ -25,13 +24,13 @@ interface GymFormModalProps {
 }
 
 export function GymFormModal({ open, onClose, gym }: GymFormModalProps) {
-  const createGym = useMutation(api.mutations.gyms.create);
-  const updateGym = useMutation(api.mutations.gyms.update);
+  const createGymMutation = useCreateGym();
+  const updateGymMutation = useUpdateGym();
 
   const [name, setName] = useState("");
-  const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<
-    EquipmentId[]
-  >([]);
+  const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>(
+    [],
+  );
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -69,13 +68,13 @@ export function GymFormModal({ open, onClose, gym }: GymFormModalProps) {
 
     try {
       if (gym) {
-        await updateGym({
-          id: gym._id,
+        await updateGymMutation.mutateAsync({
+          id: gym.id,
           name: name.trim(),
           equipmentIds: selectedEquipmentIds,
         });
       } else {
-        await createGym({
+        await createGymMutation.mutateAsync({
           name: name.trim(),
           equipmentIds: selectedEquipmentIds,
         });

@@ -5,7 +5,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-import type { RepetitionUnit, Units, WorkoutSetId } from "@/lib/convex-types";
+import type { RepetitionUnit, Units } from "@/lib/types";
 
 export const RepUnitMenu = ({
   id,
@@ -13,7 +13,7 @@ export const RepUnitMenu = ({
   onChange,
   units,
 }: {
-  id: WorkoutSetId | string;
+  id: string;
   label: string;
   onChange: (repUnit: RepetitionUnit) => void;
   units: Units;
@@ -33,7 +33,7 @@ export const RepUnitMenu = ({
       <DropdownMenuContent>
         {units.repetitionUnits.map((unit) => (
           <DropdownMenuItem
-            key={`rep-unit-${id}-${unit._id}`}
+            key={`rep-unit-${id}-${unit.id}`}
             onClick={() => {
               onChange(unit);
               setOpen(false);

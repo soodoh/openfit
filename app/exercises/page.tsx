@@ -10,10 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { api } from "@/convex/_generated/api";
-import { usePaginatedQuery, useQuery } from "convex/react";
+import { useExercises, useExerciseSearch, useInView } from "@/hooks";
 import { Dumbbell, Loader2, Search, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // Filter options
 const EQUIPMENT_OPTIONS = [
@@ -72,16 +71,12 @@ type Level = (typeof LEVEL_OPTIONS)[number]["value"];
 type Category = (typeof CATEGORY_OPTIONS)[number]["value"];
 type Muscle = (typeof MUSCLE_OPTIONS)[number]["value"];
 
-const EXERCISES_PAGE_SIZE = 24;
-
 export default function Exercises() {
   return <ExercisesContent />;
 }
 
 function ExercisesContent() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Filter state
   const [equipment, setEquipment] = useState<Equipment | undefined>(undefined);
@@ -104,84 +99,51 @@ function ExercisesContent() {
     setPrimaryMuscle(undefined);
   };
 
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  const isSearching = searchQuery.trim().length > 0;
 
-  const isSearching = debouncedSearch.trim().length > 0;
-
-  // Build filter args for queries
-  const filterArgs = {
-    equipment,
-    level,
-    category,
-    primaryMuscle,
-  };
-
-  // Get count of exercises with filters applied (for browse mode)
-  const listCount = useQuery(api.queries.exercises.listCount, filterArgs);
-
-  // Get count of search results with filters applied (for search mode)
-  const searchCount = useQuery(
-    api.queries.exercises.searchCount,
-    isSearching ? { searchTerm: debouncedSearch, ...filterArgs } : "skip",
+  // Build filter args for infinite query - map filter names to hook expectations
+  const filterArgs = useMemo(
+    () => ({
+      search: isSearching ? searchQuery : undefined,
+      equipmentId: equipment,
+      level: level,
+      categoryId: category,
+      primaryMuscleId: primaryMuscle,
+    }),
+    [isSearching, searchQuery, equipment, level, category, primaryMuscle],
   );
 
-  // Paginated list for browse mode
+  // Fetch exercises with infinite query
   const {
-    results: exercises,
-    status: browseStatus,
-    loadMore: loadMoreBrowse,
-  } = usePaginatedQuery(api.queries.exercises.list, filterArgs, {
-    initialNumItems: EXERCISES_PAGE_SIZE,
-  });
+    data: exercisesData,
+    isLoading: exercisesLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useExercises(filterArgs);
 
-  // Paginated search results
-  const {
-    results: searchResults,
-    status: searchStatus,
-    loadMore: loadMoreSearch,
-  } = usePaginatedQuery(
-    api.queries.exercises.search,
-    isSearching ? { searchTerm: debouncedSearch, ...filterArgs } : "skip",
-    { initialNumItems: EXERCISES_PAGE_SIZE },
-  );
+  // Flatten infinite query pages into a single array
+  const exercises = useMemo(() => {
+    if (!exercisesData?.pages) return [];
+    return exercisesData.pages.flatMap((page) => page.page);
+  }, [exercisesData]);
+
+  // Search exercises (when searching) - uses simple query, not infinite
+  const { data: searchResults = [], isLoading: searchLoading } =
+    useExerciseSearch(isSearching ? searchQuery : "", undefined, 50);
 
   // Determine which data to use based on search state
   const displayExercises = isSearching ? searchResults : exercises;
-  const status = isSearching ? searchStatus : browseStatus;
-  const loadMore = isSearching ? loadMoreSearch : loadMoreBrowse;
+  const isLoading = isSearching ? searchLoading : exercisesLoading;
+  const listCount = displayExercises.length;
 
-  // Intersection observer for infinite scrolling
+  // Auto-load next page when sentinel is in view
+  const { ref: sentinelRef, inView } = useInView();
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && status === "CanLoadMore") {
-          loadMore(EXERCISES_PAGE_SIZE);
-        }
-      },
-      { threshold: 0.1 },
-    );
-
-    const currentRef = loadMoreRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
+    if (inView && hasNextPage && !isFetchingNextPage && !isSearching) {
+      fetchNextPage();
     }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-    };
-  }, [status, loadMore]);
-
-  const isLoading = status === "LoadingFirstPage";
-  const isLoadingMore = status === "LoadingMore";
-  const canLoadMore = status === "CanLoadMore";
+  }, [inView, hasNextPage, isFetchingNextPage, isSearching, fetchNextPage]);
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
@@ -307,14 +269,12 @@ function ExercisesContent() {
 
         {/* Empty State */}
         {!isLoading &&
-          exercises &&
           exercises.length === 0 &&
           !isSearching &&
           !hasFilters && <EmptyState />}
 
         {/* No Results with Filters */}
         {!isLoading &&
-          displayExercises &&
           displayExercises.length === 0 &&
           hasFilters &&
           !isSearching && (
@@ -335,67 +295,57 @@ function ExercisesContent() {
           )}
 
         {/* No Search Results */}
-        {!isLoading &&
-          searchResults &&
-          searchResults.length === 0 &&
-          isSearching && (
-            <div className="flex flex-col items-center justify-center py-16 px-4">
-              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                <Search className="w-8 h-8 text-muted-foreground/60" />
-              </div>
-              <h3 className="text-lg font-medium text-foreground mb-1">
-                No exercises found
-              </h3>
-              <p className="text-muted-foreground text-center text-sm">
-                No exercises match &quot;{debouncedSearch}&quot;
-                {hasFilters && " with the selected filters"}
-              </p>
-              {hasFilters && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="mt-4"
-                >
-                  Clear filters
-                </Button>
-              )}
+        {!isLoading && searchResults.length === 0 && isSearching && (
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+              <Search className="w-8 h-8 text-muted-foreground/60" />
             </div>
-          )}
+            <h3 className="text-lg font-medium text-foreground mb-1">
+              No exercises found
+            </h3>
+            <p className="text-muted-foreground text-center text-sm">
+              No exercises match &quot;{searchQuery}&quot;
+              {hasFilters && " with the selected filters"}
+            </p>
+            {hasFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="mt-4"
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Results Count */}
-        {displayExercises && displayExercises.length > 0 && (
+        {displayExercises.length > 0 && (
           <p className="text-sm text-muted-foreground mb-6">
-            {isSearching ? (
-              <>
-                {searchCount} {searchCount === 1 ? "exercise" : "exercises"}{" "}
-                found
-              </>
-            ) : (
-              <>
-                {listCount} {listCount === 1 ? "exercise" : "exercises"}{" "}
-                {hasFilters ? "found" : "total"}
-              </>
-            )}
+            {listCount} {listCount === 1 ? "exercise" : "exercises"}{" "}
+            {isSearching ? "found" : hasFilters ? "found" : "total"}
           </p>
         )}
 
         {/* Exercises Grid */}
-        {displayExercises && displayExercises.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {displayExercises.map((exercise) => (
-              <ExerciseCard key={exercise._id} exercise={exercise} />
-            ))}
-          </div>
-        )}
+        {displayExercises.length > 0 && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {displayExercises.map((exercise) => (
+                <ExerciseCard key={exercise.id} exercise={exercise} />
+              ))}
+            </div>
 
-        {/* Infinite scroll sentinel & loading indicator */}
-        {canLoadMore && (
-          <div ref={loadMoreRef} className="flex justify-center py-8">
-            {isLoadingMore && (
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            {/* Auto-load sentinel */}
+            {!isSearching && hasNextPage && (
+              <div ref={sentinelRef} className="flex justify-center mt-8">
+                {isFetchingNextPage && (
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>

@@ -8,13 +8,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useSetDefaultGym } from "@/hooks";
 import { Edit, MoreVertical, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { DeleteGymModal } from "./DeleteGymModal";
 import { GymFormModal } from "./GymFormModal";
-import type { Gym } from "@/lib/convex-types";
+import type { Gym } from "@/lib/types";
 
 enum Modal {
   EDIT = "edit",
@@ -36,10 +35,10 @@ export function GymMenu({
 }: GymMenuProps) {
   const [modal, setModal] = useState<Modal | null>(null);
   const handleClose = () => setModal(null);
-  const setDefaultGym = useMutation(api.mutations.userProfiles.setDefaultGym);
+  const setDefaultGymMutation = useSetDefaultGym();
 
   const handleSetDefault = async () => {
-    await setDefaultGym({ gymId: gym._id });
+    await setDefaultGymMutation.mutateAsync(gym.id);
   };
 
   const handleEdit = () => {

@@ -12,8 +12,7 @@ import {
 import { useState } from "react";
 import { EditSessionModal } from "./EditSessionModal";
 import { SessionDetailModal } from "./SessionDetailModal";
-import type { Id } from "@/convex/_generated/dataModel";
-import type { Units, WorkoutSessionSummary } from "@/lib/convex-types";
+import type { Units, WorkoutSessionSummary } from "@/lib/types";
 
 type DayData = {
   date: dayjs.Dayjs;
@@ -35,8 +34,9 @@ export const MonthlyCalendar = ({
   units: Units;
   onMonthChange: (month: dayjs.Dayjs) => void;
 }) => {
-  const [selectedSessionId, setSelectedSessionId] =
-    useState<Id<"workoutSessions"> | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null,
+  );
   const [createSessionDate, setCreateSessionDate] =
     useState<dayjs.Dayjs | null>(null);
 
@@ -177,7 +177,7 @@ const CalendarDay = ({
 }: {
   dayData: DayData;
   currentSessionId?: string;
-  onSessionClick: (sessionId: Id<"workoutSessions">) => void;
+  onSessionClick: (sessionId: string) => void;
   onCreateClick: () => void;
   isLastRow: boolean;
 }) => {
@@ -224,15 +224,15 @@ const CalendarDay = ({
       <div className="space-y-1">
         {sessions.slice(0, 3).map((session) => (
           <SessionCard
-            key={session._id}
+            key={session.id}
             session={session}
-            isActive={session._id === currentSessionId}
-            onClick={() => onSessionClick(session._id)}
+            isActive={session.id === currentSessionId}
+            onClick={() => onSessionClick(session.id)}
           />
         ))}
         {sessions.length > 3 && (
           <button
-            onClick={() => onSessionClick(sessions[3]._id)}
+            onClick={() => onSessionClick(sessions[3].id)}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-left px-1"
           >
             +{sessions.length - 3} more

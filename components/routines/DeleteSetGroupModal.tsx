@@ -9,9 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
-import type { WorkoutSetGroup } from "@/lib/convex-types";
+import { useDeleteSetGroup } from "@/hooks";
+import type { WorkoutSetGroup } from "@/lib/types";
 
 export const DeleteSetGroupModal = ({
   open,
@@ -22,7 +21,7 @@ export const DeleteSetGroupModal = ({
   onClose: () => void;
   setGroup: WorkoutSetGroup;
 }) => {
-  const deleteSetGroup = useMutation(api.mutations.setGroups.remove);
+  const deleteSetGroupMutation = useDeleteSetGroup();
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
@@ -40,7 +39,7 @@ export const DeleteSetGroupModal = ({
           <Button
             variant="destructive"
             onClick={async () => {
-              await deleteSetGroup({ id: setGroup._id });
+              await deleteSetGroupMutation.mutateAsync(setGroup.id);
               onClose();
             }}
           >

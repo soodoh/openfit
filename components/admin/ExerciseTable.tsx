@@ -4,36 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { api } from "@/convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
-import { Edit2, Loader2, Plus, Search, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Pagination } from "@/components/ui/pagination";
+import {
+  type ExerciseWithRelations,
+  useAdminDeleteExercise,
+  useAdminExercisesPaginated,
+} from "@/hooks";
+import { Edit2, Plus, Search, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { DeleteExerciseModal } from "./DeleteExerciseModal";
 import { ExerciseFormModal } from "./ExerciseFormModal";
 
-interface MuscleInfo {
-  _id: string;
-  name: string;
-}
-
-interface ExerciseWithRelations {
-  _id: string;
-  name: string;
-  level: "beginner" | "intermediate" | "expert";
-  force?: "push" | "pull" | "static" | null;
-  mechanic?: "compound" | "isolation" | null;
-  equipmentId?: string;
-  categoryId: string;
-  primaryMuscleIds: string[];
-  secondaryMuscleIds: string[];
-  instructions: string[];
-  imageIds: string[];
-  imageUrls: (string | null)[];
-  equipment: { _id: string; name: string } | null;
-  category: { _id: string; name: string } | null;
-  primaryMuscles: (MuscleInfo | null)[];
-  secondaryMuscles: (MuscleInfo | null)[];
-}
+const DEFAULT_PAGE_SIZE = 10;
 
 const levelColors = {
   beginner: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
@@ -42,30 +24,86 @@ const levelColors = {
   expert: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 
+function ExerciseTableSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <div className="h-6 w-32 rounded bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+        <div className="h-9 w-28 rounded-md bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+      </CardHeader>
+      <CardContent>
+        <div className="mb-4">
+          <div className="h-10 w-full rounded-md bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between p-3 rounded-lg border"
+            >
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-40 rounded bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+                  <div className="h-5 w-16 rounded-full bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+                </div>
+                <div className="h-3 w-56 rounded bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+              </div>
+              <div className="flex items-center gap-2 ml-4">
+                <div className="h-8 w-8 rounded bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+                <div className="h-8 w-8 rounded bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function ExerciseTable() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [editExercise, setEditExercise] =
     useState<ExerciseWithRelations | null>(null);
   const [deleteExercise, setDeleteExercise] =
     useState<ExerciseWithRelations | null>(null);
 
-  const exercises = useQuery(api.queries.admin.listExercises);
-  const deleteExerciseMut = useMutation(api.mutations.admin.deleteExercise);
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
-  // Filter exercises based on search query
-  const filteredExercises = useMemo(() => {
-    if (!exercises) return [];
-    if (!searchQuery.trim()) return exercises;
-    const query = searchQuery.toLowerCase();
-    return exercises.filter(
-      (ex) =>
-        ex.name.toLowerCase().includes(query) ||
-        ex.category?.name.toLowerCase().includes(query) ||
-        ex.equipment?.name.toLowerCase().includes(query) ||
-        ex.primaryMuscles.some((m) => m?.name.toLowerCase().includes(query)),
-    );
-  }, [exercises, searchQuery]);
+  const { data, isLoading } = useAdminExercisesPaginated({
+    page: currentPage,
+    pageSize,
+    search: searchQuery || undefined,
+  });
+  const deleteExerciseMutation = useAdminDeleteExercise();
+
+  const total = data?.total ?? 0;
+  const items = data?.items ?? [];
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const startIndex = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, total);
+
+  const goToPage = useCallback(
+    (page: number) => setCurrentPage(Math.max(1, Math.min(page, totalPages))),
+    [totalPages],
+  );
+  const nextPage = useCallback(
+    () => goToPage(currentPage + 1),
+    [currentPage, goToPage],
+  );
+  const prevPage = useCallback(
+    () => goToPage(currentPage - 1),
+    [currentPage, goToPage],
+  );
+  const handlePageSizeChange = useCallback((size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  }, []);
 
   const handleCreate = () => {
     setEditExercise(null);
@@ -82,21 +120,28 @@ export function ExerciseTable() {
     setEditExercise(null);
   };
 
-  if (exercises === undefined) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
-    );
+  if (isLoading && !data) {
+    return <ExerciseTableSkeleton />;
   }
+
+  const paginationProps = {
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    totalItems: total,
+    pageSize,
+    onPageChange: goToPage,
+    onPrevPage: prevPage,
+    onNextPage: nextPage,
+    onPageSizeChange: handlePageSizeChange,
+  };
 
   return (
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle>Exercises ({exercises.length})</CardTitle>
+          <CardTitle>Exercises ({total})</CardTitle>
           <Button onClick={handleCreate} size="sm">
             <Plus className="h-4 w-4 mr-2" />
             Add Exercise
@@ -115,7 +160,9 @@ export function ExerciseTable() {
             </div>
           </div>
 
-          {filteredExercises.length === 0 ? (
+          <Pagination {...paginationProps} />
+
+          {items.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {searchQuery
                 ? `No exercises found matching "${searchQuery}"`
@@ -123,9 +170,9 @@ export function ExerciseTable() {
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredExercises.map((exercise) => (
+              {items.map((exercise) => (
                 <div
-                  key={exercise._id}
+                  key={exercise.id}
                   className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
@@ -184,6 +231,8 @@ export function ExerciseTable() {
               ))}
             </div>
           )}
+
+          <Pagination {...paginationProps} />
         </CardContent>
       </Card>
 
@@ -196,7 +245,7 @@ export function ExerciseTable() {
       <DeleteExerciseModal
         exercise={deleteExercise}
         onClose={() => setDeleteExercise(null)}
-        onDelete={deleteExerciseMut}
+        onDelete={(id: string) => deleteExerciseMutation.mutate(id)}
       />
     </>
   );

@@ -9,9 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
-import type { WorkoutSessionId } from "@/lib/convex-types";
+import { useDeleteSession } from "@/hooks";
 
 export const DeleteSessionModal = ({
   open,
@@ -20,9 +18,9 @@ export const DeleteSessionModal = ({
 }: {
   open: boolean;
   onClose: () => void;
-  sessionId: WorkoutSessionId;
+  sessionId: string;
 }) => {
-  const deleteSession = useMutation(api.mutations.sessions.remove);
+  const deleteSessionMutation = useDeleteSession();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -40,7 +38,7 @@ export const DeleteSessionModal = ({
           <Button
             variant="destructive"
             onClick={async () => {
-              await deleteSession({ id: sessionId });
+              await deleteSessionMutation.mutateAsync(sessionId);
               onClose();
             }}
           >

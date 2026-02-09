@@ -4,52 +4,108 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
-import { Edit2, Loader2, Search, Shield, User } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Pagination } from "@/components/ui/pagination";
+import { useAdminUsersPaginated, type UserWithProfile } from "@/hooks";
+import { Edit2, Search, Shield, User } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { UserRoleModal } from "./UserRoleModal";
 
-interface UserWithProfile {
-  _id: string;
-  userId: string;
-  email: string;
-  role: "USER" | "ADMIN";
+const DEFAULT_PAGE_SIZE = 10;
+
+function UserTableSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <div className="h-6 w-24 rounded bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+      </CardHeader>
+      <CardContent>
+        <div className="mb-4">
+          <div className="h-10 w-full rounded-md bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between p-3 rounded-lg border"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+                <div className="space-y-2">
+                  <div className="h-4 w-48 rounded bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+                  <div className="h-3 w-16 rounded bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+                </div>
+              </div>
+              <div className="h-8 w-8 rounded bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function UserTable() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [editUser, setEditUser] = useState<UserWithProfile | null>(null);
 
-  const users = useQuery(api.queries.admin.listUsers);
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
-  // Filter users based on search query
-  const filteredUsers = useMemo(() => {
-    if (!users) return [];
-    if (!searchQuery.trim()) return users;
-    const query = searchQuery.toLowerCase();
-    return users.filter(
-      (user) =>
-        user.email.toLowerCase().includes(query) ||
-        user.role.toLowerCase().includes(query),
-    );
-  }, [users, searchQuery]);
+  const { data, isLoading } = useAdminUsersPaginated({
+    page: currentPage,
+    pageSize,
+    search: searchQuery || undefined,
+  });
 
-  if (users === undefined) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
-    );
+  const total = data?.total ?? 0;
+  const items = data?.items ?? [];
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const startIndex = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, total);
+
+  const goToPage = useCallback(
+    (page: number) => setCurrentPage(Math.max(1, Math.min(page, totalPages))),
+    [totalPages],
+  );
+  const nextPage = useCallback(
+    () => goToPage(currentPage + 1),
+    [currentPage, goToPage],
+  );
+  const prevPage = useCallback(
+    () => goToPage(currentPage - 1),
+    [currentPage, goToPage],
+  );
+  const handlePageSizeChange = useCallback((size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  }, []);
+
+  if (isLoading && !data) {
+    return <UserTableSkeleton />;
   }
+
+  const paginationProps = {
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    totalItems: total,
+    pageSize,
+    onPageChange: goToPage,
+    onPrevPage: prevPage,
+    onNextPage: nextPage,
+    onPageSizeChange: handlePageSizeChange,
+  };
 
   return (
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle>Users ({users.length})</CardTitle>
+          <CardTitle>Users ({total})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
@@ -64,7 +120,9 @@ export function UserTable() {
             </div>
           </div>
 
-          {filteredUsers.length === 0 ? (
+          <Pagination {...paginationProps} />
+
+          {items.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {searchQuery
                 ? `No users found matching "${searchQuery}"`
@@ -72,9 +130,9 @@ export function UserTable() {
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredUsers.map((user) => (
+              {items.map((user) => (
                 <div
-                  key={user._id}
+                  key={user.id}
                   className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -110,6 +168,8 @@ export function UserTable() {
               ))}
             </div>
           )}
+
+          <Pagination {...paginationProps} />
         </CardContent>
       </Card>
 

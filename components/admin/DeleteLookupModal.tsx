@@ -13,7 +13,7 @@ import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 interface LookupItem {
-  _id: string;
+  id: string;
   name: string;
 }
 
@@ -21,7 +21,8 @@ interface DeleteLookupModalProps {
   item: LookupItem | null;
   title: string;
   onClose: () => void;
-  onDelete: (args: { id: unknown }) => Promise<unknown>;
+  onDelete: (item: LookupItem) => Promise<void>;
+  isPending: boolean;
 }
 
 export function DeleteLookupModal({
@@ -29,27 +30,23 @@ export function DeleteLookupModal({
   title,
   onClose,
   onDelete,
+  isPending,
 }: DeleteLookupModalProps) {
   const open = item !== null;
   const [error, setError] = useState<string | null>(null);
-  const [isPending, setIsPending] = useState(false);
 
   const handleDelete = async () => {
     if (!item) return;
     setError(null);
-    setIsPending(true);
 
     try {
-      await onDelete({ id: item._id });
-      onClose();
+      await onDelete(item);
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
           : `Failed to delete ${title.toLowerCase()}`,
       );
-    } finally {
-      setIsPending(false);
     }
   };
 

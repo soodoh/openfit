@@ -6,8 +6,7 @@ import { EditDayModal } from "@/components/routines/EditDayModal";
 import { EditRoutineModal } from "@/components/routines/EditRoutineModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useCreateSession } from "@/hooks";
 import dayjs from "dayjs";
 import {
   Calendar,
@@ -23,10 +22,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type {
   RoutineDay,
-  RoutineDayId,
   RoutineWithDays,
   WorkoutSessionWithData,
-} from "@/lib/convex-types";
+} from "@/lib/types";
 
 export const RoutineOverviewTab = ({
   routine,
@@ -36,23 +34,25 @@ export const RoutineOverviewTab = ({
 }: {
   routine: RoutineWithDays;
   currentSession: WorkoutSessionWithData | null | undefined;
-  onSelectDay: (dayId: RoutineDayId) => void;
-  onDayAdded?: (dayId: RoutineDayId) => void;
+  onSelectDay: (dayId: string) => void;
+  onDayAdded?: (dayId: string) => void;
 }) => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingDay, setIsAddingDay] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [startingDayId, setStartingDayId] = useState<RoutineDayId | null>(null);
-  const [deletingDayId, setDeletingDayId] = useState<RoutineDayId | null>(null);
+  const [startingDayId, setStartingDayId] = useState<string | null>(null);
+  const [deletingDayId, setDeletingDayId] = useState<string | null>(null);
 
-  const createSession = useMutation(api.mutations.sessions.create);
+  const createSessionMutation = useCreateSession();
 
-  const handleStartWorkout = async (dayId: RoutineDayId) => {
+  const handleStartWorkout = async (dayId: string) => {
     setStartingDayId(dayId);
     try {
-      const sessionId = await createSession({ templateId: dayId });
-      if (sessionId) {
+      const result = await createSessionMutation.mutateAsync({
+        templateId: dayId,
+      });
+      if (result?.id) {
         router.push("/workout");
       }
     } finally {
@@ -60,7 +60,7 @@ export const RoutineOverviewTab = ({
     }
   };
 
-  const handleDayAdded = (dayId: RoutineDayId) => {
+  const handleDayAdded = (dayId: string) => {
     onDayAdded?.(dayId);
   };
 
@@ -124,14 +124,14 @@ export const RoutineOverviewTab = ({
           <div className="divide-y divide-border/50">
             {routine.routineDays.map((day, index) => (
               <DayListItem
-                key={day._id}
+                key={day.id}
                 day={day}
                 index={index}
                 currentSession={currentSession}
-                isStarting={startingDayId === day._id}
-                onSelect={() => onSelectDay(day._id)}
-                onStartWorkout={() => handleStartWorkout(day._id)}
-                onDelete={() => setDeletingDayId(day._id)}
+                isStarting={startingDayId === day.id}
+                onSelect={() => onSelectDay(day.id)}
+                onStartWorkout={() => handleStartWorkout(day.id)}
+                onDelete={() => setDeletingDayId(day.id)}
               />
             ))}
           </div>
@@ -172,13 +172,13 @@ export const RoutineOverviewTab = ({
       <EditDayModal
         open={isAddingDay}
         onClose={() => setIsAddingDay(false)}
-        routineId={routine._id}
+        routineId={routine.id}
         onSuccess={handleDayAdded}
       />
       <DeleteRoutineModal
         open={isDeleting}
         onClose={() => setIsDeleting(false)}
-        routineId={routine._id}
+        routineId={routine.id}
       />
       {deletingDayId && (
         <DeleteDayModal
@@ -230,7 +230,7 @@ const DayListItem = ({
             <div className="flex flex-wrap gap-1">
               {day.weekdays.map((weekday) => (
                 <Badge
-                  key={`${day._id}-weekday-${weekday}`}
+                  key={`${day.id}-weekday-${weekday}`}
                   variant="outline"
                   className="text-[10px] px-1.5 py-0 h-5 font-medium border-border/50 text-muted-foreground"
                 >

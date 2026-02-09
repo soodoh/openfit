@@ -11,7 +11,7 @@ import dayjs from "dayjs";
 import { Pause, Play, Plus, Timer } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTimer } from "react-timer-hook";
-import type { SetWithRelations } from "@/lib/convex-types";
+import type { SetWithRelations } from "@/lib/types";
 
 export const WorkoutTimer = ({
   set,

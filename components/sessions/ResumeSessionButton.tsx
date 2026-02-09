@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Timer } from "lucide-react";
 import Link from "next/link";
-import type { WorkoutSessionWithData } from "@/lib/convex-types";
+import type { WorkoutSessionWithData } from "@/lib/types";
 
 export const ResumeSessionButton = ({
   session,

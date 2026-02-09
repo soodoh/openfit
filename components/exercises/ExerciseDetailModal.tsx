@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,10 +16,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { api } from "@/convex/_generated/api";
-import { Exercise, ExerciseWithImageUrl } from "@/lib/convex-types";
+import { useExercise } from "@/hooks";
+import { Exercise, ExerciseWithImageUrl } from "@/lib/types";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
-import { useQuery } from "convex/react";
 import { Dumbbell, Flame, Gauge, Settings2, Target } from "lucide-react";
 import Image from "next/image";
 
@@ -33,38 +30,49 @@ function formatDisplayName(value: string): string {
     .join(" ");
 }
 
+// Minimal exercise type for when we only have partial data
+interface MinimalExercise {
+  id: string;
+  name: string;
+  imageUrl?: string | null;
+}
+
 export const ExerciseDetailModal = ({
   exercise: exerciseProp,
   open,
   onClose,
 }: {
-  exercise: Exercise | ExerciseWithImageUrl;
+  exercise: Exercise | ExerciseWithImageUrl | MinimalExercise;
   open: boolean;
   onClose: () => void;
 }) => {
   // Fetch full exercise with image URLs when modal is open
-  const exerciseWithImages = useQuery(
-    api.queries.exercises.get,
-    open ? { id: exerciseProp._id } : "skip",
+  const { data: exerciseWithImages } = useExercise(
+    open ? exerciseProp.id : undefined,
   );
 
-  // Use fetched data if available, otherwise use prop
-  const exercise = exerciseWithImages || exerciseProp;
+  // Use fetched data for detailed info, prop only for basic display
+  const exercise = exerciseWithImages ?? null;
+  const displayName = exercise?.name ?? exerciseProp.name;
 
   // Get image URLs safely
-  const imageUrls: (string | null)[] = exerciseWithImages?.imageUrls || [];
+  const imageUrls: (string | null)[] = exercise?.imageUrls ?? [];
   const firstImageUrl: string | null =
-    imageUrls[0] ||
+    imageUrls[0] ??
+    exercise?.imageUrl ??
     ("imageUrl" in exerciseProp
       ? (exerciseProp.imageUrl as string | null)
       : null);
+
   const { getEquipmentName, getMuscleGroupNames, getCategoryName } =
     useExerciseLookups();
 
-  const categoryName = getCategoryName(exercise.categoryId);
-  const equipmentName = getEquipmentName(exercise.equipmentId);
-  const primaryMuscleNames = getMuscleGroupNames(exercise.primaryMuscleIds);
-  const secondaryMuscleNames = getMuscleGroupNames(exercise.secondaryMuscleIds);
+  const categoryName = getCategoryName(exercise?.categoryId ?? "");
+  const equipmentName = getEquipmentName(exercise?.equipmentId);
+  const primaryMuscleNames = getMuscleGroupNames(exercise?.primaryMuscleIds);
+  const secondaryMuscleNames = getMuscleGroupNames(
+    exercise?.secondaryMuscleIds,
+  );
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
@@ -76,9 +84,9 @@ export const ExerciseDetailModal = ({
               {firstImageUrl ? (
                 <Image
                   src={firstImageUrl}
-                  alt={exercise.name}
-                  width={48}
-                  height={48}
+                  alt={displayName}
+                  width={100}
+                  height={100}
                   className="object-cover w-full h-full"
                 />
               ) : (
@@ -87,7 +95,7 @@ export const ExerciseDetailModal = ({
             </div>
             <div className="min-w-0">
               <DialogTitle className="text-xl leading-tight">
-                {exercise.name}
+                {displayName}
               </DialogTitle>
               <DialogDescription className="text-sm">
                 {formatDisplayName(categoryName)}
@@ -100,7 +108,7 @@ export const ExerciseDetailModal = ({
         <div className="px-6 py-5 space-y-6 overflow-y-auto flex-1">
           {/* Image Gallery */}
           {imageUrls.filter(Boolean).length > 0 && (
-            <Carousel opts={{ loop: true }} className="w-full">
+            <Carousel className="w-full">
               <div className="relative">
                 <CarouselContent className="ml-0">
                   {imageUrls
@@ -110,7 +118,7 @@ export const ExerciseDetailModal = ({
                         <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
                           <Image
                             src={url}
-                            alt={`${exercise.name} - image ${index + 1}`}
+                            alt={`${displayName} - image ${index + 1}`}
                             fill
                             className="object-contain"
                           />
@@ -133,13 +141,13 @@ export const ExerciseDetailModal = ({
 
           {/* Quick Info */}
           <div className="grid grid-cols-2 gap-3">
-            {exercise.level && (
+            {exercise?.level && (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
                 <Gauge className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-xs text-muted-foreground">Level</p>
                   <p className="text-sm font-medium">
-                    {formatDisplayName(exercise.level)}
+                    {formatDisplayName(exercise?.level)}
                   </p>
                 </div>
               </div>
@@ -155,24 +163,24 @@ export const ExerciseDetailModal = ({
                 </div>
               </div>
             )}
-            {exercise.force && (
+            {exercise?.force && (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
                 <Flame className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-xs text-muted-foreground">Force</p>
                   <p className="text-sm font-medium">
-                    {formatDisplayName(exercise.force)}
+                    {formatDisplayName(exercise?.force)}
                   </p>
                 </div>
               </div>
             )}
-            {exercise.mechanic && (
+            {exercise?.mechanic && (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
                 <Target className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-xs text-muted-foreground">Mechanic</p>
                   <p className="text-sm font-medium">
-                    {formatDisplayName(exercise.mechanic)}
+                    {formatDisplayName(exercise?.mechanic)}
                   </p>
                 </div>
               </div>
@@ -208,11 +216,11 @@ export const ExerciseDetailModal = ({
           </div>
 
           {/* Instructions */}
-          {exercise.instructions.length > 0 && (
+          {exercise?.instructions && exercise?.instructions.length > 0 && (
             <div>
               <h4 className="text-sm font-medium mb-3">Instructions</h4>
               <ol className="space-y-2">
-                {exercise.instructions.map((instruction, index) => (
+                {exercise?.instructions.map((instruction, index) => (
                   <li key={index} className="flex gap-3 text-sm">
                     <span className="shrink-0 w-6 h-6 rounded-full bg-primary/10 dark:bg-foreground/10 text-primary dark:text-foreground text-xs font-medium flex items-center justify-center">
                       {index + 1}

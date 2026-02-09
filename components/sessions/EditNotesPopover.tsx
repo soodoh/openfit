@@ -7,9 +7,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { api } from "@/convex/_generated/api";
-import { type WorkoutSessionWithData } from "@/lib/convex-types";
-import { useMutation } from "convex/react";
+import { useUpdateSession } from "@/hooks";
+import { type WorkoutSessionWithData } from "@/lib/types";
 import { Loader2, MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -21,7 +20,7 @@ export const EditNotesPopover = ({
   const [open, setOpen] = useState(false);
   const [notes, setNotes] = useState(session.notes ?? "");
   const [isPending, setIsPending] = useState(false);
-  const updateSession = useMutation(api.mutations.sessions.update);
+  const updateSessionMutation = useUpdateSession();
 
   useEffect(() => {
     if (open) {
@@ -32,7 +31,7 @@ export const EditNotesPopover = ({
   const handleSave = async () => {
     setIsPending(true);
     try {
-      await updateSession({ id: session._id, notes });
+      await updateSessionMutation.mutateAsync({ id: session.id, notes });
       setOpen(false);
     } finally {
       setIsPending(false);

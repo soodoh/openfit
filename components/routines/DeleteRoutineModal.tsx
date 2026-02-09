@@ -9,11 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useDeleteRoutine } from "@/hooks";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useState } from "react";
-import type { RoutineId } from "@/lib/convex-types";
 
 export const DeleteRoutineModal = ({
   open,
@@ -22,15 +20,15 @@ export const DeleteRoutineModal = ({
 }: {
   open: boolean;
   onClose: () => void;
-  routineId: RoutineId;
+  routineId: string;
 }) => {
   const [isPending, setIsPending] = useState(false);
-  const deleteRoutine = useMutation(api.mutations.routines.remove);
+  const deleteRoutineMutation = useDeleteRoutine();
 
   const handleDelete = async () => {
     setIsPending(true);
     try {
-      await deleteRoutine({ id: routineId });
+      await deleteRoutineMutation.mutateAsync(routineId);
       onClose();
     } finally {
       setIsPending(false);

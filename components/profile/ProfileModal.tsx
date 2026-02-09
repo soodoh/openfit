@@ -22,9 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useGyms, useUnits, useUserProfile } from "@/hooks";
+import { useCreateGym, useUpdateGym, useUpdateUserProfile } from "@/hooks";
 import {
   AlertCircle,
   Dumbbell,
@@ -35,10 +34,16 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import type { EquipmentId, Gym } from "@/lib/convex-types";
+import type { Gym } from "@/lib/types";
 
 type Theme = "light" | "dark" | "system";
 type Tab = "settings" | "equipment";
+
+const THEME_OPTIONS = [
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "system", label: "System" },
+];
 
 export const ProfileModal = ({
   open,
@@ -47,11 +52,12 @@ export const ProfileModal = ({
   open: boolean;
   onClose: () => void;
 }) => {
-  const profileData = useQuery(api.queries.userProfiles.getCurrent);
-  const gymsData = useQuery(api.queries.gyms.list);
-  const updateProfile = useMutation(api.mutations.userProfiles.update);
-  const createGym = useMutation(api.mutations.gyms.create);
-  const updateGym = useMutation(api.mutations.gyms.update);
+  const { data: profile, isLoading: profileLoading } = useUserProfile();
+  const { data: gymsData, isLoading: gymsLoading } = useGyms();
+  const { data: units, isLoading: unitsLoading } = useUnits();
+  const updateProfileMutation = useUpdateUserProfile();
+  const createGymMutation = useCreateGym();
+  const updateGymMutation = useUpdateGym();
   const { setTheme } = useTheme();
 
   const [activeTab, setActiveTab] = useState<Tab>("settings");
@@ -65,9 +71,9 @@ export const ProfileModal = ({
   const [isAddingGym, setIsAddingGym] = useState(false);
   const [editingGym, setEditingGym] = useState<Gym | null>(null);
   const [gymName, setGymName] = useState("");
-  const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<
-    EquipmentId[]
-  >([]);
+  const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>(
+    [],
+  );
   const [gymError, setGymError] = useState<string | null>(null);
   const [isGymPending, setIsGymPending] = useState(false);
 
@@ -76,19 +82,18 @@ export const ProfileModal = ({
 
   // Reset form when modal opens or profile data changes
   useEffect(() => {
-    if (open && profileData) {
+    if (open && profile && units) {
       const repUnitId =
-        profileData.profile?.defaultRepetitionUnitId ??
-        profileData.repetitionUnits.find((u) => u.name === "Repetitions")
-          ?._id ??
-        profileData.repetitionUnits[0]?._id ??
+        profile.defaultRepetitionUnitId ??
+        units.repetitionUnits.find((u) => u.name === "Repetitions")?.id ??
+        units.repetitionUnits[0]?.id ??
         "";
       const weightUnitId =
-        profileData.profile?.defaultWeightUnitId ??
-        profileData.weightUnits.find((u) => u.name === "lb")?._id ??
-        profileData.weightUnits[0]?._id ??
+        profile.defaultWeightUnitId ??
+        units.weightUnits.find((u) => u.name === "lb")?.id ??
+        units.weightUnits[0]?.id ??
         "";
-      const theme = profileData.profile?.theme ?? "system";
+      const theme = (profile.theme as Theme) ?? "system";
 
       setDefaultRepUnitId(repUnitId);
       setDefaultWeightUnitId(weightUnitId);
@@ -97,7 +102,7 @@ export const ProfileModal = ({
       setActiveTab("settings");
       resetGymForm();
     }
-  }, [open, profileData]);
+  }, [open, profile, units]);
 
   const resetGymForm = () => {
     setIsAddingGym(false);
@@ -110,7 +115,7 @@ export const ProfileModal = ({
   const handleEditGym = (gym: Gym) => {
     setEditingGym(gym);
     setGymName(gym.name);
-    setSelectedEquipmentIds(gym.equipmentIds);
+    setSelectedEquipmentIds(gym.equipmentIds || []);
     setIsAddingGym(true);
   };
 
@@ -126,9 +131,9 @@ export const ProfileModal = ({
     setError(null);
 
     try {
-      await updateProfile({
-        defaultRepetitionUnitId: defaultRepUnitId as Id<"repetitionUnits">,
-        defaultWeightUnitId: defaultWeightUnitId as Id<"weightUnits">,
+      await updateProfileMutation.mutateAsync({
+        defaultRepetitionUnitId: defaultRepUnitId,
+        defaultWeightUnitId: defaultWeightUnitId,
         theme: selectedTheme,
       });
       setTheme(selectedTheme);
@@ -158,13 +163,13 @@ export const ProfileModal = ({
 
     try {
       if (editingGym) {
-        await updateGym({
-          id: editingGym._id,
+        await updateGymMutation.mutateAsync({
+          id: editingGym.id,
           name: gymName.trim(),
           equipmentIds: selectedEquipmentIds,
         });
       } else {
-        await createGym({
+        await createGymMutation.mutateAsync({
           name: gymName.trim(),
           equipmentIds: selectedEquipmentIds,
         });
@@ -181,8 +186,8 @@ export const ProfileModal = ({
     }
   };
 
-  const isLoading = profileData === undefined;
-  const isGymsLoading = gymsData === undefined;
+  const isLoading = profileLoading || unitsLoading;
+  const isGymsLoading = gymsLoading;
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
@@ -260,8 +265,8 @@ export const ProfileModal = ({
                           <SelectValue placeholder="Select repetition unit" />
                         </SelectTrigger>
                         <SelectContent>
-                          {profileData?.repetitionUnits.map((unit) => (
-                            <SelectItem key={unit._id} value={unit._id}>
+                          {units?.repetitionUnits.map((unit) => (
+                            <SelectItem key={unit.id} value={unit.id}>
                               {unit.name}
                             </SelectItem>
                           ))}
@@ -290,8 +295,8 @@ export const ProfileModal = ({
                           <SelectValue placeholder="Select weight unit" />
                         </SelectTrigger>
                         <SelectContent>
-                          {profileData?.weightUnits.map((unit) => (
-                            <SelectItem key={unit._id} value={unit._id}>
+                          {units?.weightUnits.map((unit) => (
+                            <SelectItem key={unit.id} value={unit.id}>
                               {unit.name}
                             </SelectItem>
                           ))}
@@ -316,7 +321,7 @@ export const ProfileModal = ({
                           <SelectValue placeholder="Select theme" />
                         </SelectTrigger>
                         <SelectContent>
-                          {profileData?.themeOptions.map((option) => (
+                          {THEME_OPTIONS.map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
@@ -451,13 +456,13 @@ export const ProfileModal = ({
                       <>
                         {gymsData.map((gym) => (
                           <GymCard
-                            key={gym._id}
+                            key={gym.id}
                             gym={gym}
-                            isDefault={
-                              profileData?.profile?.defaultGymId === gym._id
+                            isDefault={profile?.defaultGymId === gym.id}
+                            onEdit={() => handleEditGym(gym as unknown as Gym)}
+                            onDelete={() =>
+                              setGymToDelete(gym as unknown as Gym)
                             }
-                            onEdit={() => handleEditGym(gym)}
-                            onDelete={() => setGymToDelete(gym)}
                           />
                         ))}
                         <Button

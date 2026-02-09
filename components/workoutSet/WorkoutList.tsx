@@ -4,14 +4,14 @@ import { AddExerciseRow } from "@/components/routines/AddExerciseRow";
 import { RestTimer } from "@/components/sessions/RestTimer";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { api } from "@/convex/_generated/api";
+import { useReorderSetGroups } from "@/hooks";
 import {
   ListView,
   type RoutineDayId,
   type SetGroupWithRelations,
   type Units,
   type WorkoutSessionId,
-} from "@/lib/convex-types";
+} from "@/lib/types";
 import {
   DndContext,
   type DragEndEvent,
@@ -26,7 +26,6 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useMutation } from "convex/react";
 import dayjs from "dayjs";
 import { ArrowUpDown, Dumbbell } from "lucide-react";
 import { useOptimistic, useState, useTransition } from "react";
@@ -58,7 +57,7 @@ export const WorkoutList = ({
     autoStart: false,
   });
 
-  const reorderSetGroups = useMutation(api.mutations.setGroups.reorder);
+  const reorderSetGroupsMutation = useReorderSetGroups();
 
   const startRestTimer = (seconds: number) => {
     setTotalSeconds(seconds);
@@ -77,15 +76,13 @@ export const WorkoutList = ({
     if (!overId || dragId === overId || !optimisticSetGroups.length) {
       return;
     }
-    const oldIndex = optimisticSetGroups.findIndex((set) => set._id === dragId);
-    const newIndex = optimisticSetGroups.findIndex((set) => set._id === overId);
+    const oldIndex = optimisticSetGroups.findIndex((set) => set.id === dragId);
+    const newIndex = optimisticSetGroups.findIndex((set) => set.id === overId);
     const newSetGroups = arrayMove(optimisticSetGroups, oldIndex, newIndex);
     startTransition(async () => {
       optimisticUpdateSetGroups(newSetGroups);
-      await reorderSetGroups({
-        sessionOrDayId,
-        isSession: view !== ListView.EditTemplate,
-        setGroupIds: newSetGroups.map((setGroup) => setGroup._id),
+      await reorderSetGroupsMutation.mutateAsync({
+        setGroupIds: newSetGroups.map((setGroup) => setGroup.id),
       });
     });
   };
@@ -155,14 +152,14 @@ export const WorkoutList = ({
               sensors={sensors}
             >
               <SortableContext
-                items={optimisticSetGroups.map((sg) => sg._id)}
+                items={optimisticSetGroups.map((sg) => sg.id)}
                 strategy={verticalListSortingStrategy}
               >
                 {optimisticSetGroups.map((setGroup) => {
                   return (
                     <WorkoutSetGroup
                       view={view}
-                      key={`set-${setGroup._id}`}
+                      key={`set-${setGroup.id}`}
                       isReorderActive={isReorderActive}
                       setGroup={setGroup}
                       units={units}

@@ -8,9 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { api } from "@/convex/_generated/api";
-import { SetType, type SetWithRelations } from "@/lib/convex-types";
-import { useMutation } from "convex/react";
+import { useUpdateSet } from "@/hooks";
+import { SetType, type SetWithRelations } from "@/lib/types";
 import { Flame } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
@@ -59,14 +58,14 @@ export const SetTypeMenu = ({
   setNum: number;
 }) => {
   const [open, setOpen] = useState(false);
-  const updateSet = useMutation(api.mutations.sets.update);
+  const updateSetMutation = useUpdateSet();
 
   return (
     <div className="flex items-center">
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="p-0 h-auto">
-            {setTypeIcons[set.type] ?? (
+            {setTypeIcons[set.type as SetType] ?? (
               <Avatar className="w-8 h-8">
                 <AvatarFallback>{setNum}</AvatarFallback>
               </Avatar>
@@ -76,10 +75,10 @@ export const SetTypeMenu = ({
         <DropdownMenuContent>
           {Object.values(SetType).map((setType) => (
             <DropdownMenuItem
-              key={`set-type-${set._id}-${setType}`}
+              key={`set-type-${set.id}-${setType}`}
               onClick={async () => {
-                await updateSet({
-                  id: set._id,
+                await updateSetMutation.mutateAsync({
+                  id: set.id,
                   type: setType,
                 });
                 setOpen(false);

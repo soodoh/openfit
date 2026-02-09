@@ -3,15 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { api } from "@/convex/_generated/api";
-import {
-  ListView,
-  type SetWithRelations,
-  type Units,
-} from "@/lib/convex-types";
+import { useDeleteSet, useUpdateSet } from "@/hooks";
+import { ListView, type SetWithRelations, type Units } from "@/lib/types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useMutation } from "convex/react";
 import { GripVertical, Trash2 } from "lucide-react";
 import { RepUnitMenu } from "./RepUnitMenu";
 import { SetTypeMenu } from "./SetTypeMenu";
@@ -32,11 +27,11 @@ export const WorkoutSetRow = ({
   startRestTimer: (seconds: number) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: set._id });
+    useSortable({ id: set.id });
   const isRowDisabled = set.completed && view === ListView.CurrentSession;
 
-  const updateSet = useMutation(api.mutations.sets.update);
-  const deleteSet = useMutation(api.mutations.sets.remove);
+  const updateSetMutation = useUpdateSet();
+  const deleteSetMutation = useDeleteSet();
 
   return (
     <div
@@ -61,26 +56,26 @@ export const WorkoutSetRow = ({
       <div className="flex gap-2 flex-1 items-center">
         <div className="flex items-center gap-0.5 flex-1 min-w-0">
           <Input
-            key={`reps-${set._id}-${set.reps}`}
+            key={`reps-${set.id}-${set.reps}`}
             type="text"
             disabled={isRowDisabled}
             defaultValue={set.reps}
             className="h-9 text-sm text-center font-medium flex-1 min-w-0"
             onBlur={async (event) => {
-              updateSet({
-                id: set._id,
+              updateSetMutation.mutate({
+                id: set.id,
                 reps: parseInt(event.target.value, 10) || 0,
               });
             }}
           />
           <RepUnitMenu
-            id={set._id}
+            id={set.id}
             label={set.repetitionUnit?.name ?? "reps"}
             units={units}
             onChange={(repUnit) => {
-              updateSet({
-                id: set._id,
-                repetitionUnitId: repUnit._id,
+              updateSetMutation.mutate({
+                id: set.id,
+                repetitionUnitId: repUnit.id,
               });
             }}
           />
@@ -88,26 +83,26 @@ export const WorkoutSetRow = ({
 
         <div className="flex items-center gap-0.5 flex-1 min-w-0">
           <Input
-            key={`weight-${set._id}-${set.weight}`}
+            key={`weight-${set.id}-${set.weight}`}
             type="text"
             disabled={isRowDisabled}
             defaultValue={set.weight}
             className="h-9 text-sm text-center font-medium flex-1 min-w-0"
             onBlur={async (event) => {
-              updateSet({
-                id: set._id,
+              updateSetMutation.mutate({
+                id: set.id,
                 weight: parseInt(event.target.value, 10) || 0,
               });
             }}
           />
           <WeightUnitMenu
-            id={set._id}
+            id={set.id}
             label={set.weightUnit?.name ?? "lbs"}
             units={units}
             onChange={(weightUnit) => {
-              updateSet({
-                id: set._id,
-                weightUnitId: weightUnit._id,
+              updateSetMutation.mutate({
+                id: set.id,
+                weightUnitId: weightUnit.id,
               });
             }}
           />
@@ -118,8 +113,8 @@ export const WorkoutSetRow = ({
             <WorkoutTimer
               set={set}
               onComplete={async () => {
-                updateSet({
-                  id: set._id,
+                updateSetMutation.mutate({
+                  id: set.id,
                   completed: true,
                 });
                 if (set.restTime) {
@@ -134,8 +129,8 @@ export const WorkoutSetRow = ({
                 checked={set.completed}
                 className="h-5 w-5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                 onCheckedChange={(checked: boolean) => {
-                  updateSet({
-                    id: set._id,
+                  updateSetMutation.mutate({
+                    id: set.id,
                     completed: checked,
                   });
                   if (set.restTime && checked) {
@@ -151,7 +146,7 @@ export const WorkoutSetRow = ({
         variant="ghost"
         size="icon"
         className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-        onClick={() => deleteSet({ id: set._id })}
+        onClick={() => deleteSetMutation.mutate(set.id)}
         aria-label="Delete set"
       >
         <Trash2 className="h-4 w-4" />

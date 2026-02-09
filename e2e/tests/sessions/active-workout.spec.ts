@@ -8,7 +8,7 @@ test.describe("Active Workout", () => {
     await workoutPage.goto();
   });
 
-  test("should display workout page", async ({ workoutPage, page }) => {
+  test("should display workout page", async ({ workoutPage }) => {
     await workoutPage.waitForConvexData();
 
     // Should show either no active session or active session content
@@ -77,7 +77,6 @@ test.describe("Active Workout", () => {
   test("should show active session when one exists", async ({
     workoutPage,
     dashboardPage,
-    page,
   }) => {
     // First, check if there's a current session from dashboard
     await dashboardPage.goto();

@@ -1,6 +1,6 @@
 # Open Fit
 
-A fitness tracking application built with Next.js and Convex.
+A fitness tracking application built with Next.js, SQLite, and Drizzle ORM.
 
 ## Development Setup
 
@@ -10,7 +10,6 @@ For contributors who want to run the full development environment.
 
 - [Node.js](https://nodejs.org/) 18+
 - [pnpm](https://pnpm.io/) package manager
-- [Docker](https://docker.com/) for Convex backend
 
 ### 1. Clone and Install
 
@@ -20,44 +19,29 @@ cd openfit
 pnpm install
 ```
 
-### 2. Start Convex Backend
+### 2. Configure Environment
+
+Copy `.env.example` to `.env.local` and configure as needed. The app uses SQLite by default, so no external database is required.
+
+### 3. Initialize Database
 
 ```bash
-docker compose up -d
+pnpm db:migrate    # Run database migrations
+pnpm db:seed       # Seed exercise data (873 exercises)
 ```
 
-### 3. Generate Environment Variables
-
-```bash
-pnpm generate:keys
-```
-
-Copy the output to `.env.local` and run the admin key command shown.
-
-Add the remaining config:
-```env
-CONVEX_SELF_HOSTED_URL='http://localhost:3210'
-INSTANCE_NAME='convex-self-hosted'
-```
-
-### 4. Initialize Database
-
-```bash
-./scripts/dev-init.sh
-```
-
-### 5. Start Development Server
+### 4. Start Development Server
 
 ```bash
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to get started.
+Open [http://localhost:3000](http://localhost:3000) to get started. The first user to register becomes the admin.
 
 ### Seed Test Data (Optional)
 
 ```bash
-pnpm convex run seed:mockUserData '{"email": "your@email.com"}'
+pnpm db:seed-mock your@email.com
 ```
 
 ---
@@ -66,6 +50,7 @@ pnpm convex run seed:mockUserData '{"email": "your@email.com"}'
 
 ```
 ├── app/                    # Next.js app router pages
+│   └── api/               # REST API routes
 ├── components/             # React components
 │   ├── auth/              # Authentication components
 │   ├── exercises/         # Exercise-related components
@@ -73,21 +58,24 @@ pnpm convex run seed:mockUserData '{"email": "your@email.com"}'
 │   ├── sessions/          # Workout session components
 │   ├── ui/                # Shared UI components
 │   └── workoutSet/        # Workout set components
-├── convex/                 # Convex backend
-│   ├── mutations/         # Data mutation functions
-│   ├── queries/           # Data query functions
-│   ├── schema.ts          # Database schema
-│   └── seed.ts            # Database seeding
-├── lib/                    # Utility functions and types
-├── self-host/             # Self-hosting docker-compose
+├── db/                     # Database layer
+│   ├── schema/            # Drizzle ORM schema definitions
+│   ├── migrations/        # Database migrations
+│   ├── seed.ts            # Exercise data seeding
+│   └── seed-mock-user-data.ts  # Mock user data for testing
+├── hooks/                  # React hooks
+│   ├── queries/           # TanStack React Query hooks
+│   └── mutations/         # Mutation hooks with optimistic updates
+├── lib/                    # Utility functions, types, and auth
 └── public/                 # Static assets
 ```
 
 ## Tech Stack
 
 - **Frontend**: Next.js 16, React 19, TypeScript
-- **Backend**: Convex (real-time database and serverless functions)
-- **Authentication**: Convex Auth with email/password
+- **Database**: SQLite with Drizzle ORM
+- **Data Fetching**: TanStack React Query
+- **Authentication**: BetterAuth (email/password + optional Google, GitHub, Discord OAuth)
 - **Styling**: Tailwind CSS, shadcn/ui components
 - **Drag & Drop**: dnd-kit
 

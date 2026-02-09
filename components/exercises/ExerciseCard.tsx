@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { ExerciseWithImageUrl } from "@/lib/convex-types";
+import { ExerciseWithImageUrl } from "@/lib/types";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
 import { Dumbbell } from "lucide-react";
 import Image from "next/image";

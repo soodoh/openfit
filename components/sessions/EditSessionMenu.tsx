@@ -11,7 +11,7 @@ import { Edit, MoreVertical, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DeleteSessionModal } from "./DeleteSessionModal";
 import { EditSessionModal } from "./EditSessionModal";
-import type { WorkoutSessionWithData } from "@/lib/convex-types";
+import type { WorkoutSessionWithData } from "@/lib/types";
 
 enum Modal {
   EDIT = "edit",
@@ -39,7 +39,7 @@ export const EditSessionMenu = ({
       <DeleteSessionModal
         open={modal === Modal.DELETE}
         onClose={handleClose}
-        sessionId={session._id}
+        sessionId={session.id}
       />
 
       <EditSessionModal
@@ -54,7 +54,7 @@ export const EditSessionMenu = ({
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            aria-label={`Edit actions for workout session ${session._id}`}
+            aria-label={`Edit actions for workout session ${session.id}`}
           >
             <MoreVertical className="h-4 w-4" />
           </Button>
