@@ -8,15 +8,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { api } from "@/convex/_generated/api";
+import { useCreateSet, useReorderSets } from "@/hooks";
 import {
-  type Exercise,
   ListView,
   type SetGroupWithRelations,
   SetType,
   type SetWithRelations,
   type Units,
-} from "@/lib/convex-types";
+} from "@/lib/types";
 import {
   DndContext,
   DragEndEvent,
@@ -33,7 +32,6 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useMutation } from "convex/react";
 import {
   AlertCircle,
   Edit,
@@ -45,13 +43,7 @@ import {
   RefreshCw,
   Trash2,
 } from "lucide-react";
-import {
-  useEffect,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
+import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { BulkEditSetModal } from "./BulkEditSetModal";
 import { EditSetCommentModal } from "./EditSetCommentModal";
 import { WorkoutSetRow } from "./WorkoutSetRow";
@@ -70,7 +62,7 @@ export const WorkoutSetGroup = ({
   startRestTimer: (seconds: number) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: setGroup._id });
+    useSortable({ id: setGroup.id });
   const [, startTransition] = useTransition();
   const [sets, optimisticUpdateSets] = useOptimistic<
     SetWithRelations[],
@@ -79,27 +71,29 @@ export const WorkoutSetGroup = ({
   const [expanded, setExpanded] = useState(
     view === ListView.CurrentSession && sets.some((set) => !set.completed),
   );
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
-    null,
-  );
+  const [selectedExercise, setSelectedExercise] = useState<{
+    id: string;
+    name: string;
+    imageUrl: string | null;
+  } | null>(null);
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [showComment, setShowComment] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showReplace, setShowReplace] = useState(false);
 
-  const createSet = useMutation(api.mutations.sets.create);
-  const reorderSets = useMutation(api.mutations.sets.reorder);
+  const createSetMutation = useCreateSet();
+  const reorderSetsMutation = useReorderSets();
 
-  useEffect(() => {
-    // Only auto-close when all sets are completed in the active session view
-    if (
-      view === ListView.CurrentSession &&
-      sets.every((set) => set.completed)
-    ) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+  // Auto-close when all sets become completed in the active session view
+  const allSetsCompleted =
+    view === ListView.CurrentSession && sets.every((set) => set.completed);
+  const [prevAllCompleted, setPrevAllCompleted] = useState(allSetsCompleted);
+  if (allSetsCompleted !== prevAllCompleted) {
+    setPrevAllCompleted(allSetsCompleted);
+    if (allSetsCompleted) {
       setExpanded(false);
     }
-  }, [sets, view]);
+  }
 
   const exercise = sets[0]?.exercise;
   const setsWithNumber = useMemo(
@@ -123,9 +117,9 @@ export const WorkoutSetGroup = ({
 
   const handleAdd = async () => {
     if (!exercise) return;
-    await createSet({
-      setGroupId: setGroup._id,
-      exerciseId: exercise._id,
+    await createSetMutation.mutateAsync({
+      setGroupId: setGroup.id,
+      exerciseId: exercise.id,
     });
   };
 
@@ -136,14 +130,14 @@ export const WorkoutSetGroup = ({
       return;
     }
 
-    const oldIndex = sets.findIndex((set) => set._id === dragId);
-    const newIndex = sets.findIndex((set) => set._id === overId);
+    const oldIndex = sets.findIndex((set) => set.id === dragId);
+    const newIndex = sets.findIndex((set) => set.id === overId);
     const newSets = arrayMove(sets, oldIndex, newIndex);
     startTransition(async () => {
       optimisticUpdateSets(newSets);
-      await reorderSets({
-        setGroupId: setGroup._id,
-        setIds: newSets.map(({ _id }) => _id),
+      await reorderSetsMutation.mutateAsync({
+        setGroupId: setGroup.id,
+        setIds: newSets.map(({ id }) => id),
       });
     });
   };
@@ -180,7 +174,7 @@ export const WorkoutSetGroup = ({
           open={showReplace}
           onClose={() => setShowReplace(false)}
           currentExercise={exercise}
-          setGroupId={setGroup._id}
+          setGroupId={setGroup.id}
         />
       )}
       <Collapsible open={!isReorderActive && expanded} className="w-full">
@@ -285,13 +279,13 @@ export const WorkoutSetGroup = ({
             <div className="divide-y divide-border/50">
               <DndContext id="sets" onDragEnd={handleSort} sensors={sensors}>
                 <SortableContext
-                  items={sets.map((s) => s._id)}
+                  items={sets.map((s) => s.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   {setsWithNumber.map(({ set, setNum }) => {
                     return (
                       <WorkoutSetRow
-                        key={`set-row-${set._id}`}
+                        key={`set-row-${set.id}`}
                         view={view}
                         set={set}
                         setNum={setNum}

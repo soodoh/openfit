@@ -49,9 +49,6 @@ test.describe("Workout Logs Calendar", () => {
       return;
     }
 
-    // Get current month
-    const currentMonth = await logsPage.getCurrentMonthYear();
-
     // Navigate to previous month
     await logsPage.goToPreviousMonth();
     await logsPage.page.waitForTimeout(500);
@@ -72,9 +69,6 @@ test.describe("Workout Logs Calendar", () => {
       test.skip();
       return;
     }
-
-    // Get current month
-    const currentMonth = await logsPage.getCurrentMonthYear();
 
     // Navigate to next month
     await logsPage.goToNextMonth();
@@ -173,7 +167,6 @@ test.describe("Workout Logs Calendar", () => {
     await logsPage.waitForConvexData();
 
     const hasCalendar = await logsPage.isCalendarVisible();
-    const hasEmpty = await logsPage.hasEmptyState();
 
     if (hasCalendar) {
       // Look for navigation buttons (chevron icons)

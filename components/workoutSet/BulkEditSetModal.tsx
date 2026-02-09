@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,8 +14,7 @@ import {
 } from "@/components/ui/duration-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useBulkEditSetGroup } from "@/hooks";
 import { useState } from "react";
 import { RepUnitMenu } from "./RepUnitMenu";
 import { WeightUnitMenu } from "./WeightUnitMenu";
@@ -22,7 +23,7 @@ import type {
   SetGroupWithRelations,
   Units,
   WeightUnit,
-} from "@/lib/convex-types";
+} from "@/lib/types";
 
 export const BulkEditSetModal = ({
   open,
@@ -46,7 +47,7 @@ export const BulkEditSetModal = ({
     firstSet?.weightUnit ?? null,
   );
 
-  const bulkEditSetGroup = useMutation(api.mutations.setGroups.bulkEdit);
+  const bulkEditSetGroupMutation = useBulkEditSetGroup();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -65,7 +66,7 @@ export const BulkEditSetModal = ({
             />
             <div className="absolute right-1 top-1/2 -translate-y-1/2">
               <RepUnitMenu
-                id={`bulk-rep-${setGroup._id}`}
+                id={`bulk-rep-${setGroup.id}`}
                 label={repUnit?.name ?? "Repetitions"}
                 units={units}
                 onChange={(repUnit) => setRepUnit(repUnit)}
@@ -83,7 +84,7 @@ export const BulkEditSetModal = ({
             />
             <div className="absolute right-1 top-1/2 -translate-y-1/2">
               <WeightUnitMenu
-                id={`bulk-weight-${setGroup._id}`}
+                id={`bulk-weight-${setGroup.id}`}
                 label={weightUnit?.name ?? "lbs"}
                 units={units}
                 onChange={(weightUnit) => setWeightUnit(weightUnit)}
@@ -107,13 +108,13 @@ export const BulkEditSetModal = ({
           </Button>
           <Button
             onClick={async () => {
-              await bulkEditSetGroup({
-                id: setGroup._id,
+              await bulkEditSetGroupMutation.mutateAsync({
+                id: setGroup.id,
                 // If empty string, leave unchanged (undefined)
                 reps: reps ? parseInt(reps, 10) : undefined,
                 weight: weight ? parseInt(weight, 10) : undefined,
-                repetitionUnitId: repUnit?._id,
-                weightUnitId: weightUnit?._id,
+                repetitionUnitId: repUnit?.id,
+                weightUnitId: weightUnit?.id,
                 restTime: parseDurationToSeconds(restTime),
               });
               onClose();

@@ -3,8 +3,7 @@
 import { CurrentSessionPage } from "@/components/sessions/CurrentSessionPage";
 import { EditSessionModal } from "@/components/sessions/EditSessionModal";
 import { Button } from "@/components/ui/button";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useCurrentSession, useUnits } from "@/hooks";
 import { Dumbbell, Play } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -15,8 +14,9 @@ export default function Page() {
 
 function WorkoutPageContent() {
   const router = useRouter();
-  const currentSession = useQuery(api.queries.sessions.getCurrent);
-  const units = useQuery(api.queries.units.list);
+  const { data: currentSession, isLoading: sessionLoading } =
+    useCurrentSession();
+  const { data: units, isLoading: unitsLoading } = useUnits();
   const [showNewSessionModal, setShowNewSessionModal] = useState(false);
 
   const handleModalClose = () => {
@@ -24,7 +24,7 @@ function WorkoutPageContent() {
   };
 
   // Loading state
-  if (currentSession === undefined || units === undefined) {
+  if (sessionLoading || unitsLoading || !units) {
     return (
       <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-(--breakpoint-lg) mt-8">
         <p className="text-muted-foreground">Loading...</p>

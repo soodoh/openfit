@@ -12,15 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useCreateSession, useUpdateSession } from "@/hooks";
 import { AlertCircle, CalendarPlus, Loader2, Star, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SelectTemplate } from "./SelectTemplate";
 import type {
   RoutineDayWithRoutine,
   WorkoutSessionWithData,
-} from "@/lib/convex-types";
+} from "@/lib/types";
 
 export const EditSessionModal = ({
   session,
@@ -50,8 +49,8 @@ export const EditSessionModal = ({
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createSession = useMutation(api.mutations.sessions.create);
-  const updateSession = useMutation(api.mutations.sessions.update);
+  const createSessionMutation = useCreateSession();
+  const updateSessionMutation = useUpdateSession();
 
   // Reset form when modal opens/closes or session changes
   useEffect(() => {
@@ -94,8 +93,8 @@ export const EditSessionModal = ({
     setIsPending(true);
     try {
       if (session) {
-        await updateSession({
-          id: session._id,
+        await updateSessionMutation.mutateAsync({
+          id: session.id,
           name,
           startTime: startTime?.getTime(),
           endTime: endTime?.getTime() ?? undefined,
@@ -103,8 +102,8 @@ export const EditSessionModal = ({
           impression: impression ?? undefined,
         });
       } else {
-        await createSession({
-          templateId: workoutTemplate?._id,
+        await createSessionMutation.mutateAsync({
+          templateId: workoutTemplate?.id,
           name,
           startTime: startTime?.getTime() ?? Date.now(),
           endTime: endTime?.getTime(),

@@ -1,7 +1,7 @@
 "use client";
 
-import { api } from "@/convex/_generated/api";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useUserProfile } from "@/hooks";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
 
@@ -10,18 +10,15 @@ import { useEffect } from "react";
  * This runs when the user is authenticated and their profile is loaded.
  */
 export function ThemeSync() {
-  const { isAuthenticated } = useConvexAuth();
-  const profileData = useQuery(
-    api.queries.userProfiles.getCurrent,
-    isAuthenticated ? {} : "skip",
-  );
+  const { isAuthenticated } = useAuth();
+  const { data: profile } = useUserProfile();
   const { setTheme } = useTheme();
 
   useEffect(() => {
-    if (profileData?.profile?.theme) {
-      setTheme(profileData.profile.theme);
+    if (isAuthenticated && profile?.theme) {
+      setTheme(profile.theme);
     }
-  }, [profileData?.profile?.theme, setTheme]);
+  }, [isAuthenticated, profile?.theme, setTheme]);
 
   return null;
 }

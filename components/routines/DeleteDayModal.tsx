@@ -9,11 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useDeleteRoutineDay } from "@/hooks";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useState } from "react";
-import type { RoutineDayId } from "@/lib/convex-types";
 
 export const DeleteDayModal = ({
   open,
@@ -23,16 +21,16 @@ export const DeleteDayModal = ({
 }: {
   open: boolean;
   onClose: () => void;
-  dayId: RoutineDayId;
+  dayId: string;
   onSuccess?: () => void;
 }) => {
   const [isPending, setIsPending] = useState(false);
-  const deleteDay = useMutation(api.mutations.routineDays.remove);
+  const deleteDayMutation = useDeleteRoutineDay();
 
   const handleDelete = async () => {
     setIsPending(true);
     try {
-      await deleteDay({ id: dayId });
+      await deleteDayMutation.mutateAsync(dayId);
       onClose();
       onSuccess?.();
     } finally {

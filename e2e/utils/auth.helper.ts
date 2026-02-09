@@ -10,14 +10,7 @@ import { expect, Page } from "@playwright/test";
  * Most tests should use the auth.setup.ts storage state instead
  */
 export async function loginAsTestUser(page: Page): Promise<void> {
-  const testUser = process.env.TEST_USER;
-  const testPassword = process.env.TEST_PASSWORD;
-
-  if (!testUser || !testPassword) {
-    throw new Error(
-      "TEST_USER and TEST_PASSWORD environment variables are required",
-    );
-  }
+  const { email, password } = getTestCredentials();
 
   await page.goto("/signin");
 
@@ -27,8 +20,8 @@ export async function loginAsTestUser(page: Page): Promise<void> {
   });
 
   // Fill credentials
-  await page.getByLabel(/email/i).fill(testUser);
-  await page.getByLabel(/password/i).fill(testPassword);
+  await page.getByLabel(/email/i).fill(email);
+  await page.getByLabel(/password/i).fill(password);
 
   // Submit
   await page.getByRole("button", { name: /login/i }).click();
@@ -88,12 +81,12 @@ export async function isAuthenticated(page: Page): Promise<boolean> {
  * Get test user credentials from environment
  */
 export function getTestCredentials(): { email: string; password: string } {
-  const email = process.env.TEST_USER;
-  const password = process.env.TEST_PASSWORD;
+  const email = process.env.ADMIN_USER;
+  const password = process.env.ADMIN_PASSWORD;
 
   if (!email || !password) {
     throw new Error(
-      "TEST_USER and TEST_PASSWORD environment variables are required",
+      "ADMIN_USER and ADMIN_PASSWORD environment variables are required",
     );
   }
 

@@ -4,12 +4,9 @@ import { CreateRoutine } from "@/components/routines/CreateRoutine";
 import { RoutineCard } from "@/components/routines/RoutineCard";
 import { ResumeSessionButton } from "@/components/sessions/ResumeSessionButton";
 import { Input } from "@/components/ui/input";
-import { api } from "@/convex/_generated/api";
-import { usePaginatedQuery, useQuery } from "convex/react";
+import { useCurrentSession, useInView, useRoutines } from "@/hooks";
 import { Dumbbell, Loader2, Search } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-
-const ROUTINES_PAGE_SIZE = 12;
+import { useEffect, useMemo, useState } from "react";
 
 export default function Routines() {
   return <RoutinesContent />;
@@ -48,83 +45,34 @@ function EmptyState() {
 
 function RoutinesContent() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  const isSearching = searchQuery.trim().length > 0;
 
-  const isSearching = debouncedSearch.trim().length > 0;
-
-  // Get total count of routines (for browse mode)
-  const totalCount = useQuery(api.queries.routines.count);
-
-  // Get count of search results (for search mode)
-  const searchCount = useQuery(
-    api.queries.routines.searchCount,
-    isSearching ? { searchTerm: debouncedSearch } : "skip",
-  );
-
-  // Paginated list for browse mode
+  // Fetch routines with infinite query
   const {
-    results: routines,
-    status: browseStatus,
-    loadMore: loadMoreBrowse,
-  } = usePaginatedQuery(
-    api.queries.routines.list,
-    {},
-    { initialNumItems: ROUTINES_PAGE_SIZE },
-  );
+    data: routinesData,
+    isLoading: routinesLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useRoutines({ search: isSearching ? searchQuery : undefined });
 
-  // Paginated search results
-  const {
-    results: searchResults,
-    status: searchStatus,
-    loadMore: loadMoreSearch,
-  } = usePaginatedQuery(
-    api.queries.routines.search,
-    isSearching ? { searchTerm: debouncedSearch } : "skip",
-    { initialNumItems: ROUTINES_PAGE_SIZE },
-  );
+  // Flatten infinite query pages into a single array
+  const routines = useMemo(() => {
+    if (!routinesData?.pages) return [];
+    return routinesData.pages.flatMap((page) => page.page);
+  }, [routinesData]);
 
-  // Determine which data to use based on search state
-  const displayRoutines = isSearching ? searchResults : routines;
-  const status = isSearching ? searchStatus : browseStatus;
-  const loadMore = isSearching ? loadMoreSearch : loadMoreBrowse;
+  const totalCount = routines.length;
+  const { data: currentSession } = useCurrentSession();
 
-  const currentSession = useQuery(api.queries.sessions.getCurrent);
-
-  // Intersection observer for infinite scrolling
+  // Auto-load next page when sentinel is in view
+  const { ref: sentinelRef, inView } = useInView();
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && status === "CanLoadMore") {
-          loadMore(ROUTINES_PAGE_SIZE);
-        }
-      },
-      { threshold: 0.1 },
-    );
-
-    const currentRef = loadMoreRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-    };
-  }, [status, loadMore]);
-
-  const isLoading = status === "LoadingFirstPage";
-  const isLoadingMore = status === "LoadingMore";
-  const canLoadMore = status === "CanLoadMore";
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
@@ -140,11 +88,11 @@ function RoutinesContent() {
                 Manage your workout routines and training schedules
               </p>
             </div>
-            {routines && routines.length > 0 && <CreateRoutine />}
+            {routines.length > 0 && <CreateRoutine />}
           </div>
 
           {/* Search Bar */}
-          {routines && routines.length > 0 && (
+          {(routines.length > 0 || isSearching) && (
             <div className="relative mt-6 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -169,66 +117,58 @@ function RoutinesContent() {
         )}
 
         {/* Loading State */}
-        {isLoading && <RoutinesSkeleton />}
+        {routinesLoading && <RoutinesSkeleton />}
 
         {/* Empty State */}
-        {!isLoading && routines && routines.length === 0 && !isSearching && (
+        {!routinesLoading && routines.length === 0 && !isSearching && (
           <EmptyState />
         )}
 
         {/* No Search Results */}
-        {!isLoading &&
-          searchResults &&
-          searchResults.length === 0 &&
-          isSearching && (
-            <div className="flex flex-col items-center justify-center py-16 px-4">
-              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                <Search className="w-8 h-8 text-muted-foreground/60" />
-              </div>
-              <h3 className="text-lg font-medium text-foreground mb-1">
-                No routines found
-              </h3>
-              <p className="text-muted-foreground text-center text-sm">
-                No routines match &quot;{debouncedSearch}&quot;
-              </p>
+        {!routinesLoading && routines.length === 0 && isSearching && (
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+              <Search className="w-8 h-8 text-muted-foreground/60" />
             </div>
-          )}
+            <h3 className="text-lg font-medium text-foreground mb-1">
+              No routines found
+            </h3>
+            <p className="text-muted-foreground text-center text-sm">
+              No routines match &quot;{searchQuery}&quot;
+            </p>
+          </div>
+        )}
 
         {/* Results Count */}
-        {displayRoutines && displayRoutines.length > 0 && (
+        {routines.length > 0 && (
           <p className="text-sm text-muted-foreground mb-6">
-            {isSearching ? (
-              <>
-                {searchCount} {searchCount === 1 ? "routine" : "routines"} found
-              </>
-            ) : (
-              <>
-                {totalCount} {totalCount === 1 ? "routine" : "routines"} total
-              </>
-            )}
+            {totalCount} {totalCount === 1 ? "routine" : "routines"}{" "}
+            {isSearching ? "found" : "total"}
           </p>
         )}
 
         {/* Routines Grid */}
-        {displayRoutines && displayRoutines.length > 0 && (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {displayRoutines.map((routine) => (
-              <RoutineCard
-                key={routine._id}
-                routine={routine}
-                currentSession={currentSession}
-              />
-            ))}
-          </div>
-        )}
+        {routines.length > 0 && (
+          <>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {routines.map((routine) => (
+                <RoutineCard
+                  key={routine.id}
+                  routine={routine}
+                  currentSession={currentSession}
+                />
+              ))}
+            </div>
 
-        {/* Infinite scroll sentinel & loading indicator */}
-        {canLoadMore && (
-          <div ref={loadMoreRef} className="flex justify-center py-8">
-            {isLoadingMore && (
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            {/* Auto-load sentinel */}
+            {hasNextPage && (
+              <div ref={sentinelRef} className="flex justify-center mt-8">
+                {isFetchingNextPage && (
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>

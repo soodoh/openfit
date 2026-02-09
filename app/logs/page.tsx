@@ -3,8 +3,7 @@
 import { CreateSessionButton } from "@/components/sessions/CreateSession";
 import { MonthlyCalendar } from "@/components/sessions/MonthlyCalendar";
 import { ResumeSessionButton } from "@/components/sessions/ResumeSessionButton";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useCurrentSession, useSessionsByDateRange, useUnits } from "@/hooks";
 import dayjs from "dayjs";
 import { CalendarDays, Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -21,15 +20,15 @@ function SessionsContent() {
   const endOfCalendar = currentMonth.endOf("month").endOf("week");
 
   // Fetch sessions for the current month view
-  const sessions = useQuery(api.queries.sessions.listByDateRange, {
-    startDate: startOfCalendar.valueOf(),
-    endDate: endOfCalendar.valueOf(),
-  });
+  const { data: sessions, isLoading: sessionsLoading } = useSessionsByDateRange(
+    startOfCalendar.valueOf(),
+    endOfCalendar.valueOf(),
+  );
 
-  const currentSession = useQuery(api.queries.sessions.getCurrent);
-  const units = useQuery(api.queries.units.list);
+  const { data: currentSession } = useCurrentSession();
+  const { data: units, isLoading: unitsLoading } = useUnits();
 
-  const isLoading = sessions === undefined || units === undefined;
+  const isLoading = sessionsLoading || unitsLoading;
 
   // Count sessions in the actual month (not the calendar padding)
   const sessionsThisMonth =
@@ -88,7 +87,7 @@ function SessionsContent() {
             <MonthlyCalendar
               currentMonth={currentMonth}
               sessions={sessions}
-              currentSessionId={currentSession?._id}
+              currentSessionId={currentSession?.id}
               units={units}
               onMonthChange={setCurrentMonth}
             />

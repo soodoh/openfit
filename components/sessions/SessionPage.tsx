@@ -2,11 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { WorkoutList } from "@/components/workoutSet/WorkoutList";
-import {
-  ListView,
-  type Units,
-  type WorkoutSessionWithData,
-} from "@/lib/convex-types";
+import { ListView, type Units, type WorkoutSessionWithData } from "@/lib/types";
 import dayjs from "dayjs";
 import {
   ArrowLeft,
@@ -158,7 +154,7 @@ export const SessionPage = ({
       <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-(--breakpoint-lg)">
         <WorkoutList
           view={ListView.ViewSession}
-          sessionOrDayId={session._id}
+          sessionOrDayId={session.id}
           setGroups={session.setGroups}
           units={units}
         />

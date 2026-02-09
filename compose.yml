@@ -1,74 +1,25 @@
 services:
-  # Nginx reverse proxy - the only exposed service
-  nginx:
-    image: nginx:alpine
-    ports:
-      - 3000:3000
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - nextjs
-      - convex-backend
-    networks:
-      - app-net
-
-  # Next.js development server with hot reloading
-  # Runs init.sh first to deploy Convex functions and seed data
-  nextjs:
+  # Next.js application with SQLite database
+  openfit:
     image: node:22-alpine
     working_dir: /app
-    command: sh -c "corepack enable && pnpm install && sh scripts/init.sh && pnpm dev --port 3001"
+    command: sh -c "corepack enable && pnpm install && pnpm db:migrate && pnpm db:seed && pnpm dev --port 3000"
+    ports:
+      - 3000:3000
     volumes:
       - .:/app
       - /app/node_modules
       - /app/.next
+      - openfit-data:/app/data
     env_file: ".env.local"
     environment:
-      - CONVEX_SELF_HOSTED_URL=http://convex-backend:3210
       - WATCHPACK_POLLING=true
-    depends_on:
-      convex-backend:
-        condition: service_healthy
-    networks:
-      - app-net
-
-  convex-backend:
-    image: ghcr.io/get-convex/convex-backend:latest
-    stop_grace_period: 10s
-    stop_signal: SIGINT
-    volumes:
-      - convex-data:/convex/data
-    env_file: ".env.local"
-    environment:
-      # CONVEX_SITE_ORIGIN must match the browser's origin (the nginx proxy URL)
-      - CONVEX_SITE_ORIGIN=http://localhost:3000
-    # Allow container to reach host's localhost for OIDC discovery
-    extra_hosts:
-      - "localhost:host-gateway"
-    healthcheck:
-      test: curl -f http://localhost:3210/version
-      interval: 5s
-      start_period: 10s
-    networks:
-      - app-net
-
-  # Convex dashboard (optional, accessible on port 6791)
-  convex-dashboard:
-    image: ghcr.io/get-convex/convex-dashboard:latest
-    stop_grace_period: 10s
-    stop_signal: SIGINT
-    ports:
-      - 6791:6791
-    environment:
-      - NEXT_PUBLIC_DEPLOYMENT_URL=http://convex-backend:3210
-    depends_on:
-      convex-backend:
-        condition: service_healthy
+      - DATABASE_URL=file:/app/data/openfit.db
     networks:
       - app-net
 
 volumes:
-  convex-data:
+  openfit-data:
 
 networks:
   app-net:

@@ -184,10 +184,7 @@ test.describe("Dashboard", () => {
     }
   });
 
-  test("should have functioning navigation header", async ({
-    dashboardPage,
-    page,
-  }) => {
+  test("should have functioning navigation header", async ({ page }) => {
     // Check for navigation elements
     const nav = page.locator("nav, header");
     await expect(nav.first()).toBeVisible();

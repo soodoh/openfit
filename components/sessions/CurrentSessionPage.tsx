@@ -2,13 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { WorkoutList } from "@/components/workoutSet/WorkoutList";
-import { api } from "@/convex/_generated/api";
-import {
-  ListView,
-  type Units,
-  type WorkoutSessionWithData,
-} from "@/lib/convex-types";
-import { useMutation } from "convex/react";
+import { useUpdateSession } from "@/hooks";
+import { ListView, type Units, type WorkoutSessionWithData } from "@/lib/types";
 import dayjs from "dayjs";
 import {
   ArrowLeft,
@@ -31,7 +26,7 @@ export const CurrentSessionPage = ({
   units: Units;
 }) => {
   const router = useRouter();
-  const updateSession = useMutation(api.mutations.sessions.update);
+  const updateSessionMutation = useUpdateSession();
 
   const completedSets = session.setGroups.reduce(
     (acc, group) => acc + group.sets.filter((set) => set.completed).length,
@@ -43,8 +38,8 @@ export const CurrentSessionPage = ({
   );
 
   const handleEndSession = async () => {
-    await updateSession({
-      id: session._id,
+    await updateSessionMutation.mutateAsync({
+      id: session.id,
       endTime: Date.now(),
     });
     router.push("/logs");
@@ -136,7 +131,7 @@ export const CurrentSessionPage = ({
       <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-(--breakpoint-lg)">
         <WorkoutList
           view={ListView.CurrentSession}
-          sessionOrDayId={session._id}
+          sessionOrDayId={session.id}
           setGroups={session.setGroups}
           units={units}
         />

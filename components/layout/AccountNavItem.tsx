@@ -1,6 +1,7 @@
 "use client";
 
 import { ProfileModal } from "@/components/profile/ProfileModal";
+import { signOut, useAuth } from "@/components/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,19 +10,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { api } from "@/convex/_generated/api";
-import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useUserProfile } from "@/hooks";
 import { LogOut, Settings, Shield, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export const AccountNavItem = () => {
-  const { isAuthenticated } = useConvexAuth();
-  const { signOut } = useAuthActions();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
-  const isAdmin = useQuery(api.queries.userProfiles.isAdmin);
+  const { data: profile } = useUserProfile();
+  const isAdmin = profile?.role === "ADMIN";
 
   // Don't render if not authenticated
   if (!isAuthenticated) {

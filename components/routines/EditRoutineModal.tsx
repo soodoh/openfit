@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,11 +11,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useCreateRoutine, useUpdateRoutine } from "@/hooks";
 import { AlertCircle, Dumbbell, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { Routine } from "@/lib/convex-types";
+import type { Routine } from "@/lib/types";
 
 export const EditRoutineModal = ({
   open,
@@ -40,8 +41,8 @@ export const EditRoutineModal = ({
     }
   }, [open, routine]);
 
-  const createRoutine = useMutation(api.mutations.routines.create);
-  const updateRoutine = useMutation(api.mutations.routines.update);
+  const createRoutineMutation = useCreateRoutine();
+  const updateRoutineMutation = useUpdateRoutine();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -50,13 +51,13 @@ export const EditRoutineModal = ({
 
     try {
       if (routine) {
-        await updateRoutine({
-          id: routine._id,
+        await updateRoutineMutation.mutateAsync({
+          id: routine.id,
           name,
           description: description || undefined,
         });
       } else {
-        await createRoutine({
+        await createRoutineMutation.mutateAsync({
           name,
           description: description || undefined,
         });

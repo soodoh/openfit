@@ -17,18 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { type UserWithProfile, useUpdateUserRole } from "@/hooks";
 import { AlertCircle, Loader2, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { Id } from "@/convex/_generated/dataModel";
-
-interface UserWithProfile {
-  _id: string;
-  userId: string;
-  email: string;
-  role: "USER" | "ADMIN";
-}
 
 interface UserRoleModalProps {
   user: UserWithProfile | null;
@@ -37,7 +28,7 @@ interface UserRoleModalProps {
 
 export function UserRoleModal({ user, onClose }: UserRoleModalProps) {
   const open = user !== null;
-  const updateUserRole = useMutation(api.mutations.admin.updateUserRole);
+  const updateUserRoleMutation = useUpdateUserRole();
 
   const [role, setRole] = useState<"USER" | "ADMIN">("USER");
   const [error, setError] = useState<string | null>(null);
@@ -59,8 +50,8 @@ export function UserRoleModal({ user, onClose }: UserRoleModalProps) {
     setIsPending(true);
 
     try {
-      await updateUserRole({
-        profileId: user._id as Id<"userProfiles">,
+      await updateUserRoleMutation.mutateAsync({
+        id: user.id,
         role,
       });
       onClose();

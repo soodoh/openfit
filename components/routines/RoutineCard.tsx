@@ -6,10 +6,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Calendar, Layers } from "lucide-react";
 import { useState } from "react";
-import type {
-  RoutineWithDays,
-  WorkoutSessionWithData,
-} from "@/lib/convex-types";
+import type { RoutineWithDays, WorkoutSessionWithData } from "@/lib/types";
 
 dayjs.extend(relativeTime);
 

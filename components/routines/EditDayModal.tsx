@@ -12,11 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useCreateRoutineDay, useUpdateRoutineDay } from "@/hooks";
 import { CalendarDays, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { RoutineDay, RoutineDayId, RoutineId } from "@/lib/convex-types";
+import type { RoutineDay } from "@/lib/types";
 
 export const EditDayModal = ({
   open,
@@ -27,9 +26,9 @@ export const EditDayModal = ({
 }: {
   open: boolean;
   onClose: () => void;
-  routineId: RoutineId;
+  routineId: string;
   routineDay?: RoutineDay;
-  onSuccess?: (dayId: RoutineDayId) => void;
+  onSuccess?: (dayId: string) => void;
 }) => {
   const [selectedWeekdays, setWeekdays] = useState<number[]>(
     routineDay?.weekdays ?? [],
@@ -45,8 +44,8 @@ export const EditDayModal = ({
     }
   }, [open, routineDay]);
 
-  const createDay = useMutation(api.mutations.routineDays.create);
-  const updateDay = useMutation(api.mutations.routineDays.update);
+  const createDayMutation = useCreateRoutineDay();
+  const updateDayMutation = useUpdateRoutineDay();
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -54,20 +53,20 @@ export const EditDayModal = ({
 
     try {
       if (routineDay) {
-        await updateDay({
-          id: routineDay._id,
+        await updateDayMutation.mutateAsync({
+          id: routineDay.id,
           description,
           weekdays: selectedWeekdays,
         });
-        onSuccess?.(routineDay._id);
+        onSuccess?.(routineDay.id);
       } else {
-        const newDayId = await createDay({
+        const result = await createDayMutation.mutateAsync({
           routineId,
           description,
           weekdays: selectedWeekdays,
         });
-        if (newDayId) {
-          onSuccess?.(newDayId);
+        if (result?.id) {
+          onSuccess?.(result.id);
         }
       }
 

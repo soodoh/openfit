@@ -8,9 +8,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { api } from "@/convex/_generated/api";
-import { type WorkoutSessionWithData } from "@/lib/convex-types";
-import { useMutation } from "convex/react";
+import { useUpdateSession } from "@/hooks";
+import { type WorkoutSessionWithData } from "@/lib/types";
 import { Loader2, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -22,7 +21,7 @@ export const EditNamePopover = ({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(session.name);
   const [isPending, setIsPending] = useState(false);
-  const updateSession = useMutation(api.mutations.sessions.update);
+  const updateSessionMutation = useUpdateSession();
 
   useEffect(() => {
     if (open) {
@@ -33,7 +32,7 @@ export const EditNamePopover = ({
   const handleSave = async () => {
     setIsPending(true);
     try {
-      await updateSession({ id: session._id, name });
+      await updateSessionMutation.mutateAsync({ id: session.id, name });
       setOpen(false);
     } finally {
       setIsPending(false);

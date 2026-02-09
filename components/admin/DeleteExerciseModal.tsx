@@ -11,17 +11,16 @@ import {
 } from "@/components/ui/dialog";
 import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { Id } from "@/convex/_generated/dataModel";
 
 interface Exercise {
-  _id: string;
+  id: string;
   name: string;
 }
 
 interface DeleteExerciseModalProps {
   exercise: Exercise | null;
   onClose: () => void;
-  onDelete: (args: { id: Id<"exercises"> }) => Promise<unknown>;
+  onDelete: (id: string) => void;
 }
 
 export function DeleteExerciseModal({
@@ -39,7 +38,7 @@ export function DeleteExerciseModal({
     setIsPending(true);
 
     try {
-      await onDelete({ id: exercise._id as Id<"exercises"> });
+      onDelete(exercise.id);
       onClose();
     } catch (err) {
       setError(

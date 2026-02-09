@@ -20,8 +20,8 @@ test.describe("Login Page", () => {
   });
 
   test("should login with valid credentials", async ({ loginPage, page }) => {
-    const email = process.env.TEST_USER;
-    const password = process.env.TEST_PASSWORD;
+    const email = process.env.ADMIN_USER;
+    const password = process.env.ADMIN_PASSWORD;
 
     if (!email || !password) {
       test.skip();
@@ -133,8 +133,8 @@ test.describe("Login Page", () => {
   });
 
   test("should show loading state while logging in", async ({ loginPage }) => {
-    const email = process.env.TEST_USER;
-    const password = process.env.TEST_PASSWORD;
+    const email = process.env.ADMIN_USER;
+    const password = process.env.ADMIN_PASSWORD;
 
     if (!email || !password) {
       test.skip();

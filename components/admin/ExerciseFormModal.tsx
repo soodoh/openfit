@@ -33,8 +33,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { api } from "@/convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
+import {
+  type ExerciseWithRelations,
+  useAdminCategories,
+  useAdminCreateExercise,
+  useAdminEquipment,
+  useAdminMuscleGroups,
+  useAdminUpdateExercise,
+  useUploadFile,
+} from "@/hooks";
 import {
   AlertCircle,
   Check,
@@ -47,26 +54,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import type { Id } from "@/convex/_generated/dataModel";
-
-interface ExerciseWithRelations {
-  _id: string;
-  name: string;
-  level: "beginner" | "intermediate" | "expert";
-  force?: "push" | "pull" | "static" | null;
-  mechanic?: "compound" | "isolation" | null;
-  equipmentId?: string;
-  categoryId: string;
-  primaryMuscleIds: string[];
-  secondaryMuscleIds: string[];
-  instructions: string[];
-  imageIds: string[];
-  imageUrls: (string | null)[];
-}
 
 interface ImageItem {
   type: "existing" | "new";
-  id?: string; // Storage ID for existing images
   url?: string; // URL for existing images or blob URL for new
   file?: File; // File object for new uploads
 }
@@ -82,13 +72,13 @@ export function ExerciseFormModal({
   onClose,
   exercise,
 }: ExerciseFormModalProps) {
-  const createExercise = useMutation(api.mutations.admin.createExercise);
-  const updateExercise = useMutation(api.mutations.admin.updateExercise);
-  const generateUploadUrl = useMutation(api.mutations.admin.generateUploadUrl);
+  const createExerciseMutation = useAdminCreateExercise();
+  const updateExerciseMutation = useAdminUpdateExercise();
+  const uploadFileMutation = useUploadFile();
 
-  const equipment = useQuery(api.queries.admin.listEquipment);
-  const categories = useQuery(api.queries.admin.listCategories);
-  const muscleGroups = useQuery(api.queries.admin.listMuscleGroups);
+  const { data: equipment } = useAdminEquipment();
+  const { data: categories } = useAdminCategories();
+  const { data: muscleGroups } = useAdminMuscleGroups();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -128,10 +118,9 @@ export function ExerciseFormModal({
         );
         // Convert existing images to ImageItem format
         setImages(
-          exercise.imageIds.map((id, index) => ({
+          exercise.imageUrls.filter(Boolean).map((url) => ({
             type: "existing" as const,
-            id,
-            url: exercise.imageUrls[index] ?? undefined,
+            url: url ?? undefined,
           })),
         );
       } else {
@@ -176,7 +165,7 @@ export function ExerciseFormModal({
 
     try {
       // Upload new images first
-      const imageIds: Id<"_storage">[] = [];
+      const imageUrls: string[] = [];
       const newImages = images.filter((img) => img.type === "new" && img.file);
 
       if (newImages.length > 0) {
@@ -185,25 +174,14 @@ export function ExerciseFormModal({
 
       for (let i = 0; i < images.length; i++) {
         const img = images[i];
-        if (img.type === "existing" && img.id) {
-          imageIds.push(img.id as Id<"_storage">);
+        if (img.type === "existing" && img.url) {
+          imageUrls.push(img.url);
         } else if (img.type === "new" && img.file) {
-          const uploadUrl = await generateUploadUrl();
-          const response = await fetch(uploadUrl, {
-            method: "POST",
-            headers: { "Content-Type": img.file.type },
-            body: img.file,
-          });
-
-          if (!response.ok) {
-            throw new Error(`Failed to upload image: ${img.file.name}`);
-          }
-
-          const { storageId } = await response.json();
-          imageIds.push(storageId as Id<"_storage">);
+          const uploadedPath = await uploadFileMutation.mutateAsync(img.file);
+          imageUrls.push(uploadedPath);
 
           const uploadedCount =
-            imageIds.length -
+            imageUrls.length -
             images.filter((img) => img.type === "existing").length;
           setUploadProgress(
             `Uploading images (${uploadedCount}/${newImages.length})...`,
@@ -215,24 +193,24 @@ export function ExerciseFormModal({
 
       const args = {
         name: name.trim(),
-        equipmentId: equipmentId ? (equipmentId as Id<"equipment">) : undefined,
-        categoryId: categoryId as Id<"categories">,
+        equipmentId: equipmentId || undefined,
+        categoryId,
         level,
         force: force || undefined,
         mechanic: mechanic || undefined,
-        primaryMuscleIds: primaryMuscleIds as Id<"muscleGroups">[],
-        secondaryMuscleIds: secondaryMuscleIds as Id<"muscleGroups">[],
+        primaryMuscleIds,
+        secondaryMuscleIds,
         instructions: cleanedInstructions,
-        imageIds,
+        imageUrls,
       };
 
       if (exercise) {
-        await updateExercise({
-          id: exercise._id as Id<"exercises">,
+        await updateExerciseMutation.mutateAsync({
+          id: exercise.id,
           ...args,
         });
       } else {
-        await createExercise(args);
+        await createExerciseMutation.mutateAsync(args);
       }
       onClose();
     } catch (err) {
@@ -370,7 +348,7 @@ export function ExerciseFormModal({
                     </SelectTrigger>
                     <SelectContent>
                       {categories?.map((cat) => (
-                        <SelectItem key={cat._id} value={cat._id}>
+                        <SelectItem key={cat.id} value={cat.id}>
                           {cat.name}
                         </SelectItem>
                       ))}
@@ -391,7 +369,7 @@ export function ExerciseFormModal({
                     <SelectContent>
                       <SelectItem value="__none__">None</SelectItem>
                       {equipment?.map((eq) => (
-                        <SelectItem key={eq._id} value={eq._id}>
+                        <SelectItem key={eq.id} value={eq.id}>
                           {eq.name}
                         </SelectItem>
                       ))}
@@ -489,19 +467,19 @@ export function ExerciseFormModal({
                         <CommandGroup>
                           {muscleGroups?.map((muscle) => (
                             <CommandItem
-                              key={muscle._id}
+                              key={muscle.id}
                               value={muscle.name}
                               onSelect={() =>
                                 toggleMuscle(
-                                  muscle._id,
+                                  muscle.id,
                                   true,
-                                  !primaryMuscleIds.includes(muscle._id),
+                                  !primaryMuscleIds.includes(muscle.id),
                                 )
                               }
                             >
                               <Check
                                 className={`mr-2 h-4 w-4 ${
-                                  primaryMuscleIds.includes(muscle._id)
+                                  primaryMuscleIds.includes(muscle.id)
                                     ? "opacity-100"
                                     : "opacity-0"
                                 }`}
@@ -517,7 +495,7 @@ export function ExerciseFormModal({
                 {primaryMuscleIds.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {primaryMuscleIds.map((id) => {
-                      const muscle = muscleGroups?.find((m) => m._id === id);
+                      const muscle = muscleGroups?.find((m) => m.id === id);
                       return (
                         <Badge
                           key={id}
@@ -558,19 +536,19 @@ export function ExerciseFormModal({
                         <CommandGroup>
                           {muscleGroups?.map((muscle) => (
                             <CommandItem
-                              key={muscle._id}
+                              key={muscle.id}
                               value={muscle.name}
                               onSelect={() =>
                                 toggleMuscle(
-                                  muscle._id,
+                                  muscle.id,
                                   false,
-                                  !secondaryMuscleIds.includes(muscle._id),
+                                  !secondaryMuscleIds.includes(muscle.id),
                                 )
                               }
                             >
                               <Check
                                 className={`mr-2 h-4 w-4 ${
-                                  secondaryMuscleIds.includes(muscle._id)
+                                  secondaryMuscleIds.includes(muscle.id)
                                     ? "opacity-100"
                                     : "opacity-0"
                                 }`}
@@ -586,7 +564,7 @@ export function ExerciseFormModal({
                 {secondaryMuscleIds.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {secondaryMuscleIds.map((id) => {
-                      const muscle = muscleGroups?.find((m) => m._id === id);
+                      const muscle = muscleGroups?.find((m) => m.id === id);
                       return (
                         <Badge
                           key={id}

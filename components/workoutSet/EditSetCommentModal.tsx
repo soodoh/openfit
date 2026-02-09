@@ -10,10 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useUpdateSetGroup } from "@/hooks";
 import { useState } from "react";
-import type { WorkoutSetGroup } from "@/lib/convex-types";
+import type { WorkoutSetGroup } from "@/lib/types";
 
 export const EditSetCommentModal = ({
   open,
@@ -26,7 +25,7 @@ export const EditSetCommentModal = ({
 }) => {
   const [comment, setComment] = useState(setGroup.comment ?? "");
 
-  const updateSetGroup = useMutation(api.mutations.setGroups.update);
+  const updateSetGroupMutation = useUpdateSetGroup();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -50,8 +49,8 @@ export const EditSetCommentModal = ({
           </Button>
           <Button
             onClick={async () => {
-              await updateSetGroup({
-                id: setGroup._id,
+              await updateSetGroupMutation.mutateAsync({
+                id: setGroup.id,
                 comment: comment || undefined,
               });
               onClose();

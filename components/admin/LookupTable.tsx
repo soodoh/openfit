@@ -3,94 +3,125 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { api } from "@/convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
-import { Edit2, Loader2, Plus, Search, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Pagination } from "@/components/ui/pagination";
+import {
+  type LookupItem,
+  useAdminLookupPaginated,
+  useCreateLookup,
+  useDeleteLookup,
+  useUpdateLookup,
+} from "@/hooks";
+import { Edit2, Plus, Search, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { DeleteLookupModal } from "./DeleteLookupModal";
 import { LookupFormModal } from "./LookupFormModal";
 
-type AdminQueryKey =
-  | "listEquipment"
-  | "listMuscleGroups"
-  | "listCategories"
-  | "listWeightUnits"
-  | "listRepetitionUnits";
+const DEFAULT_PAGE_SIZE = 10;
 
-type AdminMutationKey =
-  | "createEquipment"
-  | "updateEquipment"
-  | "deleteEquipment"
-  | "createMuscleGroup"
-  | "updateMuscleGroup"
-  | "deleteMuscleGroup"
-  | "createCategory"
-  | "updateCategory"
-  | "deleteCategory"
-  | "createWeightUnit"
-  | "updateWeightUnit"
-  | "deleteWeightUnit"
-  | "createRepetitionUnit"
-  | "updateRepetitionUnit"
-  | "deleteRepetitionUnit";
+type LookupType =
+  | "equipment"
+  | "categories"
+  | "muscleGroups"
+  | "weightUnits"
+  | "repetitionUnits";
 
 interface LookupTableProps {
   title: string;
   singularTitle: string;
-  queryKey: AdminQueryKey;
-  createMutation: AdminMutationKey;
-  updateMutation: AdminMutationKey;
-  deleteMutation: AdminMutationKey;
+  lookupType: LookupType;
 }
 
-interface LookupItem {
-  _id: string;
-  name: string;
+// Local type for items with id
+interface LookupItemWithId extends LookupItem {
+  id: string;
+}
+
+function LookupTableSkeleton({ title }: { title: string }) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardTitle>{title}</CardTitle>
+        <div className="h-9 w-24 rounded-md bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+      </CardHeader>
+      <CardContent>
+        <div className="mb-4">
+          <div className="h-10 w-full rounded-md bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between p-3 rounded-lg border"
+            >
+              <div className="h-4 w-32 rounded bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+                <div className="h-8 w-8 rounded bg-linear-to-br from-muted/50 to-muted/30 animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function LookupTable({
   title,
   singularTitle,
-  queryKey,
-  createMutation,
-  updateMutation,
-  deleteMutation,
+  lookupType,
 }: LookupTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [formModalOpen, setFormModalOpen] = useState(false);
-  const [editItem, setEditItem] = useState<LookupItem | null>(null);
-  const [deleteItem, setDeleteItem] = useState<LookupItem | null>(null);
+  const [editItem, setEditItem] = useState<LookupItemWithId | null>(null);
+  const [deleteItem, setDeleteItem] = useState<LookupItemWithId | null>(null);
 
-  // Use the query key to get the appropriate query
-  const data = useQuery(api.queries.admin[queryKey]);
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
-  // Mutations - using type assertions for generic handling
-  const createMut = useMutation(
-    api.mutations.admin[createMutation],
-  ) as unknown as (args: { name: string }) => Promise<unknown>;
-  const updateMut = useMutation(
-    api.mutations.admin[updateMutation],
-  ) as unknown as (args: { id: unknown; name: string }) => Promise<unknown>;
-  const deleteMut = useMutation(
-    api.mutations.admin[deleteMutation],
-  ) as unknown as (args: { id: unknown }) => Promise<unknown>;
+  const { data, isLoading } = useAdminLookupPaginated(lookupType, {
+    page: currentPage,
+    pageSize,
+    search: searchQuery || undefined,
+  });
 
-  // Filter items based on search query
-  const filteredItems = useMemo(() => {
-    if (!data) return [];
-    const items = data as LookupItem[];
-    if (!searchQuery.trim()) return items;
-    return items.filter((item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [data, searchQuery]);
+  const createLookupMutation = useCreateLookup();
+  const updateLookupMutation = useUpdateLookup();
+  const deleteLookupMutation = useDeleteLookup();
+
+  const total = data?.total ?? 0;
+  const items = data?.items ?? [];
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const startIndex = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, total);
+
+  const goToPage = useCallback(
+    (page: number) => setCurrentPage(Math.max(1, Math.min(page, totalPages))),
+    [totalPages],
+  );
+  const nextPage = useCallback(
+    () => goToPage(currentPage + 1),
+    [currentPage, goToPage],
+  );
+  const prevPage = useCallback(
+    () => goToPage(currentPage - 1),
+    [currentPage, goToPage],
+  );
+  const handlePageSizeChange = useCallback((size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  }, []);
 
   const handleCreate = () => {
     setEditItem(null);
     setFormModalOpen(true);
   };
 
-  const handleEdit = (item: LookupItem) => {
+  const handleEdit = (item: LookupItemWithId) => {
     setEditItem(item);
     setFormModalOpen(true);
   };
@@ -100,15 +131,46 @@ export function LookupTable({
     setEditItem(null);
   };
 
-  if (data === undefined) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
-    );
+  const handleFormSubmit = async (name: string) => {
+    if (editItem) {
+      await updateLookupMutation.mutateAsync({
+        id: editItem.id,
+        type: lookupType,
+        name,
+      });
+    } else {
+      await createLookupMutation.mutateAsync({
+        type: lookupType,
+        name,
+      });
+    }
+    handleCloseForm();
+  };
+
+  const handleDelete = async (item: LookupItemWithId) => {
+    await deleteLookupMutation.mutateAsync({
+      id: item.id,
+      type: lookupType,
+    });
+    setDeleteItem(null);
+  };
+
+  if (isLoading && !data) {
+    return <LookupTableSkeleton title={title} />;
   }
+
+  const paginationProps = {
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    totalItems: total,
+    pageSize,
+    onPageChange: goToPage,
+    onPrevPage: prevPage,
+    onNextPage: nextPage,
+    onPageSizeChange: handlePageSizeChange,
+  };
 
   return (
     <>
@@ -133,7 +195,9 @@ export function LookupTable({
             </div>
           </div>
 
-          {filteredItems.length === 0 ? (
+          <Pagination {...paginationProps} />
+
+          {items.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {searchQuery
                 ? `No ${title.toLowerCase()} found matching "${searchQuery}"`
@@ -141,9 +205,9 @@ export function LookupTable({
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredItems.map((item) => (
+              {items.map((item) => (
                 <div
-                  key={item._id}
+                  key={item.id}
                   className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                 >
                   <span className="font-medium">{item.name}</span>
@@ -168,6 +232,8 @@ export function LookupTable({
               ))}
             </div>
           )}
+
+          <Pagination {...paginationProps} />
         </CardContent>
       </Card>
 
@@ -176,15 +242,18 @@ export function LookupTable({
         onClose={handleCloseForm}
         title={singularTitle}
         item={editItem}
-        onCreate={createMut}
-        onUpdate={updateMut}
+        onSubmit={handleFormSubmit}
+        isPending={
+          createLookupMutation.isPending || updateLookupMutation.isPending
+        }
       />
 
       <DeleteLookupModal
         item={deleteItem}
         title={singularTitle}
         onClose={() => setDeleteItem(null)}
-        onDelete={deleteMut}
+        onDelete={handleDelete}
+        isPending={deleteLookupMutation.isPending}
       />
     </>
   );

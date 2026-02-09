@@ -5,7 +5,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-import type { Units, WeightUnit, WorkoutSetId } from "@/lib/convex-types";
+import type { Units, WeightUnit } from "@/lib/types";
 
 export const WeightUnitMenu = ({
   id,
@@ -13,7 +13,7 @@ export const WeightUnitMenu = ({
   onChange,
   units,
 }: {
-  id: WorkoutSetId | string;
+  id: string;
   label: string;
   onChange: (weightUnit: WeightUnit) => void;
   units: Units;
@@ -33,7 +33,7 @@ export const WeightUnitMenu = ({
       <DropdownMenuContent>
         {units.weightUnits.map((unit) => (
           <DropdownMenuItem
-            key={`weight-unit-${id}-${unit._id}`}
+            key={`weight-unit-${id}-${unit.id}`}
             onClick={() => {
               onChange(unit);
               setOpen(false);

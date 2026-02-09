@@ -13,14 +13,12 @@ import {
   PopoverAnchor,
   PopoverContent,
 } from "@/components/ui/popover";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useEquipment } from "@/hooks";
 import { useMemo, useRef, useState } from "react";
-import type { EquipmentId } from "@/lib/convex-types";
 
 interface AutocompleteEquipmentProps {
-  selectedIds: EquipmentId[];
-  onSelect: (equipmentId: EquipmentId) => void;
+  selectedIds: string[];
+  onSelect: (equipmentId: string) => void;
   disabled?: boolean;
 }
 
@@ -29,7 +27,7 @@ export function AutocompleteEquipment({
   onSelect,
   disabled = false,
 }: AutocompleteEquipmentProps) {
-  const equipment = useQuery(api.queries.lookups.getEquipment);
+  const { data: equipment } = useEquipment();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -38,7 +36,7 @@ export function AutocompleteEquipment({
   const availableEquipment = useMemo(() => {
     if (!equipment) return [];
     return equipment
-      .filter((e) => !selectedIds.includes(e._id))
+      .filter((e) => !selectedIds.includes(e.id))
       .filter(
         (e) =>
           !searchTerm ||
@@ -49,10 +47,10 @@ export function AutocompleteEquipment({
 
   const allSelected = useMemo(() => {
     if (!equipment) return false;
-    return equipment.every((e) => selectedIds.includes(e._id));
+    return equipment.every((e) => selectedIds.includes(e.id));
   }, [equipment, selectedIds]);
 
-  const handleSelect = (equipmentId: EquipmentId) => {
+  const handleSelect = (equipmentId: string) => {
     onSelect(equipmentId);
     setSearchTerm("");
     setOpen(false);
@@ -63,7 +61,7 @@ export function AutocompleteEquipment({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && availableEquipment.length > 0) {
       e.preventDefault();
-      handleSelect(availableEquipment[0]._id);
+      handleSelect(availableEquipment[0].id);
     }
     if (e.key === "Escape") {
       setOpen(false);
@@ -118,9 +116,9 @@ export function AutocompleteEquipment({
             <CommandGroup>
               {availableEquipment.map((item, index) => (
                 <CommandItem
-                  key={item._id}
-                  value={item._id}
-                  onSelect={() => handleSelect(item._id)}
+                  key={item.id}
+                  value={item.id}
+                  onSelect={() => handleSelect(item.id)}
                   className={`cursor-pointer ${index === 0 ? "bg-accent" : ""}`}
                 >
                   {item.name}

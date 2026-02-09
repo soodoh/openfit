@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WorkoutList } from "@/components/workoutSet/WorkoutList";
-import { api } from "@/convex/_generated/api";
 import {
-  ListView,
-  type RoutineDayId,
-  type WorkoutSessionWithData,
-} from "@/lib/convex-types";
-import { useMutation, useQuery } from "convex/react";
+  useCreateSession,
+  useRoutineDay,
+  useUnits,
+  useUpdateRoutineDay,
+} from "@/hooks";
+import { ListView, type WorkoutSessionWithData } from "@/lib/types";
 import { Calendar, Loader2, Play, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -22,21 +22,21 @@ export const RoutineDayTab = ({
   currentSession,
   onDeleted,
 }: {
-  dayId: RoutineDayId;
+  dayId: string;
   currentSession: WorkoutSessionWithData | null | undefined;
   onDeleted: () => void;
 }) => {
   const router = useRouter();
-  const routineDay = useQuery(api.queries.routineDays.get, { id: dayId });
-  const units = useQuery(api.queries.units.list);
+  const { data: routineDay } = useRoutineDay(dayId);
+  const { data: units } = useUnits();
 
   const [description, setDescription] = useState("");
   const [weekdays, setWeekdays] = useState<number[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
 
-  const updateDay = useMutation(api.mutations.routineDays.update);
-  const createSession = useMutation(api.mutations.sessions.create);
+  const updateDayMutation = useUpdateRoutineDay();
+  const createSessionMutation = useCreateSession();
 
   // Sync local state when routineDay loads
   useEffect(() => {
@@ -48,7 +48,7 @@ export const RoutineDayTab = ({
 
   const handleDescriptionBlur = async () => {
     if (routineDay && description !== routineDay.description) {
-      await updateDay({
+      await updateDayMutation.mutateAsync({
         id: dayId,
         description,
       });
@@ -58,7 +58,7 @@ export const RoutineDayTab = ({
   const handleWeekdaysChange = async (newWeekdays: number[]) => {
     setWeekdays(newWeekdays);
     if (routineDay) {
-      await updateDay({
+      await updateDayMutation.mutateAsync({
         id: dayId,
         weekdays: newWeekdays,
       });
@@ -68,8 +68,10 @@ export const RoutineDayTab = ({
   const handleStartWorkout = async () => {
     setIsStarting(true);
     try {
-      const sessionId = await createSession({ templateId: dayId });
-      if (sessionId) {
+      const result = await createSessionMutation.mutateAsync({
+        templateId: dayId,
+      });
+      if (result?.id) {
         router.push("/workout");
       }
     } finally {

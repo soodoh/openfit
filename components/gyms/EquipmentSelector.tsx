@@ -1,41 +1,39 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useEquipment } from "@/hooks";
 import { AlertCircle, Loader2, X } from "lucide-react";
 import { useMemo } from "react";
 import { AutocompleteEquipment } from "./AutocompleteEquipment";
-import type { EquipmentId } from "@/lib/convex-types";
 
 interface EquipmentSelectorProps {
-  selectedIds: EquipmentId[];
-  onSelectionChange: (ids: EquipmentId[]) => void;
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
 }
 
 export function EquipmentSelector({
   selectedIds,
   onSelectionChange,
 }: EquipmentSelectorProps) {
-  const equipment = useQuery(api.queries.lookups.getEquipment);
+  const { data: equipment, isLoading } = useEquipment();
 
   // Get selected equipment details sorted alphabetically
   const selectedEquipment = useMemo(() => {
     if (!equipment) return [];
     return equipment
-      .filter((e) => selectedIds.includes(e._id))
+      .filter((e) => selectedIds.includes(e.id))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [equipment, selectedIds]);
 
-  const handleSelect = (equipmentId: EquipmentId) => {
+  const handleSelect = (equipmentId: string) => {
     onSelectionChange([...selectedIds, equipmentId]);
   };
 
-  const handleRemove = (equipmentId: EquipmentId) => {
+  const handleRemove = (equipmentId: string) => {
     onSelectionChange(selectedIds.filter((id) => id !== equipmentId));
   };
 
-  if (equipment === undefined) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -63,7 +61,7 @@ export function EquipmentSelector({
         <div className="space-y-1 max-h-[250px] overflow-y-auto">
           {selectedEquipment.map((item) => (
             <div
-              key={item._id}
+              key={item.id}
               className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted/50 text-sm"
             >
               <span>{item.name}</span>
@@ -72,7 +70,7 @@ export function EquipmentSelector({
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                onClick={() => handleRemove(item._id)}
+                onClick={() => handleRemove(item.id)}
                 aria-label={`Remove ${item.name}`}
               >
                 <X className="h-4 w-4" />
