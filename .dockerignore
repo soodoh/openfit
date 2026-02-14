@@ -10,20 +10,37 @@ node_modules
 .next
 out
 build
+dist
 
 # Development
 .git
 .github
 .vscode
 .idea
+.changeset
 
-# BMAD workflow files
-_bmad
-_bmad-output
+# Tests
+tests
+e2e
+playwright-report
+test-results
+coverage
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+playwright.config.ts
+vitest.config.ts
 
 # Data (SQLite DB and downloaded images - generated at runtime)
 data
 
+# Documentation
+CLAUDE.md
+CHANGELOG.md
+LICENSE
+
 # Misc
 .DS_Store
 *.log
+*.md.bak

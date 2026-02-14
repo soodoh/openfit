@@ -22,7 +22,7 @@ run_init() {
 
     # Run migrations
     echo "Running database migrations..."
-    if npx tsx /app/db/migrate.ts; then
+    if tsx /app/db/migrate.ts; then
       echo "Migrations complete!"
     else
       echo "Warning: Migrations failed. Continuing anyway..."
@@ -30,7 +30,7 @@ run_init() {
 
     # Seed database
     echo "Seeding database..."
-    if npx tsx /app/db/seed.ts; then
+    if tsx /app/db/seed.ts; then
       echo "Database seeding complete!"
     else
       echo "Warning: Seeding failed. You may need to seed manually."
@@ -39,7 +39,7 @@ run_init() {
     echo "Database already exists, skipping initialization."
     # Still run migrations in case of updates
     echo "Running any pending migrations..."
-    npx tsx /app/db/migrate.ts || true
+    tsx /app/db/migrate.ts || true
   fi
 }
 
@@ -48,4 +48,4 @@ run_init
 
 # Start the application
 echo "Starting OpenFit..."
-exec node .next/standalone/server.js
+exec node server.js
