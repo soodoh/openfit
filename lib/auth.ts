@@ -5,10 +5,6 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { genericOAuth } from "better-auth/plugins";
 import { nanoid } from "nanoid";
 
-if (!process.env.BETTER_AUTH_SECRET) {
-  throw new Error("BETTER_AUTH_SECRET environment variable is required");
-}
-
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "sqlite",
