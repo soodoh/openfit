@@ -10,8 +10,6 @@
 
 # dependencies
 /node_modules
-.pnpm-debug.log*
-/.pnpm-store
 
 # testing
 /coverage
