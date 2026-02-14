@@ -21,12 +21,12 @@ mkdir -p data/uploads
 
 # Run migrations
 echo "Running database migrations..."
-pnpm db:migrate
+bun run db:migrate
 
 # Seed database
 echo "Seeding database..."
-pnpm db:seed
+bun run db:seed
 
 echo ""
 echo "Initialization complete!"
-echo "You can now run: pnpm dev"
+echo "You can now run: bun dev"

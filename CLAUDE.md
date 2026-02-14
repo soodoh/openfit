@@ -20,30 +20,30 @@ OpenFit is an open-source fitness tracking application for logging workouts, man
 ## Development Commands
 
 ```bash
-pnpm dev              # Start dev server
-pnpm build            # Production build
-pnpm lint             # Run ESLint
-pnpm lint:fix         # Auto-fix lint issues
-pnpm db:generate      # Generate Drizzle migrations
-pnpm db:migrate       # Run database migrations
-pnpm db:seed          # Seed database with exercise data (873 exercises)
-pnpm db:studio        # Open Drizzle Studio (DB browser)
-pnpm changeset        # Create a changeset for version management
+bun dev              # Start dev server
+bun run build        # Production build
+bun run lint         # Run ESLint
+bun run lint:fix     # Auto-fix lint issues
+bun run db:generate  # Generate Drizzle migrations
+bun run db:migrate   # Run database migrations
+bun run db:seed      # Seed database with exercise data (873 exercises)
+bun run db:studio    # Open Drizzle Studio (DB browser)
+bun run changeset    # Create a changeset for version management
 ```
 
 ### Initial Setup
 
 ```bash
-pnpm install                   # Install dependencies
-pnpm db:migrate                # Run database migrations
-pnpm db:seed                   # Seed exercise data
-pnpm dev                       # Start Next.js dev server
+bun install                    # Install dependencies
+bun run db:migrate             # Run database migrations
+bun run db:seed                # Seed exercise data
+bun dev                        # Start Next.js dev server
 ```
 
 ### Seeding Test Data
 
 ```bash
-pnpm db:seed-mock your@email.com
+bun run db:seed-mock your@email.com
 ```
 
 ## Code Conventions
@@ -154,6 +154,6 @@ Test credentials are in `.env.local`:
 
 When making changes for a release, create a changeset:
 ```bash
-pnpm changeset  # Select patch/minor/major, write summary
+bun run changeset  # Select patch/minor/major, write summary
 ```
 The changeset file in `.changeset/` should be committed with your PR.

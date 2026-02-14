@@ -3,8 +3,9 @@ FROM node:lts
 
 RUN apt-get -qy update && apt-get -qy install openssl curl
 
-# Enable pnpm via corepack
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
 
 # Set working directory
 WORKDIR /app
@@ -13,10 +14,10 @@ WORKDIR /app
 COPY ./ ./
 
 # Install dependencies
-RUN pnpm install
+RUN bun install
 
 # Build the app in standalone mode
-RUN pnpm build
+RUN bun run build
 
 # Copy static assets to standalone output (required for standalone mode)
 RUN cp -r public .next/standalone/public

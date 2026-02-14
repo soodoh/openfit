@@ -9,14 +9,14 @@ For contributors who want to run the full development environment.
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) 18+
-- [pnpm](https://pnpm.io/) package manager
+- [Bun](https://bun.sh/) package manager
 
 ### 1. Clone and Install
 
 ```bash
 git clone https://github.com/soodoh/openfit.git
 cd openfit
-pnpm install
+bun install
 ```
 
 ### 2. Configure Environment
@@ -26,14 +26,14 @@ Copy `.env.example` to `.env.local` and configure as needed. The app uses SQLite
 ### 3. Initialize Database
 
 ```bash
-pnpm db:migrate    # Run database migrations
-pnpm db:seed       # Seed exercise data (873 exercises)
+bun run db:migrate    # Run database migrations
+bun run db:seed       # Seed exercise data (873 exercises)
 ```
 
 ### 4. Start Development Server
 
 ```bash
-pnpm dev
+bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to get started. The first user to register becomes the admin.
@@ -41,7 +41,7 @@ Open [http://localhost:3000](http://localhost:3000) to get started. The first us
 ### Seed Test Data (Optional)
 
 ```bash
-pnpm db:seed-mock your@email.com
+bun run db:seed-mock your@email.com
 ```
 
 ---
@@ -88,7 +88,7 @@ pnpm db:seed-mock your@email.com
 This project uses [Changesets](https://github.com/changesets/changesets) for version management. When making changes that should be included in a release, create a changeset:
 
 ```bash
-pnpm changeset
+bun run changeset
 ```
 
 You'll be prompted to:

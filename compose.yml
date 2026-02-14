@@ -1,9 +1,9 @@
 services:
   # Next.js application with SQLite database
   openfit:
-    image: node:22-alpine
+    image: oven/bun:latest
     working_dir: /app
-    command: sh -c "corepack enable && pnpm install && pnpm db:migrate && pnpm db:seed && pnpm dev --port 3000"
+    command: sh -c "bun install && bun run db:migrate && bun run db:seed && bun run dev --port 3000"
     ports:
       - 3000:3000
     volumes:
