@@ -1,5 +1,11 @@
 # openfit
 
+## 0.5.1
+
+### Patch Changes
+
+- fd901c3: Reduce docker image size
+
 ## 0.5.0
 
 ### Minor Changes
