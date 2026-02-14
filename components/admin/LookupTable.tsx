@@ -12,7 +12,7 @@ import {
   useUpdateLookup,
 } from "@/hooks";
 import { Edit2, Plus, Search, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { DeleteLookupModal } from "./DeleteLookupModal";
 import { LookupFormModal } from "./LookupFormModal";
 
@@ -77,11 +77,6 @@ export function LookupTable({
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<LookupItemWithId | null>(null);
   const [deleteItem, setDeleteItem] = useState<LookupItemWithId | null>(null);
-
-  // Reset to first page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
 
   const { data, isLoading } = useAdminLookupPaginated(lookupType, {
     page: currentPage,
@@ -189,7 +184,10 @@ export function LookupTable({
               <Input
                 placeholder={`Search ${title.toLowerCase()}...`}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="pl-9"
               />
             </div>

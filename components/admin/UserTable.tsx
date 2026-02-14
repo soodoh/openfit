@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { useAdminUsersPaginated, type UserWithProfile } from "@/hooks";
 import { Edit2, Search, Shield, User } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { UserRoleModal } from "./UserRoleModal";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -49,11 +49,6 @@ export function UserTable() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [editUser, setEditUser] = useState<UserWithProfile | null>(null);
-
-  // Reset to first page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
 
   const { data, isLoading } = useAdminUsersPaginated({
     page: currentPage,
@@ -114,7 +109,10 @@ export function UserTable() {
               <Input
                 placeholder="Search users..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="pl-9"
               />
             </div>

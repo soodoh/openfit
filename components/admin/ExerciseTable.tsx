@@ -11,7 +11,7 @@ import {
   useAdminExercisesPaginated,
 } from "@/hooks";
 import { Edit2, Plus, Search, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { DeleteExerciseModal } from "./DeleteExerciseModal";
 import { ExerciseFormModal } from "./ExerciseFormModal";
 
@@ -69,11 +69,6 @@ export function ExerciseTable() {
     useState<ExerciseWithRelations | null>(null);
   const [deleteExercise, setDeleteExercise] =
     useState<ExerciseWithRelations | null>(null);
-
-  // Reset to first page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
 
   const { data, isLoading } = useAdminExercisesPaginated({
     page: currentPage,
@@ -154,7 +149,10 @@ export function ExerciseTable() {
               <Input
                 placeholder="Search exercises..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="pl-9"
               />
             </div>
