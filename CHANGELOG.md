@@ -1,5 +1,11 @@
 # openfit
 
+## 0.5.0
+
+### Minor Changes
+
+- 9c61666: Migrated from Convex to SQLite, React Query, Drizzle, and BetterAuth
+
 ## 0.4.1
 
 ### Patch Changes
