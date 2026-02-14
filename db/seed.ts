@@ -9,6 +9,10 @@ import * as schema from "./schema";
 
 // Push schema to database (creates tables if they don't exist)
 function pushSchema() {
+  if (process.env.SKIP_SCHEMA_PUSH) {
+    console.log("Skipping schema push (migrations handle schema creation).");
+    return;
+  }
   console.log("Pushing database schema...");
   try {
     execSync("npx drizzle-kit push", {
