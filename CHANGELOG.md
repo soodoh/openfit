@@ -1,5 +1,11 @@
 # openfit
 
+## 0.6.0
+
+### Minor Changes
+
+- c920742: Migrate to tanstack/start + other fixes
+
 ## 0.5.1
 
 ### Patch Changes
