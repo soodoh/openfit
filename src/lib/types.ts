@@ -1,110 +1,97 @@
-/* eslint-disable eslint-plugin-import(no-duplicates), typescript-eslint(array-type), typescript-eslint(no-restricted-types) */
 // Type definitions for the application
 // Re-exports Drizzle schema types and defines API response shapes
-
-import { SetGroupTypeEnum, SetTypeEnum } from '@/db/schema';
-import type { SetGroupType as _SetGroupType, SetType as _SetType } from '@/db/schema';
-import type {
-  Exercise as DbExercise,
-  Gym as DbGym,
-  RoutineDay as DbRoutineDay,
-  Routine,
-  UserProfile,
-  WorkoutSession,
-} from "@/db/schema";
-
+import type { Exercise as DbExercise } from "@/db/schema/exercises";
+import type { Routine, RoutineDay as DbRoutineDay } from "@/db/schema/routines";
+import type { Gym as DbGym, UserProfile } from "@/db/schema/user-data";
+import type { WorkoutSession } from "@/db/schema/workouts";
 // Re-export base types from DB schema
 export type { UserProfile, Routine, WorkoutSession };
-
 // Re-export enum values with expected names
-export const SetType = SetTypeEnum;
+export const SetType = {
+    NORMAL: "NORMAL",
+    WARMUP: "WARMUP",
+    DROPSET: "DROPSET",
+    FAILURE: "FAILURE",
+} as const;
+type _SetType = (typeof SetType)[keyof typeof SetType];
 export type SetType = _SetType;
-
-export const SetGroupType = SetGroupTypeEnum;
+export const SetGroupType = {
+    NORMAL: "NORMAL",
+    SUPERSET: "SUPERSET",
+} as const;
+type _SetGroupType = (typeof SetGroupType)[keyof typeof SetGroupType];
 export type SetGroupType = _SetGroupType;
-
 // Reference types — optional createdAt since API responses may omit it
 export type RepetitionUnit = {
-  id: string;
-  name: string;
-  createdAt?: Date;
-}
-
+    id: string;
+    name: string;
+    createdAt?: Date;
+};
 export type WeightUnit = {
-  id: string;
-  name: string;
-  createdAt?: Date;
-}
-
+    id: string;
+    name: string;
+    createdAt?: Date;
+};
 export type Equipment = {
-  id: string;
-  name: string;
-  createdAt?: Date;
-}
-
+    id: string;
+    name: string;
+    createdAt?: Date;
+};
 export type MuscleGroup = {
-  id: string;
-  name: string;
-  createdAt?: Date;
-}
-
+    id: string;
+    name: string;
+    createdAt?: Date;
+};
 export type Category = {
-  id: string;
-  name: string;
-  createdAt?: Date;
-}
-
+    id: string;
+    name: string;
+    createdAt?: Date;
+};
 // Workout set group/set — defined to match API response shape (no createdAt/updatedAt)
 export type WorkoutSetGroup = {
-  id: string;
-  userId: string;
-  routineDayId: string | null;
-  sessionId: string | null;
-  type: SetGroupType | string;
-  order: number;
-  comment: string | null;
-}
-
+    id: string;
+    userId: string;
+    routineDayId: string | undefined;
+    sessionId: string | undefined;
+    type: SetGroupType | string;
+    order: number;
+    comment: string | undefined;
+};
 export type WorkoutSet = {
-  id: string;
-  userId: string;
-  setGroupId: string;
-  exerciseId: string;
-  type: SetType | string;
-  order: number;
-  reps: number;
-  repetitionUnitId: string;
-  weight: number;
-  weightUnitId: string;
-  restTime: number;
-  completed: boolean;
-}
-
+    id: string;
+    userId: string;
+    setGroupId: string;
+    exerciseId: string;
+    type: SetType | string;
+    order: number;
+    reps: number;
+    repetitionUnitId: string;
+    weight: number;
+    weightUnitId: string;
+    restTime: number;
+    completed: boolean;
+};
 // Extended types for API response shapes (computed fields from junction tables)
 export type Exercise = {
-  imageUrl?: string | null;
-  primaryMuscleIds?: string[];
-  secondaryMuscleIds?: string[];
-  instructions?: string[];
-  imageUrls?: (string | null)[];
-} & DbExercise
-
+    imageUrl?: string | undefined;
+    primaryMuscleIds?: string[];
+    secondaryMuscleIds?: string[];
+    instructions?: string[];
+    imageUrls?: Array<string | undefined>;
+} & DbExercise;
 export type RoutineDay = {
-  weekdays: number[];
-} & DbRoutineDay
-
+    weekdays: number[];
+} & DbRoutineDay;
 export type Gym = {
-  equipmentIds: string[];
-} & DbGym
-
+    equipmentIds: string[];
+} & DbGym;
 // View mode constant (UI-only, not in DB)
 export const ListView = {
-  EditTemplate: "EditTemplate",
-  CurrentSession: "CurrentSession",
-  ViewSession: "ViewSession",
+    EditTemplate: "EditTemplate",
+    CurrentSession: "CurrentSession",
+    ViewSession: "ViewSession",
 } as const;
 export type ListView = (typeof ListView)[keyof typeof ListView];
-
 // ID type aliases (just strings, preserves readability)
 export type ExerciseId = string;
 export type RoutineId = string;
@@ -118,55 +105,54 @@ export type EquipmentId = string;
 export type MuscleGroupId = string;
 export type CategoryId = string;
 export type GymId = string;
-
 // Exercise with first image URL (for list views)
 export type ExerciseWithImageUrl = {
-  imageUrl: string | null;
-} & Exercise
-
+    imageUrl: string | undefined;
+} & Exercise;
 // Complex types with relations
 export type RoutineWithDays = {
-  routineDays: RoutineDay[];
-} & Routine
-
+    routineDays: RoutineDay[];
+} & Routine;
 export type RoutineDayWithRoutine = {
-  routine: { id: string; name: string } | null;
-} & RoutineDay
-
+    routine: {
+        id: string;
+        name: string;
+    } | undefined;
+} & RoutineDay;
 export type WorkoutSetWithRelations = {
-  exercise: {
-    id: string;
-    name: string;
-    imageUrl: string | null;
-  } | null;
-  repetitionUnit: { id: string; name: string } | null;
-  weightUnit: { id: string; name: string } | null;
-} & WorkoutSet
-
+    exercise: {
+        id: string;
+        name: string;
+        imageUrl: string | undefined;
+    } | undefined;
+    repetitionUnit: {
+        id: string;
+        name: string;
+    } | undefined;
+    weightUnit: {
+        id: string;
+        name: string;
+    } | undefined;
+} & WorkoutSet;
 export type WorkoutSetGroupWithSets = {
-  sets: WorkoutSetWithRelations[];
-} & WorkoutSetGroup
-
+    sets: WorkoutSetWithRelations[];
+} & WorkoutSetGroup;
 export type RoutineDayWithData = {
-  routine: { id: string; name: string } | null;
-  setGroups: WorkoutSetGroupWithSets[];
-} & RoutineDay
-
+    routine: {
+        id: string;
+        name: string;
+    } | undefined;
+    setGroups: WorkoutSetGroupWithSets[];
+} & RoutineDay;
 export type WorkoutSessionWithData = {
-  setGroups: WorkoutSetGroupWithSets[];
-} & WorkoutSession
-
+    setGroups: WorkoutSetGroupWithSets[];
+} & WorkoutSession;
 // Minimal session data for calendar cards
-export type WorkoutSessionSummary = Pick<
-  WorkoutSession,
-  "id" | "createdAt" | "name" | "startTime" | "endTime" | "impression"
->;
-
+export type WorkoutSessionSummary = Pick<WorkoutSession, "id" | "createdAt" | "name" | "startTime" | "endTime" | "impression">;
 export type Units = {
-  repetitionUnits: RepetitionUnit[];
-  weightUnits: WeightUnit[];
-}
-
+    repetitionUnits: RepetitionUnit[];
+    weightUnits: WeightUnit[];
+};
 // Backwards-compat aliases
 export type GymWithEquipment = Gym;
 export type RoutineDayWithWeekdays = RoutineDay;

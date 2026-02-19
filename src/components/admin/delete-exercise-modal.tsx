@@ -1,66 +1,47 @@
-/* eslint-disable eslint(no-shadow), eslint-plugin-import(prefer-default-export), eslint-plugin-unicorn(filename-case), typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
-
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
 import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
-
 type Exercise = {
-  id: string;
-  name: string;
-}
-
+    id: string;
+    name: string;
+};
 type DeleteExerciseModalProps = {
-  exercise: Exercise | null;
-  onClose: () => void;
-  onDelete: (id: string) => void;
-}
-
-export function DeleteExerciseModal({
-  exercise,
-  onClose,
-  onDelete,
-}: DeleteExerciseModalProps) {
-  const open = exercise !== null;
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, setIsPending] = useState(false);
-
-  const handleDelete = async () => {
-    if (!exercise) {return;}
-    setError(null);
-    setIsPending(true);
-
-    try {
-      onDelete(exercise.id);
-      onClose();
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Failed to delete exercise",
-      );
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  const handleClose = () => {
-    setError(null);
-    onClose();
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    exercise: Exercise | undefined;
+    onClose: () => void;
+    onDelete: (id: string) => void;
+};
+export function DeleteExerciseModal({ exercise, onClose, onDelete, }: DeleteExerciseModalProps): any {
+    const open = exercise !== null;
+    const [error, setError] = useState<string | undefined>(null);
+    const [isPending, setIsPending] = useState(false);
+    const handleDelete = async () => {
+        if (!exercise) {
+            return;
+        }
+        setError(null);
+        setIsPending(true);
+        try {
+            onDelete(exercise.id);
+            onClose();
+        }
+        catch (caughtError) {
+            setError(caughtError instanceof Error ? caughtError.message : "Failed to delete exercise");
+        }
+        finally {
+            setIsPending(false);
+        }
+    };
+    const handleClose = () => {
+        setError(null);
+        onClose();
+    };
+    return (<Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950 flex items-center justify-center">
-              <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400"/>
             </div>
             <div>
               <DialogTitle className="text-xl">Delete Exercise</DialogTitle>
@@ -72,46 +53,30 @@ export function DeleteExerciseModal({
         </DialogHeader>
 
         <div className="py-4">
-          {error ? (
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300">
-              <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" />
+          {error ? (<div className="flex items-start gap-3 p-3 rounded-lg bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300">
+              <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0"/>
               <p className="text-sm">{error}</p>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
+            </div>) : (<p className="text-sm text-muted-foreground">
               Are you sure you want to delete{" "}
               <span className="font-medium text-foreground">
                 &quot;{exercise?.name}&quot;
               </span>
               ? This will permanently remove the exercise from the system.
-            </p>
-          )}
+            </p>)}
         </div>
 
         <DialogFooter>
           <Button type="button" variant="ghost" onClick={handleClose}>
             {error ? "Close" : "Cancel"}
           </Button>
-          {!error && (
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isPending}
-              className="min-w-[100px]"
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          {!error && (<Button type="button" variant="destructive" onClick={handleDelete} disabled={isPending} className="min-w-[100px]">
+              {isPending ? (<>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
                   Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
-            </Button>
-          )}
+                </>) : ("Delete")}
+            </Button>)}
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
 }
+export default DeleteExerciseModal;

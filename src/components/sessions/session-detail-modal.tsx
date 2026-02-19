@@ -1,23 +1,11 @@
-/* eslint-disable eslint-plugin-import(prefer-default-export), eslint-plugin-unicorn(filename-case), typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
 import { WorkoutList } from "@/components/workoutSet/workout-list";
 import { useSession } from "@/hooks";
 import { ListView } from '@/lib/types';
 import type { Units } from '@/lib/types';
 import dayjs from "dayjs";
-import {
-  Activity,
-  Calendar as CalendarIcon,
-  CheckCircle2,
-  Trash2,
-} from "lucide-react";
+import { Activity, Calendar as CalendarIcon, CheckCircle2, Trash2, } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { DeleteSessionModal } from "./delete-session-modal";
@@ -25,81 +13,66 @@ import { EditDurationPopover } from "./edit-duration-popover";
 import { EditNamePopover } from "./edit-name-popover";
 import { EditNotesPopover } from "./edit-notes-popover";
 import { EditRatingPopover } from "./edit-rating-popover";
-
-export const SessionDetailModal = ({
-  sessionId,
-  units,
-  open,
-  onClose,
-  isActive = false,
-}: {
-  sessionId: string | null;
-  units: Units;
-  open: boolean;
-  onClose: () => void;
-  isActive?: boolean;
-}) => {
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  // Fetch full session data when modal is open
-  const { data: session } = useSession(sessionId ?? undefined);
-
-  if (!sessionId || !session) {
-    return (
-      <Dialog open={open} onOpenChange={() => onClose()}>
+export const SessionDetailModal = ({ sessionId, units, open, onClose, isActive = false, }: {
+    sessionId: string | undefined;
+    units: Units;
+    open: boolean;
+    onClose: () => void;
+    isActive?: boolean;
+}): any => {
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    // Fetch full session data when modal is open
+    const { data: session } = useSession(sessionId ?? undefined);
+    if (!sessionId || !session) {
+        return (<Dialog open={open} onOpenChange={() => onClose()}>
         <DialogContent className="sm:max-w-[700px]">
           <DialogTitle className="sr-only">Loading session</DialogTitle>
           <div className="flex items-center justify-center py-8">
             <p className="text-muted-foreground">Loading session...</p>
           </div>
         </DialogContent>
-      </Dialog>
-    );
-  }
-
-  const durationDate =
-    session.startTime && session.endTime
-      ? dayjs.duration(dayjs(session.endTime).diff(dayjs(session.startTime)))
-      : null;
-
-  const formatDuration = () => {
-    if (!durationDate) {return null;}
-    const hours = durationDate.hours();
-    const mins = durationDate.minutes();
-    if (hours > 0) {return `${hours}h ${mins}m`;}
-    return `${mins} min`;
-  };
-
-  const handleDeleteSuccess = () => {
-    setShowDeleteModal(false);
-    onClose();
-  };
-
-  return (
-    <>
+      </Dialog>);
+    }
+    const durationDate = session.startTime && session.endTime
+        ? dayjs.duration(dayjs(session.endTime).diff(dayjs(session.startTime)))
+        : null;
+    const formatDuration = () => {
+        if (!durationDate) {
+            return null;
+        }
+        const hours = durationDate.hours();
+        const mins = durationDate.minutes();
+        if (hours > 0) {
+            return `${hours}h ${mins}m`;
+        }
+        return `${mins} min`;
+    };
+    const handleDeleteSuccess = () => {
+        setShowDeleteModal(false);
+        onClose();
+    };
+    return (<>
       <Dialog open={open} onOpenChange={() => onClose()}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] p-0 overflow-hidden flex flex-col">
           {/* Header */}
           <DialogHeader className="px-6 pt-6 pb-4 bg-linear-to-br from-accent/10 via-transparent to-primary/5 shrink-0">
             <div className="flex items-start gap-4 pr-8">
               <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-foreground/10 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="h-6 w-6 text-primary dark:text-foreground" />
+                <CheckCircle2 className="h-6 w-6 text-primary dark:text-foreground"/>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                  <CalendarIcon className="h-3.5 w-3.5" />
+                  <CalendarIcon className="h-3.5 w-3.5"/>
                   <span>{dayjs(session.startTime).format("MMMM D, YYYY")}</span>
-                  {isActive && (
-                    <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full">
+                  {isActive && (<span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full">
                       In Progress
-                    </span>
-                  )}
+                    </span>)}
                 </div>
                 <div className="flex items-center gap-2">
                   <DialogTitle className="text-xl font-bold tracking-tight truncate">
                     {session.name || "Workout Session"}
                   </DialogTitle>
-                  <EditNamePopover session={session} />
+                  <EditNamePopover session={session}/>
                 </div>
                 <DialogDescription className="sr-only">
                   View workout session details
@@ -113,23 +86,19 @@ export const SessionDetailModal = ({
             {/* Stats Cards */}
             <div className="grid grid-cols-3 gap-3 py-4">
               {/* Duration Card */}
-              <EditDurationPopover
-                session={session}
-                formattedDuration={formatDuration()}
-              />
+              <EditDurationPopover session={session} formattedDuration={formatDuration()}/>
 
               {/* Rating Card */}
-              <EditRatingPopover session={session} />
+              <EditRatingPopover session={session}/>
 
               {/* Notes Card */}
-              <EditNotesPopover session={session} />
+              <EditNotesPopover session={session}/>
             </div>
 
             {/* Exercise/Set Stats Card */}
-            {session.setGroups.length > 0 && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-card border mb-4">
+            {session.setGroups.length > 0 && (<div className="flex items-center gap-3 p-3 rounded-xl bg-card border mb-4">
                 <div className="w-9 h-9 rounded-lg bg-primary/10 dark:bg-foreground/10 flex items-center justify-center shrink-0">
-                  <Activity className="h-4 w-4 text-primary dark:text-foreground" />
+                  <Activity className="h-4 w-4 text-primary dark:text-foreground"/>
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground leading-none mb-1">
@@ -139,48 +108,30 @@ export const SessionDetailModal = ({
                     {session.setGroups.length}{" "}
                     {session.setGroups.length === 1 ? "exercise" : "exercises"}{" "}
                     •{" "}
-                    {session.setGroups.reduce(
-                      (acc, group) => acc + group.sets.length,
-                      0,
-                    )}{" "}
-                    {session.setGroups.reduce(
-                      (acc, group) => acc + group.sets.length,
-                      0,
-                    ) === 1
-                      ? "set"
-                      : "sets"}
+                    {session.setGroups.reduce((acc, group) => acc + group.sets.length, 0)}{" "}
+                    {session.setGroups.reduce((acc, group) => acc + group.sets.length, 0) === 1
+                ? "set"
+                : "sets"}
                   </p>
                 </div>
-              </div>
-            )}
+              </div>)}
 
             {/* Continue Workout for active sessions */}
-            {isActive && (
-              <div className="pb-4">
+            {isActive && (<div className="pb-4">
                 <Button asChild className="w-full">
                   <Link to="/workout">Continue Workout</Link>
                 </Button>
-              </div>
-            )}
+              </div>)}
 
             {/* Workout List */}
             <div className="pt-2 border-t">
-              <WorkoutList
-                view={isActive ? ListView.CurrentSession : ListView.ViewSession}
-                sessionOrDayId={session.id}
-                setGroups={session.setGroups}
-                units={units}
-              />
+              <WorkoutList view={isActive ? ListView.CurrentSession : ListView.ViewSession} sessionOrDayId={session.id} setGroups={session.setGroups} units={units}/>
             </div>
 
             {/* Delete Button */}
             <div className="pt-4">
-              <Button
-                variant="destructive"
-                onClick={() => setShowDeleteModal(true)}
-                className="w-full gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
+              <Button variant="destructive" onClick={() => setShowDeleteModal(true)} className="w-full gap-2">
+                <Trash2 className="h-4 w-4"/>
                 Delete Session
               </Button>
             </div>
@@ -189,11 +140,8 @@ export const SessionDetailModal = ({
       </Dialog>
 
       {/* Delete Modal */}
-      <DeleteSessionModal
-        open={showDeleteModal}
-        onClose={handleDeleteSuccess}
-        sessionId={session.id}
-      />
-    </>
-  );
+      <DeleteSessionModal open={showDeleteModal} onClose={handleDeleteSuccess} sessionId={session.id}/>
+    </>);
 };
+
+export default SessionDetailModal;

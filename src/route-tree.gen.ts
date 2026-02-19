@@ -1,6 +1,3 @@
-/* eslint-disable eslint(no-unused-vars), eslint-plugin-import(first), typescript-eslint(ban-ts-comment), typescript-eslint(consistent-type-definitions) */
-
-// @ts-nocheck
 
 // noinspection JSUnusedGlobalSymbols
 
@@ -57,6 +54,7 @@ import { Route as ApiSetGroupsIdBulkEditRouteImport } from './routes/api/set-gro
 import { Route as ApiAdminUsersIdRouteImport } from './routes/api/admin/users.$id'
 import { Route as ApiAdminLookupsIdRouteImport } from './routes/api/admin/lookups.$id'
 import { Route as ApiAdminExercisesIdRouteImport } from './routes/api/admin/exercises.$id'
+import type { getRouter } from './router.tsx'
 
 const WorkoutRoute = WorkoutRouteImport.update({
   id: '/workout',
@@ -301,7 +299,7 @@ const ApiAdminExercisesIdRoute = ApiAdminExercisesIdRouteImport.update({
   getParentRoute: () => ApiAdminExercisesRoute,
 } as any)
 
-export interface FileRoutesByFullPath {
+export type FileRoutesByFullPath = {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/exercises': typeof ExercisesRoute
@@ -351,7 +349,7 @@ export interface FileRoutesByFullPath {
   '/api/set-groups/$id/bulk-edit': typeof ApiSetGroupsIdBulkEditRoute
   '/api/set-groups/$id/replace-exercise': typeof ApiSetGroupsIdReplaceExerciseRoute
 }
-export interface FileRoutesByTo {
+export type FileRoutesByTo = {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/exercises': typeof ExercisesRoute
@@ -401,7 +399,7 @@ export interface FileRoutesByTo {
   '/api/set-groups/$id/bulk-edit': typeof ApiSetGroupsIdBulkEditRoute
   '/api/set-groups/$id/replace-exercise': typeof ApiSetGroupsIdReplaceExerciseRoute
 }
-export interface FileRoutesById {
+export type FileRoutesById = {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
@@ -452,7 +450,7 @@ export interface FileRoutesById {
   '/api/set-groups/$id/bulk-edit': typeof ApiSetGroupsIdBulkEditRoute
   '/api/set-groups/$id/replace-exercise': typeof ApiSetGroupsIdReplaceExerciseRoute
 }
-export interface FileRouteTypes {
+export type FileRouteTypes = {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
@@ -605,7 +603,7 @@ export interface FileRouteTypes {
     | '/api/set-groups/$id/replace-exercise'
   fileRoutesById: FileRoutesById
 }
-export interface RootRouteChildren {
+export type RootRouteChildren = {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   ExercisesRoute: typeof ExercisesRoute
@@ -640,7 +638,7 @@ export interface RootRouteChildren {
 }
 
 declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
+  type FileRoutesByPath = {
     '/workout': {
       id: '/workout'
       path: '/workout'
@@ -980,7 +978,7 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface ApiExercisesRouteChildren {
+type ApiExercisesRouteChildren = {
   ApiExercisesIdRoute: typeof ApiExercisesIdRoute
   ApiExercisesSearchRoute: typeof ApiExercisesSearchRoute
   ApiExercisesSimilarRoute: typeof ApiExercisesSimilarRoute
@@ -996,7 +994,7 @@ const ApiExercisesRouteWithChildren = ApiExercisesRoute._addFileChildren(
   ApiExercisesRouteChildren,
 )
 
-interface ApiGymsRouteChildren {
+type ApiGymsRouteChildren = {
   ApiGymsIdRoute: typeof ApiGymsIdRoute
 }
 
@@ -1007,7 +1005,7 @@ const ApiGymsRouteChildren: ApiGymsRouteChildren = {
 const ApiGymsRouteWithChildren =
   ApiGymsRoute._addFileChildren(ApiGymsRouteChildren)
 
-interface ApiRoutineDaysRouteChildren {
+type ApiRoutineDaysRouteChildren = {
   ApiRoutineDaysIdRoute: typeof ApiRoutineDaysIdRoute
 }
 
@@ -1019,7 +1017,7 @@ const ApiRoutineDaysRouteWithChildren = ApiRoutineDaysRoute._addFileChildren(
   ApiRoutineDaysRouteChildren,
 )
 
-interface ApiRoutinesRouteChildren {
+type ApiRoutinesRouteChildren = {
   ApiRoutinesIdRoute: typeof ApiRoutinesIdRoute
 }
 
@@ -1031,7 +1029,7 @@ const ApiRoutinesRouteWithChildren = ApiRoutinesRoute._addFileChildren(
   ApiRoutinesRouteChildren,
 )
 
-interface ApiSessionsRouteChildren {
+type ApiSessionsRouteChildren = {
   ApiSessionsIdRoute: typeof ApiSessionsIdRoute
   ApiSessionsCurrentRoute: typeof ApiSessionsCurrentRoute
 }
@@ -1045,7 +1043,7 @@ const ApiSessionsRouteWithChildren = ApiSessionsRoute._addFileChildren(
   ApiSessionsRouteChildren,
 )
 
-interface ApiSetGroupsIdRouteChildren {
+type ApiSetGroupsIdRouteChildren = {
   ApiSetGroupsIdBulkEditRoute: typeof ApiSetGroupsIdBulkEditRoute
   ApiSetGroupsIdReplaceExerciseRoute: typeof ApiSetGroupsIdReplaceExerciseRoute
 }
@@ -1059,7 +1057,7 @@ const ApiSetGroupsIdRouteWithChildren = ApiSetGroupsIdRoute._addFileChildren(
   ApiSetGroupsIdRouteChildren,
 )
 
-interface ApiSetGroupsRouteChildren {
+type ApiSetGroupsRouteChildren = {
   ApiSetGroupsIdRoute: typeof ApiSetGroupsIdRouteWithChildren
   ApiSetGroupsReorderRoute: typeof ApiSetGroupsReorderRoute
 }
@@ -1073,7 +1071,7 @@ const ApiSetGroupsRouteWithChildren = ApiSetGroupsRoute._addFileChildren(
   ApiSetGroupsRouteChildren,
 )
 
-interface ApiSetsRouteChildren {
+type ApiSetsRouteChildren = {
   ApiSetsIdRoute: typeof ApiSetsIdRoute
   ApiSetsReorderRoute: typeof ApiSetsReorderRoute
 }
@@ -1086,7 +1084,7 @@ const ApiSetsRouteChildren: ApiSetsRouteChildren = {
 const ApiSetsRouteWithChildren =
   ApiSetsRoute._addFileChildren(ApiSetsRouteChildren)
 
-interface ApiAdminExercisesRouteChildren {
+type ApiAdminExercisesRouteChildren = {
   ApiAdminExercisesIdRoute: typeof ApiAdminExercisesIdRoute
 }
 
@@ -1097,7 +1095,7 @@ const ApiAdminExercisesRouteChildren: ApiAdminExercisesRouteChildren = {
 const ApiAdminExercisesRouteWithChildren =
   ApiAdminExercisesRoute._addFileChildren(ApiAdminExercisesRouteChildren)
 
-interface ApiAdminLookupsRouteChildren {
+type ApiAdminLookupsRouteChildren = {
   ApiAdminLookupsIdRoute: typeof ApiAdminLookupsIdRoute
 }
 
@@ -1109,7 +1107,7 @@ const ApiAdminLookupsRouteWithChildren = ApiAdminLookupsRoute._addFileChildren(
   ApiAdminLookupsRouteChildren,
 )
 
-interface ApiAdminUsersRouteChildren {
+type ApiAdminUsersRouteChildren = {
   ApiAdminUsersIdRoute: typeof ApiAdminUsersIdRoute
 }
 
@@ -1158,10 +1156,8 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
 declare module '@tanstack/react-start' {
-  interface Register {
+  type Register = {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
   }
