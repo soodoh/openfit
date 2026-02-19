@@ -18,24 +18,23 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run build
 
+# Prune to production dependencies after build
+RUN bun install --frozen-lockfile --production
+
 # Stage 2: Runtime
 FROM node:24-alpine AS runner
 
 WORKDIR /app
 
-# Install tsx for running TypeScript db scripts at startup
-RUN npm install -g tsx --no-fund --no-audit 2>/dev/null
+# Copy Nitro server output and db artifacts
+COPY --from=builder /app/.output ./.output
 
-# Copy TanStack Start build output
-COPY --from=builder /app/dist ./dist
-
-# Copy db scripts and files needed for migrations/seeding
-COPY --from=builder /app/db ./db
-COPY --from=builder /app/src/lib/auth.ts ./src/lib/auth.ts
-
-# Copy node_modules for db scripts
+# Copy production node_modules for runtime and db scripts
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /app/db/schema.ts ./db/schema.ts
+COPY --from=builder /app/db/schema ./db/schema
 
 # Copy public assets
 COPY --from=builder /app/public ./public
@@ -43,9 +42,6 @@ COPY --from=builder /app/public ./public
 # Copy entrypoint
 COPY --from=builder /app/scripts ./scripts
 RUN chmod +x ./scripts/docker-entrypoint.sh
-
-# Minimal tsconfig for tsx path alias resolution
-RUN echo '{"compilerOptions":{"paths":{"@/db":["./db"],"@/db/*":["./db/*"],"@/*":["./src/*"]},"target":"ES2017","esModuleInterop":true}}' > tsconfig.json
 
 # Create data directory for SQLite and uploads
 RUN mkdir -p /app/data/uploads

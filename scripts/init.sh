@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -14,11 +14,11 @@ mkdir -p data/uploads
 
 # Run migrations
 echo "Running database migrations..."
-npx tsx db/migrate.ts
+node .output/db/migrate.js
 
 # Seed database
 echo "Seeding database..."
-npx tsx db/seed.ts
+node .output/db/seed.js
 
 echo ""
 echo "Initialization complete!"

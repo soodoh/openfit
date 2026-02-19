@@ -1,36 +1,42 @@
 import { auth } from "@/lib/auth";
-import { execSync } from "node:child_process";
 import { eq } from "drizzle-orm";
 import fs from "node:fs/promises";
 import { nanoid } from "nanoid";
 import path from "node:path";
 import { db } from "./index";
-import * as schema from "./schema";
-// Push schema to database (creates tables if they don't exist)
-function pushSchema() {
-  if (process.env.SKIP_SCHEMA_PUSH) {
-    // oxlint-disable-next-line no-console
-    console.log("Skipping schema push (migrations handle schema creation).");
-    return;
-  }
-  // oxlint-disable-next-line no-console
-  console.log("Pushing database schema...");
-  try {
-    execSync("npx drizzle-kit push", {
-      stdio: "inherit",
-      cwd: process.cwd(),
-    });
-    // oxlint-disable-next-line no-console
-    console.log("Schema pushed successfully.");
-  } catch (error) {
-    throw new Error("Failed to push schema", { cause: error });
-  }
-}
+import { schema } from "./schema";
 // Base URL for exercise images from the free-exercise-db repository
 const IMAGE_BASE_URL =
   "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises";
 // Directory to store uploaded images
 const UPLOAD_DIR = path.join(process.cwd(), "data", "uploads");
+const IMAGE_DOWNLOAD_CONCURRENCY = 50;
+const IMAGE_INSERT_CHUNK_SIZE = 150;
+
+async function mapWithConcurrencyLimit<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = [];
+  let nextIndex = 0;
+
+  async function worker() {
+    while (true) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      if (currentIndex >= items.length) {
+        return;
+      }
+
+      results[currentIndex] = await mapper(items[currentIndex], currentIndex);
+    }
+  }
+
+  const workerCount = Math.min(concurrency, items.length);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  return results;
+}
 // Ensure upload directory exists
 async function ensureUploadDir() {
   try {
@@ -128,102 +134,76 @@ type LookupMaps = {
   muscleGroups: Map<string, string>;
   categories: Map<string, string>;
 };
+
+type ExerciseImageInsert = typeof schema.exerciseImages.$inferInsert;
 async function seedReferenceData() {
   // oxlint-disable-next-line no-console
   console.log("Seeding reference data...");
-  // oxlint-disable-next-line no-console
-  console.log("Seeding repetition units...");
-  for (const name of REPETITION_UNITS) {
-    const existing = await db.query.repetitionUnits.findFirst({
-      where: eq(schema.repetitionUnits.name, name),
-    });
-    if (!existing) {
-      await db.insert(schema.repetitionUnits).values({
-        id: nanoid(),
-        name,
-      });
-      // oxlint-disable-next-line no-console
-      console.log(`Created repetition unit: ${name}`);
-    }
-  }
-  // oxlint-disable-next-line no-console
-  console.log("Seeding weight units...");
-  for (const name of WEIGHT_UNITS) {
-    const existing = await db.query.weightUnits.findFirst({
-      where: eq(schema.weightUnits.name, name),
-    });
-    if (!existing) {
-      await db.insert(schema.weightUnits).values({
-        id: nanoid(),
-        name,
-      });
-      // oxlint-disable-next-line no-console
-      console.log(`Created weight unit: ${name}`);
-    }
-  }
-  // oxlint-disable-next-line no-console
-  console.log("Seeding equipment...");
+  const equipmentNames = EQUIPMENT_NAMES.map(capitalize);
+  const muscleGroupNames = MUSCLE_GROUP_NAMES.map(capitalize);
+  const categoryNames = CATEGORY_NAMES.map(capitalize);
+
+  await db
+    .insert(schema.repetitionUnits)
+    .values(REPETITION_UNITS.map((name) => ({ id: nanoid(), name })))
+    .onConflictDoNothing({ target: schema.repetitionUnits.name });
+  await db
+    .insert(schema.weightUnits)
+    .values(WEIGHT_UNITS.map((name) => ({ id: nanoid(), name })))
+    .onConflictDoNothing({ target: schema.weightUnits.name });
+  await db
+    .insert(schema.equipment)
+    .values(equipmentNames.map((name) => ({ id: nanoid(), name })))
+    .onConflictDoNothing({ target: schema.equipment.name });
+  await db
+    .insert(schema.muscleGroups)
+    .values(muscleGroupNames.map((name) => ({ id: nanoid(), name })))
+    .onConflictDoNothing({ target: schema.muscleGroups.name });
+  await db
+    .insert(schema.categories)
+    .values(categoryNames.map((name) => ({ id: nanoid(), name })))
+    .onConflictDoNothing({ target: schema.categories.name });
+
+  const [equipmentRows, muscleGroupRows, categoryRows] = await Promise.all([
+    db.select().from(schema.equipment),
+    db.select().from(schema.muscleGroups),
+    db.select().from(schema.categories),
+  ]);
+
+  const equipmentByName = new Map(
+    equipmentRows.map((record) => [record.name, record.id]),
+  );
+  const muscleGroupByName = new Map(
+    muscleGroupRows.map((record) => [record.name, record.id]),
+  );
+  const categoryByName = new Map(
+    categoryRows.map((record) => [record.name, record.id]),
+  );
+
   const equipmentMap = new Map<string, string>();
   for (const name of EQUIPMENT_NAMES) {
-    const displayName = capitalize(name);
-    const existing = await db.query.equipment.findFirst({
-      where: eq(schema.equipment.name, displayName),
-    });
-    if (existing) {
-      equipmentMap.set(name, existing.id);
-    } else {
-      const id = nanoid();
-      await db.insert(schema.equipment).values({
-        id,
-        name: displayName,
-      });
+    const id = equipmentByName.get(capitalize(name));
+    if (id) {
       equipmentMap.set(name, id);
-      // oxlint-disable-next-line no-console
-      console.log(`Created equipment: ${displayName}`);
     }
   }
-  // oxlint-disable-next-line no-console
-  console.log("Seeding muscle groups...");
+
   const muscleGroupMap = new Map<string, string>();
   for (const name of MUSCLE_GROUP_NAMES) {
-    const displayName = capitalize(name);
-    const existing = await db.query.muscleGroups.findFirst({
-      where: eq(schema.muscleGroups.name, displayName),
-    });
-    if (existing) {
-      muscleGroupMap.set(name, existing.id);
-    } else {
-      const id = nanoid();
-      await db.insert(schema.muscleGroups).values({
-        id,
-        name: displayName,
-      });
+    const id = muscleGroupByName.get(capitalize(name));
+    if (id) {
       muscleGroupMap.set(name, id);
-      // oxlint-disable-next-line no-console
-      console.log(`Created muscle group: ${displayName}`);
     }
   }
-  // oxlint-disable-next-line no-console
-  console.log("Seeding categories...");
+
   const categoryMap = new Map<string, string>();
   for (const name of CATEGORY_NAMES) {
-    const displayName = capitalize(name);
-    const existing = await db.query.categories.findFirst({
-      where: eq(schema.categories.name, displayName),
-    });
-    if (existing) {
-      categoryMap.set(name, existing.id);
-    } else {
-      const id = nanoid();
-      await db.insert(schema.categories).values({
-        id,
-        name: displayName,
-      });
+    const id = categoryByName.get(capitalize(name));
+    if (id) {
       categoryMap.set(name, id);
-      // oxlint-disable-next-line no-console
-      console.log(`Created category: ${displayName}`);
     }
   }
+
   return {
     equipment: equipmentMap,
     muscleGroups: muscleGroupMap,
@@ -244,13 +224,18 @@ async function seedExercises(lookups: LookupMaps) {
   await ensureUploadDir();
   let count = 0;
   let skipped = 0;
-  let imageCount = 0;
+  const existingExercises = await db.select().from(schema.exercises);
+  const existingExerciseNames = new Set(
+    existingExercises.map((exercise) => exercise.name),
+  );
+  const imageJobs: Array<{
+    imageUrl: string;
+    exerciseId: string;
+    order: number;
+  }> = [];
+
   for (const exercise of rawExercises) {
-    // Check if exercise already exists
-    const existing = await db.query.exercises.findFirst({
-      where: eq(schema.exercises.name, exercise.name),
-    });
-    if (existing) {
+    if (existingExerciseNames.has(exercise.name)) {
       skipped += 1;
       continue;
     }
@@ -272,62 +257,106 @@ async function seedExercises(lookups: LookupMaps) {
       mechanic: exercise.mechanic || null,
       categoryId,
     });
-    // Create primary muscles
-    for (const muscle of exercise.primaryMuscles) {
+    const primaryMuscleRows = exercise.primaryMuscles.flatMap((muscle) => {
       const muscleGroupId = lookups.muscleGroups.get(muscle);
-      if (muscleGroupId) {
-        await db.insert(schema.exercisePrimaryMuscles).values({
-          id: nanoid(),
-          exerciseId,
-          muscleGroupId,
-        });
+      if (!muscleGroupId) {
+        return [];
       }
+      return [{ id: nanoid(), exerciseId, muscleGroupId }];
+    });
+    if (primaryMuscleRows.length > 0) {
+      await db.insert(schema.exercisePrimaryMuscles).values(primaryMuscleRows);
     }
-    // Create secondary muscles
-    for (const muscle of exercise.secondaryMuscles) {
+
+    const secondaryMuscleRows = exercise.secondaryMuscles.flatMap((muscle) => {
       const muscleGroupId = lookups.muscleGroups.get(muscle);
-      if (muscleGroupId) {
-        await db.insert(schema.exerciseSecondaryMuscles).values({
-          id: nanoid(),
-          exerciseId,
-          muscleGroupId,
-        });
+      if (!muscleGroupId) {
+        return [];
       }
+      return [{ id: nanoid(), exerciseId, muscleGroupId }];
+    });
+    if (secondaryMuscleRows.length > 0) {
+      await db
+        .insert(schema.exerciseSecondaryMuscles)
+        .values(secondaryMuscleRows);
     }
-    // Create instructions
-    for (let i = 0; i < exercise.instructions.length; i += 1) {
-      await db.insert(schema.exerciseInstructions).values({
-        id: nanoid(),
-        exerciseId,
-        order: i,
-        instruction: exercise.instructions[i],
-      });
+
+    const instructionRows = exercise.instructions.map((instruction, index) => ({
+      id: nanoid(),
+      exerciseId,
+      order: index,
+      instruction,
+    }));
+    if (instructionRows.length > 0) {
+      await db.insert(schema.exerciseInstructions).values(instructionRows);
     }
-    // Download and create images
+    // Queue images for bounded parallel download after exercise rows exist.
     if (exercise.images && exercise.images.length > 0) {
       for (let i = 0; i < exercise.images.length; i += 1) {
         const imagePath = exercise.images[i];
         const imageUrl = `${IMAGE_BASE_URL}/${imagePath}`;
-        const localPath = await downloadImage(imageUrl, exerciseId, i);
-        if (localPath) {
-          await db.insert(schema.exerciseImages).values({
-            id: nanoid(),
-            exerciseId,
-            order: i,
-            path: localPath,
-          });
-          imageCount += 1;
-        }
+        imageJobs.push({ imageUrl, exerciseId, order: i });
       }
     }
+    existingExerciseNames.add(exercise.name);
     count += 1;
     if (count % 50 === 0) {
       // oxlint-disable-next-line no-console
       console.log(
-        `  Progress: ${count} exercises seeded, ${imageCount}/${totalImages} images downloaded`,
+        `  Progress: ${count} exercises seeded, ${imageJobs.length} images queued`,
       );
     }
   }
+
+  // oxlint-disable-next-line no-console
+  console.log(
+    `Downloading ${imageJobs.length} images with concurrency ${IMAGE_DOWNLOAD_CONCURRENCY}...`,
+  );
+  let completedImageJobs = 0;
+
+  const downloadedImageRows = await mapWithConcurrencyLimit(
+    imageJobs,
+    IMAGE_DOWNLOAD_CONCURRENCY,
+    async (job) => {
+      const localPath = await downloadImage(
+        job.imageUrl,
+        job.exerciseId,
+        job.order,
+      );
+      completedImageJobs += 1;
+      if (
+        completedImageJobs % 100 === 0 ||
+        completedImageJobs === imageJobs.length
+      ) {
+        // oxlint-disable-next-line no-console
+        console.log(
+          `  Image progress: ${completedImageJobs}/${imageJobs.length} processed`,
+        );
+      }
+
+      if (!localPath) {
+        return undefined;
+      }
+
+      return {
+        id: nanoid(),
+        exerciseId: job.exerciseId,
+        order: job.order,
+        path: localPath,
+      } satisfies ExerciseImageInsert;
+    },
+  );
+
+  const imageRows = downloadedImageRows.filter(
+    (row): row is ExerciseImageInsert => row !== undefined,
+  );
+
+  for (let i = 0; i < imageRows.length; i += IMAGE_INSERT_CHUNK_SIZE) {
+    const chunk = imageRows.slice(i, i + IMAGE_INSERT_CHUNK_SIZE);
+    await db.insert(schema.exerciseImages).values(chunk);
+  }
+
+  const imageCount = imageRows.length;
   if (skipped > 0) {
     // oxlint-disable-next-line no-console
     console.log(`Skipped ${skipped} exercises (already exist).`);
@@ -381,8 +410,8 @@ async function seedAdminUser() {
 async function main() {
   // oxlint-disable-next-line no-console
   console.log("Starting database seed...");
-  // Push schema first to ensure tables exist
-  pushSchema();
+  // oxlint-disable-next-line no-console
+  console.log("Assuming migrations already ran (bun run db:migrate).");
   // oxlint-disable-next-line no-console
   console.log("Downloading exercise images from GitHub...");
   try {
