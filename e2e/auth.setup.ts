@@ -41,7 +41,9 @@ setup("authenticate", async ({ page }) => {
   await page.getByRole("button", { name: /login/i }).click();
 
   // Wait for dashboard content
-  await expect(page.getByText(/welcome back/i)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/welcome back/i)).toBeVisible({
+    timeout: 30_000,
+  });
 
   // Save storage state for reuse
   await page.context().storageState({ path: authFile });

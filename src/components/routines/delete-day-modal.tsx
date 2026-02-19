@@ -1,34 +1,46 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useDeleteRoutineDay } from "@/hooks";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useState } from "react";
-export const DeleteDayModal = ({ open, onClose, dayId, onSuccess, }: {
-    open: boolean;
-    onClose: () => void;
-    dayId: string;
-    onSuccess?: () => void;
+export const DeleteDayModal = ({
+  open,
+  onClose,
+  dayId,
+  onSuccess,
+}: {
+  open: boolean;
+  onClose: () => void;
+  dayId: string;
+  onSuccess?: () => void;
 }): any => {
-    const [isPending, setIsPending] = useState(false);
-    const deleteDayMutation = useDeleteRoutineDay();
-    const handleDelete = async () => {
-        setIsPending(true);
-        try {
-            await deleteDayMutation.mutateAsync(dayId);
-            onClose();
-            onSuccess?.();
-        }
-        finally {
-            setIsPending(false);
-        }
-    };
-    return (<Dialog open={open} onOpenChange={() => onClose()}>
+  const [isPending, setIsPending] = useState(false);
+  const deleteDayMutation = useDeleteRoutineDay();
+  const handleDelete = async () => {
+    setIsPending(true);
+    try {
+      await deleteDayMutation.mutateAsync(dayId);
+      onClose();
+      onSuccess?.();
+    } finally {
+      setIsPending(false);
+    }
+  };
+  return (
+    <Dialog open={open} onOpenChange={() => onClose()}>
       <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden">
         {/* Header with warning styling */}
         <DialogHeader className="px-6 pt-6 pb-4 bg-linear-to-br from-destructive/10 via-transparent to-transparent">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
-              <AlertTriangle className="h-5 w-5 text-destructive"/>
+              <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
             <div>
               <DialogTitle className="text-xl">Delete Workout Day</DialogTitle>
@@ -52,15 +64,25 @@ export const DeleteDayModal = ({ open, onClose, dayId, onSuccess, }: {
           <Button variant="ghost" onClick={onClose} className="mr-2">
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={isPending} className="min-w-[100px]">
-            {isPending ? (<>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isPending}
+            className="min-w-[100px]"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Deleting...
-              </>) : ("Delete Day")}
+              </>
+            ) : (
+              "Delete Day"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>);
+    </Dialog>
+  );
 };
 
 export default DeleteDayModal;

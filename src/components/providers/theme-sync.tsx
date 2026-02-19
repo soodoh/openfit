@@ -7,15 +7,15 @@ import { useEffect } from "react";
  * This runs when the user is authenticated and their profile is loaded.
  */
 export function ThemeSync(): any {
-    const { isAuthenticated } = useAuth();
-    const { data: profile } = useUserProfile();
-    const { setTheme } = useTheme();
-    useEffect(() => {
-        if (isAuthenticated && profile?.theme) {
-            setTheme(profile.theme);
-        }
-    }, [isAuthenticated, profile?.theme, setTheme]);
-    return null;
+  const { isAuthenticated } = useAuth();
+  const { data: profile } = useUserProfile();
+  const { setTheme } = useTheme();
+  useEffect(() => {
+    if (isAuthenticated && profile?.theme) {
+      setTheme(profile.theme);
+    }
+  }, [isAuthenticated, profile?.theme, setTheme]);
+  return null;
 }
 
 export default ThemeSync;

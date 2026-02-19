@@ -39,22 +39,22 @@ export const auth = betterAuth({
       },
     }),
   },
-  plugins: (process.env.AUTH_OIDC_CLIENT_ID
-      ? [
-          genericOAuth({
-            config: [
-              {
-                providerId: "oidc",
-                clientId: process.env.AUTH_OIDC_CLIENT_ID,
-                clientSecret: process.env.AUTH_OIDC_CLIENT_SECRET!,
-                discoveryUrl: `${process.env.AUTH_OIDC_ISSUER}/.well-known/openid-configuration`,
-                scopes: ["openid", "email", "profile"],
-                pkce: true,
-              },
-            ],
-          }),
-        ]
-      : []),
+  plugins: process.env.AUTH_OIDC_CLIENT_ID
+    ? [
+        genericOAuth({
+          config: [
+            {
+              providerId: "oidc",
+              clientId: process.env.AUTH_OIDC_CLIENT_ID,
+              clientSecret: process.env.AUTH_OIDC_CLIENT_SECRET!,
+              discoveryUrl: `${process.env.AUTH_OIDC_ISSUER}/.well-known/openid-configuration`,
+              scopes: ["openid", "email", "profile"],
+              pkce: true,
+            },
+          ],
+        }),
+      ]
+    : [],
   user: {
     additionalFields: {},
   },

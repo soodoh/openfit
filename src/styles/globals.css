@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -179,7 +179,7 @@
     --pale-dogwood: #c9ada7;
     --isabelline: #f2e9e4;
     --max-width: 1320px;
-    
+
     /* shadcn/ui color system */
     --background: 43 26% 94%; /* isabelline */
     --foreground: 244 27% 18%; /* space-cadet */

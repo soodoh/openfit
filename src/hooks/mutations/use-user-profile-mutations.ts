@@ -1,43 +1,43 @@
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 type UpdateUserProfileInput = {
-    theme?: "light" | "dark" | "system";
-    defaultRepetitionUnitId?: string;
-    defaultWeightUnitId?: string;
-    defaultGymId?: string | undefined;
+  theme?: "light" | "dark" | "system";
+  defaultRepetitionUnitId?: string;
+  defaultWeightUnitId?: string;
+  defaultGymId?: string | undefined;
 };
 // Update user profile
 async function updateUserProfile(input: UpdateUserProfileInput) {
-    const response = await fetch("/api/user-profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
-    });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update profile");
-    }
-    return response.json();
+  const response = await fetch("/api/user-profile", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to update profile");
+  }
+  return response.json();
 }
 export function useUpdateUserProfile(): any {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: updateUserProfile,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.userProfile.all });
-        },
-    });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateUserProfile,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.userProfile.all });
+    },
+  });
 }
 // Set default gym
 async function setDefaultGym(gymId: string) {
-    return updateUserProfile({ defaultGymId: gymId });
+  return updateUserProfile({ defaultGymId: gymId });
 }
 export function useSetDefaultGym(): any {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: setDefaultGym,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.userProfile.all });
-        },
-    });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: setDefaultGym,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.userProfile.all });
+    },
+  });
 }

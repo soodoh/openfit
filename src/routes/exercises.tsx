@@ -1,8 +1,21 @@
 import { ExerciseCard } from "@/components/exercises/exercise-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCategories, useEquipment, useExercises, useExerciseSearch, useInView, useMuscleGroups } from "@/hooks";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  useCategories,
+  useEquipment,
+  useExercises,
+  useExerciseSearch,
+  useInView,
+  useMuscleGroups,
+} from "@/hooks";
 import type { ExerciseWithImageUrl } from "@/lib/types";
 import { createFileRoute } from "@tanstack/react-router";
 import { Dumbbell, Loader2, Search, X } from "lucide-react";
@@ -51,10 +64,12 @@ function EmptyState(): React.JSX.Element {
       <div className="w-20 h-20 rounded-full bg-linear-to-br from-primary/10 to-accent/20 flex items-center justify-center mb-6">
         <Dumbbell className="w-10 h-10 text-primary/60" />
       </div>
-      <h3 className="text-xl font-semibold text-foreground mb-2">No exercises available</h3>
+      <h3 className="text-xl font-semibold text-foreground mb-2">
+        No exercises available
+      </h3>
       <p className="text-muted-foreground text-center max-w-md">
-        Exercise library is empty. Contact your administrator to seed the exercise
-        database.
+        Exercise library is empty. Contact your administrator to seed the
+        exercise database.
       </p>
     </div>
   );
@@ -106,7 +121,9 @@ function ExercisesFilters({
     <div className="mt-4 flex flex-wrap items-center gap-3">
       <Select
         value={equipmentId ?? ""}
-        onValueChange={(value) => onEquipmentChange(value === "" ? undefined : value)}
+        onValueChange={(value) =>
+          onEquipmentChange(value === "" ? undefined : value)
+        }
       >
         <SelectTrigger className="w-[150px]">
           <SelectValue placeholder="Equipment" />
@@ -122,7 +139,9 @@ function ExercisesFilters({
 
       <Select
         value={level ?? ""}
-        onValueChange={(value) => onLevelChange(value === "" ? undefined : (value as Level))}
+        onValueChange={(value) =>
+          onLevelChange(value === "" ? undefined : (value as Level))
+        }
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Level" />
@@ -138,7 +157,9 @@ function ExercisesFilters({
 
       <Select
         value={categoryId ?? ""}
-        onValueChange={(value) => onCategoryChange(value === "" ? undefined : value)}
+        onValueChange={(value) =>
+          onCategoryChange(value === "" ? undefined : value)
+        }
       >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Category" />
@@ -154,7 +175,9 @@ function ExercisesFilters({
 
       <Select
         value={primaryMuscleId ?? ""}
-        onValueChange={(value) => onPrimaryMuscleChange(value === "" ? undefined : value)}
+        onValueChange={(value) =>
+          onPrimaryMuscleChange(value === "" ? undefined : value)
+        }
       >
         <SelectTrigger className="w-[150px]">
           <SelectValue placeholder="Muscle" />
@@ -287,7 +310,9 @@ function ExercisesContent(): React.JSX.Element {
   const [equipmentId, setEquipmentId] = useState<string | undefined>(undefined);
   const [level, setLevel] = useState<Level | undefined>(undefined);
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
-  const [primaryMuscleId, setPrimaryMuscleId] = useState<string | undefined>(undefined);
+  const [primaryMuscleId, setPrimaryMuscleId] = useState<string | undefined>(
+    undefined,
+  );
 
   const { data: equipmentOptions = [] } = useEquipment();
   const { data: categoryOptions = [] } = useCategories();
@@ -326,11 +351,8 @@ function ExercisesContent(): React.JSX.Element {
     return exercisesData.pages.flatMap((page) => page.page);
   }, [exercisesData]);
 
-  const { data: searchResults = [], isLoading: searchLoading } = useExerciseSearch(
-    isSearching ? searchQuery : "",
-    undefined,
-    50,
-  );
+  const { data: searchResults = [], isLoading: searchLoading } =
+    useExerciseSearch(isSearching ? searchQuery : "", undefined, 50);
 
   const displayExercises = isSearching ? searchResults : exercises;
   const isLoading = isSearching ? searchLoading : exercisesLoading;
@@ -355,7 +377,9 @@ function ExercisesContent(): React.JSX.Element {
         <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-(--breakpoint-xl) py-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">Exercises</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                Exercises
+              </h1>
               <p className="text-muted-foreground mt-1">
                 Browse and discover exercises for your workouts
               </p>

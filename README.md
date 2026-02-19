@@ -92,6 +92,7 @@ bun run changeset
 ```
 
 You'll be prompted to:
+
 1. Select the type of change: `patch` (bug fix), `minor` (new feature), or `major` (breaking change)
 2. Write a summary of your changes
 
@@ -114,6 +115,7 @@ Releases are automated via GitHub Actions:
 ### Docker Image Tags
 
 Docker images are tagged with:
+
 - `latest` - Most recent main branch build
 - `x.y.z` - Semantic version from package.json (e.g., `1.2.0`)
 - `vx.y.z` - Version tags (e.g., `v1.2.0`)
