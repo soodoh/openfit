@@ -1,13 +1,14 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface UpdateUserRoleInput {
+type UpdateUserRoleInput = {
   id: string;
   role: "USER" | "ADMIN";
 }
 
-interface CreateExerciseInput {
+type CreateExerciseInput = {
   name: string;
   level: "beginner" | "intermediate" | "expert";
   force?: "push" | "pull" | "static" | null;
@@ -20,22 +21,22 @@ interface CreateExerciseInput {
   imageUrls: string[];
 }
 
-interface UpdateExerciseInput extends CreateExerciseInput {
+type UpdateExerciseInput = {
   id: string;
-}
+} & CreateExerciseInput
 
-interface CreateLookupInput {
+type CreateLookupInput = {
   type: string;
   name: string;
 }
 
-interface UpdateLookupInput {
+type UpdateLookupInput = {
   id: string;
   type: string;
   name: string;
 }
 
-interface DeleteLookupInput {
+type DeleteLookupInput = {
   id: string;
   type: string;
 }

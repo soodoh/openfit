@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export) */
 // Query key factory for TanStack React Query
 // Following the recommended pattern from TanStack docs
 

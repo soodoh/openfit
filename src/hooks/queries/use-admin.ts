@@ -1,20 +1,21 @@
+/* eslint-disable typescript-eslint(array-type), typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-interface UserWithProfile {
+type UserWithProfile = {
   id: string;
   userId: string;
   email: string;
   role: "USER" | "ADMIN";
 }
 
-interface MuscleInfo {
+type MuscleInfo = {
   id: string;
   name: string;
 }
 
-interface ExerciseWithRelations {
+type ExerciseWithRelations = {
   id: string;
   name: string;
   level: "beginner" | "intermediate" | "expert";
@@ -32,19 +33,19 @@ interface ExerciseWithRelations {
   secondaryMuscles: MuscleInfo[];
 }
 
-interface LookupItem {
+type LookupItem = {
   id: string;
   name: string;
 }
 
-interface PaginatedResponse<T> {
+type PaginatedResponse<T> = {
   items: T[];
   total: number;
   page: number;
   pageSize: number;
 }
 
-interface AdminPaginationParams {
+type AdminPaginationParams = {
   page: number;
   pageSize: number;
   search?: string;

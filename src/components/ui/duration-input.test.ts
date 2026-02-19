@@ -42,7 +42,7 @@ describe("parseDurationToSeconds", () => {
 
     it("handles large minute values", () => {
       expect(parseDurationToSeconds("120:00")).toBe(7200);
-      expect(parseDurationToSeconds("999:59")).toBe(59999);
+      expect(parseDurationToSeconds("999:59")).toBe(59_999);
     });
   });
 

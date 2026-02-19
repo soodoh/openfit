@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-jest(no-conditional-in-test) */
 import { describe, expect, it } from "vitest";
 import { cn } from "./utils";
 

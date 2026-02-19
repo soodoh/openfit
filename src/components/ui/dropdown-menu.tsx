@@ -1,3 +1,4 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types) */
 
 import { cn } from "@/lib/utils";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";

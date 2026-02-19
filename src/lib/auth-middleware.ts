@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-unicorn(prefer-response-static-json), typescript-eslint(explicit-module-boundary-types) */
 import { db } from "@/db";
 import { userProfiles } from "@/db/schema";
 import { auth } from "@/lib/auth";

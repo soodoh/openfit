@@ -1,8 +1,9 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface CreateSetInput {
+type CreateSetInput = {
   setGroupId: string;
   exerciseId: string;
   type?: "NORMAL" | "WARMUP" | "DROPSET" | "FAILURE";
@@ -13,7 +14,7 @@ interface CreateSetInput {
   restTime?: number;
 }
 
-interface UpdateSetInput {
+type UpdateSetInput = {
   id: string;
   type?: "NORMAL" | "WARMUP" | "DROPSET" | "FAILURE";
   reps?: number;
@@ -24,7 +25,7 @@ interface UpdateSetInput {
   completed?: boolean;
 }
 
-interface ReorderSetsInput {
+type ReorderSetsInput = {
   setGroupId: string;
   setIds: string[];
 }

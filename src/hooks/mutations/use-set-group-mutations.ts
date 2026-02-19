@@ -1,8 +1,9 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface CreateSetGroupInput {
+type CreateSetGroupInput = {
   sessionId?: string;
   routineDayId?: string;
   type?: "NORMAL" | "SUPERSET";
@@ -10,22 +11,22 @@ interface CreateSetGroupInput {
   numSets?: number;
 }
 
-interface UpdateSetGroupInput {
+type UpdateSetGroupInput = {
   id: string;
   type?: "NORMAL" | "SUPERSET";
   comment?: string;
 }
 
-interface ReorderSetGroupsInput {
+type ReorderSetGroupsInput = {
   setGroupIds: string[];
 }
 
-interface ReplaceExerciseInput {
+type ReplaceExerciseInput = {
   id: string;
   exerciseId: string;
 }
 
-interface BulkEditInput {
+type BulkEditInput = {
   id: string;
   reps?: number;
   weight?: number;

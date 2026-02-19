@@ -1,3 +1,4 @@
+/* eslint-disable eslint(no-console), eslint(radix), eslint-plugin-import(prefer-default-export), oxc(no-map-spread) */
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -17,7 +18,7 @@ export const Route = createFileRoute('/api/routine-days')({
 
         const { searchParams } = new URL(request.url);
         const searchTerm = searchParams.get("search") || "";
-        const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 50);
+        const limit = Math.min(Number.parseInt(searchParams.get("limit") || "10"), 50);
 
         // Build query conditions
         const conditions = [eq(schema.routineDays.userId, session.user.id)];
@@ -49,7 +50,7 @@ export const Route = createFileRoute('/api/routine-days')({
         try {
           session = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 

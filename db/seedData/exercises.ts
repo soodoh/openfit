@@ -1,3 +1,4 @@
+/* eslint-disable typescript-eslint(no-restricted-types) */
 type Muscle =
   | "abdominals"
   | "abductors"

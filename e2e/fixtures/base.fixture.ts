@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-react-hooks(rules-of-hooks) */
 import { DashboardPage } from "@/e2e/pages/dashboard.page";
 import { ExercisesPage } from "@/e2e/pages/exercises.page";
 import { LoginPage } from "@/e2e/pages/login.page";
@@ -9,7 +10,7 @@ import { test as base } from "@playwright/test";
 /**
  * Type definitions for page fixtures
  */
-export interface PageFixtures {
+export type PageFixtures = {
   loginPage: LoginPage;
   dashboardPage: DashboardPage;
   routinesPage: RoutinesPage;

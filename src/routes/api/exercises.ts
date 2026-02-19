@@ -1,3 +1,4 @@
+/* eslint-disable eslint(no-console), eslint(no-plusplus), eslint(radix), eslint-plugin-import(prefer-default-export), oxc(no-map-spread), typescript-eslint(no-restricted-types) */
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -17,7 +18,7 @@ async function getFirstImageUrl(exerciseId: string): Promise<string | null> {
 // Helper to add first image URL to exercises list
 async function withFirstImageUrls<T extends { id: string }>(
   exercises: T[],
-): Promise<(T & { imageUrl: string | null })[]> {
+): Promise<Array<T & { imageUrl: string | null }>> {
   const results = [];
   for (const exercise of exercises) {
     const imageUrl = await getFirstImageUrl(exercise.id);
@@ -35,7 +36,7 @@ export const Route = createFileRoute('/api/exercises')({
 
         // Pagination
         const cursor = searchParams.get("cursor");
-        const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
+        const limit = Math.min(Number.parseInt(searchParams.get("limit") || "20"), 100);
 
         // Filters
         const searchTerm = searchParams.get("search") || "";
@@ -50,7 +51,7 @@ export const Route = createFileRoute('/api/exercises')({
         const primaryMuscleId = searchParams.get("primaryMuscleId");
 
         // Build query conditions
-        const conditions: ReturnType<typeof eq>[] = [];
+        const conditions: Array<ReturnType<typeof eq>> = [];
 
         if (equipmentId) {
           conditions.push(eq(schema.exercises.equipmentId, equipmentId));
@@ -70,7 +71,7 @@ export const Route = createFileRoute('/api/exercises')({
           where: conditions.length > 0 ? and(...conditions) : undefined,
           orderBy: asc(schema.exercises.name),
           limit: limit + 1,
-          offset: cursor ? parseInt(cursor) : 0,
+          offset: cursor ? Number.parseInt(cursor) : 0,
           with: {
             equipment: true,
             category: true,
@@ -91,7 +92,7 @@ export const Route = createFileRoute('/api/exercises')({
         if (equipmentIds.length > 0) {
           exercises = exercises.filter((e) => {
             // Bodyweight exercises (no equipment) are always included
-            if (!e.equipmentId) return true;
+            if (!e.equipmentId) {return true;}
             return equipmentIds.includes(e.equipmentId);
           });
         }
@@ -116,7 +117,7 @@ export const Route = createFileRoute('/api/exercises')({
           page,
           isDone: !hasMore,
           continueCursor: hasMore
-            ? String((cursor ? parseInt(cursor) : 0) + limit)
+            ? String((cursor ? Number.parseInt(cursor) : 0) + limit)
             : null,
         });
       },
@@ -126,7 +127,7 @@ export const Route = createFileRoute('/api/exercises')({
         try {
           await requireAdmin(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 

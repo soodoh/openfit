@@ -1,12 +1,9 @@
+/* eslint-disable eslint-plugin-import(no-duplicates), typescript-eslint(array-type), typescript-eslint(no-restricted-types) */
 // Type definitions for the application
 // Re-exports Drizzle schema types and defines API response shapes
 
-import {
-  type SetGroupType as _SetGroupType,
-  type SetType as _SetType,
-  SetGroupTypeEnum,
-  SetTypeEnum,
-} from "@/db/schema";
+import { SetGroupTypeEnum, SetTypeEnum } from '@/db/schema';
+import type { SetGroupType as _SetGroupType, SetType as _SetType } from '@/db/schema';
 import type {
   Exercise as DbExercise,
   Gym as DbGym,
@@ -27,38 +24,38 @@ export const SetGroupType = SetGroupTypeEnum;
 export type SetGroupType = _SetGroupType;
 
 // Reference types — optional createdAt since API responses may omit it
-export interface RepetitionUnit {
+export type RepetitionUnit = {
   id: string;
   name: string;
   createdAt?: Date;
 }
 
-export interface WeightUnit {
+export type WeightUnit = {
   id: string;
   name: string;
   createdAt?: Date;
 }
 
-export interface Equipment {
+export type Equipment = {
   id: string;
   name: string;
   createdAt?: Date;
 }
 
-export interface MuscleGroup {
+export type MuscleGroup = {
   id: string;
   name: string;
   createdAt?: Date;
 }
 
-export interface Category {
+export type Category = {
   id: string;
   name: string;
   createdAt?: Date;
 }
 
 // Workout set group/set — defined to match API response shape (no createdAt/updatedAt)
-export interface WorkoutSetGroup {
+export type WorkoutSetGroup = {
   id: string;
   userId: string;
   routineDayId: string | null;
@@ -68,7 +65,7 @@ export interface WorkoutSetGroup {
   comment: string | null;
 }
 
-export interface WorkoutSet {
+export type WorkoutSet = {
   id: string;
   userId: string;
   setGroupId: string;
@@ -84,21 +81,21 @@ export interface WorkoutSet {
 }
 
 // Extended types for API response shapes (computed fields from junction tables)
-export interface Exercise extends DbExercise {
+export type Exercise = {
   imageUrl?: string | null;
   primaryMuscleIds?: string[];
   secondaryMuscleIds?: string[];
   instructions?: string[];
   imageUrls?: (string | null)[];
-}
+} & DbExercise
 
-export interface RoutineDay extends DbRoutineDay {
+export type RoutineDay = {
   weekdays: number[];
-}
+} & DbRoutineDay
 
-export interface Gym extends DbGym {
+export type Gym = {
   equipmentIds: string[];
-}
+} & DbGym
 
 // View mode constant (UI-only, not in DB)
 export const ListView = {
@@ -123,20 +120,20 @@ export type CategoryId = string;
 export type GymId = string;
 
 // Exercise with first image URL (for list views)
-export interface ExerciseWithImageUrl extends Exercise {
+export type ExerciseWithImageUrl = {
   imageUrl: string | null;
-}
+} & Exercise
 
 // Complex types with relations
-export interface RoutineWithDays extends Routine {
+export type RoutineWithDays = {
   routineDays: RoutineDay[];
-}
+} & Routine
 
-export interface RoutineDayWithRoutine extends RoutineDay {
+export type RoutineDayWithRoutine = {
   routine: { id: string; name: string } | null;
-}
+} & RoutineDay
 
-export interface WorkoutSetWithRelations extends WorkoutSet {
+export type WorkoutSetWithRelations = {
   exercise: {
     id: string;
     name: string;
@@ -144,20 +141,20 @@ export interface WorkoutSetWithRelations extends WorkoutSet {
   } | null;
   repetitionUnit: { id: string; name: string } | null;
   weightUnit: { id: string; name: string } | null;
-}
+} & WorkoutSet
 
-export interface WorkoutSetGroupWithSets extends WorkoutSetGroup {
+export type WorkoutSetGroupWithSets = {
   sets: WorkoutSetWithRelations[];
-}
+} & WorkoutSetGroup
 
-export interface RoutineDayWithData extends RoutineDay {
+export type RoutineDayWithData = {
   routine: { id: string; name: string } | null;
   setGroups: WorkoutSetGroupWithSets[];
-}
+} & RoutineDay
 
-export interface WorkoutSessionWithData extends WorkoutSession {
+export type WorkoutSessionWithData = {
   setGroups: WorkoutSetGroupWithSets[];
-}
+} & WorkoutSession
 
 // Minimal session data for calendar cards
 export type WorkoutSessionSummary = Pick<
@@ -165,7 +162,7 @@ export type WorkoutSessionSummary = Pick<
   "id" | "createdAt" | "name" | "startTime" | "endTime" | "impression"
 >;
 
-export interface Units {
+export type Units = {
   repetitionUnits: RepetitionUnit[];
   weightUnits: WeightUnit[];
 }

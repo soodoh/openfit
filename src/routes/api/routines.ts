@@ -1,3 +1,4 @@
+/* eslint-disable eslint(no-console), eslint(radix), eslint-plugin-import(prefer-default-export), oxc(no-map-spread) */
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -29,13 +30,13 @@ export const Route = createFileRoute('/api/routines')({
         try {
           session = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const { searchParams } = new URL(request.url);
         const cursor = searchParams.get("cursor");
-        const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
+        const limit = Math.min(Number.parseInt(searchParams.get("limit") || "20"), 100);
         const searchTerm = searchParams.get("search") || "";
 
         // Build query conditions
@@ -49,7 +50,7 @@ export const Route = createFileRoute('/api/routines')({
           where: and(...conditions),
           orderBy: desc(schema.routines.updatedAt),
           limit: limit + 1,
-          offset: cursor ? parseInt(cursor) : 0,
+          offset: cursor ? Number.parseInt(cursor) : 0,
         });
 
         // Check if there are more results
@@ -71,7 +72,7 @@ export const Route = createFileRoute('/api/routines')({
           page: routinesWithDays,
           isDone: !hasMore,
           continueCursor: hasMore
-            ? String((cursor ? parseInt(cursor) : 0) + limit)
+            ? String((cursor ? Number.parseInt(cursor) : 0) + limit)
             : null,
         });
       },
@@ -82,7 +83,7 @@ export const Route = createFileRoute('/api/routines')({
         try {
           session = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 

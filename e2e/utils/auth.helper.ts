@@ -1,4 +1,6 @@
-import { expect, Page } from "@playwright/test";
+/* eslint-disable typescript-eslint(no-use-before-define) */
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 /**
  * Authentication helper utilities for E2E tests
@@ -16,7 +18,7 @@ export async function loginAsTestUser(page: Page): Promise<void> {
 
   // Wait for login form
   await expect(page.getByRole("button", { name: /login/i })).toBeVisible({
-    timeout: 15000,
+    timeout: 15_000,
   });
 
   // Fill credentials
@@ -27,8 +29,8 @@ export async function loginAsTestUser(page: Page): Promise<void> {
   await page.getByRole("button", { name: /login/i }).click();
 
   // Wait for successful login
-  await expect(page).toHaveURL("/", { timeout: 15000 });
-  await expect(page.getByText(/welcome back/i)).toBeVisible({ timeout: 10000 });
+  await expect(page).toHaveURL("/", { timeout: 15_000 });
+  await expect(page.getByText(/welcome back/i)).toBeVisible({ timeout: 10_000 });
 }
 
 /**
@@ -52,7 +54,7 @@ export async function logout(page: Page): Promise<void> {
   }
 
   // Verify logged out
-  await expect(page).toHaveURL("/signin", { timeout: 10000 });
+  await expect(page).toHaveURL("/signin", { timeout: 10_000 });
 }
 
 /**

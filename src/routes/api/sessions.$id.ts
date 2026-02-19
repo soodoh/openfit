@@ -1,3 +1,4 @@
+/* eslint-disable eslint(no-console), eslint-plugin-import(prefer-default-export), oxc(no-map-spread), typescript-eslint(no-restricted-types) */
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -19,7 +20,7 @@ async function getSessionWithData(sessionId: string) {
     where: eq(schema.workoutSessions.id, sessionId),
   });
 
-  if (!session) return null;
+  if (!session) {return null;}
 
   const setGroups = await db.query.workoutSetGroups.findMany({
     where: eq(schema.workoutSetGroups.sessionId, sessionId),
@@ -72,7 +73,7 @@ export const Route = createFileRoute('/api/sessions/$id')({
         try {
           authSession = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -100,7 +101,7 @@ export const Route = createFileRoute('/api/sessions/$id')({
         try {
           authSession = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -153,7 +154,7 @@ export const Route = createFileRoute('/api/sessions/$id')({
         try {
           authSession = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 

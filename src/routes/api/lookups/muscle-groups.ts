@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export) */
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { createFileRoute } from "@tanstack/react-router";

@@ -1,3 +1,4 @@
+/* eslint-disable eslint(no-plusplus), eslint-plugin-import(prefer-default-export), eslint-plugin-react(no-array-index-key), typescript-eslint(explicit-module-boundary-types) */
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -10,7 +11,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
-interface PaginationProps {
+type PaginationProps = {
   currentPage: number;
   totalPages: number;
   startIndex: number;
@@ -26,12 +27,12 @@ interface PaginationProps {
 function getPageNumbers(
   currentPage: number,
   totalPages: number,
-): (number | "ellipsis")[] {
+): Array<number | "ellipsis"> {
   if (totalPages <= 5) {
     return Array.from({ length: totalPages }, (_, i) => i + 1);
   }
 
-  const pages: (number | "ellipsis")[] = [1];
+  const pages: Array<number | "ellipsis"> = [1];
 
   if (currentPage > 3) {
     pages.push("ellipsis");

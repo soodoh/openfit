@@ -1,9 +1,10 @@
+/* eslint-disable eslint(no-console), eslint(no-negated-condition), eslint(no-plusplus), eslint-plugin-unicorn(no-process-exit), eslint-plugin-unicorn(prefer-top-level-await), typescript-eslint(no-restricted-types) */
 import { auth } from "@/lib/auth";
-import { execSync } from "child_process";
+import { execSync } from "node:child_process";
 import { eq } from "drizzle-orm";
-import fs from "fs/promises";
+import fs from "node:fs/promises";
 import { nanoid } from "nanoid";
-import path from "path";
+import path from "node:path";
 import { db } from "./index";
 import * as schema from "./schema";
 

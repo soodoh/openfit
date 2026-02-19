@@ -1,6 +1,7 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export), typescript-eslint(explicit-module-boundary-types) */
 import { cn } from "@/lib/utils";
 
-interface ProgressCircleProps {
+type ProgressCircleProps = {
   value: number; // percentage 0-100
   size?: number;
   strokeWidth?: number;

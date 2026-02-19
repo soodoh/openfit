@@ -1,3 +1,4 @@
+/* eslint-disable eslint(no-plusplus), eslint-plugin-import(prefer-default-export) */
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/api/dashboard/stats")({
         try {
           session = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 

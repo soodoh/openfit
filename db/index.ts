@@ -1,10 +1,9 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 import Database from "better-sqlite3";
-import {
-  type BetterSQLite3Database,
-  drizzle,
-} from "drizzle-orm/better-sqlite3";
-import fs from "fs";
-import path from "path";
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import fs from "node:fs";
+import path from "node:path";
 import * as schema from "./schema";
 
 const dbPath =

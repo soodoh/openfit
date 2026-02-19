@@ -1,4 +1,6 @@
-import { expect, Locator, Page } from "@playwright/test";
+/* eslint-disable eslint-plugin-import(prefer-default-export), typescript-eslint(no-restricted-types) */
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -39,7 +41,7 @@ export class WorkoutPage extends BasePage {
 
     // Active session elements
     this.sessionTitle = page.locator('[class*="font-bold"]').first();
-    this.sessionTimer = page.locator("text=/\\d+:\\d+/");
+    this.sessionTimer = page.locator(String.raw`text=/\d+:\d+/`);
     this.finishSessionButton = page.getByRole("button", {
       name: /finish|complete|end/i,
     });
@@ -70,7 +72,7 @@ export class WorkoutPage extends BasePage {
     // Either no active session or active session should be visible
     await expect(
       this.page.locator("text=/no active workout|session|workout/i").first(),
-    ).toBeVisible({ timeout: 15000 });
+    ).toBeVisible({ timeout: 15_000 });
   }
 
   /**

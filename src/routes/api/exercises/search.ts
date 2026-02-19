@@ -1,3 +1,4 @@
+/* eslint-disable eslint(radix), eslint-plugin-import(prefer-default-export), typescript-eslint(no-restricted-types) */
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -21,7 +22,7 @@ export const Route = createFileRoute('/api/exercises/search')({
 
         const searchTerm = searchParams.get("q") || "";
         const equipmentIds = searchParams.getAll("equipmentIds");
-        const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50);
+        const limit = Math.min(Number.parseInt(searchParams.get("limit") || "20"), 50);
 
         // Build query
         let exercises = await db.query.exercises.findMany({
@@ -39,7 +40,7 @@ export const Route = createFileRoute('/api/exercises/search')({
         // Bodyweight exercises (no equipment) are always included
         if (equipmentIds.length > 0) {
           exercises = exercises.filter((e) => {
-            if (!e.equipmentId) return true;
+            if (!e.equipmentId) {return true;}
             return equipmentIds.includes(e.equipmentId);
           });
         }

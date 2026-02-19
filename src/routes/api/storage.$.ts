@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export) */
 import { createFileRoute } from "@tanstack/react-router";
 
 // Development-only: Proxy Convex storage requests to the backend

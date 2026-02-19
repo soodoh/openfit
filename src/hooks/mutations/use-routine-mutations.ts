@@ -1,13 +1,14 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface CreateRoutineInput {
+type CreateRoutineInput = {
   name: string;
   description?: string;
 }
 
-interface UpdateRoutineInput {
+type UpdateRoutineInput = {
   id: string;
   name?: string;
   description?: string;

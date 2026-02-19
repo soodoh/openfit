@@ -1,4 +1,5 @@
-import { ExerciseCard } from "@/components/exercises/ExerciseCard";
+/* eslint-disable eslint(complexity), eslint(no-nested-ternary), eslint-plugin-import(prefer-default-export), typescript-eslint(no-use-before-define) */
+import { ExerciseCard } from "@/components/exercises/exercise-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -89,7 +90,7 @@ function ExercisesContent() {
 
   // Flatten infinite query pages into a single array
   const exercises = useMemo(() => {
-    if (!exercisesData?.pages) return [];
+    if (!exercisesData?.pages) {return [];}
     return exercisesData.pages.flatMap((page) => page.page);
   }, [exercisesData]);
 
@@ -289,7 +290,7 @@ function ExercisesContent() {
         {displayExercises.length > 0 && (
           <p className="text-sm text-muted-foreground mb-6">
             {listCount} {listCount === 1 ? "exercise" : "exercises"}{" "}
-            {isSearching ? "found" : hasFilters ? "found" : "total"}
+            {isSearching ? "found" : (hasFilters ? "found" : "total")}
           </p>
         )}
 

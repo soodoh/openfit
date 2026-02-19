@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export) */
 import { auth } from "@/lib/auth";
 import { createFileRoute } from "@tanstack/react-router";
 

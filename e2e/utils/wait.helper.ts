@@ -1,4 +1,6 @@
-import { expect, Locator, Page } from "@playwright/test";
+/* eslint-disable eslint(no-promise-executor-return) */
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 /**
  * Wait utilities for handling Convex real-time updates and async operations
@@ -7,7 +9,7 @@ import { expect, Locator, Page } from "@playwright/test";
 /**
  * Default timeout for Convex data operations
  */
-const DEFAULT_CONVEX_TIMEOUT = 10000;
+const DEFAULT_CONVEX_TIMEOUT = 10_000;
 
 /**
  * Wait for Convex real-time data to load

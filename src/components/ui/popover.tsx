@@ -1,3 +1,4 @@
+/* eslint-disable typescript-eslint(no-restricted-types) */
 
 import { cn } from "@/lib/utils";
 import * as PopoverPrimitive from "@radix-ui/react-popover";

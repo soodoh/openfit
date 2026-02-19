@@ -1,38 +1,39 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
 
-interface Equipment {
+type Equipment = {
   id: string;
   name: string;
   createdAt: Date;
 }
 
-interface MuscleGroup {
+type MuscleGroup = {
   id: string;
   name: string;
   createdAt: Date;
 }
 
-interface Category {
+type Category = {
   id: string;
   name: string;
   createdAt: Date;
 }
 
-interface RepetitionUnit {
+type RepetitionUnit = {
   id: string;
   name: string;
   createdAt: Date;
 }
 
-interface WeightUnit {
+type WeightUnit = {
   id: string;
   name: string;
   createdAt: Date;
 }
 
-interface Units {
+type Units = {
   repetitionUnits: RepetitionUnit[];
   weightUnits: WeightUnit[];
 }
@@ -40,28 +41,28 @@ interface Units {
 // Fetch equipment
 async function fetchEquipment(): Promise<Equipment[]> {
   const response = await fetch("/api/lookups/equipment");
-  if (!response.ok) throw new Error("Failed to fetch equipment");
+  if (!response.ok) {throw new Error("Failed to fetch equipment");}
   return response.json();
 }
 
 // Fetch muscle groups
 async function fetchMuscleGroups(): Promise<MuscleGroup[]> {
   const response = await fetch("/api/lookups/muscle-groups");
-  if (!response.ok) throw new Error("Failed to fetch muscle groups");
+  if (!response.ok) {throw new Error("Failed to fetch muscle groups");}
   return response.json();
 }
 
 // Fetch categories
 async function fetchCategories(): Promise<Category[]> {
   const response = await fetch("/api/lookups/categories");
-  if (!response.ok) throw new Error("Failed to fetch categories");
+  if (!response.ok) {throw new Error("Failed to fetch categories");}
   return response.json();
 }
 
 // Fetch units
 async function fetchUnits(): Promise<Units> {
   const response = await fetch("/api/lookups/units");
-  if (!response.ok) throw new Error("Failed to fetch units");
+  if (!response.ok) {throw new Error("Failed to fetch units");}
   return response.json();
 }
 
@@ -70,7 +71,7 @@ export function useEquipment() {
   return useQuery({
     queryKey: queryKeys.lookups.equipment(),
     queryFn: fetchEquipment,
-    staleTime: Infinity, // Lookup data rarely changes
+    staleTime: Number.POSITIVE_INFINITY, // Lookup data rarely changes
   });
 }
 
@@ -79,7 +80,7 @@ export function useMuscleGroups() {
   return useQuery({
     queryKey: queryKeys.lookups.muscleGroups(),
     queryFn: fetchMuscleGroups,
-    staleTime: Infinity,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 }
 
@@ -88,7 +89,7 @@ export function useCategories() {
   return useQuery({
     queryKey: queryKeys.lookups.categories(),
     queryFn: fetchCategories,
-    staleTime: Infinity,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 }
 
@@ -97,6 +98,6 @@ export function useUnits() {
   return useQuery({
     queryKey: queryKeys.lookups.units(),
     queryFn: fetchUnits,
-    staleTime: Infinity,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 }

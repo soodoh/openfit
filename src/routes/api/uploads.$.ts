@@ -1,6 +1,7 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export) */
 import { createFileRoute } from "@tanstack/react-router";
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
 
 const UPLOAD_DIR = path.join(process.cwd(), "data", "uploads");
 

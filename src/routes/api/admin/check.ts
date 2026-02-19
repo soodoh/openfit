@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export) */
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -13,7 +14,7 @@ export const Route = createFileRoute('/api/admin/check')({
         try {
           session = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ isAdmin: false }, { status: 401 });
         }
 

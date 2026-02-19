@@ -1,3 +1,4 @@
+/* eslint-disable eslint(no-console), eslint-plugin-import(prefer-default-export), oxc(no-map-spread), typescript-eslint(no-restricted-types) */
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -23,7 +24,7 @@ export const Route = createFileRoute('/api/routine-days/$id')({
         try {
           session = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -97,7 +98,7 @@ export const Route = createFileRoute('/api/routine-days/$id')({
         try {
           session = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -195,7 +196,7 @@ export const Route = createFileRoute('/api/routine-days/$id')({
         try {
           session = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 

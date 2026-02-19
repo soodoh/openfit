@@ -1,8 +1,9 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
 
-interface SetWithRelations {
+type SetWithRelations = {
   id: string;
   userId: string;
   setGroupId: string;
@@ -24,7 +25,7 @@ interface SetWithRelations {
   weightUnit: { id: string; name: string } | null;
 }
 
-interface SetGroupWithSets {
+type SetGroupWithSets = {
   id: string;
   userId: string;
   routineDayId: string | null;
@@ -35,7 +36,7 @@ interface SetGroupWithSets {
   sets: SetWithRelations[];
 }
 
-interface RoutineDayWithData {
+type RoutineDayWithData = {
   id: string;
   routineId: string;
   userId: string;
@@ -50,7 +51,7 @@ interface RoutineDayWithData {
   updatedAt: Date;
 }
 
-interface RoutineDayWithRoutine {
+type RoutineDayWithRoutine = {
   id: string;
   routineId: string;
   description: string;
@@ -64,8 +65,8 @@ interface RoutineDayWithRoutine {
 // Fetch routine day with full data
 async function fetchRoutineDay(id: string): Promise<RoutineDayWithData | null> {
   const response = await fetch(`/api/routine-days/${id}`);
-  if (response.status === 404) return null;
-  if (!response.ok) throw new Error("Failed to fetch routine day");
+  if (response.status === 404) {return null;}
+  if (!response.ok) {throw new Error("Failed to fetch routine day");}
   return response.json();
 }
 
@@ -75,11 +76,11 @@ async function searchRoutineDays(
   limit = 10,
 ): Promise<RoutineDayWithRoutine[]> {
   const params = new URLSearchParams();
-  if (term) params.set("search", term);
+  if (term) {params.set("search", term);}
   params.set("limit", String(limit));
 
   const response = await fetch(`/api/routine-days?${params}`);
-  if (!response.ok) throw new Error("Failed to search routine days");
+  if (!response.ok) {throw new Error("Failed to search routine days");}
   return response.json();
 }
 
@@ -88,7 +89,7 @@ export function useRoutineDay(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.routineDays.detail(id || ""),
     queryFn: () => fetchRoutineDay(id!),
-    enabled: !!id,
+    enabled: Boolean(id),
   });
 }
 

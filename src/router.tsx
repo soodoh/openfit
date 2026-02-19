@@ -1,5 +1,6 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export), typescript-eslint(explicit-module-boundary-types) */
 import { createRouter } from "@tanstack/react-router";
-import { routeTree } from "./routeTree.gen";
+import { routeTree } from "./route-tree.gen";
 
 export function getRouter() {
   const router = createRouter({
@@ -11,7 +12,7 @@ export function getRouter() {
 }
 
 declare module "@tanstack/react-router" {
-  interface Register {
+  type Register = {
     router: ReturnType<typeof getRouter>;
   }
 }

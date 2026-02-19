@@ -1,15 +1,16 @@
+/* eslint-disable typescript-eslint(array-type), typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
 
-interface DashboardStats {
+type DashboardStats = {
   totalSessions: number;
   totalRoutines: number;
   thisWeekSessions: number;
   currentStreak: number;
 }
 
-interface RecentSession {
+type RecentSession = {
   id: string;
   name: string;
   startTime: string;
@@ -34,14 +35,14 @@ interface RecentSession {
 // Fetch dashboard stats
 async function fetchDashboardStats(): Promise<DashboardStats> {
   const response = await fetch("/api/dashboard/stats");
-  if (!response.ok) throw new Error("Failed to fetch dashboard stats");
+  if (!response.ok) {throw new Error("Failed to fetch dashboard stats");}
   return response.json();
 }
 
 // Fetch recent sessions
 async function fetchRecentSessions(): Promise<RecentSession[]> {
   const response = await fetch("/api/dashboard/recent-sessions");
-  if (!response.ok) throw new Error("Failed to fetch recent sessions");
+  if (!response.ok) {throw new Error("Failed to fetch recent sessions");}
   return response.json();
 }
 

@@ -1,4 +1,6 @@
-import { expect, Locator, Page } from "@playwright/test";
+/* eslint-disable eslint(class-methods-use-this), eslint-plugin-import(prefer-default-export) */
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -91,7 +93,7 @@ export class DashboardPage extends BasePage {
    */
   async waitForDashboardReady(): Promise<void> {
     await this.waitForLoadingComplete();
-    await expect(this.welcomeHeading).toBeVisible({ timeout: 15000 });
+    await expect(this.welcomeHeading).toBeVisible({ timeout: 15_000 });
   }
 
   /**
@@ -106,7 +108,7 @@ export class DashboardPage extends BasePage {
    */
   async getStatValue(statCard: Locator): Promise<number> {
     const valueText = await statCard.locator(".text-2xl").textContent();
-    return parseInt(valueText || "0", 10);
+    return Number.parseInt(valueText || "0", 10);
   }
 
   /**

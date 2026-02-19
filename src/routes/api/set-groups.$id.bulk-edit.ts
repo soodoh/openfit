@@ -1,3 +1,4 @@
+/* eslint-disable eslint(no-console), eslint-plugin-import(prefer-default-export) */
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -13,7 +14,7 @@ export const Route = createFileRoute('/api/set-groups/$id/bulk-edit')({
         try {
           session = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
