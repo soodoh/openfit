@@ -18,16 +18,6 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run build
 
-# Copy static assets into standalone output
-RUN cp -r public .next/standalone/public && \
-    cp -r .next/static .next/standalone/.next/static
-
-# Install production-only dependencies for runtime
-RUN mkdir /prod-deps && \
-    cp package.json bun.lock /prod-deps/ && \
-    cd /prod-deps && \
-    bun install --production
-
 # Stage 2: Runtime
 FROM node:24-alpine AS runner
 
@@ -36,29 +26,32 @@ WORKDIR /app
 # Install tsx for running TypeScript db scripts at startup
 RUN npm install -g tsx --no-fund --no-audit 2>/dev/null
 
-# Copy standalone Next.js build (includes server.js, .next/, public/)
-COPY --from=builder /app/.next/standalone ./
-
-# Replace traced node_modules with full production deps (superset needed by db scripts)
-COPY --from=builder /prod-deps/node_modules ./node_modules
+# Copy TanStack Start build output
+COPY --from=builder /app/.output ./.output
 
 # Copy db scripts and files needed for migrations/seeding
 COPY --from=builder /app/db ./db
-COPY --from=builder /app/lib/auth.ts ./lib/auth.ts
+COPY --from=builder /app/src/lib/auth.ts ./src/lib/auth.ts
 
-# Minimal tsconfig for tsx path alias resolution (avoids needing @tsconfig/next devDep)
-RUN echo '{"compilerOptions":{"paths":{"@/*":["./*"]},"target":"ES2017","esModuleInterop":true}}' > tsconfig.json
+# Copy node_modules for db scripts
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+# Copy public assets
+COPY --from=builder /app/public ./public
 
 # Copy entrypoint
-COPY --from=builder /app/scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
+COPY --from=builder /app/scripts ./scripts
 RUN chmod +x ./scripts/docker-entrypoint.sh
+
+# Minimal tsconfig for tsx path alias resolution
+RUN echo '{"compilerOptions":{"paths":{"@/db":["./db"],"@/db/*":["./db/*"],"@/*":["./src/*"]},"target":"ES2017","esModuleInterop":true}}' > tsconfig.json
 
 # Create data directory for SQLite and uploads
 RUN mkdir -p /app/data/uploads
 
 ENV NODE_ENV=production
 ENV DATABASE_URL=file:/app/data/openfit.db
-ENV SKIP_SCHEMA_PUSH=1
 
 EXPOSE 3000
 
