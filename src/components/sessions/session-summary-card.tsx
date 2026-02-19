@@ -1,35 +1,56 @@
 import dayjs from "dayjs";
-import { ArrowRight, Calendar, Clock, MessageSquare, Play, Star, } from "lucide-react";
+import {
+  ArrowRight,
+  Calendar,
+  Clock,
+  MessageSquare,
+  Play,
+  Star,
+} from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { EditSessionMenu } from "./edit-session-menu";
 import type { WorkoutSessionWithData } from "@/lib/types";
-export const SessionSummaryCard = ({ session, isActive = false, onClick, showEditMenu = true, }: {
-    session: WorkoutSessionWithData;
-    isActive?: boolean;
-    onClick?: () => void;
-    showEditMenu?: boolean;
+export const SessionSummaryCard = ({
+  session,
+  isActive = false,
+  onClick,
+  showEditMenu = true,
+}: {
+  session: WorkoutSessionWithData;
+  isActive?: boolean;
+  onClick?: () => void;
+  showEditMenu?: boolean;
 }): any => {
-    const durationDate = session.startTime && session.endTime
-        ? dayjs.duration(dayjs(session.endTime).diff(dayjs(session.startTime)))
-        : null;
-    const formatDuration = () => {
-        if (!durationDate) {
-            return null;
-        }
-        const hours = durationDate.hours();
-        const mins = durationDate.minutes();
-        if (hours > 0) {
-            return `${hours}h ${mins}m`;
-        }
-        return `${mins} min`;
-    };
-    const totalSets = session.setGroups.reduce((acc, group) => acc + group.sets.length, 0);
-    const cardContent = (<div className={`relative h-full rounded-xl border bg-card p-5 transition-all duration-200 hover:shadow-lg hover:border-foreground/20 hover:-translate-y-0.5 ${isActive ? "ring-2 ring-primary/50 border-primary/30" : ""}`}>
+  const durationDate =
+    session.startTime && session.endTime
+      ? dayjs.duration(dayjs(session.endTime).diff(dayjs(session.startTime)))
+      : null;
+  const formatDuration = () => {
+    if (!durationDate) {
+      return null;
+    }
+    const hours = durationDate.hours();
+    const mins = durationDate.minutes();
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins} min`;
+  };
+  const totalSets = session.setGroups.reduce(
+    (acc, group) => acc + group.sets.length,
+    0,
+  );
+  const cardContent = (
+    <div
+      className={`relative h-full rounded-xl border bg-card p-5 transition-all duration-200 hover:shadow-lg hover:border-foreground/20 hover:-translate-y-0.5 ${isActive ? "ring-2 ring-primary/50 border-primary/30" : ""}`}
+    >
       {/* Active Session Indicator */}
-      {isActive && (<div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full shadow-xs">
-          <Play className="w-3 h-3 fill-current"/>
+      {isActive && (
+        <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full shadow-xs">
+          <Play className="w-3 h-3 fill-current" />
           <span>In Progress</span>
-        </div>)}
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
@@ -38,58 +59,84 @@ export const SessionSummaryCard = ({ session, isActive = false, onClick, showEdi
             {session.name}
           </h3>
           <div className="flex items-center gap-1.5 mt-1.5 text-muted-foreground">
-            <Calendar className="w-3.5 h-3.5 shrink-0"/>
+            <Calendar className="w-3.5 h-3.5 shrink-0" />
             <span className="text-sm">
               {dayjs(session.startTime).format("MMM D, YYYY")}
             </span>
           </div>
         </div>
         {/* stopPropagation to prevent card link/button click */}
-        {showEditMenu && (<div onPointerDown={(e) => e.stopPropagation()}>
-            <EditSessionMenu session={session}/>
-          </div>)}
+        {showEditMenu && (
+          <div onPointerDown={(e) => e.stopPropagation()}>
+            <EditSessionMenu session={session} />
+          </div>
+        )}
       </div>
 
       {/* Stats Row */}
       <div className="flex items-center gap-4 mb-4">
-        {formatDuration() && (<div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Clock className="w-3.5 h-3.5"/>
+        {formatDuration() && (
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Clock className="w-3.5 h-3.5" />
             <span>{formatDuration()}</span>
-          </div>)}
-        {totalSets > 0 && (<div className="text-sm text-muted-foreground">
+          </div>
+        )}
+        {totalSets > 0 && (
+          <div className="text-sm text-muted-foreground">
             {totalSets} {totalSets === 1 ? "set" : "sets"}
-          </div>)}
+          </div>
+        )}
       </div>
 
       {/* Rating */}
-      {session.impression && (<div className="flex items-center gap-1 mb-3">
-          {Array.from({ length: 5 }, (_, i) => (<Star key={`session-rating-${session.id}-${i + 1}`} className={`w-4 h-4 ${i < session.impression!
-                    ? "text-amber-400 fill-amber-400"
-                    : "text-muted/40"}`}/>))}
-        </div>)}
+      {session.impression && (
+        <div className="flex items-center gap-1 mb-3">
+          {Array.from({ length: 5 }, (_, i) => (
+            <Star
+              key={`session-rating-${session.id}-${i + 1}`}
+              className={`w-4 h-4 ${
+                i < session.impression!
+                  ? "text-amber-400 fill-amber-400"
+                  : "text-muted/40"
+              }`}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Notes Preview */}
-      {session.notes && (<div className="flex items-start gap-2 pt-3 border-t border-border/50">
-          <MessageSquare className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0"/>
+      {session.notes && (
+        <div className="flex items-start gap-2 pt-3 border-t border-border/50">
+          <MessageSquare className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
           <p className="text-sm text-muted-foreground line-clamp-2">
             {session.notes}
           </p>
-        </div>)}
+        </div>
+      )}
 
       {/* Hover Arrow */}
       <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-        <ArrowRight className="w-4 h-4 text-primary dark:text-white"/>
+        <ArrowRight className="w-4 h-4 text-primary dark:text-white" />
       </div>
-    </div>);
-    // If onClick is provided, render as a button instead of a link
-    if (onClick) {
-        return (<button type="button" onClick={onClick} className="group block w-full text-left">
+    </div>
+  );
+  // If onClick is provided, render as a button instead of a link
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="group block w-full text-left"
+      >
         {cardContent}
-      </button>);
-    }
-    // Active sessions go to /workout, completed sessions go to /logs (calendar view)
-    return (<Link to={isActive ? "/workout" : "/logs"} className="group block">
+      </button>
+    );
+  }
+  // Active sessions go to /workout, completed sessions go to /logs (calendar view)
+  return (
+    <Link to={isActive ? "/workout" : "/logs"} className="group block">
       {cardContent}
-    </Link>);
+    </Link>
+  );
 };
 export default SessionSummaryCard;

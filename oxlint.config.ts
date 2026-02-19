@@ -1,6 +1,6 @@
-import {defineConfig} from '@standard-config/oxlint';
+import { defineConfig } from "@standard-config/oxlint";
 
 export default defineConfig({
   react: true,
   rules: {},
-})
+});

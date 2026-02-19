@@ -4,10 +4,7 @@ import * as React from "react";
 type DurationInputProps = {
   value: string;
   onChange: (value: string) => void;
-} & Omit<
-  React.ComponentProps<"input">,
-  "value" | "onChange"
->
+} & Omit<React.ComponentProps<"input">, "value" | "onChange">;
 
 /**
  * Input component for duration in MM:ss format.

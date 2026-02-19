@@ -1,7 +1,21 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Carousel, CarouselContent, CarouselDots, CarouselItem, CarouselNext, CarouselPrevious, } from "@/components/ui/carousel";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselDots,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useExercise } from "@/hooks";
 import type { Exercise, ExerciseWithImageUrl } from "@/lib/types";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
@@ -65,7 +79,9 @@ function ExerciseHeader({
           )}
         </div>
         <div className="min-w-0">
-          <DialogTitle className="text-xl leading-tight">{displayName}</DialogTitle>
+          <DialogTitle className="text-xl leading-tight">
+            {displayName}
+          </DialogTitle>
           <DialogDescription className="text-sm">
             {formatDisplayName(categoryName)}
           </DialogDescription>
@@ -143,7 +159,9 @@ function ExerciseQuickInfo({
           <Settings2 className="h-4 w-4 text-muted-foreground" />
           <div>
             <p className="text-xs text-muted-foreground">Equipment</p>
-            <p className="text-sm font-medium">{formatDisplayName(equipmentName)}</p>
+            <p className="text-sm font-medium">
+              {formatDisplayName(equipmentName)}
+            </p>
           </div>
         </div>
       )}
@@ -243,18 +261,29 @@ export const ExerciseDetailModal = ({
   open: boolean;
   onClose: () => void;
 }): any => {
-  const { data: exerciseWithImages } = useExercise(open ? exerciseProp.id : undefined);
+  const { data: exerciseWithImages } = useExercise(
+    open ? exerciseProp.id : undefined,
+  );
   const exercise = exerciseWithImages ?? undefined;
   const displayName = exercise?.name ?? exerciseProp.name;
-  const imageUrls = (exercise?.imageUrls ?? []).filter((url): url is string => url !== undefined);
+  const imageUrls = (exercise?.imageUrls ?? []).filter(
+    (url): url is string => url !== undefined,
+  );
   const fallbackImageUrl = getFallbackImageUrl(exerciseProp);
-  const firstImageUrl = getFirstImageUrl(imageUrls, exercise?.imageUrl, fallbackImageUrl);
+  const firstImageUrl = getFirstImageUrl(
+    imageUrls,
+    exercise?.imageUrl,
+    fallbackImageUrl,
+  );
 
-  const { getEquipmentName, getMuscleGroupNames, getCategoryName } = useExerciseLookups();
+  const { getEquipmentName, getMuscleGroupNames, getCategoryName } =
+    useExerciseLookups();
   const categoryName = getCategoryName(exercise?.categoryId ?? "");
   const equipmentName = getEquipmentName(exercise?.equipmentId);
   const primaryMuscleNames = getMuscleGroupNames(exercise?.primaryMuscleIds);
-  const secondaryMuscleNames = getMuscleGroupNames(exercise?.secondaryMuscleIds);
+  const secondaryMuscleNames = getMuscleGroupNames(
+    exercise?.secondaryMuscleIds,
+  );
   const instructions = exercise?.instructions ?? [];
 
   return (

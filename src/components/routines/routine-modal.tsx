@@ -6,76 +6,117 @@ import { useMemo, useState } from "react";
 import type { RoutineWithDays, WorkoutSessionWithData } from "@/lib/types";
 const OVERVIEW_TAB = "overview";
 function truncateName(name: string, maxLength = 15): string {
-    if (name.length <= maxLength) {
-        return name;
-    }
-    return `${name.slice(0, maxLength)}...`;
+  if (name.length <= maxLength) {
+    return name;
+  }
+  return `${name.slice(0, maxLength)}...`;
 }
-export const RoutineModal = ({ open, onClose, routine, currentSession, initialTab, }: {
-    open: boolean;
-    onClose: () => void;
-    routine: RoutineWithDays;
-    currentSession: WorkoutSessionWithData | undefined | undefined;
-    initialTab?: string;
+export const RoutineModal = ({
+  open,
+  onClose,
+  routine,
+  currentSession,
+  initialTab,
+}: {
+  open: boolean;
+  onClose: () => void;
+  routine: RoutineWithDays;
+  currentSession: WorkoutSessionWithData | undefined | undefined;
+  initialTab?: string;
 }): any => {
-    const [activeTab, setActiveTab] = useState(initialTab || OVERVIEW_TAB);
-    // Compute valid tab - if current tab doesn't exist, show overview
-    const validTab = useMemo(() => {
-        if (activeTab === OVERVIEW_TAB) {
-            return OVERVIEW_TAB;
-        }
-        const dayExists = routine.routineDays.some((day) => `day-${day.id}` === activeTab);
-        return dayExists ? activeTab : OVERVIEW_TAB;
-    }, [activeTab, routine.routineDays]);
-    const handleSelectDay = (dayId: string) => {
-        setActiveTab(`day-${dayId}`);
-    };
-    const handleDayAdded = (dayId: string) => {
-        // Auto-switch to the newly created day tab
-        setActiveTab(`day-${dayId}`);
-    };
-    const handleDayDeleted = () => {
-        // Switch back to overview when a day is deleted
-        setActiveTab(OVERVIEW_TAB);
-    };
-    const handleOpenChange = (isOpen: boolean) => {
-        if (isOpen) {
-            // Reset to initial tab when opening
-            setActiveTab(initialTab || OVERVIEW_TAB);
-            return;
-        }
-        onClose();
-    };
-    return (<Dialog open={open} onOpenChange={handleOpenChange}>
+  const [activeTab, setActiveTab] = useState(initialTab || OVERVIEW_TAB);
+  // Compute valid tab - if current tab doesn't exist, show overview
+  const validTab = useMemo(() => {
+    if (activeTab === OVERVIEW_TAB) {
+      return OVERVIEW_TAB;
+    }
+    const dayExists = routine.routineDays.some(
+      (day) => `day-${day.id}` === activeTab,
+    );
+    return dayExists ? activeTab : OVERVIEW_TAB;
+  }, [activeTab, routine.routineDays]);
+  const handleSelectDay = (dayId: string) => {
+    setActiveTab(`day-${dayId}`);
+  };
+  const handleDayAdded = (dayId: string) => {
+    // Auto-switch to the newly created day tab
+    setActiveTab(`day-${dayId}`);
+  };
+  const handleDayDeleted = () => {
+    // Switch back to overview when a day is deleted
+    setActiveTab(OVERVIEW_TAB);
+  };
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isOpen) {
+      // Reset to initial tab when opening
+      setActiveTab(initialTab || OVERVIEW_TAB);
+      return;
+    }
+    onClose();
+  };
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-4xl p-0 overflow-hidden max-h-[85vh] flex flex-col">
         <DialogTitle className="sr-only">{routine.name}</DialogTitle>
 
-        <Tabs value={validTab} onValueChange={setActiveTab} className="flex flex-col h-full min-h-0">
+        <Tabs
+          value={validTab}
+          onValueChange={setActiveTab}
+          className="flex flex-col h-full min-h-0"
+        >
           {/* Tab List - Horizontally scrollable */}
           <div className="border-b border-border/50 px-4 pt-4">
             <TabsList className="w-full justify-start h-auto p-1 bg-muted/50 overflow-x-auto flex-nowrap">
-              <TabsTrigger value={OVERVIEW_TAB} className="shrink-0 data-[state=active]:bg-background">
+              <TabsTrigger
+                value={OVERVIEW_TAB}
+                className="shrink-0 data-[state=active]:bg-background"
+              >
                 Overview
               </TabsTrigger>
 
-              {routine.routineDays.map((day, index) => (<TabsTrigger key={day.id} value={`day-${day.id}`} className="shrink-0 data-[state=active]:bg-background">
+              {routine.routineDays.map((day, index) => (
+                <TabsTrigger
+                  key={day.id}
+                  value={`day-${day.id}`}
+                  className="shrink-0 data-[state=active]:bg-background"
+                >
                   Day {index + 1}: {truncateName(day.description)}
-                </TabsTrigger>))}
+                </TabsTrigger>
+              ))}
             </TabsList>
           </div>
 
           {/* Tab Content - explicit height so children can use h-full */}
           <div className="h-[calc(85vh-72px)] overflow-hidden">
-            <TabsContent value={OVERVIEW_TAB} className="h-full m-0 flex flex-col data-[state=inactive]:hidden">
-              <RoutineOverviewTab routine={routine} currentSession={currentSession} onSelectDay={handleSelectDay} onDayAdded={handleDayAdded}/>
+            <TabsContent
+              value={OVERVIEW_TAB}
+              className="h-full m-0 flex flex-col data-[state=inactive]:hidden"
+            >
+              <RoutineOverviewTab
+                routine={routine}
+                currentSession={currentSession}
+                onSelectDay={handleSelectDay}
+                onDayAdded={handleDayAdded}
+              />
             </TabsContent>
 
-            {routine.routineDays.map((day) => (<TabsContent key={day.id} value={`day-${day.id}`} className="h-full m-0 flex flex-col data-[state=inactive]:hidden">
-                <RoutineDayTab dayId={day.id} currentSession={currentSession} onDeleted={handleDayDeleted}/>
-              </TabsContent>))}
+            {routine.routineDays.map((day) => (
+              <TabsContent
+                key={day.id}
+                value={`day-${day.id}`}
+                className="h-full m-0 flex flex-col data-[state=inactive]:hidden"
+              >
+                <RoutineDayTab
+                  dayId={day.id}
+                  currentSession={currentSession}
+                  onDeleted={handleDayDeleted}
+                />
+              </TabsContent>
+            ))}
           </div>
         </Tabs>
       </DialogContent>
-    </Dialog>);
+    </Dialog>
+  );
 };
 export default RoutineModal;
