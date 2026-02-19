@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -11,22 +11,5 @@ if [ -f "$PROJECT_ROOT/.env.local" ]; then
   set +a
 fi
 
-cd "$PROJECT_ROOT"
-
-echo "OpenFit Development Initialization"
-echo "===================================="
-
-# Ensure data directory exists
-mkdir -p data/uploads
-
-# Run migrations
-echo "Running database migrations..."
-bun run db:migrate
-
-# Seed database
-echo "Seeding database..."
-bun run db:seed
-
-echo ""
-echo "Initialization complete!"
-echo "You can now run: bun dev"
+bun run build
+"$SCRIPT_DIR"/init.sh

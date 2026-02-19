@@ -1,19 +1,15 @@
 services:
   # TanStack Start application with SQLite database
   openfit:
-    image: oven/bun:latest
-    working_dir: /app
-    command: sh -c "bun install && bun run db:migrate && bun run db:seed && bun run dev"
+    image: openfit
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - 3000:3000
     volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/dist
       - openfit-data:/app/data
     env_file: ".env.local"
-    environment:
-      - DATABASE_URL=file:/app/data/openfit.db
     networks:
       - app-net
 

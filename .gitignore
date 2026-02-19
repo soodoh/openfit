@@ -17,13 +17,8 @@
 /test-results
 /e2e/.auth
 
-# next.js
-/.next/
-/out/
-
 # production
-/build
-/dist
+/.output
 
 # misc
 .DS_Store

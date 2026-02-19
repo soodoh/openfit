@@ -7,10 +7,7 @@
 node_modules
 
 # Build artifacts
-.next
-out
-build
-dist
+.output
 
 # Development
 .git

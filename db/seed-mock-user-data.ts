@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "./index";
-import * as schema from "./schema";
+import { schema } from "./schema";
 // Helpers
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
