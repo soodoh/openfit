@@ -9,7 +9,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/.output
+      - /app/dist
       - openfit-data:/app/data
     env_file: ".env.local"
     environment:
