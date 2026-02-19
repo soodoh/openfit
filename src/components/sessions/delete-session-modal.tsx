@@ -1,29 +1,13 @@
-/* eslint-disable eslint-plugin-import(prefer-default-export), eslint-plugin-unicorn(filename-case), typescript-eslint(explicit-module-boundary-types) */
-
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
 import { useDeleteSession } from "@/hooks";
-
-export const DeleteSessionModal = ({
-  open,
-  onClose,
-  sessionId,
-}: {
-  open: boolean;
-  onClose: () => void;
-  sessionId: string;
-}) => {
-  const deleteSessionMutation = useDeleteSession();
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
+export const DeleteSessionModal = ({ open, onClose, sessionId, }: {
+    open: boolean;
+    onClose: () => void;
+    sessionId: string;
+}): any => {
+    const deleteSessionMutation = useDeleteSession();
+    return (<Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete Session</DialogTitle>
@@ -35,17 +19,15 @@ export const DeleteSessionModal = ({
           <Button variant="outline" onClick={onClose}>
             No
           </Button>
-          <Button
-            variant="destructive"
-            onClick={async () => {
-              await deleteSessionMutation.mutateAsync(sessionId);
-              onClose();
-            }}
-          >
+          <Button variant="destructive" onClick={async () => {
+            await deleteSessionMutation.mutateAsync(sessionId);
+            onClose();
+        }}>
             Yes
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
 };
+
+export default DeleteSessionModal;

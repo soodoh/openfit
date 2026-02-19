@@ -1,15 +1,11 @@
-/* eslint-disable eslint-plugin-import(prefer-default-export), typescript-eslint(no-use-before-define) */
 import { LoginForm } from "@/components/auth/login-form";
 import { createFileRoute } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/signin")({
-  component: SignInPage,
-});
-
 function SignInPage() {
-  return (
-    <div className="flex flex-1">
+    return (<div className="flex flex-1">
       <LoginForm />
-    </div>
-  );
+    </div>);
 }
+export const Route = createFileRoute("/signin")({
+    component: SignInPage,
+});
+export default Route;

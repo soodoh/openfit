@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import * as schema from "@/db/schema";
+import { schema } from "@/db/schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { genericOAuth } from "better-auth/plugins";

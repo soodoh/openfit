@@ -1,67 +1,74 @@
-/* eslint-disable eslint(no-console), eslint-plugin-import(prefer-default-export), eslint-plugin-promise(prefer-await-to-then), eslint-plugin-unicorn(filename-case), typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
-
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
-
 // Provider type info for display
-const PROVIDER_INFO: Record<
-  string,
-  { label: string; envVars: { id: string; secret: string; issuer?: string } }
-> = {
-  google: {
-    label: "Google",
-    envVars: { id: "AUTH_GOOGLE_ID", secret: "AUTH_GOOGLE_SECRET" },
-  },
-  github: {
-    label: "GitHub",
-    envVars: { id: "AUTH_GITHUB_ID", secret: "AUTH_GITHUB_SECRET" },
-  },
-  discord: {
-    label: "Discord",
-    envVars: { id: "AUTH_DISCORD_ID", secret: "AUTH_DISCORD_SECRET" },
-  },
-  oidc: {
-    label: import.meta.env.VITE_AUTH_OIDC_PROVIDER_NAME || "OIDC",
+const PROVIDER_INFO: Record<string, {
+    label: string;
     envVars: {
-      id: "AUTH_OIDC_CLIENT_ID",
-      secret: "AUTH_OIDC_CLIENT_SECRET",
-      issuer: "AUTH_OIDC_ISSUER",
+        id: string;
+        secret: string;
+        issuer?: string;
+    };
+}> = {
+    google: {
+        label: "Google",
+        envVars: { id: "AUTH_GOOGLE_ID", secret: "AUTH_GOOGLE_SECRET" },
     },
-  },
+    github: {
+        label: "GitHub",
+        envVars: { id: "AUTH_GITHUB_ID", secret: "AUTH_GITHUB_SECRET" },
+    },
+    discord: {
+        label: "Discord",
+        envVars: { id: "AUTH_DISCORD_ID", secret: "AUTH_DISCORD_SECRET" },
+    },
+    oidc: {
+        label: import.meta.env.VITE_AUTH_OIDC_PROVIDER_NAME || "OIDC",
+        envVars: {
+            id: "AUTH_OIDC_CLIENT_ID",
+            secret: "AUTH_OIDC_CLIENT_SECRET",
+            issuer: "AUTH_OIDC_ISSUER",
+        },
+    },
 };
-
 type ProviderStatus = {
-  google: boolean;
-  github: boolean;
-  discord: boolean;
-  oidc: boolean;
-}
-
-export function AuthProvidersTable() {
-  const [providerStatus, setProviderStatus] = useState<ProviderStatus | null>(
-    null,
-  );
-
-  useEffect(() => {
-    // Fetch configured provider status from API
-    fetch("/api/auth/providers")
-      .then((res) => res.json())
-      .then(setProviderStatus)
-      .catch(console.error);
-  }, []);
-
-  const providers = Object.entries(PROVIDER_INFO).map(([key, info]) => ({
-    id: key,
-    displayName: info.label,
-    type: key as keyof typeof PROVIDER_INFO,
-    envVars: info.envVars,
-    isConfigured: providerStatus?.[key as keyof ProviderStatus] ?? false,
-  }));
-
-  return (
-    <Card>
+    google: boolean;
+    github: boolean;
+    discord: boolean;
+    oidc: boolean;
+};
+export function AuthProvidersTable(): any {
+    const [providerStatus, setProviderStatus] = useState<ProviderStatus | undefined>(undefined);
+    useEffect(() => {
+        let isMounted = true;
+        const loadProviderStatus = async () => {
+            try {
+                const response = await fetch("/api/auth/providers");
+                const data = await response.json();
+                if (isMounted) {
+                    setProviderStatus(data);
+                }
+            }
+            catch {
+                if (isMounted) {
+                    setProviderStatus(undefined);
+                }
+            }
+        };
+        void loadProviderStatus();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+    const providers = Object.entries(PROVIDER_INFO).map(([key, info]) => ({
+        id: key,
+        displayName: info.label,
+        type: key as keyof typeof PROVIDER_INFO,
+        envVars: info.envVars,
+        isConfigured: providerStatus?.[key as keyof ProviderStatus] ?? false,
+    }));
+    return (<Card>
       <CardHeader>
         <div>
           <CardTitle>Authentication Providers</CardTitle>
@@ -72,11 +79,7 @@ export function AuthProvidersTable() {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {providers.map((provider) => (
-            <div
-              key={provider.id}
-              className="flex items-center justify-between p-3 rounded-lg border bg-card"
-            >
+          {providers.map((provider) => (<div key={provider.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
               <div className="flex items-center gap-3 flex-1">
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-lg font-medium">
                   {provider.displayName.charAt(0).toUpperCase()}
@@ -96,24 +99,19 @@ export function AuthProvidersTable() {
               </div>
 
               <div className="flex items-center gap-2">
-                {provider.isConfigured ? (
-                  <div className="flex items-center gap-1">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                {provider.isConfigured ? (<div className="flex items-center gap-1">
+                    <CheckCircle2 className="h-4 w-4 text-green-500"/>
                     <span className="text-xs text-muted-foreground">
                       Configured
                     </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                  </div>) : (<div className="flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4 text-muted-foreground"/>
                     <span className="text-xs text-muted-foreground">
                       Not configured
                     </span>
-                  </div>
-                )}
+                  </div>)}
               </div>
-            </div>
-          ))}
+            </div>))}
         </div>
 
         {/* Help text about env vars */}
@@ -138,6 +136,6 @@ export function AuthProvidersTable() {
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
 }
+export default AuthProvidersTable;

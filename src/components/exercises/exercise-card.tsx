@@ -1,5 +1,3 @@
-/* eslint-disable eslint-plugin-import(prefer-default-export), eslint-plugin-react(button-has-type), eslint-plugin-unicorn(filename-case), typescript-eslint(explicit-module-boundary-types) */
-
 import { Badge } from "@/components/ui/badge";
 import type { ExerciseWithImageUrl } from "@/lib/types";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
@@ -7,56 +5,30 @@ import { Image } from "@unpic/react";
 import { Dumbbell } from "lucide-react";
 import { useState } from "react";
 import { ExerciseDetailModal } from "./exercise-detail-modal";
-
 // Helper to format display names (capitalize words)
 function formatDisplayName(value: string): string {
-  return value
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+    return value
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
 }
+export const ExerciseCard = ({ exercise, }: {
+    exercise: ExerciseWithImageUrl;
+}): any => {
+    const [showDetail, setShowDetail] = useState(false);
+    const { getEquipmentName, getMuscleGroupNames, getCategoryName } = useExerciseLookups();
+    const categoryName = getCategoryName(exercise.categoryId);
+    const equipmentName = getEquipmentName(exercise.equipmentId);
+    const primaryMuscleNames = getMuscleGroupNames(exercise.primaryMuscleIds);
+    return (<>
+      <ExerciseDetailModal exercise={exercise} open={showDetail} onClose={() => setShowDetail(false)}/>
 
-export const ExerciseCard = ({
-  exercise,
-}: {
-  exercise: ExerciseWithImageUrl;
-}) => {
-  const [showDetail, setShowDetail] = useState(false);
-  const { getEquipmentName, getMuscleGroupNames, getCategoryName } =
-    useExerciseLookups();
-
-  const categoryName = getCategoryName(exercise.categoryId);
-  const equipmentName = getEquipmentName(exercise.equipmentId);
-  const primaryMuscleNames = getMuscleGroupNames(exercise.primaryMuscleIds);
-
-  return (
-    <>
-      <ExerciseDetailModal
-        exercise={exercise}
-        open={showDetail}
-        onClose={() => setShowDetail(false)}
-      />
-
-      <button
-        onClick={() => setShowDetail(true)}
-        className="group text-left w-full"
-      >
+      <button type="button" onClick={() => setShowDetail(true)} className="group text-left w-full">
         <div className="relative h-full rounded-xl border bg-card p-4 transition-all duration-200 hover:shadow-lg hover:border-foreground/20 hover:-translate-y-0.5">
           {/* Header with image and name */}
           <div className="flex items-start gap-3 mb-3">
             <div className="h-12 w-12 rounded-lg shrink-0 overflow-hidden bg-primary/10 flex items-center justify-center">
-              {exercise.imageUrl ? (
-                <Image
-                  src={exercise.imageUrl}
-                  alt={exercise.name}
-                  width={48}
-                  height={48}
-                  layout="fixed"
-                  className="object-cover"
-                />
-              ) : (
-                <Dumbbell className="h-5 w-5 text-primary/60" />
-              )}
+              {exercise.imageUrl ? (<Image src={exercise.imageUrl} alt={exercise.name} width={48} height={48} layout="fixed" className="object-cover"/>) : (<Dumbbell className="h-5 w-5 text-primary/60"/>)}
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm leading-tight line-clamp-2 group-hover:text-primary dark:group-hover:text-white transition-colors">
@@ -69,37 +41,25 @@ export const ExerciseCard = ({
           </div>
 
           {/* Primary muscles */}
-          {primaryMuscleNames.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {primaryMuscleNames.slice(0, 3).map((muscle) => (
-                <Badge
-                  key={muscle}
-                  variant="secondary"
-                  className="text-xs px-2 py-0.5"
-                >
+          {primaryMuscleNames.length > 0 && (<div className="flex flex-wrap gap-1.5 mb-3">
+              {primaryMuscleNames.slice(0, 3).map((muscle) => (<Badge key={muscle} variant="secondary" className="text-xs px-2 py-0.5">
                   {formatDisplayName(muscle)}
-                </Badge>
-              ))}
-              {primaryMuscleNames.length > 3 && (
-                <Badge variant="outline" className="text-xs px-2 py-0.5">
+                </Badge>))}
+              {primaryMuscleNames.length > 3 && (<Badge variant="outline" className="text-xs px-2 py-0.5">
                   +{primaryMuscleNames.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
+                </Badge>)}
+            </div>)}
 
           {/* Footer info */}
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             {equipmentName && <span>{formatDisplayName(equipmentName)}</span>}
-            {exercise.level && (
-              <>
+            {exercise.level && (<>
                 {equipmentName && <span>•</span>}
                 <span>{formatDisplayName(exercise.level)}</span>
-              </>
-            )}
+              </>)}
           </div>
         </div>
       </button>
-    </>
-  );
+    </>);
 };
+export default ExerciseCard;

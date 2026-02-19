@@ -1,30 +1,14 @@
-/* eslint-disable eslint-plugin-import(prefer-default-export), eslint-plugin-unicorn(filename-case), typescript-eslint(explicit-module-boundary-types) */
-
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
 import { useDeleteSetGroup } from "@/hooks";
 import type { WorkoutSetGroup } from "@/lib/types";
-
-export const DeleteSetGroupModal = ({
-  open,
-  onClose,
-  setGroup,
-}: {
-  open: boolean;
-  onClose: () => void;
-  setGroup: WorkoutSetGroup;
-}) => {
-  const deleteSetGroupMutation = useDeleteSetGroup();
-
-  return (
-    <Dialog open={open} onOpenChange={() => onClose()}>
+export const DeleteSetGroupModal = ({ open, onClose, setGroup, }: {
+    open: boolean;
+    onClose: () => void;
+    setGroup: WorkoutSetGroup;
+}): any => {
+    const deleteSetGroupMutation = useDeleteSetGroup();
+    return (<Dialog open={open} onOpenChange={() => onClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete Exercise</DialogTitle>
@@ -36,17 +20,15 @@ export const DeleteSetGroupModal = ({
           <Button variant="outline" onClick={onClose}>
             No
           </Button>
-          <Button
-            variant="destructive"
-            onClick={async () => {
-              await deleteSetGroupMutation.mutateAsync(setGroup.id);
-              onClose();
-            }}
-          >
+          <Button variant="destructive" onClick={async () => {
+            await deleteSetGroupMutation.mutateAsync(setGroup.id);
+            onClose();
+        }}>
             Yes
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
 };
+
+export default DeleteSetGroupModal;

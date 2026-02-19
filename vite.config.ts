@@ -19,9 +19,6 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
     },
-    optimizeDeps: {
-      include: ["react-timer-hook"],
-    },
     plugins: [tailwindcss(), tsconfigPaths(), tanstackStart(), viteReact()],
   };
 });
