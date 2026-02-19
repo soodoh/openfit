@@ -1,5 +1,5 @@
 import { expect, test as setup } from "@playwright/test";
-import path from "path";
+import path from "node:path";
 
 const authFile = path.join(__dirname, ".auth/user.json");
 
@@ -30,7 +30,7 @@ setup("authenticate", async ({ page }) => {
 
   // Wait for the login form to load
   await expect(page.getByRole("button", { name: /login/i })).toBeVisible({
-    timeout: 15000,
+    timeout: 15_000,
   });
 
   // Fill in credentials
@@ -41,7 +41,7 @@ setup("authenticate", async ({ page }) => {
   await page.getByRole("button", { name: /login/i }).click();
 
   // Wait for dashboard content
-  await expect(page.getByText(/welcome back/i)).toBeVisible({ timeout: 30000 });
+  await expect(page.getByText(/welcome back/i)).toBeVisible({ timeout: 30_000 });
 
   // Save storage state for reuse
   await page.context().storageState({ path: authFile });

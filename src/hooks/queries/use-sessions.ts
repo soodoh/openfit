@@ -1,8 +1,9 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
 
-interface SetWithRelations {
+type SetWithRelations = {
   id: string;
   userId: string;
   setGroupId: string;
@@ -24,7 +25,7 @@ interface SetWithRelations {
   weightUnit: { id: string; name: string } | null;
 }
 
-interface SetGroupWithSets {
+type SetGroupWithSets = {
   id: string;
   userId: string;
   routineDayId: string | null;
@@ -35,7 +36,7 @@ interface SetGroupWithSets {
   sets: SetWithRelations[];
 }
 
-interface WorkoutSessionWithData {
+type WorkoutSessionWithData = {
   id: string;
   userId: string;
   name: string;
@@ -49,7 +50,7 @@ interface WorkoutSessionWithData {
   updatedAt: Date;
 }
 
-interface WorkoutSessionSummary {
+type WorkoutSessionSummary = {
   id: string;
   createdAt: Date;
   name: string;
@@ -61,7 +62,7 @@ interface WorkoutSessionSummary {
 // Fetch all sessions
 async function fetchSessions(): Promise<WorkoutSessionWithData[]> {
   const response = await fetch("/api/sessions");
-  if (!response.ok) throw new Error("Failed to fetch sessions");
+  if (!response.ok) {throw new Error("Failed to fetch sessions");}
   return response.json();
 }
 
@@ -75,14 +76,14 @@ async function fetchSessionsByDateRange(
   params.set("endDate", String(endDate));
 
   const response = await fetch(`/api/sessions?${params}`);
-  if (!response.ok) throw new Error("Failed to fetch sessions");
+  if (!response.ok) {throw new Error("Failed to fetch sessions");}
   return response.json();
 }
 
 // Fetch current active session
 async function fetchCurrentSession(): Promise<WorkoutSessionWithData | null> {
   const response = await fetch("/api/sessions/current");
-  if (!response.ok) throw new Error("Failed to fetch current session");
+  if (!response.ok) {throw new Error("Failed to fetch current session");}
   const data = await response.json();
   return data;
 }
@@ -92,8 +93,8 @@ async function fetchSession(
   id: string,
 ): Promise<WorkoutSessionWithData | null> {
   const response = await fetch(`/api/sessions/${id}`);
-  if (response.status === 404) return null;
-  if (!response.ok) throw new Error("Failed to fetch session");
+  if (response.status === 404) {return null;}
+  if (!response.ok) {throw new Error("Failed to fetch session");}
   return response.json();
 }
 
@@ -110,7 +111,7 @@ export function useSessionsByDateRange(startDate: number, endDate: number) {
   return useQuery({
     queryKey: queryKeys.sessions.byDateRange(startDate, endDate),
     queryFn: () => fetchSessionsByDateRange(startDate, endDate),
-    enabled: !!startDate && !!endDate,
+    enabled: Boolean(startDate) && Boolean(endDate),
   });
 }
 
@@ -119,7 +120,7 @@ export function useCurrentSession() {
   return useQuery({
     queryKey: queryKeys.sessions.current(),
     queryFn: fetchCurrentSession,
-    refetchInterval: 30000, // Refetch every 30 seconds to keep session fresh
+    refetchInterval: 30_000, // Refetch every 30 seconds to keep session fresh
   });
 }
 
@@ -128,6 +129,6 @@ export function useSession(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.sessions.detail(id || ""),
     queryFn: () => fetchSession(id!),
-    enabled: !!id,
+    enabled: Boolean(id),
   });
 }

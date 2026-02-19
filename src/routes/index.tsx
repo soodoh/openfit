@@ -1,8 +1,9 @@
-import { useAuth } from "@/components/providers/AuthProvider";
-import { CreateSessionButton } from "@/components/sessions/CreateSession";
-import { ResumeSessionButton } from "@/components/sessions/ResumeSessionButton";
-import { SessionDetailModal } from "@/components/sessions/SessionDetailModal";
-import { SessionSummaryCard } from "@/components/sessions/SessionSummaryCard";
+/* eslint-disable eslint(no-nested-ternary), eslint-plugin-import(prefer-default-export), eslint-plugin-react(no-array-index-key), eslint-plugin-unicorn(new-for-builtins), typescript-eslint(no-restricted-types), typescript-eslint(no-use-before-define) */
+import { useAuth } from "@/components/providers/auth-provider";
+import { CreateSessionButton } from "@/components/sessions/create-session";
+import { ResumeSessionButton } from "@/components/sessions/resume-session-button";
+import { SessionDetailModal } from "@/components/sessions/session-detail-modal";
+import { SessionSummaryCard } from "@/components/sessions/session-summary-card";
 import { Card } from "@/components/ui/card";
 import {
   useCurrentSession,
@@ -168,7 +169,7 @@ function DashboardContent() {
 
           {isLoading ? (
             <RecentActivitySkeleton />
-          ) : !recentSessions || recentSessions.length === 0 ? (
+          ) : (!recentSessions || recentSessions.length === 0 ? (
             <EmptyActivity />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -181,7 +182,7 @@ function DashboardContent() {
                 />
               ))}
             </div>
-          )}
+          ))}
         </div>
       </div>
 
@@ -190,7 +191,7 @@ function DashboardContent() {
         <SessionDetailModal
           sessionId={selectedSessionId}
           units={units}
-          open={!!selectedSessionId}
+          open={Boolean(selectedSessionId)}
           onClose={() => setSelectedSessionId(null)}
         />
       )}

@@ -1,8 +1,9 @@
+/* eslint-disable eslint(no-console), eslint-plugin-import(prefer-default-export), typescript-eslint(no-restricted-types) */
 import { requireAdmin } from "@/lib/auth-middleware";
 import { createFileRoute } from "@tanstack/react-router";
-import fs from "fs/promises";
+import fs from "node:fs/promises";
 import { nanoid } from "nanoid";
-import path from "path";
+import path from "node:path";
 
 const UPLOAD_DIR = path.join(process.cwd(), "data", "uploads");
 

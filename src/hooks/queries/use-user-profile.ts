@@ -1,8 +1,9 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export), typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
 
-interface UserProfile {
+type UserProfile = {
   id: string;
   userId: string;
   role: "USER" | "ADMIN";
@@ -20,7 +21,7 @@ interface UserProfile {
 // Fetch user profile
 async function fetchUserProfile(): Promise<UserProfile | null> {
   const response = await fetch("/api/user-profile");
-  if (!response.ok) throw new Error("Failed to fetch user profile");
+  if (!response.ok) {throw new Error("Failed to fetch user profile");}
   const data = await response.json();
   return data;
 }

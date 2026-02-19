@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-jest(no-conditional-in-test) */
 import { expect, test } from "@/e2e/fixtures/base.fixture";
 
 /**
@@ -32,9 +33,9 @@ test.describe("Login Page", () => {
     await loginPage.login(email, password);
 
     // Should redirect to dashboard
-    await expect(page).toHaveURL("/", { timeout: 15000 });
+    await expect(page).toHaveURL("/", { timeout: 15_000 });
     await expect(page.getByText(/welcome back/i)).toBeVisible({
-      timeout: 10000,
+      timeout: 10_000,
     });
   });
 

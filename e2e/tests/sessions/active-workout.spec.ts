@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-jest(no-conditional-in-test) */
 import { expect, test } from "@/e2e/fixtures/base.fixture";
 
 /**

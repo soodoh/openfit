@@ -1,9 +1,9 @@
+/* eslint-disable eslint(no-shadow), eslint-plugin-react(button-has-type), eslint-plugin-react(jsx-no-constructed-context-values), eslint-plugin-react(no-array-index-key), typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import useEmblaCarousel, {
-  type UseEmblaCarouselType,
-} from "embla-carousel-react";
+import useEmblaCarousel from 'embla-carousel-react';
+import type { UseEmblaCarouselType } from 'embla-carousel-react';
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import * as React from "react";
 

@@ -1,5 +1,6 @@
-import { CurrentSessionPage } from "@/components/sessions/CurrentSessionPage";
-import { EditSessionModal } from "@/components/sessions/EditSessionModal";
+/* eslint-disable eslint-plugin-import(prefer-default-export), typescript-eslint(no-use-before-define) */
+import { CurrentSessionPage } from "@/components/sessions/current-session-page";
+import { EditSessionModal } from "@/components/sessions/edit-session-modal";
 import { Button } from "@/components/ui/button";
 import { useCurrentSession, useUnits } from "@/hooks";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";

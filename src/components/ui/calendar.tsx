@@ -1,3 +1,4 @@
+/* eslint-disable eslint(no-shadow), typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-use-before-define) */
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -7,7 +8,8 @@ import {
   ChevronRightIcon,
 } from "lucide-react";
 import * as React from "react";
-import { DayButton, DayPicker } from "react-day-picker";
+import type { DayButton} from "react-day-picker";
+import { DayPicker } from "react-day-picker";
 
 function Calendar({
   className,
@@ -133,7 +135,7 @@ function CalendarDayButton({
 }: React.ComponentProps<typeof DayButton>) {
   const ref = React.useRef<HTMLButtonElement>(null);
   React.useEffect(() => {
-    if (modifiers.focused) ref.current?.focus();
+    if (modifiers.focused) {ref.current?.focus();}
   }, [modifiers.focused]);
 
   return (

@@ -1,4 +1,6 @@
-import { expect, Locator, Page } from "@playwright/test";
+/* eslint-disable eslint-plugin-import(prefer-default-export), typescript-eslint(no-restricted-types) */
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -47,7 +49,7 @@ export class LoginPage extends BasePage {
    */
   async waitForFormReady(): Promise<void> {
     await this.waitForLoadingComplete();
-    await expect(this.emailInput).toBeVisible({ timeout: 15000 });
+    await expect(this.emailInput).toBeVisible({ timeout: 15_000 });
     await expect(this.loginButton).toBeVisible({ timeout: 5000 });
   }
 

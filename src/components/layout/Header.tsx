@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export), eslint-plugin-unicorn(filename-case), typescript-eslint(explicit-module-boundary-types) */
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -8,7 +9,7 @@ import {
 import { Menu } from "lucide-react";
 import { Image } from "@unpic/react";
 import { Link } from "@tanstack/react-router";
-import { AccountNavItem } from "./AccountNavItem";
+import { AccountNavItem } from "./account-nav-item";
 
 const navItems = [
   { to: "/routines", label: "Routines" },

@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export), typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -12,7 +13,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import * as React from "react";
 
-interface DateTimePickerProps {
+type DateTimePickerProps = {
   value?: Date | null;
   onChange?: (date: Date | null) => void;
   label?: string;

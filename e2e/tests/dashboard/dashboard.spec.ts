@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-jest(no-conditional-in-test) */
 import { expect, test } from "@/e2e/fixtures/base.fixture";
 
 /**
@@ -22,7 +23,7 @@ test.describe("Dashboard", () => {
     // Check that stats section exists
     // Look for stat card labels
     await expect(page.getByText(/total sessions/i)).toBeVisible({
-      timeout: 10000,
+      timeout: 10_000,
     });
     await expect(page.getByText(/this week/i)).toBeVisible();
     await expect(page.getByText(/day streak/i)).toBeVisible();

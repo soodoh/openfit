@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-jest(no-conditional-in-test) */
 import { expect, test } from "@/e2e/fixtures/base.fixture";
 import { logout } from "@/e2e/utils/auth.helper";
 
@@ -18,7 +19,7 @@ test.describe("Logout", () => {
     await logout(page);
 
     // Should be redirected to signin page
-    await expect(page).toHaveURL("/signin", { timeout: 10000 });
+    await expect(page).toHaveURL("/signin", { timeout: 10_000 });
   });
 
   test("should redirect to signin after logout", async ({ page }) => {
@@ -42,7 +43,7 @@ test.describe("Logout", () => {
     await page.goto("/");
 
     // Should be redirected to signin
-    await expect(page).toHaveURL("/signin", { timeout: 10000 });
+    await expect(page).toHaveURL("/signin", { timeout: 10_000 });
   });
 
   test("should not be able to access routines page after logout", async ({
@@ -55,7 +56,7 @@ test.describe("Logout", () => {
     await page.goto("/routines");
 
     // Should be redirected to signin
-    await expect(page).toHaveURL("/signin", { timeout: 10000 });
+    await expect(page).toHaveURL("/signin", { timeout: 10_000 });
   });
 
   test("should not be able to access exercises page after logout", async ({
@@ -68,7 +69,7 @@ test.describe("Logout", () => {
     await page.goto("/exercises");
 
     // Should be redirected to signin
-    await expect(page).toHaveURL("/signin", { timeout: 10000 });
+    await expect(page).toHaveURL("/signin", { timeout: 10_000 });
   });
 
   test("should not be able to access logs page after logout", async ({
@@ -81,7 +82,7 @@ test.describe("Logout", () => {
     await page.goto("/logs");
 
     // Should be redirected to signin
-    await expect(page).toHaveURL("/signin", { timeout: 10000 });
+    await expect(page).toHaveURL("/signin", { timeout: 10_000 });
   });
 
   test("should be able to login again after logout", async ({
@@ -107,9 +108,9 @@ test.describe("Logout", () => {
     await loginPage.login(email, password);
 
     // Should be back on dashboard
-    await expect(page).toHaveURL("/", { timeout: 15000 });
+    await expect(page).toHaveURL("/", { timeout: 15_000 });
     await expect(page.getByText(/welcome back/i)).toBeVisible({
-      timeout: 10000,
+      timeout: 10_000,
     });
   });
 });

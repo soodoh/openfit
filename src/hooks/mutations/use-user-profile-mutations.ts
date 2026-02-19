@@ -1,8 +1,9 @@
 
+/* eslint-disable typescript-eslint(no-restricted-types), typescript-eslint(explicit-module-boundary-types), eslint-plugin-import(prefer-default-export) */
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface UpdateUserProfileInput {
+type UpdateUserProfileInput = {
   theme?: "light" | "dark" | "system";
   defaultRepetitionUnitId?: string;
   defaultWeightUnitId?: string;

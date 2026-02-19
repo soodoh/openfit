@@ -1,3 +1,4 @@
+/* eslint-disable eslint(complexity), eslint(no-console), eslint(no-plusplus), eslint-plugin-unicorn(no-process-exit), eslint-plugin-unicorn(prefer-top-level-await), typescript-eslint(array-type), typescript-eslint(no-restricted-types) */
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "./index";
@@ -71,10 +72,10 @@ async function main() {
     // 4. Create 50 routines with 2 routine days each
     console.log("Creating 50 routines...");
     let firstRoutineDayId: string | null = null;
-    const firstRoutineDaySetGroups: {
+    const firstRoutineDaySetGroups: Array<{
       order: number;
       sets: { exerciseId: string; order: number }[];
-    }[] = [];
+    }> = [];
 
     for (let r = 1; r <= 50; r++) {
       const routineId = nanoid();
@@ -100,7 +101,7 @@ async function main() {
         }
 
         // Assign 2 random weekdays
-        const shuffled = [...WEEKDAYS].sort(() => Math.random() - 0.5);
+        const shuffled = [...WEEKDAYS].toSorted(() => Math.random() - 0.5);
         for (let w = 0; w < 2; w++) {
           await db.insert(schema.routineDayWeekdays).values({
             id: nanoid(),
@@ -121,7 +122,7 @@ async function main() {
             order: sg,
           });
 
-          const sets: { exerciseId: string; order: number }[] = [];
+          const sets: Array<{ exerciseId: string; order: number }> = [];
           for (let s = 0; s < 4; s++) {
             const exerciseId = randomElement(exerciseIds);
             sets.push({ exerciseId, order: s });

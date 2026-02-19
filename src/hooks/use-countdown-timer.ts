@@ -1,3 +1,4 @@
+/* eslint-disable eslint(eqeqeq), eslint(no-eq-null), eslint-plugin-unicorn(prefer-global-this), typescript-eslint(no-restricted-types) */
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const DEFAULT_INTERVAL_MS = 250;

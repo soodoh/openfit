@@ -1,6 +1,7 @@
-import { CreateSessionButton } from "@/components/sessions/CreateSession";
-import { MonthlyCalendar } from "@/components/sessions/MonthlyCalendar";
-import { ResumeSessionButton } from "@/components/sessions/ResumeSessionButton";
+/* eslint-disable eslint-plugin-import(prefer-default-export), typescript-eslint(no-use-before-define) */
+import { CreateSessionButton } from "@/components/sessions/create-session";
+import { MonthlyCalendar } from "@/components/sessions/monthly-calendar";
+import { ResumeSessionButton } from "@/components/sessions/resume-session-button";
 import { useCurrentSession, useSessionsByDateRange, useUnits } from "@/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import dayjs from "dayjs";

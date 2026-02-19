@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export), typescript-eslint(no-restricted-types) */
 import { useCallback, useRef, useState } from "react";
 
 export function useInView(options?: IntersectionObserverInit): {

@@ -39,8 +39,7 @@ export const auth = betterAuth({
       },
     }),
   },
-  plugins: [
-    ...(process.env.AUTH_OIDC_CLIENT_ID
+  plugins: (process.env.AUTH_OIDC_CLIENT_ID
       ? [
           genericOAuth({
             config: [
@@ -56,7 +55,6 @@ export const auth = betterAuth({
           }),
         ]
       : []),
-  ],
   user: {
     additionalFields: {},
   },

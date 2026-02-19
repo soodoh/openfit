@@ -1,8 +1,9 @@
+/* eslint-disable eslint-plugin-import(prefer-default-export), typescript-eslint(no-use-before-define) */
 /// <reference types="vite/client" />
-import { AppWrapper } from "@/components/layout/AppWrapper";
-import { AuthProvider } from "@/components/providers/AuthProvider";
-import { QueryProvider } from "@/components/providers/QueryProvider";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { AppWrapper } from "@/components/layout/app-wrapper";
+import { AuthProvider } from "@/components/providers/auth-provider";
+import { QueryProvider } from "@/components/providers/query-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import {
   HeadContent,
   Outlet,
@@ -15,7 +16,7 @@ import appCss from "@/styles/globals.css?url";
 export const Route = createRootRoute({
   head: () => ({
     meta: [
-      { charSet: "utf-8" },
+      { charSet: "utf8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "OpenFit" },
       { name: "description", content: "Open source fitness app" },

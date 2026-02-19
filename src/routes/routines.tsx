@@ -1,6 +1,7 @@
-import { CreateRoutine } from "@/components/routines/CreateRoutine";
-import { RoutineCard } from "@/components/routines/RoutineCard";
-import { ResumeSessionButton } from "@/components/sessions/ResumeSessionButton";
+/* eslint-disable eslint-plugin-import(prefer-default-export), typescript-eslint(no-use-before-define) */
+import { CreateRoutine } from "@/components/routines/create-routine";
+import { RoutineCard } from "@/components/routines/routine-card";
+import { ResumeSessionButton } from "@/components/sessions/resume-session-button";
 import { Input } from "@/components/ui/input";
 import { useCurrentSession, useInView, useRoutines } from "@/hooks";
 import { createFileRoute } from "@tanstack/react-router";
@@ -56,7 +57,7 @@ function RoutinesPage() {
   } = useRoutines({ search: isSearching ? searchQuery : undefined });
 
   const routines = useMemo(() => {
-    if (!routinesData?.pages) return [];
+    if (!routinesData?.pages) {return [];}
     return routinesData.pages.flatMap((page) => page.page);
   }, [routinesData]);
 

@@ -1,4 +1,6 @@
-import { expect, Locator, Page } from "@playwright/test";
+/* eslint-disable eslint(no-plusplus), eslint-plugin-import(prefer-default-export), typescript-eslint(no-restricted-types) */
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -29,7 +31,7 @@ export class LogsPage extends BasePage {
     this.calendar = page
       .locator('[class*="calendar"], [class*="grid"]')
       .first();
-    this.calendarHeader = page.locator("text=/\\w+ \\d{4}/i");
+    this.calendarHeader = page.locator(String.raw`text=/\w+ \d{4}/i`);
     this.previousMonthButton = page.getByRole("button", {
       name: /previous|prev|left|</i,
     });
@@ -38,11 +40,11 @@ export class LogsPage extends BasePage {
     });
     this.todayButton = page.getByRole("button", { name: /today/i });
     this.calendarDays = page.locator("[class*='day'], button").filter({
-      has: page.locator("text=/^\\d{1,2}$/"),
+      has: page.locator(String.raw`text=/^\d{1,2}$/`),
     });
 
     // Session info
-    this.sessionCount = page.locator("text=/\\d+ sessions? in/i");
+    this.sessionCount = page.locator(String.raw`text=/\d+ sessions? in/i`);
 
     // Empty state
     this.emptyState = page.getByText(/no workout logs yet/i);
@@ -62,7 +64,7 @@ export class LogsPage extends BasePage {
    */
   async waitForLogsReady(): Promise<void> {
     await this.waitForLoadingComplete();
-    await expect(this.pageHeading).toBeVisible({ timeout: 15000 });
+    await expect(this.pageHeading).toBeVisible({ timeout: 15_000 });
   }
 
   /**
@@ -136,7 +138,7 @@ export class LogsPage extends BasePage {
     if (await this.isVisible(this.sessionCount, 2000)) {
       const text = await this.sessionCount.textContent();
       const match = text?.match(/(\d+)/);
-      return match ? parseInt(match[1], 10) : 0;
+      return match ? Number.parseInt(match[1], 10) : 0;
     }
     return 0;
   }
@@ -235,7 +237,7 @@ export class LogsPage extends BasePage {
       const text = await parent.textContent();
       const match = text?.match(/(\d{1,2})/);
       if (match) {
-        days.push(parseInt(match[1], 10));
+        days.push(Number.parseInt(match[1], 10));
       }
     }
 

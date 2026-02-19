@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils";
 import * as React from "react";
 
-interface DurationInputProps extends Omit<
-  React.ComponentProps<"input">,
-  "value" | "onChange"
-> {
+type DurationInputProps = {
   value: string;
   onChange: (value: string) => void;
-}
+} & Omit<
+  React.ComponentProps<"input">,
+  "value" | "onChange"
+>
 
 /**
  * Input component for duration in MM:ss format.
@@ -60,14 +60,14 @@ const DurationInput = React.forwardRef<HTMLInputElement, DurationInputProps>(
 
         // If seconds has 2 digits, validate it's <= 59
         if (seconds.length === 2) {
-          const secNum = parseInt(seconds, 10);
+          const secNum = Number.parseInt(seconds, 10);
           if (secNum > 59) {
             return;
           }
         }
 
         // If first digit of seconds is > 5, it's invalid
-        if (seconds.length >= 1 && parseInt(seconds[0], 10) > 5) {
+        if (seconds.length > 0 && Number.parseInt(seconds[0], 10) > 5) {
           return;
         }
 
@@ -103,8 +103,8 @@ export function parseDurationToSeconds(duration: string): number | undefined {
   }
 
   const parts = duration.split(":");
-  const minutes = parseInt(parts[0] ?? "0", 10) || 0;
-  const seconds = parseInt(parts[1] ?? "0", 10) || 0;
+  const minutes = Number.parseInt(parts[0] ?? "0", 10) || 0;
+  const seconds = Number.parseInt(parts[1] ?? "0", 10) || 0;
 
   return minutes * 60 + seconds;
 }

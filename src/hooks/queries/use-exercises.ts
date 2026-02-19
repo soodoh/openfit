@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-unicorn(no-array-for-each), typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import {
@@ -7,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import type { ExerciseWithImageUrl } from "@/lib/types";
 
-interface ExerciseFilters {
+type ExerciseFilters = {
   search?: string;
   equipmentId?: string;
   equipmentIds?: string[];
@@ -19,7 +20,7 @@ interface ExerciseFilters {
 // Use the proper type from convex-types
 type Exercise = ExerciseWithImageUrl;
 
-interface PaginatedResponse<T> {
+type PaginatedResponse<T> = {
   page: T[];
   isDone: boolean;
   continueCursor: string | null;
@@ -32,17 +33,17 @@ function buildExerciseQueryString(
   limit?: number,
 ): string {
   const params = new URLSearchParams();
-  if (filters.search) params.set("search", filters.search);
-  if (filters.equipmentId) params.set("equipmentId", filters.equipmentId);
+  if (filters.search) {params.set("search", filters.search);}
+  if (filters.equipmentId) {params.set("equipmentId", filters.equipmentId);}
   if (filters.equipmentIds) {
     filters.equipmentIds.forEach((id) => params.append("equipmentIds", id));
   }
-  if (filters.level) params.set("level", filters.level);
-  if (filters.categoryId) params.set("categoryId", filters.categoryId);
+  if (filters.level) {params.set("level", filters.level);}
+  if (filters.categoryId) {params.set("categoryId", filters.categoryId);}
   if (filters.primaryMuscleId)
-    params.set("primaryMuscleId", filters.primaryMuscleId);
-  if (cursor) params.set("cursor", cursor);
-  if (limit) params.set("limit", String(limit));
+    {params.set("primaryMuscleId", filters.primaryMuscleId);}
+  if (cursor) {params.set("cursor", cursor);}
+  if (limit) {params.set("limit", String(limit));}
   return params.toString();
 }
 
@@ -55,15 +56,15 @@ async function fetchExercises(
 ): Promise<PaginatedResponse<Exercise>> {
   const queryString = buildExerciseQueryString(filters, cursor, limit);
   const response = await fetch(`/api/exercises?${queryString}`, { signal });
-  if (!response.ok) throw new Error("Failed to fetch exercises");
+  if (!response.ok) {throw new Error("Failed to fetch exercises");}
   return response.json();
 }
 
 // Fetch single exercise
 async function fetchExercise(id: string): Promise<Exercise | null> {
   const response = await fetch(`/api/exercises/${id}`);
-  if (response.status === 404) return null;
-  if (!response.ok) throw new Error("Failed to fetch exercise");
+  if (response.status === 404) {return null;}
+  if (!response.ok) {throw new Error("Failed to fetch exercise");}
   return response.json();
 }
 
@@ -75,14 +76,14 @@ async function searchExercises(
   signal?: AbortSignal,
 ): Promise<Exercise[]> {
   const params = new URLSearchParams();
-  if (term) params.set("q", term);
+  if (term) {params.set("q", term);}
   if (equipmentIds) {
     equipmentIds.forEach((id) => params.append("equipmentIds", id));
   }
   params.set("limit", String(limit));
 
   const response = await fetch(`/api/exercises/search?${params}`, { signal });
-  if (!response.ok) throw new Error("Failed to search exercises");
+  if (!response.ok) {throw new Error("Failed to search exercises");}
   return response.json();
 }
 
@@ -97,17 +98,17 @@ async function searchSimilarExercises(
   } = {},
 ): Promise<Exercise[]> {
   const params = new URLSearchParams();
-  if (options.search) params.set("q", options.search);
+  if (options.search) {params.set("q", options.search);}
   if (options.equipmentIds) {
     options.equipmentIds.forEach((id) => params.append("equipmentIds", id));
   }
   primaryMuscleIds.forEach((id) => params.append("primaryMuscleIds", id));
   if (options.excludeExerciseId)
-    params.set("exclude", options.excludeExerciseId);
-  if (options.limit) params.set("limit", String(options.limit));
+    {params.set("exclude", options.excludeExerciseId);}
+  if (options.limit) {params.set("limit", String(options.limit));}
 
   const response = await fetch(`/api/exercises/similar?${params}`);
-  if (!response.ok) throw new Error("Failed to search similar exercises");
+  if (!response.ok) {throw new Error("Failed to search similar exercises");}
   return response.json();
 }
 
@@ -128,7 +129,7 @@ export function useExercise(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.exercises.detail(id || ""),
     queryFn: () => fetchExercise(id!),
-    enabled: !!id,
+    enabled: Boolean(id),
   });
 }
 

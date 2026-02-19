@@ -1,4 +1,6 @@
-import { expect, Locator, Page } from "@playwright/test";
+/* eslint-disable eslint(class-methods-use-this), eslint-plugin-import(prefer-default-export) */
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 /**
  * Base page object with common utilities for all pages
@@ -37,13 +39,13 @@ export class BasePage {
     // Wait for any loading spinners to disappear
     const spinner = this.page.locator(".animate-spin").first();
     if (await spinner.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await expect(spinner).toBeHidden({ timeout: 15000 });
+      await expect(spinner).toBeHidden({ timeout: 15_000 });
     }
 
     // Additional wait for "Loading..." text
     const loadingText = this.page.getByText(/^loading\.\.\.$/i).first();
     if (await loadingText.isVisible({ timeout: 500 }).catch(() => false)) {
-      await expect(loadingText).toBeHidden({ timeout: 15000 });
+      await expect(loadingText).toBeHidden({ timeout: 15_000 });
     }
   }
 

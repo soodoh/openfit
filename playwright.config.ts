@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import dotenv from "dotenv";
-import path from "path";
+import path from "node:path";
 
 // Load environment variables from .env.local
 dotenv.config({ path: path.resolve(__dirname, ".env.local") });
@@ -17,7 +17,7 @@ export default defineConfig({
   fullyParallel: true,
 
   // Fail the build on CI if you accidentally left test.only in the source code
-  forbidOnly: !!process.env.CI,
+  forbidOnly: Boolean(process.env.CI),
 
   // Retry failed tests on CI
   retries: process.env.CI ? 1 : 0,
@@ -117,11 +117,11 @@ export default defineConfig({
   ],
 
   // Global timeout for tests
-  timeout: 30000,
+  timeout: 30_000,
 
   // Expect timeout
   expect: {
-    timeout: 10000,
+    timeout: 10_000,
   },
 
   // Run local dev server before starting tests (if not already running)
@@ -131,6 +131,6 @@ export default defineConfig({
         command: "bun run dev",
         url: "http://localhost:3000",
         reuseExistingServer: true,
-        timeout: 120000,
+        timeout: 120_000,
       },
 });

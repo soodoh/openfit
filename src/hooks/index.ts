@@ -1,3 +1,4 @@
+/* eslint-disable oxc(no-barrel-file) */
 // Query hooks
 export * from "./queries/use-exercises";
 export * from "./queries/use-routines";

@@ -1,3 +1,4 @@
+/* eslint-disable eslint(no-console), eslint-plugin-import(prefer-default-export) */
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from "@/db";
 import { userProfiles, users } from "@/db/schema";

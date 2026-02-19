@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-unicorn(no-array-for-each) */
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ProgressCircle } from "./progress-circle";

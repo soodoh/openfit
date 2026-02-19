@@ -1,3 +1,4 @@
+/* eslint-disable eslint(radix), eslint-plugin-import(prefer-default-export), typescript-eslint(no-restricted-types) */
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -23,7 +24,7 @@ export const Route = createFileRoute('/api/exercises/similar')({
         const equipmentIds = searchParams.getAll("equipmentIds");
         const primaryMuscleIds = searchParams.getAll("primaryMuscleIds");
         const excludeExerciseId = searchParams.get("exclude");
-        const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50);
+        const limit = Math.min(Number.parseInt(searchParams.get("limit") || "20"), 50);
 
         if (primaryMuscleIds.length === 0) {
           return Response.json([]);
@@ -57,7 +58,7 @@ export const Route = createFileRoute('/api/exercises/similar')({
         // Bodyweight exercises (no equipment) are always included
         if (equipmentIds.length > 0) {
           exercises = exercises.filter((e) => {
-            if (!e.equipmentId) return true;
+            if (!e.equipmentId) {return true;}
             return equipmentIds.includes(e.equipmentId);
           });
         }

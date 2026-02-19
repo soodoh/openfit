@@ -1,8 +1,9 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface CreateExerciseInput {
+type CreateExerciseInput = {
   name: string;
   equipmentId?: string | null;
   force?: "push" | "pull" | "static" | null;
@@ -14,9 +15,9 @@ interface CreateExerciseInput {
   instructions?: string[];
 }
 
-interface UpdateExerciseInput extends Partial<CreateExerciseInput> {
+type UpdateExerciseInput = {
   id: string;
-}
+} & Partial<CreateExerciseInput>
 
 // Create exercise
 async function createExercise(input: CreateExerciseInput) {

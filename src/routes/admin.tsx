@@ -1,5 +1,6 @@
-import { AdminPage } from "@/components/admin/AdminPage";
-import { useAuth } from "@/components/providers/AuthProvider";
+/* eslint-disable eslint-plugin-import(prefer-default-export), eslint-plugin-promise(always-return), eslint-plugin-promise(prefer-await-to-then), typescript-eslint(no-restricted-types), typescript-eslint(no-use-before-define) */
+import { AdminPage } from "@/components/admin/admin-page";
+import { useAuth } from "@/components/providers/auth-provider";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";

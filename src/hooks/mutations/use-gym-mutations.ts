@@ -1,13 +1,14 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface CreateGymInput {
+type CreateGymInput = {
   name: string;
   equipmentIds?: string[];
 }
 
-interface UpdateGymInput {
+type UpdateGymInput = {
   id: string;
   name?: string;
   equipmentIds?: string[];

@@ -1,6 +1,8 @@
+/* eslint-disable typescript-eslint(ban-types), typescript-eslint(explicit-module-boundary-types) */
 import { cn } from "@/lib/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority';
 import { X } from "lucide-react";
 import * as React from "react";
 
@@ -43,10 +45,7 @@ const sheetVariants = cva("fixed z-50 gap-4 bg-background p-6 shadow-lg", {
   },
 });
 
-interface SheetContentProps
-  extends
-    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {}
+type SheetContentProps = {} & React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & VariantProps<typeof sheetVariants>
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,

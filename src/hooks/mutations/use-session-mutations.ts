@@ -1,8 +1,9 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface CreateSessionInput {
+type CreateSessionInput = {
   name?: string;
   notes?: string;
   startTime?: number;
@@ -11,7 +12,7 @@ interface CreateSessionInput {
   templateId?: string;
 }
 
-interface UpdateSessionInput {
+type UpdateSessionInput = {
   id: string;
   name?: string;
   notes?: string;

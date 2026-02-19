@@ -1,3 +1,4 @@
+/* eslint-disable eslint(no-console), eslint-plugin-import(prefer-default-export) */
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from "@/db";
 import {
@@ -39,7 +40,7 @@ export const Route = createFileRoute('/api/admin/exercises/$id')({
               .delete(exercisePrimaryMuscles)
               .where(eq(exercisePrimaryMuscles.exerciseId, id));
 
-            if (body.primaryMuscleIds.length) {
+            if (body.primaryMuscleIds.length > 0) {
               await db.insert(exercisePrimaryMuscles).values(
                 body.primaryMuscleIds.map((muscleId: string) => ({
                   id: createId(),
@@ -56,7 +57,7 @@ export const Route = createFileRoute('/api/admin/exercises/$id')({
               .delete(exerciseSecondaryMuscles)
               .where(eq(exerciseSecondaryMuscles.exerciseId, id));
 
-            if (body.secondaryMuscleIds.length) {
+            if (body.secondaryMuscleIds.length > 0) {
               await db.insert(exerciseSecondaryMuscles).values(
                 body.secondaryMuscleIds.map((muscleId: string) => ({
                   id: createId(),
@@ -73,7 +74,7 @@ export const Route = createFileRoute('/api/admin/exercises/$id')({
               .delete(exerciseInstructions)
               .where(eq(exerciseInstructions.exerciseId, id));
 
-            if (body.instructions.length) {
+            if (body.instructions.length > 0) {
               await db.insert(exerciseInstructions).values(
                 body.instructions.map((instruction: string, index: number) => ({
                   id: createId(),
@@ -89,7 +90,7 @@ export const Route = createFileRoute('/api/admin/exercises/$id')({
           if (body.imageUrls !== undefined) {
             await db.delete(exerciseImages).where(eq(exerciseImages.exerciseId, id));
 
-            if (body.imageUrls.length) {
+            if (body.imageUrls.length > 0) {
               await db.insert(exerciseImages).values(
                 body.imageUrls.map((imagePath: string, index: number) => ({
                   id: createId(),

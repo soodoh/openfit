@@ -1,3 +1,4 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types) */
 
 import { cn } from "@/lib/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";

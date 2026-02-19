@@ -1,14 +1,15 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface CreateRoutineDayInput {
+type CreateRoutineDayInput = {
   routineId: string;
   description: string;
   weekdays?: number[];
 }
 
-interface UpdateRoutineDayInput {
+type UpdateRoutineDayInput = {
   id: string;
   description?: string;
   weekdays?: number[];

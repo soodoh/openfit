@@ -1,4 +1,6 @@
-import { expect, Locator, Page } from "@playwright/test";
+/* eslint-disable eslint(no-plusplus), eslint-plugin-import(prefer-default-export), typescript-eslint(no-restricted-types) */
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -30,7 +32,7 @@ export class RoutinesPage extends BasePage {
     });
     this.emptyState = page.getByText(/no routines yet/i);
     this.noResultsState = page.getByText(/no routines found/i);
-    this.resultsCount = page.locator("text=/\\d+ routines? (total|found)/i");
+    this.resultsCount = page.locator(String.raw`text=/\d+ routines? (total|found)/i`);
   }
 
   /**
@@ -46,7 +48,7 @@ export class RoutinesPage extends BasePage {
    */
   async waitForRoutinesReady(): Promise<void> {
     await this.waitForLoadingComplete();
-    await expect(this.pageHeading).toBeVisible({ timeout: 15000 });
+    await expect(this.pageHeading).toBeVisible({ timeout: 15_000 });
   }
 
   /**
@@ -205,7 +207,7 @@ export class RoutinesPage extends BasePage {
       const card = cards.nth(i);
       const nameElement = card.locator('[class*="font-semibold"]').first();
       const name = await nameElement.textContent();
-      if (name) names.push(name.trim());
+      if (name) {names.push(name.trim());}
     }
 
     return names;

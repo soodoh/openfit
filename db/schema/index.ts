@@ -1,3 +1,4 @@
+/* eslint-disable oxc(no-barrel-file) */
 // Re-export all schema tables and relations
 export * from "./auth";
 export * from "./user-data";

@@ -1,4 +1,6 @@
-import { expect, Locator, Page } from "@playwright/test";
+/* eslint-disable eslint(default-case), eslint(no-plusplus), eslint-plugin-import(prefer-default-export), typescript-eslint(no-restricted-types) */
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
@@ -49,7 +51,7 @@ export class ExercisesPage extends BasePage {
     });
     this.emptyState = page.getByText(/no exercises available/i);
     this.noResultsState = page.getByText(/no exercises found/i);
-    this.resultsCount = page.locator("text=/\\d+ exercises? (total|found)/i");
+    this.resultsCount = page.locator(String.raw`text=/\d+ exercises? (total|found)/i`);
   }
 
   /**
@@ -65,7 +67,7 @@ export class ExercisesPage extends BasePage {
    */
   async waitForExercisesReady(): Promise<void> {
     await this.waitForLoadingComplete();
-    await expect(this.pageHeading).toBeVisible({ timeout: 15000 });
+    await expect(this.pageHeading).toBeVisible({ timeout: 15_000 });
   }
 
   /**
@@ -108,18 +110,22 @@ export class ExercisesPage extends BasePage {
     const comboboxes = this.page.getByRole("combobox");
 
     switch (filterType) {
-      case "equipment":
+      case "equipment": {
         trigger = comboboxes.first();
         break;
-      case "level":
+      }
+      case "level": {
         trigger = comboboxes.nth(1);
         break;
-      case "category":
+      }
+      case "category": {
         trigger = comboboxes.nth(2);
         break;
-      case "muscle":
+      }
+      case "muscle": {
         trigger = comboboxes.nth(3);
         break;
+      }
     }
 
     await trigger.click();
@@ -209,7 +215,7 @@ export class ExercisesPage extends BasePage {
       const card = cards.nth(i);
       const nameElement = card.locator("h3, [class*='font-semibold']").first();
       const name = await nameElement.textContent();
-      if (name) names.push(name.trim());
+      if (name) {names.push(name.trim());}
     }
 
     return names;
@@ -252,7 +258,7 @@ export class ExercisesPage extends BasePage {
     const text = await this.getResultsCountText();
     if (text) {
       const match = text.match(/(\d+)/);
-      return match ? parseInt(match[1], 10) : null;
+      return match ? Number.parseInt(match[1], 10) : null;
     }
     return null;
   }

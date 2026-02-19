@@ -1,8 +1,9 @@
+/* eslint-disable typescript-eslint(explicit-module-boundary-types), typescript-eslint(no-restricted-types) */
 
 import { queryKeys } from "@/lib/query-keys";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
-interface RoutineDay {
+type RoutineDay = {
   id: string;
   routineId: string;
   userId: string;
@@ -12,7 +13,7 @@ interface RoutineDay {
   updatedAt: Date;
 }
 
-interface Routine {
+type Routine = {
   id: string;
   userId: string;
   name: string;
@@ -22,13 +23,13 @@ interface Routine {
   updatedAt: Date;
 }
 
-interface PaginatedResponse<T> {
+type PaginatedResponse<T> = {
   page: T[];
   isDone: boolean;
   continueCursor: string | null;
 }
 
-interface RoutineFilters {
+type RoutineFilters = {
   search?: string;
 }
 
@@ -40,20 +41,20 @@ async function fetchRoutines(
   signal?: AbortSignal,
 ): Promise<PaginatedResponse<Routine>> {
   const params = new URLSearchParams();
-  if (filters.search) params.set("search", filters.search);
-  if (cursor) params.set("cursor", cursor);
+  if (filters.search) {params.set("search", filters.search);}
+  if (cursor) {params.set("cursor", cursor);}
   params.set("limit", String(limit));
 
   const response = await fetch(`/api/routines?${params}`, { signal });
-  if (!response.ok) throw new Error("Failed to fetch routines");
+  if (!response.ok) {throw new Error("Failed to fetch routines");}
   return response.json();
 }
 
 // Fetch single routine
 async function fetchRoutine(id: string): Promise<Routine | null> {
   const response = await fetch(`/api/routines/${id}`);
-  if (response.status === 404) return null;
-  if (!response.ok) throw new Error("Failed to fetch routine");
+  if (response.status === 404) {return null;}
+  if (!response.ok) {throw new Error("Failed to fetch routine");}
   return response.json();
 }
 
@@ -74,7 +75,7 @@ export function useRoutine(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.routines.detail(id || ""),
     queryFn: () => fetchRoutine(id!),
-    enabled: !!id,
+    enabled: Boolean(id),
   });
 }
 

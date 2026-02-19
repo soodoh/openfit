@@ -1,3 +1,4 @@
+/* eslint-disable eslint(no-console), eslint-plugin-import(prefer-default-export) */
 import { createFileRoute } from '@tanstack/react-router'
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -13,7 +14,7 @@ export const Route = createFileRoute('/api/sets/reorder')({
         try {
           session = await requireAuth(request);
         } catch (error) {
-          if (error instanceof Response) return error;
+          if (error instanceof Response) {return error;}
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -43,7 +44,7 @@ export const Route = createFileRoute('/api/sets/reorder')({
               where: eq(schema.workoutSets.id, setId),
             });
 
-            if (!set) continue;
+            if (!set) {continue;}
 
             if (set.userId !== session.user.id) {
               return Response.json({ error: "Unauthorized" }, { status: 403 });

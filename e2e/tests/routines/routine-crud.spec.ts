@@ -1,3 +1,4 @@
+/* eslint-disable eslint-plugin-jest(no-conditional-in-test) */
 import { expect, test } from "@/e2e/fixtures/base.fixture";
 
 /**
@@ -41,7 +42,7 @@ test.describe("Routine CRUD", () => {
     await submitButton.click();
 
     // Wait for modal to close and data to update
-    await expect(page.getByRole("dialog")).toBeHidden({ timeout: 10000 });
+    await expect(page.getByRole("dialog")).toBeHidden({ timeout: 10_000 });
     await routinesPage.waitForConvexData();
 
     // Verify routine was created
@@ -90,7 +91,7 @@ test.describe("Routine CRUD", () => {
       await saveButton.click();
 
       // Wait for update
-      await expect(page.getByRole("dialog")).toBeHidden({ timeout: 10000 });
+      await expect(page.getByRole("dialog")).toBeHidden({ timeout: 10_000 });
       await routinesPage.waitForConvexData();
 
       // Verify update
