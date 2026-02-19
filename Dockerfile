@@ -27,7 +27,7 @@ WORKDIR /app
 RUN npm install -g tsx --no-fund --no-audit 2>/dev/null
 
 # Copy TanStack Start build output
-COPY --from=builder /app/.output ./.output
+COPY --from=builder /app/dist ./dist
 
 # Copy db scripts and files needed for migrations/seeding
 COPY --from=builder /app/db ./db
