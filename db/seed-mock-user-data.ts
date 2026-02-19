@@ -10,6 +10,7 @@ function randomElement<T>(arr: T[]): T {
   return arr[randomInt(0, arr.length - 1)];
 }
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6]; // Sun-Sat
+// oxlint-disable-next-line complexity
 async function main() {
   const email = process.argv[2];
   if (!email) {
@@ -23,6 +24,8 @@ async function main() {
     if (!user) {
       throw new Error(`User not found: ${email}`);
     }
+    // oxlint-disable-next-line no-console
+    console.log(`Found user: ${user.name} (${user.id})`);
     // 2. Look up user profile
     const profile = await db.query.userProfiles.findFirst({
       where: eq(schema.userProfiles.userId, user.id),
@@ -48,6 +51,10 @@ async function main() {
       throw new Error("No exercises available to seed mock data");
     }
     const exerciseIds = allExercises.map((e) => e.id);
+    // oxlint-disable-next-line no-console
+    console.log(`Found ${exerciseIds.length} exercises to use.`);
+    // oxlint-disable-next-line no-console
+    console.log("Creating 50 routines...");
     let firstRoutineDayId: string | undefined = null;
     const firstRoutineDaySetGroups: Array<{
       order: number;
@@ -124,8 +131,14 @@ async function main() {
           }
         }
       }
+      if (r % 10 === 0) {
+        // oxlint-disable-next-line no-console
+        console.log(`  Created ${r}/50 routines`);
+      }
     }
     const now = Date.now();
+    // oxlint-disable-next-line no-console
+    console.log("Creating 100 workout sessions...");
     for (let n = 1; n <= 100; n += 1) {
       const daysAgo = 100 - n; // Session 1 is 99 days ago, Session 100 is today
       const dayStart = new Date(now - daysAgo * 24 * 60 * 60 * 1000);
@@ -170,7 +183,21 @@ async function main() {
           });
         }
       }
+      if (n % 20 === 0) {
+        // oxlint-disable-next-line no-console
+        console.log(`  Created ${n}/100 sessions`);
+      }
     }
+    // oxlint-disable-next-line no-console
+    console.log("Mock data seeding complete!");
+    // oxlint-disable-next-line no-console
+    console.log(
+      "  - 50 routines (2 days each, 10 set groups per day, 4 sets per group)",
+    );
+    // oxlint-disable-next-line no-console
+    console.log(
+      "  - 100 workout sessions (10 set groups each, 4 sets per group)",
+    );
   } catch (error) {
     throw new Error("Failed to seed mock user data", { cause: error });
   }

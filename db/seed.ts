@@ -9,13 +9,19 @@ import * as schema from "./schema";
 // Push schema to database (creates tables if they don't exist)
 function pushSchema() {
   if (process.env.SKIP_SCHEMA_PUSH) {
+    // oxlint-disable-next-line no-console
+    console.log("Skipping schema push (migrations handle schema creation).");
     return;
   }
+  // oxlint-disable-next-line no-console
+  console.log("Pushing database schema...");
   try {
     execSync("npx drizzle-kit push", {
       stdio: "inherit",
       cwd: process.cwd(),
     });
+    // oxlint-disable-next-line no-console
+    console.log("Schema pushed successfully.");
   } catch (error) {
     throw new Error("Failed to push schema", { cause: error });
   }
@@ -123,6 +129,10 @@ type LookupMaps = {
   categories: Map<string, string>;
 };
 async function seedReferenceData() {
+  // oxlint-disable-next-line no-console
+  console.log("Seeding reference data...");
+  // oxlint-disable-next-line no-console
+  console.log("Seeding repetition units...");
   for (const name of REPETITION_UNITS) {
     const existing = await db.query.repetitionUnits.findFirst({
       where: eq(schema.repetitionUnits.name, name),
@@ -132,8 +142,12 @@ async function seedReferenceData() {
         id: nanoid(),
         name,
       });
+      // oxlint-disable-next-line no-console
+      console.log(`Created repetition unit: ${name}`);
     }
   }
+  // oxlint-disable-next-line no-console
+  console.log("Seeding weight units...");
   for (const name of WEIGHT_UNITS) {
     const existing = await db.query.weightUnits.findFirst({
       where: eq(schema.weightUnits.name, name),
@@ -143,8 +157,12 @@ async function seedReferenceData() {
         id: nanoid(),
         name,
       });
+      // oxlint-disable-next-line no-console
+      console.log(`Created weight unit: ${name}`);
     }
   }
+  // oxlint-disable-next-line no-console
+  console.log("Seeding equipment...");
   const equipmentMap = new Map<string, string>();
   for (const name of EQUIPMENT_NAMES) {
     const displayName = capitalize(name);
@@ -160,8 +178,12 @@ async function seedReferenceData() {
         name: displayName,
       });
       equipmentMap.set(name, id);
+      // oxlint-disable-next-line no-console
+      console.log(`Created equipment: ${displayName}`);
     }
   }
+  // oxlint-disable-next-line no-console
+  console.log("Seeding muscle groups...");
   const muscleGroupMap = new Map<string, string>();
   for (const name of MUSCLE_GROUP_NAMES) {
     const displayName = capitalize(name);
@@ -177,8 +199,12 @@ async function seedReferenceData() {
         name: displayName,
       });
       muscleGroupMap.set(name, id);
+      // oxlint-disable-next-line no-console
+      console.log(`Created muscle group: ${displayName}`);
     }
   }
+  // oxlint-disable-next-line no-console
+  console.log("Seeding categories...");
   const categoryMap = new Map<string, string>();
   for (const name of CATEGORY_NAMES) {
     const displayName = capitalize(name);
@@ -194,6 +220,8 @@ async function seedReferenceData() {
         name: displayName,
       });
       categoryMap.set(name, id);
+      // oxlint-disable-next-line no-console
+      console.log(`Created category: ${displayName}`);
     }
   }
   return {
@@ -205,13 +233,25 @@ async function seedReferenceData() {
 async function seedExercises(lookups: LookupMaps) {
   // Import exercises data - this is a dynamic import since it's a large file
   const { exercises: rawExercises } = await import("./seedData/exercises");
+  const totalImages = rawExercises.reduce(
+    (sum, ex) => sum + (ex.images?.length || 0),
+    0,
+  );
+  // oxlint-disable-next-line no-console
+  console.log(
+    `Seeding ${rawExercises.length} exercises (${totalImages} images)...`,
+  );
   await ensureUploadDir();
+  let count = 0;
+  let skipped = 0;
+  let imageCount = 0;
   for (const exercise of rawExercises) {
     // Check if exercise already exists
     const existing = await db.query.exercises.findFirst({
       where: eq(schema.exercises.name, exercise.name),
     });
     if (existing) {
+      skipped += 1;
       continue;
     }
     const equipmentId = exercise.equipment
@@ -276,15 +316,35 @@ async function seedExercises(lookups: LookupMaps) {
             order: i,
             path: localPath,
           });
+          imageCount += 1;
         }
       }
     }
+    count += 1;
+    if (count % 50 === 0) {
+      // oxlint-disable-next-line no-console
+      console.log(
+        `  Progress: ${count} exercises seeded, ${imageCount}/${totalImages} images downloaded`,
+      );
+    }
   }
+  if (skipped > 0) {
+    // oxlint-disable-next-line no-console
+    console.log(`Skipped ${skipped} exercises (already exist).`);
+  }
+  // oxlint-disable-next-line no-console
+  console.log(
+    `Seeded ${count} exercises with ${imageCount}/${totalImages} images downloaded.`,
+  );
 }
 async function seedAdminUser() {
   const email = process.env.ADMIN_USER;
   const password = process.env.ADMIN_PASSWORD;
   if (!email || !password) {
+    // oxlint-disable-next-line no-console
+    console.log(
+      "ADMIN_USER and ADMIN_PASSWORD not set, skipping admin user creation.",
+    );
     return;
   }
   // Check if admin already exists
@@ -292,8 +352,12 @@ async function seedAdminUser() {
     where: eq(schema.users.email, email),
   });
   if (existing) {
+    // oxlint-disable-next-line no-console
+    console.log(`Admin user ${email} already exists, skipping.`);
     return;
   }
+  // oxlint-disable-next-line no-console
+  console.log(`Creating admin user: ${email}...`);
   // Use BetterAuth API to create the user (handles password hashing, user + account creation)
   // The databaseHook will create a USER profile automatically
   const result = await auth.api.signUpEmail({
@@ -311,10 +375,16 @@ async function seedAdminUser() {
     .update(schema.userProfiles)
     .set({ role: "ADMIN" })
     .where(eq(schema.userProfiles.userId, result.user.id));
+  // oxlint-disable-next-line no-console
+  console.log(`Admin user ${email} created successfully.`);
 }
 async function main() {
+  // oxlint-disable-next-line no-console
+  console.log("Starting database seed...");
   // Push schema first to ensure tables exist
   pushSchema();
+  // oxlint-disable-next-line no-console
+  console.log("Downloading exercise images from GitHub...");
   try {
     // Seed reference data
     const lookups = await seedReferenceData();
@@ -322,6 +392,8 @@ async function main() {
     await seedExercises(lookups);
     // Seed admin user (after reference data so default units exist for the profile hook)
     await seedAdminUser();
+    // oxlint-disable-next-line no-console
+    console.log("Database seeding complete!");
   } catch (error) {
     throw new Error("Error seeding database", { cause: error });
   }
