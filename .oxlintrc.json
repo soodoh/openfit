@@ -1,0 +1,42 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "react",
+    "jsx-a11y",
+    "import"
+  ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "style": "warn",
+    "perf": "warn",
+    "pedantic": "warn"
+  },
+  "ignorePatterns": [
+    ".output/**",
+    "dist/**",
+    "src/routeTree.gen.ts"
+  ],
+  "rules": {
+    "import/no-relative-parent-imports": "error",
+    "react/react-in-jsx-scope": "off",
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "e2e/**/*.{js,ts,tsx}"
+      ],
+      "rules": {
+        "react/rules-of-hooks": "off"
+      }
+    }
+  ]
+}
