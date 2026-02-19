@@ -1,5 +1,11 @@
 # openfit
 
+## 0.6.2
+
+### Patch Changes
+
+- a466221: Fix docker build
+
 ## 0.6.1
 
 ### Patch Changes
