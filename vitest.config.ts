@@ -8,8 +8,8 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
-    include: ["lib/**/*.test.ts", "components/**/*.test.{ts,tsx}"],
-    exclude: ["node_modules", ".next", "convex/**/*"],
+    include: ["src/lib/**/*.test.ts", "src/components/**/*.test.{ts,tsx}"],
+    exclude: ["node_modules", ".output"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],

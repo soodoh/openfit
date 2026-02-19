@@ -1,20 +1,33 @@
 {
-  "extends": "@tsconfig/next/tsconfig.json",
   "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
-    },
-    "target": "ES2017"
+      "@/db": ["./db"],
+      "@/db/*": ["./db/*"],
+      "@/*": ["./src/*"]
+    }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "node_modules/@tsconfig/next/next-env.d.ts",
-    "node_modules/@tsconfig/next/**/*.ts",
-    "node_modules/@tsconfig/next/**/*.tsx",
-    "node_modules/@tsconfig/next/.next/types/**/*.ts",
-    ".next/types/**/*.ts"
-  ]
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "db/**/*.ts",
+    "scripts/**/*.ts",
+    "drizzle.config.ts",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts"
+  ],
+  "exclude": ["node_modules", ".output"]
 }

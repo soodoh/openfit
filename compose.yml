@@ -1,19 +1,18 @@
 services:
-  # Next.js application with SQLite database
+  # TanStack Start application with SQLite database
   openfit:
     image: oven/bun:latest
     working_dir: /app
-    command: sh -c "bun install && bun run db:migrate && bun run db:seed && bun run dev --port 3000"
+    command: sh -c "bun install && bun run db:migrate && bun run db:seed && bun run dev"
     ports:
       - 3000:3000
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/.next
+      - /app/.output
       - openfit-data:/app/data
     env_file: ".env.local"
     environment:
-      - WATCHPACK_POLLING=true
       - DATABASE_URL=file:/app/data/openfit.db
     networks:
       - app-net
