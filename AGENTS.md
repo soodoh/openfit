@@ -17,7 +17,7 @@ Use Bun for package management and scripts:
 - `bun dev`: start local dev server
 - `bun run build`: production build
 - `bun run start`: run built server (`.output/server/index.mjs`)
-- `bun run lint`: run ESLint
+- `bun run lint`: run oxlint
 - `bun run test`: run Vitest in watch mode
 - `bun run test:run`: single-run unit/component tests
 - `bun run test:coverage`: coverage report (text + HTML)
