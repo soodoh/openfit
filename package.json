@@ -22,7 +22,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "start": "node dist/server/index.mjs",
+    "start": "node dist/server/index.js",
     "lint": "bun x --bun oxlint . && prettier --check .",
     "lint:fix": "bun x --bun oxlint --fix . && prettier --write .",
     "lint-staged": "lint-staged",
