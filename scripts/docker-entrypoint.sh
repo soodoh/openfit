@@ -48,4 +48,4 @@ run_init
 
 # Start the application
 echo "Starting OpenFit..."
-exec node dist/server/index.js
+exec node dist/server/server.js
