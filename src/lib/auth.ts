@@ -5,8 +5,13 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { genericOAuth } from "better-auth/plugins";
 import { nanoid } from "nanoid";
 
+const authBaseURL =
+  process.env.BETTER_AUTH_BASE_URL ||
+  process.env.VITE_APP_URL ||
+  (process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000");
+
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_BASE_URL || "http://localhost:3000",
+  ...(authBaseURL ? { baseURL: authBaseURL } : {}),
   database: drizzleAdapter(db, {
     provider: "sqlite",
     schema: {
