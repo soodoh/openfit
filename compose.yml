@@ -4,12 +4,12 @@ services:
     image: openfit
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: apps/openfit/Dockerfile
     ports:
       - 3000:3000
     volumes:
       - openfit-data:/app/data
-    env_file: ".env.local"
+    env_file: "apps/openfit/.env.local"
     networks:
       - app-net
 

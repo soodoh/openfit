@@ -8,6 +8,7 @@ node_modules
 
 # Build artifacts
 .output
+apps/openfit/.output
 
 # Development
 .git
@@ -19,6 +20,7 @@ node_modules
 # Tests
 tests
 e2e
+apps/openfit/e2e
 playwright-report
 test-results
 coverage
@@ -31,11 +33,13 @@ vitest.config.ts
 
 # Data (SQLite DB and downloaded images - generated at runtime)
 data
+apps/openfit/data
 
 # Documentation
 CLAUDE.md
 CHANGELOG.md
 LICENSE
+apps/openfit/CHANGELOG.md
 
 # Misc
 .DS_Store

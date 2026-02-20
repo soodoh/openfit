@@ -1,0 +1,14 @@
+{
+  "name": "mobile-app",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'mobile-app dev placeholder'",
+    "build": "mkdir -p dist && echo 'mobile-app build placeholder' > dist/.keep",
+    "start": "echo 'mobile-app start placeholder'",
+    "lint": "echo 'mobile-app lint placeholder'",
+    "lint:fix": "echo 'mobile-app lint fix placeholder'",
+    "test": "echo 'mobile-app test placeholder'",
+    "test:run": "echo 'mobile-app test:run placeholder'"
+  }
+}

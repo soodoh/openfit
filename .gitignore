@@ -7,18 +7,30 @@
 
 # Database
 /data/
+/apps/openfit/data/
 
 # dependencies
 /node_modules
+/apps/openfit/node_modules
 
 # testing
 /coverage
 /playwright-report
 /test-results
-/e2e/.auth
+/apps/openfit/coverage
+/apps/openfit/playwright-report
+/apps/openfit/test-results
+/apps/openfit/e2e/.auth
 
 # production
 /.output
+/apps/openfit/.output
+/.turbo
+/apps/openfit/.turbo
+/apps/docs/.turbo
+/apps/mobile-app/.turbo
+/apps/docs/dist
+/apps/mobile-app/dist
 
 # misc
 .DS_Store
@@ -27,7 +39,7 @@
 # env files (can opt-in for committing if needed)
 .env
 .env.*
-!.env.example
+!**/.env.example
 
 # vercel
 .vercel

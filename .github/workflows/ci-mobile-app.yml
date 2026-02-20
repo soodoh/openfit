@@ -1,0 +1,48 @@
+name: CI Mobile App
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/mobile-app/**"
+      - "package.json"
+      - "bun.lock"
+      - "turbo.json"
+      - ".github/workflows/ci-mobile-app.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/mobile-app/**"
+      - "package.json"
+      - "bun.lock"
+      - "turbo.json"
+      - ".github/workflows/ci-mobile-app.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile-app:
+    name: Mobile App Workspace
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint mobile workspace
+        run: bunx turbo run lint --filter=mobile-app
+
+      - name: Run mobile tests
+        run: bunx turbo run test:run --filter=mobile-app
+
+      - name: Build mobile workspace
+        run: bunx turbo run build --filter=mobile-app
