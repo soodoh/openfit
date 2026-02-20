@@ -1,11 +1,12 @@
-import { signIn, signUp } from "@/components/providers/auth-provider";
+import { signIn, signUp, useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { getSession } from "@/lib/auth-client";
 import { SignUpSchema } from "@/lib/auth-schema";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { flattenError } from "zod";
 // Provider icons (simple SVG paths for common providers)
 const PROVIDER_ICONS: Record<string, React.ReactNode> = {
@@ -79,12 +80,18 @@ const OAUTH_PROVIDERS = [
 ].filter((p) => p.enabled);
 export const LoginForm = ({ register }: { register?: boolean }): any => {
   const navigate = useNavigate();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | undefined>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState<string[]>([]);
   const [passwordError, setPasswordError] = useState<string[]>([]);
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate({ to: "/", replace: true });
+    }
+  }, [authLoading, isAuthenticated, navigate]);
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setEmailError([]);
@@ -117,8 +124,16 @@ export const LoginForm = ({ register }: { register?: boolean }): any => {
           return;
         }
       }
-      // Redirect to dashboard after successful auth
-      navigate({ to: "/" });
+      const { data: session, error: sessionError } = await getSession();
+      if (sessionError || !session) {
+        setPasswordError([
+          "Authentication succeeded but session was not ready",
+        ]);
+        setLoading(false);
+        return;
+      }
+      // Redirect to dashboard after successful auth and session refresh
+      navigate({ to: "/", replace: true });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Authentication failed";
