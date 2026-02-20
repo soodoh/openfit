@@ -1,5 +1,11 @@
 # openfit
 
+## 0.6.4
+
+### Patch Changes
+
+- ae4515c: Fix deployment base URL issue
+
 ## 0.6.3
 
 ### Patch Changes
