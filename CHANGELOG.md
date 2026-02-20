@@ -1,5 +1,11 @@
 # openfit
 
+## 0.6.3
+
+### Patch Changes
+
+- b093b10: Fix db scripts build for docker
+
 ## 0.6.2
 
 ### Patch Changes
