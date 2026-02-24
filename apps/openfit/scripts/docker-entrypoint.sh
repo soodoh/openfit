@@ -9,4 +9,4 @@ echo "OpenFit - Starting up..."
 
 # Start the application
 echo "Starting OpenFit..."
-exec node /app/.output/server/index.mjs
+exec bun run /app/.output/server/index.mjs

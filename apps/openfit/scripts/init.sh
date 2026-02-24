@@ -14,11 +14,11 @@ mkdir -p data/uploads
 
 # Run migrations
 echo "Running database migrations..."
-node .output/db/migrate.js
+bun run db/migrate.ts
 
 # Seed database
 echo "Seeding database..."
-node .output/db/seed.js
+bun run db/seed.ts
 
 echo ""
 echo "Initialization complete!"

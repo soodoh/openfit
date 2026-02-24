@@ -11,5 +11,4 @@ if [ -f "$PROJECT_ROOT/.env.local" ]; then
   set +a
 fi
 
-bun run build
 "$SCRIPT_DIR"/init.sh

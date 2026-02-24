@@ -22,7 +22,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "start": "node .output/server/index.mjs",
+    "start": "bun run .output/server/index.mjs",
     "lint": "bun x --bun oxlint . && prettier --check .",
     "lint:fix": "bun x --bun oxlint --fix . && prettier --write .",
     "test": "vitest",
@@ -35,9 +35,9 @@
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
     "db:init": "./scripts/dev-init.sh",
-    "db:migrate": "bun run build && node .output/db/migrate.js",
-    "db:seed": "bun run build && node .output/db/seed.js",
-    "db:seed-mock": "node .output/db/seed-mock-user-data.js"
+    "db:migrate": "bun run db/migrate.ts",
+    "db:seed": "bun run db/seed.ts",
+    "db:seed-mock": "bun run db/seed-mock-user-data.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

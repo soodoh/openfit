@@ -25,19 +25,24 @@ RUN bun run build:openfit
 RUN bun install --frozen-lockfile --production
 
 # Stage 2: Runtime
-FROM node:24-alpine AS runner
+FROM oven/bun:1-alpine AS runner
 
 WORKDIR /app
 
-# Copy Nitro server output and db artifacts
+# Copy Nitro server output
 COPY --from=builder /repo/apps/openfit/.output ./.output
 
 # Copy production node_modules for runtime and db scripts
 COPY --from=builder /repo/node_modules ./node_modules
 COPY --from=builder /repo/apps/openfit/package.json ./package.json
 COPY --from=builder /repo/apps/openfit/drizzle.config.ts ./drizzle.config.ts
-COPY --from=builder /repo/apps/openfit/db/schema.ts ./db/schema.ts
-COPY --from=builder /repo/apps/openfit/db/schema ./db/schema
+COPY --from=builder /repo/apps/openfit/tsconfig.json ./tsconfig.json
+
+# Copy db source (scripts, schema, migrations, seed data)
+COPY --from=builder /repo/apps/openfit/db ./db
+
+# Copy src/lib/auth.ts (imported by db/seed.ts via @/lib/auth)
+COPY --from=builder /repo/apps/openfit/src/lib/auth.ts ./src/lib/auth.ts
 
 # Copy public assets
 COPY --from=builder /repo/apps/openfit/public ./public
