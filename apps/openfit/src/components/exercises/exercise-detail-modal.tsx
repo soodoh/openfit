@@ -21,6 +21,7 @@ import type { Exercise, ExerciseWithImageUrl } from "@/lib/types";
 import { useExerciseLookups } from "@/lib/use-exercise-lookups";
 import { Image } from "@unpic/react";
 import { Dumbbell, Flame, Gauge, Settings2, Target } from "lucide-react";
+import { useMemo } from "react";
 
 type MinimalExercise = {
   id: string;
@@ -266,8 +267,12 @@ export const ExerciseDetailModal = ({
   );
   const exercise = exerciseWithImages ?? undefined;
   const displayName = exercise?.name ?? exerciseProp.name;
-  const imageUrls = (exercise?.imageUrls ?? []).filter(
-    (url): url is string => url !== undefined,
+  const imageUrls = useMemo(
+    () =>
+      (exercise?.imageUrls ?? []).filter(
+        (url): url is string => url !== undefined,
+      ),
+    [exercise?.imageUrls],
   );
   const fallbackImageUrl = getFallbackImageUrl(exerciseProp);
   const firstImageUrl = getFirstImageUrl(
@@ -284,7 +289,10 @@ export const ExerciseDetailModal = ({
   const secondaryMuscleNames = getMuscleGroupNames(
     exercise?.secondaryMuscleIds,
   );
-  const instructions = exercise?.instructions ?? [];
+  const instructions = useMemo(
+    () => exercise?.instructions ?? [],
+    [exercise?.instructions],
+  );
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>

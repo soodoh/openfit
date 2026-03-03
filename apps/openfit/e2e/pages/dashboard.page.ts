@@ -199,12 +199,9 @@ export class DashboardPage extends BasePage {
     const closeButton = this.page.getByRole("button", {
       name: /close|cancel|x/i,
     });
-    if (await this.isVisible(closeButton)) {
-      await closeButton.click();
-    } else {
-      // Press escape as fallback
-      await this.page.keyboard.press("Escape");
-    }
+    await ((await this.isVisible(closeButton))
+      ? closeButton.click()
+      : this.page.keyboard.press("Escape"));
   }
   /**
    * Check if there's an active session to resume

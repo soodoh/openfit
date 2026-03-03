@@ -26,7 +26,7 @@ import {
 } from "@dnd-kit/sortable";
 import dayjs from "dayjs";
 import { ArrowUpDown, Dumbbell } from "lucide-react";
-import { useOptimistic, useState, useTransition } from "react";
+import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { WorkoutSetGroup } from "./workout-set-group";
 export const WorkoutList = ({
   view = ListView.EditTemplate,
@@ -58,6 +58,10 @@ export const WorkoutList = ({
     timer.restart(dayjs().add(seconds, "seconds").toDate(), true);
     setTimerOpen(true);
   };
+  const setGroupIds = useMemo(
+    () => optimisticSetGroups.map((sg) => sg.id),
+    [optimisticSetGroups],
+  );
   const mouseSensor = useSensor(MouseSensor);
   const touchSensor = useSensor(TouchSensor);
   const keyboardSensor = useSensor(KeyboardSensor);
@@ -143,7 +147,7 @@ export const WorkoutList = ({
               sensors={sensors}
             >
               <SortableContext
-                items={optimisticSetGroups.map((sg) => sg.id)}
+                items={setGroupIds}
                 strategy={verticalListSortingStrategy}
               >
                 {optimisticSetGroups.map((setGroup) => {

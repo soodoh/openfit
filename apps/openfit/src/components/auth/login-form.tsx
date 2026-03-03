@@ -144,17 +144,15 @@ export const LoginForm = ({ register }: { register?: boolean }): any => {
   const handleOAuthSignIn = async (providerId: string) => {
     setOauthLoading(providerId);
     try {
-      if (providerId === "oidc") {
-        await signIn.oauth2({
-          providerId: "oidc",
-          callbackURL: "/",
-        });
-      } else {
-        await signIn.social({
-          provider: providerId as "google" | "github" | "discord",
-          callbackURL: "/",
-        });
-      }
+      await (providerId === "oidc"
+        ? signIn.oauth2({
+            providerId: "oidc",
+            callbackURL: "/",
+          })
+        : signIn.social({
+            provider: providerId as "google" | "github" | "discord",
+            callbackURL: "/",
+          }));
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "OAuth sign-in failed";

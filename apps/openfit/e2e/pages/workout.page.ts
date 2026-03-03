@@ -161,11 +161,9 @@ export class WorkoutPage extends BasePage {
     const closeButton = this.page.getByRole("button", {
       name: /close|cancel|x/i,
     });
-    if (await this.isVisible(closeButton)) {
-      await closeButton.click();
-    } else {
-      await this.page.keyboard.press("Escape");
-    }
+    await ((await this.isVisible(closeButton))
+      ? closeButton.click()
+      : this.page.keyboard.press("Escape"));
   }
   /**
    * Fill new session form

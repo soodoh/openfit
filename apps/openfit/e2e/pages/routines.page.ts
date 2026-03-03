@@ -167,11 +167,9 @@ export class RoutinesPage extends BasePage {
     const closeButton = this.page.getByRole("button", {
       name: /close|cancel|x/i,
     });
-    if (await this.isVisible(closeButton)) {
-      await closeButton.click();
-    } else {
-      await this.page.keyboard.press("Escape");
-    }
+    await ((await this.isVisible(closeButton))
+      ? closeButton.click()
+      : this.page.keyboard.press("Escape"));
   }
   /**
    * Get routine names visible on the page

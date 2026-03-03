@@ -48,18 +48,16 @@ export const EditRoutineModal = ({
     setIsPending(true);
     setErrors({});
     try {
-      if (routine) {
-        await updateRoutineMutation.mutateAsync({
-          id: routine.id,
-          name,
-          description: description || undefined,
-        });
-      } else {
-        await createRoutineMutation.mutateAsync({
-          name,
-          description: description || undefined,
-        });
-      }
+      await (routine
+        ? updateRoutineMutation.mutateAsync({
+            id: routine.id,
+            name,
+            description: description || undefined,
+          })
+        : createRoutineMutation.mutateAsync({
+            name,
+            description: description || undefined,
+          }));
       onClose();
     } catch {
       setErrors({ name: "Failed to save routine" });

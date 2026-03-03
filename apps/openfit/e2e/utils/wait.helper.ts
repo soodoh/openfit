@@ -77,11 +77,9 @@ export async function waitForText(
   text: string | RegExp,
   timeout = DEFAULT_CONVEX_TIMEOUT,
 ): Promise<void> {
-  if (typeof text === "string") {
-    await expect(page.getByText(text)).toBeVisible({ timeout });
-  } else {
-    await expect(page.locator(`text=${text.source}`)).toBeVisible({ timeout });
-  }
+  await (typeof text === "string"
+    ? expect(page.getByText(text)).toBeVisible({ timeout })
+    : expect(page.locator(`text=${text.source}`)).toBeVisible({ timeout }));
 }
 /**
  * Wait for URL to change

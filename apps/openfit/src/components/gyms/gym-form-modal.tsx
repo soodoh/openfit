@@ -59,18 +59,16 @@ export function GymFormModal({ open, onClose, gym }: GymFormModalProps): any {
     }
     setIsPending(true);
     try {
-      if (gym) {
-        await updateGymMutation.mutateAsync({
-          id: gym.id,
-          name: name.trim(),
-          equipmentIds: selectedEquipmentIds,
-        });
-      } else {
-        await createGymMutation.mutateAsync({
-          name: name.trim(),
-          equipmentIds: selectedEquipmentIds,
-        });
-      }
+      await (gym
+        ? updateGymMutation.mutateAsync({
+            id: gym.id,
+            name: name.trim(),
+            equipmentIds: selectedEquipmentIds,
+          })
+        : createGymMutation.mutateAsync({
+            name: name.trim(),
+            equipmentIds: selectedEquipmentIds,
+          }));
       onClose();
     } catch (caughtError) {
       setError(

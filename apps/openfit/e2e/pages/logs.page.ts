@@ -190,11 +190,9 @@ export class LogsPage extends BasePage {
     const closeButton = this.page.getByRole("button", {
       name: /close|cancel|x/i,
     });
-    if (await this.isVisible(closeButton)) {
-      await closeButton.click();
-    } else {
-      await this.page.keyboard.press("Escape");
-    }
+    await ((await this.isVisible(closeButton))
+      ? closeButton.click()
+      : this.page.keyboard.press("Escape"));
   }
   /**
    * Get the days with sessions in the current view
@@ -231,11 +229,9 @@ export class LogsPage extends BasePage {
       // Determine direction
       const currentDate = new Date(current || "");
       const targetDate = new Date(`${month} 1, ${year}`);
-      if (currentDate < targetDate) {
-        await this.goToNextMonth();
-      } else {
-        await this.goToPreviousMonth();
-      }
+      await (currentDate < targetDate
+        ? this.goToNextMonth()
+        : this.goToPreviousMonth());
       attempts += 1;
     }
   }

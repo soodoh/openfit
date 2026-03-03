@@ -94,25 +94,23 @@ export const EditSessionModal = ({
     }
     setIsPending(true);
     try {
-      if (session) {
-        await updateSessionMutation.mutateAsync({
-          id: session.id,
-          name,
-          startTime: startTime?.getTime(),
-          endTime: endTime?.getTime() ?? undefined,
-          notes,
-          impression: impression ?? undefined,
-        });
-      } else {
-        await createSessionMutation.mutateAsync({
-          templateId: workoutTemplate?.id,
-          name,
-          startTime: startTime?.getTime() ?? Date.now(),
-          endTime: endTime?.getTime(),
-          notes,
-          impression: impression ?? undefined,
-        });
-      }
+      await (session
+        ? updateSessionMutation.mutateAsync({
+            id: session.id,
+            name,
+            startTime: startTime?.getTime(),
+            endTime: endTime?.getTime() ?? undefined,
+            notes,
+            impression: impression ?? undefined,
+          })
+        : createSessionMutation.mutateAsync({
+            templateId: workoutTemplate?.id,
+            name,
+            startTime: startTime?.getTime() ?? Date.now(),
+            endTime: endTime?.getTime(),
+            notes,
+            impression: impression ?? undefined,
+          }));
       onClose();
     } catch {
       setError("Failed to save session. Please try again.");

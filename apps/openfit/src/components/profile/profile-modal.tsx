@@ -158,18 +158,16 @@ export const ProfileModal = ({
     }
     setIsGymPending(true);
     try {
-      if (editingGym) {
-        await updateGymMutation.mutateAsync({
-          id: editingGym.id,
-          name: gymName.trim(),
-          equipmentIds: selectedEquipmentIds,
-        });
-      } else {
-        await createGymMutation.mutateAsync({
-          name: gymName.trim(),
-          equipmentIds: selectedEquipmentIds,
-        });
-      }
+      await (editingGym
+        ? updateGymMutation.mutateAsync({
+            id: editingGym.id,
+            name: gymName.trim(),
+            equipmentIds: selectedEquipmentIds,
+          })
+        : createGymMutation.mutateAsync({
+            name: gymName.trim(),
+            equipmentIds: selectedEquipmentIds,
+          }));
       resetGymForm();
     } catch (caughtError) {
       setGymError(

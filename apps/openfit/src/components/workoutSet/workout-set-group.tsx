@@ -94,6 +94,7 @@ export const WorkoutSetGroup = ({
     }
   }
   const exercise = sets[0]?.exercise;
+  const setIds = useMemo(() => sets.map((s) => s.id), [sets]);
   const setsWithNumber = useMemo(() => {
     const numberedSets: Array<{ set: SetWithRelations; setNum: number }> = [];
     let normalSetCount = 0;
@@ -271,7 +272,7 @@ export const WorkoutSetGroup = ({
             <div className="divide-y divide-border/50">
               <DndContext id="sets" onDragEnd={handleSort} sensors={sensors}>
                 <SortableContext
-                  items={sets.map((s) => s.id)}
+                  items={setIds}
                   strategy={verticalListSortingStrategy}
                 >
                   {setsWithNumber.map(({ set, setNum }) => {

@@ -207,14 +207,12 @@ export function ExerciseFormModal({
         instructions: cleanedInstructions,
         imageUrls,
       };
-      if (exercise) {
-        await updateExerciseMutation.mutateAsync({
-          id: exercise.id,
-          ...args,
-        });
-      } else {
-        await createExerciseMutation.mutateAsync(args);
-      }
+      await (exercise
+        ? updateExerciseMutation.mutateAsync({
+            id: exercise.id,
+            ...args,
+          })
+        : createExerciseMutation.mutateAsync(args));
       onClose();
     } catch (caughtError) {
       setError(

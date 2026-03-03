@@ -1,7 +1,7 @@
 import { expect, test as setup } from "@playwright/test";
 import path from "node:path";
 
-const authFile = path.join(__dirname, ".auth/user.json");
+const authFile = path.join(import.meta.dirname, ".auth/user.json");
 
 /**
  * Authentication setup for E2E tests

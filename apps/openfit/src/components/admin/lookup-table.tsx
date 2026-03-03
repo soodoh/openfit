@@ -113,18 +113,16 @@ export function LookupTable({
     setEditItem(null);
   };
   const handleFormSubmit = async (name: string) => {
-    if (editItem) {
-      await updateLookupMutation.mutateAsync({
-        id: editItem.id,
-        type: lookupType,
-        name,
-      });
-    } else {
-      await createLookupMutation.mutateAsync({
-        type: lookupType,
-        name,
-      });
-    }
+    await (editItem
+      ? updateLookupMutation.mutateAsync({
+          id: editItem.id,
+          type: lookupType,
+          name,
+        })
+      : createLookupMutation.mutateAsync({
+          type: lookupType,
+          name,
+        }));
     handleCloseForm();
   };
   const handleDelete = async (item: LookupItemWithId) => {
