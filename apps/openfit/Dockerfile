@@ -1,14 +1,10 @@
 # Stage 1: Build
-FROM node:24-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /repo
 
 # Install build dependencies
-RUN apk add --no-cache curl bash python3 make g++
-
-# Install bun
-RUN curl -fsSL https://bun.sh/install | bash
-ENV PATH="/root/.bun/bin:${PATH}"
+RUN apk add --no-cache bash
 
 # Install dependencies (cached layer - only re-runs when lockfile changes)
 COPY package.json bun.lock turbo.json ./
@@ -21,9 +17,6 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run build:openfit
 
-# Prune to production dependencies after build
-RUN bun install --frozen-lockfile --production
-
 # Stage 2: Runtime
 FROM oven/bun:1-alpine AS runner
 
@@ -32,9 +25,9 @@ WORKDIR /app
 # Copy Nitro server output
 COPY --from=builder /repo/apps/openfit/.output ./.output
 
-# Copy production node_modules for runtime and db scripts
-COPY --from=builder /repo/node_modules ./node_modules
+# Copy package files and install production deps directly (avoids symlink issues from monorepo)
 COPY --from=builder /repo/apps/openfit/package.json ./package.json
+RUN bun install --production
 COPY --from=builder /repo/apps/openfit/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder /repo/apps/openfit/tsconfig.json ./tsconfig.json
 
