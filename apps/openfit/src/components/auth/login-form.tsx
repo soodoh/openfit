@@ -92,7 +92,7 @@ export const LoginForm = ({ register }: { register?: boolean }): any => {
       void navigate({ to: "/", replace: true });
     }
   }, [authLoading, isAuthenticated, navigate]);
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setEmailError([]);
     setPasswordError([]);

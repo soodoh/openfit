@@ -40,7 +40,6 @@ const DurationInput = React.forwardRef<HTMLInputElement, DurationInputProps>(
         if (parts[0].length > 3) {
           return;
         }
-        onChange(input);
       } else {
         // Has colon - validate minutes and seconds
         const [minutes, seconds] = parts;
@@ -67,9 +66,9 @@ const DurationInput = React.forwardRef<HTMLInputElement, DurationInputProps>(
         if (seconds.length > 0 && Number.parseInt(seconds[0], 10) > 5) {
           return;
         }
-
-        onChange(input);
       }
+
+      onChange(input);
     };
 
     return (

@@ -32,6 +32,9 @@
 /apps/docs/dist
 /apps/mobile-app/dist
 
+# TanStack
+.tanstack/
+
 # misc
 .DS_Store
 *.pem

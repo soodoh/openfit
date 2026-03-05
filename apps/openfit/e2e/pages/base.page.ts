@@ -51,7 +51,7 @@ export class BasePage {
   /**
    * Get the current URL path (without base URL)
    */
-  async getCurrentPath(): Promise<string> {
+  getCurrentPath(): string {
     const url = new URL(this.page.url());
     return url.pathname;
   }

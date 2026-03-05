@@ -74,7 +74,7 @@ export const EditSessionModal = ({
       setError(null);
     }
   }, [open, session, defaultStartDate]);
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     // Must be null or valid date

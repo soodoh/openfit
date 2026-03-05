@@ -45,7 +45,7 @@ export const EditDayModal = ({
     ? "Update workout day details and schedule"
     : "Create a new workout day for this routine";
   const submitLabel = routineDay ? "Save Changes" : "Add Day";
-  const onSubmit = async (event: React.FormEvent) => {
+  const onSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsPending(true);
     try {

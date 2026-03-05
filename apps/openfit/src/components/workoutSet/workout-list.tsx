@@ -4,12 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useCountdownTimer, useReorderSetGroups } from "@/hooks";
 import { ListView } from "@/lib/types";
-import type {
-  RoutineDayId,
-  SetGroupWithRelations,
-  Units,
-  WorkoutSessionId,
-} from "@/lib/types";
+import type { RoutineDayId, SetGroupWithRelations, Units } from "@/lib/types";
 import {
   DndContext,
   KeyboardSensor,

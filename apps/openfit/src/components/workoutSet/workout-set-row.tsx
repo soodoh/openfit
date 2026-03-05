@@ -55,7 +55,7 @@ export const WorkoutSetRow = ({
             disabled={isRowDisabled}
             defaultValue={set.reps}
             className="h-9 text-sm text-center font-medium flex-1 min-w-0"
-            onBlur={async (event) => {
+            onBlur={(event) => {
               updateSetMutation.mutate({
                 id: set.id,
                 reps: Number.parseInt(event.target.value, 10) || 0,
@@ -82,7 +82,7 @@ export const WorkoutSetRow = ({
             disabled={isRowDisabled}
             defaultValue={set.weight}
             className="h-9 text-sm text-center font-medium flex-1 min-w-0"
-            onBlur={async (event) => {
+            onBlur={(event) => {
               updateSetMutation.mutate({
                 id: set.id,
                 weight: Number.parseInt(event.target.value, 10) || 0,
@@ -106,7 +106,7 @@ export const WorkoutSetRow = ({
           (set.repetitionUnit?.name === "Seconds" && !set.completed ? (
             <WorkoutTimer
               set={set}
-              onComplete={async () => {
+              onComplete={() => {
                 updateSetMutation.mutate({
                   id: set.id,
                   completed: true,

@@ -44,7 +44,7 @@ export function LookupFormModal({
   }
   const isEditMode = Boolean(item);
   const submitLabel = isEditMode ? "Save Changes" : "Create";
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     const trimmedName = name.trim();

@@ -36,7 +36,7 @@ export function UserRoleModal({ user, onClose }: UserRoleModalProps): any {
       setError(null);
     }
   }, [open, user]);
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) {
       return;

@@ -68,7 +68,7 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24, // 1 day
   },
   callbacks: {
-    session: async ({
+    session: ({
       session,
       user,
     }: {
@@ -87,7 +87,7 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        after: async (user) => {
+        after: (user) => {
           const repUnits = db
             .select()
             .from(schema.repetitionUnits)

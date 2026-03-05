@@ -43,7 +43,7 @@ export const EditRoutineModal = ({
     ? "Update your workout routine details"
     : "Set up a new workout routine to organize your training";
   const submitLabel = routine ? "Save Changes" : "Create Routine";
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsPending(true);
     setErrors({});

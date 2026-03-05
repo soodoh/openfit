@@ -46,7 +46,7 @@ export function GymFormModal({ open, onClose, gym }: GymFormModalProps): any {
       setError(null);
     }
   }, [open, gym]);
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     if (!name.trim()) {

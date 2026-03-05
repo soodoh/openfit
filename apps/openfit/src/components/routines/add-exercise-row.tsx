@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useCreateSetGroup } from "@/hooks";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import type { Exercise, RoutineDayId, WorkoutSessionId } from "@/lib/types";
+import type { Exercise, RoutineDayId } from "@/lib/types";
 export const AddExerciseRow = ({
   sessionOrDayId,
   isSession,
@@ -15,7 +15,7 @@ export const AddExerciseRow = ({
   const [exercise, setExercise] = useState<Exercise | undefined>(null);
   const [numSets, setNumSets] = useState<string>("1");
   const createSetGroupMutation = useCreateSetGroup();
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!exercise) {
       return;

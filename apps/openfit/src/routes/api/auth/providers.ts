@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/api/auth/providers")({
   server: {
     handlers: {
-      GET: async () => {
+      GET: () => {
         // Check which OAuth providers are configured via environment variables
         const providerStatus = {
           google: Boolean(

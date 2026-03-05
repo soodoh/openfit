@@ -26,7 +26,7 @@ export function DeleteExerciseModal({
   const open = exercise !== null;
   const [error, setError] = useState<string | undefined>(null);
   const [isPending, setIsPending] = useState(false);
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!exercise) {
       return;
     }

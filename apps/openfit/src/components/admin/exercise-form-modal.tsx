@@ -156,7 +156,7 @@ export function ExerciseFormModal({
       setUploadProgress(null);
     }
   }, [open, exercise]);
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     if (!name.trim()) {

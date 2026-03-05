@@ -122,14 +122,10 @@ e2eTest.describe("Create Session", () => {
       await e2eExpect(page.getByRole("dialog")).toBeVisible({ timeout: 5000 });
       // Find and click close button
       const closeButton = page.getByRole("button", { name: /close|cancel|x/i });
-      if (await closeButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await closeButton.click();
-        await e2eExpect(page.getByRole("dialog")).toBeHidden({ timeout: 5000 });
-      } else {
-        // Use escape as fallback
-        await page.keyboard.press("Escape");
-        await e2eExpect(page.getByRole("dialog")).toBeHidden({ timeout: 5000 });
-      }
+      await ((await closeButton.isVisible({ timeout: 2000 }).catch(() => false))
+        ? closeButton.click()
+        : page.keyboard.press("Escape"));
+      await e2eExpect(page.getByRole("dialog")).toBeHidden({ timeout: 5000 });
     },
   );
 });

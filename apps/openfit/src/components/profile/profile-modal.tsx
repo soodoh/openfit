@@ -123,7 +123,9 @@ export const ProfileModal = ({
     setSelectedEquipmentIds(gym.equipmentIds || []);
     setIsAddingGym(true);
   };
-  const handleSubmitSettings = async (event: React.FormEvent) => {
+  const handleSubmitSettings = async (
+    event: React.SubmitEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
     if (!defaultRepUnitId || !defaultWeightUnitId) {
       setError("Please select both units");
@@ -145,7 +147,7 @@ export const ProfileModal = ({
       setIsPending(false);
     }
   };
-  const handleSubmitGym = async (event: React.FormEvent) => {
+  const handleSubmitGym = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setGymError(null);
     if (!gymName.trim()) {
