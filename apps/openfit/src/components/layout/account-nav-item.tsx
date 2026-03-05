@@ -24,7 +24,7 @@ export const AccountNavItem = (): any => {
   }
   const handleSignOut = async () => {
     await signOut();
-    navigate({ to: "/signin" });
+    void navigate({ to: "/signin" });
   };
   return (
     <>
@@ -41,7 +41,7 @@ export const AccountNavItem = (): any => {
         <DropdownMenuContent align="end">
           {isAdmin && (
             <>
-              <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
+              <DropdownMenuItem onClick={() => void navigate({ to: "/admin" })}>
                 <Shield className="mr-2 h-4 w-4" />
                 <span>Admin</span>
               </DropdownMenuItem>

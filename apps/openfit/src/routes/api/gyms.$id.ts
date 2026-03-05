@@ -2,13 +2,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 export const Route = createFileRoute("/api/gyms/$id")({
   server: {
     handlers: {
       // GET /api/gyms/[id] - Get single gym
-      GET: async ({ request, params }) => {
+      GET: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -41,7 +48,13 @@ export const Route = createFileRoute("/api/gyms/$id")({
         });
       },
       // PATCH /api/gyms/[id] - Update gym
-      PATCH: async ({ request, params }) => {
+      PATCH: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -62,7 +75,10 @@ export const Route = createFileRoute("/api/gyms/$id")({
           if (gym.userId !== session.user.id) {
             return Response.json({ error: "Unauthorized" }, { status: 403 });
           }
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            name?: string;
+            equipmentIds?: string[];
+          }>(request);
           const { name, equipmentIds } = body;
           const trimmedName = name?.trim();
           if (name !== undefined && !trimmedName) {
@@ -106,7 +122,7 @@ export const Route = createFileRoute("/api/gyms/$id")({
           });
           return Response.json({
             ...updated,
-            equipmentIds: updated?.equipment.map((ge) => ge.equipmentId) || [],
+            equipmentIds: updated?.equipment.map((ge) => ge.equipmentId) ?? [],
           });
         } catch {
           return Response.json(
@@ -116,7 +132,13 @@ export const Route = createFileRoute("/api/gyms/$id")({
         }
       },
       // DELETE /api/gyms/[id] - Delete gym
-      DELETE: async ({ request, params }) => {
+      DELETE: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let session;
         try {
           session = await requireAuth(request);

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { and, asc, eq, like } from "drizzle-orm";
 import { nanoid } from "nanoid";
 // Helper to get first image URL for an exercise
@@ -39,16 +40,16 @@ export const Route = createFileRoute("/api/exercises")({
   server: {
     handlers: {
       // GET /api/exercises - List exercises with pagination and filters
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         const { searchParams } = new URL(request.url);
         // Pagination
         const cursor = searchParams.get("cursor");
         const limit = Math.min(
-          Number.parseInt(searchParams.get("limit") || "20", 10),
+          Number.parseInt(searchParams.get("limit") ?? "20", 10),
           100,
         );
         // Filters
-        const searchTerm = searchParams.get("search") || "";
+        const searchTerm = searchParams.get("search") ?? "";
         const equipmentId = searchParams.get("equipmentId");
         const equipmentIds = searchParams.getAll("equipmentIds");
         const level = searchParams.get("level") as
@@ -126,7 +127,7 @@ export const Route = createFileRoute("/api/exercises")({
         });
       },
       // POST /api/exercises - Create exercise (admin only)
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         try {
           await requireAdmin(request);
         } catch (error) {
@@ -136,7 +137,17 @@ export const Route = createFileRoute("/api/exercises")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
         try {
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            name: string;
+            equipmentId?: string | undefined;
+            force?: string | undefined;
+            level?: string;
+            mechanic?: string | undefined;
+            categoryId: string;
+            primaryMuscleIds?: string[];
+            secondaryMuscleIds?: string[];
+            instructions?: string[];
+          }>(request);
           const {
             name,
             equipmentId,
@@ -159,10 +170,10 @@ export const Route = createFileRoute("/api/exercises")({
           await db.insert(schema.exercises).values({
             id: exerciseId,
             name,
-            equipmentId: equipmentId || null,
-            force: force || null,
-            level: level || "beginner",
-            mechanic: mechanic || null,
+            equipmentId: equipmentId ?? null,
+            force: force ?? null,
+            level: level ?? "beginner",
+            mechanic: mechanic ?? null,
             categoryId,
           });
           // Create primary muscles

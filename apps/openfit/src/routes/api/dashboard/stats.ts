@@ -7,7 +7,7 @@ import { and, count, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 export const Route = createFileRoute("/api/dashboard/stats")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);

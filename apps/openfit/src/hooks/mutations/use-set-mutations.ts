@@ -1,5 +1,7 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseMutationResult } from "@tanstack/react-query";
 type CreateSetInput = {
   setGroupId: string;
   exerciseId: string;
@@ -25,92 +27,96 @@ type ReorderSetsInput = {
   setIds: string[];
 };
 // Create set
-async function createSet(input: CreateSetInput) {
+async function createSet(input: CreateSetInput): Promise<unknown> {
   const response = await fetch("/api/sets", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to create set");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to create set");
 }
 // Update set
-async function updateSet({ id, ...input }: UpdateSetInput) {
+async function updateSet({ id, ...input }: UpdateSetInput): Promise<unknown> {
   const response = await fetch(`/api/sets/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to update set");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to update set");
 }
 // Delete set
-async function deleteSet(id: string) {
+async function deleteSet(id: string): Promise<unknown> {
   const response = await fetch(`/api/sets/${id}`, {
     method: "DELETE",
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to delete set");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to delete set");
 }
 // Reorder sets
-async function reorderSets(input: ReorderSetsInput) {
+async function reorderSets(input: ReorderSetsInput): Promise<unknown> {
   const response = await fetch("/api/sets/reorder", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to reorder sets");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to reorder sets");
 }
-export function useCreateSet(): any {
+export function useCreateSet(): UseMutationResult<
+  unknown,
+  Error,
+  CreateSetInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createSet,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.routineDays.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routineDays.all,
+      });
     },
   });
 }
-export function useUpdateSet(): any {
+export function useUpdateSet(): UseMutationResult<
+  unknown,
+  Error,
+  UpdateSetInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateSet,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.routineDays.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routineDays.all,
+      });
     },
   });
 }
-export function useDeleteSet(): any {
+export function useDeleteSet(): UseMutationResult<unknown, Error, string> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteSet,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.routineDays.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routineDays.all,
+      });
     },
   });
 }
-export function useReorderSets(): any {
+export function useReorderSets(): UseMutationResult<
+  unknown,
+  Error,
+  ReorderSetsInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: reorderSets,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.routineDays.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routineDays.all,
+      });
     },
   });
 }

@@ -18,7 +18,7 @@ e2eTest.describe("Workout Logs Calendar", () => {
     const hasEmpty = await logsPage.hasEmptyState();
     const hasCalendar = await logsPage.isCalendarVisible();
     // Should show either calendar or empty state
-    e2eExpect(hasEmpty || hasCalendar).toBe(true);
+    e2eExpect(hasEmpty ?? hasCalendar).toBe(true);
   });
   e2eTest("should display session count", async ({ logsPage }) => {
     await logsPage.waitForConvexData();
@@ -154,7 +154,7 @@ e2eTest.describe("Workout Logs Calendar", () => {
       const hasNext = await nextButton
         .isVisible({ timeout: 2000 })
         .catch(() => false);
-      e2eExpect(hasPrev || hasNext).toBe(true);
+      e2eExpect(hasPrev ?? hasNext).toBe(true);
     }
   });
   e2eTest("should show empty state message", async ({ logsPage }) => {

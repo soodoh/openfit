@@ -185,7 +185,7 @@ export function ExerciseTable(): any {
                           <span>
                             {exercise.primaryMuscles
                               .filter(Boolean)
-                              .map((m) => m!.name)
+                              .map((m) => m.name)
                               .join(", ")}
                           </span>
                         </>

@@ -367,7 +367,7 @@ function ExercisesContent(): React.JSX.Element {
 
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage && !isSearching) {
-      fetchNextPage();
+      void fetchNextPage();
     }
   }, [fetchNextPage, hasNextPage, inView, isFetchingNextPage, isSearching]);
 

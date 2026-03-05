@@ -1,5 +1,7 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseMutationResult } from "@tanstack/react-query";
 type CreateSetGroupInput = {
   sessionId?: string;
   routineDayId?: string;
@@ -28,138 +30,157 @@ type BulkEditInput = {
   restTime?: number;
 };
 // Create set group
-async function createSetGroup(input: CreateSetGroupInput) {
+async function createSetGroup(input: CreateSetGroupInput): Promise<unknown> {
   const response = await fetch("/api/set-groups", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to create set group");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to create set group");
 }
 // Update set group
-async function updateSetGroup({ id, ...input }: UpdateSetGroupInput) {
+async function updateSetGroup({
+  id,
+  ...input
+}: UpdateSetGroupInput): Promise<unknown> {
   const response = await fetch(`/api/set-groups/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to update set group");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to update set group");
 }
 // Delete set group
-async function deleteSetGroup(id: string) {
+async function deleteSetGroup(id: string): Promise<unknown> {
   const response = await fetch(`/api/set-groups/${id}`, {
     method: "DELETE",
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to delete set group");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to delete set group");
 }
 // Reorder set groups
-async function reorderSetGroups(input: ReorderSetGroupsInput) {
+async function reorderSetGroups(
+  input: ReorderSetGroupsInput,
+): Promise<unknown> {
   const response = await fetch("/api/set-groups/reorder", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to reorder set groups");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to reorder set groups");
 }
 // Replace exercise in set group
-async function replaceExercise({ id, exerciseId }: ReplaceExerciseInput) {
+async function replaceExercise({
+  id,
+  exerciseId,
+}: ReplaceExerciseInput): Promise<unknown> {
   const response = await fetch(`/api/set-groups/${id}/replace-exercise`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ exerciseId }),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to replace exercise");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to replace exercise");
 }
 // Bulk edit sets in set group
-async function bulkEditSetGroup({ id, ...input }: BulkEditInput) {
+async function bulkEditSetGroup({
+  id,
+  ...input
+}: BulkEditInput): Promise<unknown> {
   const response = await fetch(`/api/set-groups/${id}/bulk-edit`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to bulk edit");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to bulk edit");
 }
-export function useCreateSetGroup(): any {
+export function useCreateSetGroup(): UseMutationResult<
+  unknown,
+  Error,
+  CreateSetGroupInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createSetGroup,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.routineDays.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routineDays.all,
+      });
     },
   });
 }
-export function useUpdateSetGroup(): any {
+export function useUpdateSetGroup(): UseMutationResult<
+  unknown,
+  Error,
+  UpdateSetGroupInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateSetGroup,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.routineDays.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routineDays.all,
+      });
     },
   });
 }
-export function useDeleteSetGroup(): any {
+export function useDeleteSetGroup(): UseMutationResult<unknown, Error, string> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteSetGroup,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.routineDays.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routineDays.all,
+      });
     },
   });
 }
-export function useReorderSetGroups(): any {
+export function useReorderSetGroups(): UseMutationResult<
+  unknown,
+  Error,
+  ReorderSetGroupsInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: reorderSetGroups,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.routineDays.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routineDays.all,
+      });
     },
   });
 }
-export function useReplaceExercise(): any {
+export function useReplaceExercise(): UseMutationResult<
+  unknown,
+  Error,
+  ReplaceExerciseInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: replaceExercise,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.routineDays.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routineDays.all,
+      });
     },
   });
 }
-export function useBulkEditSetGroup(): any {
+export function useBulkEditSetGroup(): UseMutationResult<
+  unknown,
+  Error,
+  BulkEditInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: bulkEditSetGroup,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.routineDays.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routineDays.all,
+      });
     },
   });
 }

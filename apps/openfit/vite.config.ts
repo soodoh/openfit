@@ -10,10 +10,8 @@ export default defineConfig(({ mode }) => {
 
   // Make all env vars available to server-side code via process.env
   // (Vite only exposes VITE_* to client by default)
-  for (const key in env) {
-    if (process.env[key] === undefined) {
-      process.env[key] = env[key];
-    }
+  for (const key of Object.keys(env)) {
+    process.env[key] ??= env[key];
   }
 
   return {
@@ -24,7 +22,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       tsconfigPaths(),
       tanstackStart(),
-      nitro(),
+      nitro({ preset: "bun" }),
       viteReact(),
     ],
   };

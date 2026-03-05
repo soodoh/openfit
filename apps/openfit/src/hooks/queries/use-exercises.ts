@@ -1,8 +1,14 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import {
   keepPreviousData,
   useInfiniteQuery,
   useQuery,
+} from "@tanstack/react-query";
+import type {
+  InfiniteData,
+  UseInfiniteQueryResult,
+  UseQueryResult,
 } from "@tanstack/react-query";
 import type { ExerciseWithImageUrl } from "@/lib/types";
 type ExerciseFilters = {
@@ -64,21 +70,18 @@ async function fetchExercises(
 ): Promise<PaginatedResponse<Exercise>> {
   const queryString = buildExerciseQueryString(filters, cursor, limit);
   const response = await fetch(`/api/exercises?${queryString}`, { signal });
-  if (!response.ok) {
-    throw new Error("Failed to fetch exercises");
-  }
-  return response.json();
+  return fetchJson<PaginatedResponse<Exercise>>(
+    response,
+    "Failed to fetch exercises",
+  );
 }
 // Fetch single exercise
 async function fetchExercise(id: string): Promise<Exercise | undefined> {
   const response = await fetch(`/api/exercises/${id}`);
   if (response.status === 404) {
-    return null;
+    return undefined;
   }
-  if (!response.ok) {
-    throw new Error("Failed to fetch exercise");
-  }
-  return response.json();
+  return fetchJson<Exercise>(response, "Failed to fetch exercise");
 }
 // Search exercises (simple list, not paginated)
 async function searchExercises(
@@ -98,10 +101,7 @@ async function searchExercises(
   }
   params.set("limit", String(limit));
   const response = await fetch(`/api/exercises/search?${params}`, { signal });
-  if (!response.ok) {
-    throw new Error("Failed to search exercises");
-  }
-  return response.json();
+  return fetchJson<Exercise[]>(response, "Failed to search exercises");
 }
 // Search similar exercises
 async function searchSimilarExercises(
@@ -132,16 +132,17 @@ async function searchSimilarExercises(
     params.set("limit", String(options.limit));
   }
   const response = await fetch(`/api/exercises/similar?${params}`);
-  if (!response.ok) {
-    throw new Error("Failed to search similar exercises");
-  }
-  return response.json();
+  return fetchJson<Exercise[]>(response, "Failed to search similar exercises");
 }
 // Hook for paginated exercise list
-export function useExercises(filters: ExerciseFilters = {}): any {
+export function useExercises(
+  filters: ExerciseFilters = {},
+): UseInfiniteQueryResult<
+  InfiniteData<PaginatedResponse<Exercise>, string | undefined>
+> {
   return useInfiniteQuery({
     queryKey: queryKeys.exercises.list(filters as Record<string, unknown>),
-    queryFn: ({ pageParam, signal }) =>
+    queryFn: async ({ pageParam, signal }) =>
       fetchExercises(filters, pageParam, 20, signal),
     getNextPageParam: (lastPage) =>
       lastPage.isDone ? undefined : lastPage.continueCursor,
@@ -149,10 +150,12 @@ export function useExercises(filters: ExerciseFilters = {}): any {
   });
 }
 // Hook for single exercise
-export function useExercise(id: string | undefined): any {
+export function useExercise(
+  id: string | undefined,
+): UseQueryResult<Exercise | undefined> {
   return useQuery({
-    queryKey: queryKeys.exercises.detail(id || ""),
-    queryFn: () => fetchExercise(id!),
+    queryKey: queryKeys.exercises.detail(id ?? ""),
+    queryFn: async () => fetchExercise(id!),
     enabled: Boolean(id),
   });
 }
@@ -161,10 +164,11 @@ export function useExerciseSearch(
   term: string,
   equipmentIds?: string[],
   limit = 20,
-): any {
+): UseQueryResult<Exercise[]> {
   return useQuery({
     queryKey: queryKeys.exercises.search(term, { equipmentIds }),
-    queryFn: ({ signal }) => searchExercises(term, equipmentIds, limit, signal),
+    queryFn: async ({ signal }) =>
+      searchExercises(term, equipmentIds, limit, signal),
     enabled: true,
     placeholderData: keepPreviousData,
   });
@@ -178,14 +182,14 @@ export function useSimilarExercises(
     excludeExerciseId?: string;
     limit?: number;
   } = {},
-): any {
+): UseQueryResult<Exercise[]> {
   const muscleIds = primaryMuscleIds ?? [];
   return useQuery({
     queryKey: queryKeys.exercises.similar({
       primaryMuscleIds: muscleIds,
       ...options,
     }),
-    queryFn: () => searchSimilarExercises(muscleIds, options),
+    queryFn: async () => searchSimilarExercises(muscleIds, options),
     enabled: muscleIds.length > 0,
   });
 }

@@ -5,6 +5,6 @@ export default defineConfig({
   out: "./db/migrations",
   dialect: "sqlite",
   dbCredentials: {
-    url: process.env.DATABASE_URL || "file:./data/openfit.db",
+    url: process.env.DATABASE_URL ?? "file:./data/openfit.db",
   },
 });

@@ -57,11 +57,11 @@ export const EditDayModal = ({
         });
         onSuccess?.(routineDay.id);
       } else {
-        const result = await createDayMutation.mutateAsync({
+        const result = (await createDayMutation.mutateAsync({
           routineId,
           description,
           weekdays: selectedWeekdays,
-        });
+        })) as { id?: string } | undefined;
         if (result?.id) {
           onSuccess?.(result.id);
         }

@@ -19,8 +19,8 @@
     "unrs-resolver"
   ],
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
+    "dev": "bun --bun vite dev",
+    "build": "bun --bun vite build",
     "start": "bun run .output/server/index.mjs",
     "lint": "bun x --bun oxlint . && prettier --check .",
     "lint:fix": "bun x --bun oxlint --fix . && prettier --write .",

@@ -2,13 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { asc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 export const Route = createFileRoute("/api/gyms")({
   server: {
     handlers: {
       // GET /api/gyms - List user's gyms
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -38,7 +39,7 @@ export const Route = createFileRoute("/api/gyms")({
         return Response.json(gymsWithEquipment);
       },
       // POST /api/gyms - Create a new gym
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -49,7 +50,10 @@ export const Route = createFileRoute("/api/gyms")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
         try {
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            name: string;
+            equipmentIds?: string[];
+          }>(request);
           const { name, equipmentIds = [] } = body;
           const trimmedName = name?.trim();
           if (!trimmedName) {
@@ -86,7 +90,7 @@ export const Route = createFileRoute("/api/gyms")({
           return Response.json(
             {
               ...gym,
-              equipmentIds: gym?.equipment.map((ge) => ge.equipmentId) || [],
+              equipmentIds: gym?.equipment.map((ge) => ge.equipmentId) ?? [],
             },
             { status: 201 },
           );

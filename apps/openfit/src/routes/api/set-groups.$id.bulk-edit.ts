@@ -2,12 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { eq } from "drizzle-orm";
 export const Route = createFileRoute("/api/set-groups/$id/bulk-edit")({
   server: {
     handlers: {
       // POST /api/set-groups/[id]/bulk-edit - Bulk edit all sets in a set group
-      POST: async ({ request, params }) => {
+      POST: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -31,7 +38,13 @@ export const Route = createFileRoute("/api/set-groups/$id/bulk-edit")({
           if (setGroup.userId !== session.user.id) {
             return Response.json({ error: "Unauthorized" }, { status: 403 });
           }
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            reps?: number;
+            weight?: number;
+            repetitionUnitId?: string;
+            weightUnitId?: string;
+            restTime?: number;
+          }>(request);
           const { reps, weight, repetitionUnitId, weightUnitId, restTime } =
             body;
           // Get all sets in this set group

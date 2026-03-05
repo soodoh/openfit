@@ -102,7 +102,7 @@ export function DeleteGymModal({
 
         <DialogFooter>
           <Button type="button" variant="ghost" onClick={handleClose}>
-            {error || isLastGym ? "Close" : "Cancel"}
+            {(error ?? isLastGym) ? "Close" : "Cancel"}
           </Button>
           {!error && !isLastGym && (
             <Button

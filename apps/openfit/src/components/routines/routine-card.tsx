@@ -11,7 +11,7 @@ export function RoutineCard({
   currentSession,
 }: {
   routine: RoutineWithDays;
-  currentSession: WorkoutSessionWithData | undefined | undefined;
+  currentSession: WorkoutSessionWithData | undefined;
 }): any {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const dayCount = routine.routineDays.length;

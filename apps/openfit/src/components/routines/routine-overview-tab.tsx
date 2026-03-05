@@ -34,7 +34,7 @@ const DayListItem = ({
 }: {
   day: RoutineDay;
   index: number;
-  currentSession: WorkoutSessionWithData | undefined | undefined;
+  currentSession: WorkoutSessionWithData | undefined;
   isStarting: boolean;
   onSelect: () => void;
   onStartWorkout: () => void;
@@ -121,7 +121,7 @@ export const RoutineOverviewTab = ({
   onDayAdded,
 }: {
   routine: RoutineWithDays;
-  currentSession: WorkoutSessionWithData | undefined | undefined;
+  currentSession: WorkoutSessionWithData | undefined;
   onSelectDay: (dayId: string) => void;
   onDayAdded?: (dayId: string) => void;
 }): any => {
@@ -139,7 +139,7 @@ export const RoutineOverviewTab = ({
         templateId: dayId,
       });
       if (result?.id) {
-        navigate({ to: "/workout" });
+        void navigate({ to: "/workout" });
       }
     } finally {
       setStartingDayId(null);
@@ -214,7 +214,7 @@ export const RoutineOverviewTab = ({
                 currentSession={currentSession}
                 isStarting={startingDayId === day.id}
                 onSelect={() => onSelectDay(day.id)}
-                onStartWorkout={() => handleStartWorkout(day.id)}
+                onStartWorkout={async () => handleStartWorkout(day.id)}
                 onDelete={() => setDeletingDayId(day.id)}
               />
             ))}

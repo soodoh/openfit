@@ -12,7 +12,7 @@ const MIME_TYPES: Record<string, string> = {
 export const Route = createFileRoute("/api/uploads/$")({
   server: {
     handlers: {
-      GET: async ({ params }) => {
+      GET: async ({ params }: { params: Record<string, string> }) => {
         try {
           const filename = params._splat;
           // Prevent directory traversal

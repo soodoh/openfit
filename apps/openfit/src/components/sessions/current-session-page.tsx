@@ -48,7 +48,7 @@ export const CurrentSessionPage = ({
       endTime: Date.now(),
     });
     setIsEndSessionDialogOpen(false);
-    navigate({ to: "/logs" });
+    void navigate({ to: "/logs" });
   };
   return (
     <div className="min-h-[calc(100vh-4rem)]">

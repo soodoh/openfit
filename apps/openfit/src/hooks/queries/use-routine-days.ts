@@ -1,5 +1,7 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
+import type { UseQueryResult } from "@tanstack/react-query";
 type SetWithRelations = {
   id: string;
   userId: string;
@@ -77,12 +79,9 @@ async function fetchRoutineDay(
 ): Promise<RoutineDayWithData | undefined> {
   const response = await fetch(`/api/routine-days/${id}`);
   if (response.status === 404) {
-    return null;
+    return undefined;
   }
-  if (!response.ok) {
-    throw new Error("Failed to fetch routine day");
-  }
-  return response.json();
+  return fetchJson<RoutineDayWithData>(response, "Failed to fetch routine day");
 }
 // Search routine days
 async function searchRoutineDays(
@@ -95,23 +94,28 @@ async function searchRoutineDays(
   }
   params.set("limit", String(limit));
   const response = await fetch(`/api/routine-days?${params}`);
-  if (!response.ok) {
-    throw new Error("Failed to search routine days");
-  }
-  return response.json();
+  return fetchJson<RoutineDayWithRoutine[]>(
+    response,
+    "Failed to search routine days",
+  );
 }
 // Hook for single routine day with full data
-export function useRoutineDay(id: string | undefined): any {
+export function useRoutineDay(
+  id: string | undefined,
+): UseQueryResult<RoutineDayWithData | undefined> {
   return useQuery({
-    queryKey: queryKeys.routineDays.detail(id || ""),
-    queryFn: () => fetchRoutineDay(id!),
+    queryKey: queryKeys.routineDays.detail(id ?? ""),
+    queryFn: async () => fetchRoutineDay(id!),
     enabled: Boolean(id),
   });
 }
 // Hook for searching routine days
-export function useRoutineDaySearch(term: string, limit = 10): any {
+export function useRoutineDaySearch(
+  term: string,
+  limit = 10,
+): UseQueryResult<RoutineDayWithRoutine[]> {
   return useQuery({
     queryKey: queryKeys.routineDays.search(term),
-    queryFn: () => searchRoutineDays(term, limit),
+    queryFn: async () => searchRoutineDays(term, limit),
   });
 }

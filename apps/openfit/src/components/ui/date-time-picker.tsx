@@ -24,7 +24,7 @@ export function DateTimePicker({
   disabled,
   className,
 }: DateTimePickerProps): any {
-  const [date, setDate] = React.useState<Date | undefined>(value || undefined);
+  const [date, setDate] = React.useState<Date | undefined>(value ?? undefined);
   const [timeValue, setTimeValue] = React.useState<string>(
     value ? format(value, "HH:mm") : "00:00",
   );

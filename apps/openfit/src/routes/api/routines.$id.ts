@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { eq } from "drizzle-orm";
 // Helper to get routine days with weekdays
 async function getRoutineDaysWithWeekdays(routineId: string) {
@@ -21,7 +22,13 @@ export const Route = createFileRoute("/api/routines/$id")({
   server: {
     handlers: {
       // GET /api/routines/[id] - Get single routine
-      GET: async ({ request, params }) => {
+      GET: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -48,7 +55,13 @@ export const Route = createFileRoute("/api/routines/$id")({
         });
       },
       // PATCH /api/routines/[id] - Update routine
-      PATCH: async ({ request, params }) => {
+      PATCH: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -72,7 +85,10 @@ export const Route = createFileRoute("/api/routines/$id")({
           if (routine.userId !== session.user.id) {
             return Response.json({ error: "Unauthorized" }, { status: 403 });
           }
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            name?: string;
+            description?: string;
+          }>(request);
           const { name, description } = body;
           const trimmedName = name?.trim();
           if (name !== undefined && !trimmedName) {
@@ -107,7 +123,13 @@ export const Route = createFileRoute("/api/routines/$id")({
         }
       },
       // DELETE /api/routines/[id] - Delete routine (cascades)
-      DELETE: async ({ request, params }) => {
+      DELETE: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let session;
         try {
           session = await requireAuth(request);

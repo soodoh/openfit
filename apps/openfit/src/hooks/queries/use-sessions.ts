@@ -1,5 +1,7 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
+import type { UseQueryResult } from "@tanstack/react-query";
 type SetWithRelations = {
   id: string;
   userId: string;
@@ -67,10 +69,10 @@ type WorkoutSessionSummary = {
 // Fetch all sessions
 async function fetchSessions(): Promise<WorkoutSessionWithData[]> {
   const response = await fetch("/api/sessions");
-  if (!response.ok) {
-    throw new Error("Failed to fetch sessions");
-  }
-  return response.json();
+  return fetchJson<WorkoutSessionWithData[]>(
+    response,
+    "Failed to fetch sessions",
+  );
 }
 // Fetch sessions by date range (for calendar)
 async function fetchSessionsByDateRange(
@@ -81,21 +83,20 @@ async function fetchSessionsByDateRange(
   params.set("startDate", String(startDate));
   params.set("endDate", String(endDate));
   const response = await fetch(`/api/sessions?${params}`);
-  if (!response.ok) {
-    throw new Error("Failed to fetch sessions");
-  }
-  return response.json();
+  return fetchJson<WorkoutSessionSummary[]>(
+    response,
+    "Failed to fetch sessions",
+  );
 }
 // Fetch current active session
 async function fetchCurrentSession(): Promise<
   WorkoutSessionWithData | undefined
 > {
   const response = await fetch("/api/sessions/current");
-  if (!response.ok) {
-    throw new Error("Failed to fetch current session");
-  }
-  const data = await response.json();
-  return data;
+  return fetchJson<WorkoutSessionWithData | undefined>(
+    response,
+    "Failed to fetch current session",
+  );
 }
 // Fetch single session
 async function fetchSession(
@@ -103,15 +104,12 @@ async function fetchSession(
 ): Promise<WorkoutSessionWithData | undefined> {
   const response = await fetch(`/api/sessions/${id}`);
   if (response.status === 404) {
-    return null;
+    return undefined;
   }
-  if (!response.ok) {
-    throw new Error("Failed to fetch session");
-  }
-  return response.json();
+  return fetchJson<WorkoutSessionWithData>(response, "Failed to fetch session");
 }
 // Hook for all sessions
-export function useSessions(): any {
+export function useSessions(): UseQueryResult<WorkoutSessionWithData[]> {
   return useQuery({
     queryKey: queryKeys.sessions.lists(),
     queryFn: fetchSessions,
@@ -121,15 +119,17 @@ export function useSessions(): any {
 export function useSessionsByDateRange(
   startDate: number,
   endDate: number,
-): any {
+): UseQueryResult<WorkoutSessionSummary[]> {
   return useQuery({
     queryKey: queryKeys.sessions.byDateRange(startDate, endDate),
-    queryFn: () => fetchSessionsByDateRange(startDate, endDate),
+    queryFn: async () => fetchSessionsByDateRange(startDate, endDate),
     enabled: Boolean(startDate) && Boolean(endDate),
   });
 }
 // Hook for current active session
-export function useCurrentSession(): any {
+export function useCurrentSession(): UseQueryResult<
+  WorkoutSessionWithData | undefined
+> {
   return useQuery({
     queryKey: queryKeys.sessions.current(),
     queryFn: fetchCurrentSession,
@@ -137,10 +137,12 @@ export function useCurrentSession(): any {
   });
 }
 // Hook for single session
-export function useSession(id: string | undefined): any {
+export function useSession(
+  id: string | undefined,
+): UseQueryResult<WorkoutSessionWithData | undefined> {
   return useQuery({
-    queryKey: queryKeys.sessions.detail(id || ""),
-    queryFn: () => fetchSession(id!),
+    queryKey: queryKeys.sessions.detail(id ?? ""),
+    queryFn: async () => fetchSession(id!),
     enabled: Boolean(id),
   });
 }

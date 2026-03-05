@@ -1,5 +1,7 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseMutationResult } from "@tanstack/react-query";
 type CreateRoutineDayInput = {
   routineId: string;
   description: string;
@@ -11,77 +13,90 @@ type UpdateRoutineDayInput = {
   weekdays?: number[];
 };
 // Create routine day
-async function createRoutineDay(input: CreateRoutineDayInput) {
+async function createRoutineDay(
+  input: CreateRoutineDayInput,
+): Promise<unknown> {
   const response = await fetch("/api/routine-days", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to create routine day");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to create routine day");
 }
 // Update routine day
-async function updateRoutineDay({ id, ...input }: UpdateRoutineDayInput) {
+async function updateRoutineDay({
+  id,
+  ...input
+}: UpdateRoutineDayInput): Promise<unknown> {
   const response = await fetch(`/api/routine-days/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to update routine day");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to update routine day");
 }
 // Delete routine day
-async function deleteRoutineDay(id: string) {
+async function deleteRoutineDay(id: string): Promise<unknown> {
   const response = await fetch(`/api/routine-days/${id}`, {
     method: "DELETE",
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to delete routine day");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to delete routine day");
 }
-export function useCreateRoutineDay(): any {
+export function useCreateRoutineDay(): UseMutationResult<
+  unknown,
+  Error,
+  CreateRoutineDayInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createRoutineDay,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.routineDays.all });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.routines.detail(data.routineId),
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routineDays.all,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routines.detail(
+          (data as { routineId: string }).routineId,
+        ),
       });
     },
   });
 }
-export function useUpdateRoutineDay(): any {
+export function useUpdateRoutineDay(): UseMutationResult<
+  unknown,
+  Error,
+  UpdateRoutineDayInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateRoutineDay,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.routineDays.detail(variables.id),
       });
-      if (data.routineId) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.routines.detail(data.routineId),
+      if ((data as { routineId?: string }).routineId) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.routines.detail(
+            (data as { routineId: string }).routineId,
+          ),
         });
       }
     },
   });
 }
-export function useDeleteRoutineDay(): any {
+export function useDeleteRoutineDay(): UseMutationResult<
+  unknown,
+  Error,
+  string
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteRoutineDay,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.routineDays.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.routines.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.routineDays.all,
+      });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.routines.all });
     },
   });
 }

@@ -27,7 +27,7 @@ const DurationInput = React.forwardRef<HTMLInputElement, DurationInputProps>(
       }
 
       // Don't allow more than one colon
-      if ((input.match(/:/g) || []).length > 1) {
+      if ((input.match(/:/g) ?? []).length > 1) {
         return;
       }
 

@@ -2,21 +2,22 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { getOptionalSession, requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { and, eq, like } from "drizzle-orm";
 import { nanoid } from "nanoid";
 export const Route = createFileRoute("/api/routine-days")({
   server: {
     handlers: {
       // GET /api/routine-days - Search routine days
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         const session = await getOptionalSession(request);
         if (!session) {
           return Response.json([]);
         }
         const { searchParams } = new URL(request.url);
-        const searchTerm = searchParams.get("search") || "";
+        const searchTerm = searchParams.get("search") ?? "";
         const limit = Math.min(
-          Number.parseInt(searchParams.get("limit") || "10", 10),
+          Number.parseInt(searchParams.get("limit") ?? "10", 10),
           50,
         );
         // Build query conditions
@@ -43,7 +44,7 @@ export const Route = createFileRoute("/api/routine-days")({
         return Response.json(result);
       },
       // POST /api/routine-days - Create routine day
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -54,7 +55,11 @@ export const Route = createFileRoute("/api/routine-days")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
         try {
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            routineId: string;
+            description: string;
+            weekdays?: number[];
+          }>(request);
           const { routineId, description, weekdays = [] } = body;
           // Verify routine ownership
           const routine = await db.query.routines.findFirst({
@@ -106,7 +111,7 @@ export const Route = createFileRoute("/api/routine-days")({
           return Response.json(
             {
               ...routineDay,
-              weekdays: routineDay?.weekdays.map((w) => w.weekday) || [],
+              weekdays: routineDay?.weekdays.map((w) => w.weekday) ?? [],
             },
             { status: 201 },
           );

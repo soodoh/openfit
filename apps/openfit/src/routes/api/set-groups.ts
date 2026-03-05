@@ -106,8 +106,8 @@ async function createSetGroupResponse(
   await db.insert(schema.workoutSetGroups).values({
     id: setGroupId,
     userId,
-    routineDayId: routineDayId || null,
-    sessionId: sessionId || null,
+    routineDayId: routineDayId ?? null,
+    sessionId: sessionId ?? null,
     type,
     order: await getNextSetGroupOrder(sessionId, routineDayId),
   });
@@ -145,7 +145,7 @@ export const Route = createFileRoute("/api/set-groups")({
   server: {
     handlers: {
       // POST /api/set-groups - Create set group with sets
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -157,7 +157,7 @@ export const Route = createFileRoute("/api/set-groups")({
         }
         try {
           const body = (await request.json()) as CreateSetGroupBody;
-          return createSetGroupResponse(session.user.id, body);
+          return await createSetGroupResponse(session.user.id, body);
         } catch {
           return Response.json(
             { error: "Failed to create set group" },

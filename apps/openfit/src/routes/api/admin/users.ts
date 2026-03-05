@@ -6,7 +6,7 @@ import { count, eq, like } from "drizzle-orm";
 export const Route = createFileRoute("/api/admin/users")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         try {
           await requireAdmin(request);
           const { searchParams } = new URL(request.url);
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/admin/users")({
             1,
             Number(searchParams.get("pageSize")) || 10,
           );
-          const search = searchParams.get("search")?.trim() || "";
+          const search = searchParams.get("search")?.trim() ?? "";
           const conditions = search
             ? like(schema.users.email, `%${search}%`)
             : undefined;

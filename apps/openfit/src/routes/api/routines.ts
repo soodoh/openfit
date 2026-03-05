@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { and, desc, eq, like } from "drizzle-orm";
 import { nanoid } from "nanoid";
 // Helper to get routine days with weekdays
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/api/routines")({
   server: {
     handlers: {
       // GET /api/routines - List routines with pagination
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -35,10 +36,10 @@ export const Route = createFileRoute("/api/routines")({
         const { searchParams } = new URL(request.url);
         const cursor = searchParams.get("cursor");
         const limit = Math.min(
-          Number.parseInt(searchParams.get("limit") || "20", 10),
+          Number.parseInt(searchParams.get("limit") ?? "20", 10),
           100,
         );
-        const searchTerm = searchParams.get("search") || "";
+        const searchTerm = searchParams.get("search") ?? "";
         // Build query conditions
         const conditions = [eq(schema.routines.userId, session.user.id)];
         if (searchTerm) {
@@ -72,7 +73,7 @@ export const Route = createFileRoute("/api/routines")({
         });
       },
       // POST /api/routines - Create routine
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -83,7 +84,10 @@ export const Route = createFileRoute("/api/routines")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
         try {
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            name: string;
+            description?: string;
+          }>(request);
           const { name, description } = body;
           const trimmedName = name?.trim();
           if (!trimmedName) {
@@ -97,7 +101,7 @@ export const Route = createFileRoute("/api/routines")({
             id: routineId,
             userId: session.user.id,
             name: trimmedName,
-            description: description?.trim() || null,
+            description: description?.trim() ?? null,
           });
           // Fetch created routine
           const routine = await db.query.routines.findFirst({

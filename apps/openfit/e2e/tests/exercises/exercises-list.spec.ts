@@ -195,7 +195,7 @@ e2eTest.describe("Exercises Library", () => {
       const hasEmpty = await exercisesPage.hasEmptyState();
       const cardCount = await exercisesPage.getExerciseCardsCount();
       // Either has empty state or has cards
-      e2eExpect(hasEmpty || cardCount > 0).toBe(true);
+      e2eExpect(hasEmpty ?? cardCount > 0).toBe(true);
     },
   );
   e2eTest(

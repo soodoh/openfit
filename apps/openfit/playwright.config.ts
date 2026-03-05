@@ -35,7 +35,7 @@ export default defineConfig({
   // Shared settings for all projects
   use: {
     // Base URL for the app
-    baseURL: process.env.E2E_BASE_URL || "http://localhost:3000",
+    baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
 
     // Collect trace on first retry
     trace: "on-first-retry",

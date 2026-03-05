@@ -1,5 +1,11 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import type {
+  InfiniteData,
+  UseInfiniteQueryResult,
+  UseQueryResult,
+} from "@tanstack/react-query";
 type RoutineDay = {
   id: string;
   routineId: string;
@@ -42,27 +48,28 @@ async function fetchRoutines(
   }
   params.set("limit", String(limit));
   const response = await fetch(`/api/routines?${params}`, { signal });
-  if (!response.ok) {
-    throw new Error("Failed to fetch routines");
-  }
-  return response.json();
+  return fetchJson<PaginatedResponse<Routine>>(
+    response,
+    "Failed to fetch routines",
+  );
 }
 // Fetch single routine
 async function fetchRoutine(id: string): Promise<Routine | undefined> {
   const response = await fetch(`/api/routines/${id}`);
   if (response.status === 404) {
-    return null;
+    return undefined;
   }
-  if (!response.ok) {
-    throw new Error("Failed to fetch routine");
-  }
-  return response.json();
+  return fetchJson<Routine>(response, "Failed to fetch routine");
 }
 // Hook for paginated routine list
-export function useRoutines(filters: RoutineFilters = {}): any {
+export function useRoutines(
+  filters: RoutineFilters = {},
+): UseInfiniteQueryResult<
+  InfiniteData<PaginatedResponse<Routine>, string | undefined>
+> {
   return useInfiniteQuery({
     queryKey: queryKeys.routines.list(filters as Record<string, unknown>),
-    queryFn: ({ pageParam, signal }) =>
+    queryFn: async ({ pageParam, signal }) =>
       fetchRoutines(filters, pageParam, 20, signal),
     getNextPageParam: (lastPage) =>
       lastPage.isDone ? undefined : lastPage.continueCursor,
@@ -70,14 +77,20 @@ export function useRoutines(filters: RoutineFilters = {}): any {
   });
 }
 // Hook for single routine
-export function useRoutine(id: string | undefined): any {
+export function useRoutine(
+  id: string | undefined,
+): UseQueryResult<Routine | undefined> {
   return useQuery({
-    queryKey: queryKeys.routines.detail(id || ""),
-    queryFn: () => fetchRoutine(id!),
+    queryKey: queryKeys.routines.detail(id ?? ""),
+    queryFn: async () => fetchRoutine(id!),
     enabled: Boolean(id),
   });
 }
 // Hook for routine search (simple list, not paginated)
-export function useRoutineSearch(term: string): any {
+export function useRoutineSearch(
+  term: string,
+): UseInfiniteQueryResult<
+  InfiniteData<PaginatedResponse<Routine>, string | undefined>
+> {
   return useRoutines({ search: term });
 }

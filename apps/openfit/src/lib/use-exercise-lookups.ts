@@ -1,6 +1,19 @@
 import { useCategories, useEquipment, useMuscleGroups } from "@/hooks";
+import type { Category, Equipment, MuscleGroup } from "@/lib/types";
 import { useMemo } from "react";
-export function useExerciseLookups(): any {
+
+type ExerciseLookups = {
+  equipment: Equipment[] | undefined;
+  muscleGroups: MuscleGroup[] | undefined;
+  categories: Category[] | undefined;
+  isLoading: boolean;
+  getEquipmentName: (id: string | undefined) => string | undefined;
+  getMuscleGroupName: (id: string) => string;
+  getMuscleGroupNames: (ids: string[] | undefined) => string[];
+  getCategoryName: (id: string) => string;
+};
+
+export function useExerciseLookups(): ExerciseLookups {
   const { data: equipment } = useEquipment();
   const { data: muscleGroups } = useMuscleGroups();
   const { data: categories } = useCategories();
@@ -23,9 +36,7 @@ export function useExerciseLookups(): any {
     }
     return new Map(categories.map((c) => [c.id, c.name] as const));
   }, [categories]);
-  const getEquipmentName = (
-    id: string | undefined | undefined,
-  ): string | undefined => {
+  const getEquipmentName = (id: string | undefined): string | undefined => {
     if (!id) {
       return undefined;
     }

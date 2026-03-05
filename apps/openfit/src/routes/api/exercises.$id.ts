@@ -2,13 +2,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { asc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 export const Route = createFileRoute("/api/exercises/$id")({
   server: {
     handlers: {
       // GET /api/exercises/$id - Get single exercise
-      GET: async ({ request: _request, params }) => {
+      GET: async ({
+        request: _request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         const { id } = params;
         const exercise = await db.query.exercises.findFirst({
           where: eq(schema.exercises.id, id),
@@ -42,7 +49,13 @@ export const Route = createFileRoute("/api/exercises/$id")({
         return Response.json(result);
       },
       // PATCH /api/exercises/$id - Update exercise (admin only)
-      PATCH: async ({ request, params }) => {
+      PATCH: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         try {
           await requireAdmin(request);
         } catch (error) {
@@ -53,7 +66,17 @@ export const Route = createFileRoute("/api/exercises/$id")({
         }
         const { id } = params;
         try {
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            name?: string;
+            equipmentId?: string | undefined;
+            force?: string | undefined;
+            level?: string;
+            mechanic?: string | undefined;
+            categoryId?: string;
+            primaryMuscleIds?: string[];
+            secondaryMuscleIds?: string[];
+            instructions?: string[];
+          }>(request);
           const {
             name,
             equipmentId,
@@ -81,11 +104,11 @@ export const Route = createFileRoute("/api/exercises/$id")({
             .set({
               ...(name !== undefined && { name }),
               ...(equipmentId !== undefined && {
-                equipmentId: equipmentId || null,
+                equipmentId: equipmentId ?? null,
               }),
-              ...(force !== undefined && { force: force || null }),
+              ...(force !== undefined && { force: force ?? null }),
               ...(level !== undefined && { level }),
-              ...(mechanic !== undefined && { mechanic: mechanic || null }),
+              ...(mechanic !== undefined && { mechanic: mechanic ?? null }),
               ...(categoryId !== undefined && { categoryId }),
               updatedAt: new Date(),
             })
@@ -150,7 +173,13 @@ export const Route = createFileRoute("/api/exercises/$id")({
         }
       },
       // DELETE /api/exercises/$id - Delete exercise (admin only)
-      DELETE: async ({ request, params }) => {
+      DELETE: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         try {
           await requireAdmin(request);
         } catch (error) {

@@ -41,7 +41,10 @@ function WorkoutPage() {
                 <Play className="h-4 w-4" />
                 Start New Workout
               </Button>
-              <Button variant="outline" onClick={() => navigate({ to: "/" })}>
+              <Button
+                variant="outline"
+                onClick={async () => navigate({ to: "/" })}
+              >
                 Back to Dashboard
               </Button>
             </div>

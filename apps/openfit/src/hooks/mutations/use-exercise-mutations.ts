@@ -1,5 +1,7 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseMutationResult } from "@tanstack/react-query";
 type CreateExerciseInput = {
   name: string;
   equipmentId?: string | undefined;
@@ -15,69 +17,70 @@ type UpdateExerciseInput = {
   id: string;
 } & Partial<CreateExerciseInput>;
 // Create exercise
-async function createExercise(input: CreateExerciseInput) {
+async function createExercise(input: CreateExerciseInput): Promise<unknown> {
   const response = await fetch("/api/exercises", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to create exercise");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to create exercise");
 }
 // Update exercise
-async function updateExercise({ id, ...input }: UpdateExerciseInput) {
+async function updateExercise({
+  id,
+  ...input
+}: UpdateExerciseInput): Promise<unknown> {
   const response = await fetch(`/api/exercises/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to update exercise");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to update exercise");
 }
 // Delete exercise
-async function deleteExercise(id: string) {
+async function deleteExercise(id: string): Promise<unknown> {
   const response = await fetch(`/api/exercises/${id}`, {
     method: "DELETE",
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to delete exercise");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to delete exercise");
 }
-export function useCreateExercise(): any {
+export function useCreateExercise(): UseMutationResult<
+  unknown,
+  Error,
+  CreateExerciseInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createExercise,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.exercises.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.exercises.all });
     },
   });
 }
-export function useUpdateExercise(): any {
+export function useUpdateExercise(): UseMutationResult<
+  unknown,
+  Error,
+  UpdateExerciseInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateExercise,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.exercises.detail(variables.id),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.exercises.lists() });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.exercises.lists(),
+      });
     },
   });
 }
-export function useDeleteExercise(): any {
+export function useDeleteExercise(): UseMutationResult<unknown, Error, string> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteExercise,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.exercises.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.exercises.all });
     },
   });
 }

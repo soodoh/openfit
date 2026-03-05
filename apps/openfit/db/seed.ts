@@ -34,7 +34,7 @@ async function mapWithConcurrencyLimit<T, R>(
   }
 
   const workerCount = Math.min(concurrency, items.length);
-  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  await Promise.all(Array.from({ length: workerCount }, async () => worker()));
   return results;
 }
 // Ensure upload directory exists
@@ -252,9 +252,9 @@ async function seedExercises(lookups: LookupMaps) {
       id: exerciseId,
       name: exercise.name,
       equipmentId,
-      force: exercise.force || null,
+      force: exercise.force ?? null,
       level: exercise.level,
-      mechanic: exercise.mechanic || null,
+      mechanic: exercise.mechanic ?? null,
       categoryId,
     });
     const primaryMuscleRows = exercise.primaryMuscles.flatMap((muscle) => {

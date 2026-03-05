@@ -9,7 +9,7 @@ export const AddExerciseRow = ({
   sessionOrDayId,
   isSession,
 }: {
-  sessionOrDayId: RoutineDayId | WorkoutSessionId;
+  sessionOrDayId: RoutineDayId;
   isSession: boolean;
 }): any => {
   const [exercise, setExercise] = useState<Exercise | undefined>(null);

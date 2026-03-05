@@ -16,12 +16,12 @@ export const Route = createFileRoute("/api/exercises/search")({
   server: {
     handlers: {
       // GET /api/exercises/search - Simple search for autocomplete
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         const { searchParams } = new URL(request.url);
-        const searchTerm = searchParams.get("q") || "";
+        const searchTerm = searchParams.get("q") ?? "";
         const equipmentIds = searchParams.getAll("equipmentIds");
         const limit = Math.min(
-          Number.parseInt(searchParams.get("limit") || "20", 10),
+          Number.parseInt(searchParams.get("limit") ?? "20", 10),
           50,
         );
         // Build query

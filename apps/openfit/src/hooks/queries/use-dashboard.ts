@@ -1,5 +1,7 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
+import type { UseQueryResult } from "@tanstack/react-query";
 type DashboardStats = {
   totalSessions: number;
   totalRoutines: number;
@@ -32,28 +34,25 @@ type RecentSession = {
 // Fetch dashboard stats
 async function fetchDashboardStats(): Promise<DashboardStats> {
   const response = await fetch("/api/dashboard/stats");
-  if (!response.ok) {
-    throw new Error("Failed to fetch dashboard stats");
-  }
-  return response.json();
+  return fetchJson<DashboardStats>(response, "Failed to fetch dashboard stats");
 }
 // Fetch recent sessions
 async function fetchRecentSessions(): Promise<RecentSession[]> {
   const response = await fetch("/api/dashboard/recent-sessions");
-  if (!response.ok) {
-    throw new Error("Failed to fetch recent sessions");
-  }
-  return response.json();
+  return fetchJson<RecentSession[]>(
+    response,
+    "Failed to fetch recent sessions",
+  );
 }
 // Hook for dashboard stats
-export function useDashboardStats(): any {
+export function useDashboardStats(): UseQueryResult<DashboardStats> {
   return useQuery({
     queryKey: queryKeys.dashboard.stats(),
     queryFn: fetchDashboardStats,
   });
 }
 // Hook for recent sessions
-export function useRecentSessions(): any {
+export function useRecentSessions(): UseQueryResult<RecentSession[]> {
   return useQuery({
     queryKey: queryKeys.dashboard.recentSessions(),
     queryFn: fetchRecentSessions,

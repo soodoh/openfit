@@ -1,5 +1,5 @@
 import { authClient } from "@/lib/auth-client";
-import { createContext, useContext, useMemo } from "react";
+import React, { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 // Re-export the session hook and other auth utilities
 export const useSession = authClient.useSession;
@@ -14,13 +14,13 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
 });
-export function useAuth(): any {
+export function useAuth(): AuthContextType {
   return useContext(AuthContext);
 }
 type AuthProviderProps = {
   children: ReactNode;
 };
-export function AuthProvider({ children }: AuthProviderProps): any {
+export function AuthProvider({ children }: AuthProviderProps): React.ReactNode {
   const { data: session, isPending } = useSession();
   const value = useMemo(
     () => ({

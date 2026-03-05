@@ -21,10 +21,10 @@ export const RoutineModal = ({
   open: boolean;
   onClose: () => void;
   routine: RoutineWithDays;
-  currentSession: WorkoutSessionWithData | undefined | undefined;
+  currentSession: WorkoutSessionWithData | undefined;
   initialTab?: string;
 }): any => {
-  const [activeTab, setActiveTab] = useState(initialTab || OVERVIEW_TAB);
+  const [activeTab, setActiveTab] = useState(initialTab ?? OVERVIEW_TAB);
   // Compute valid tab - if current tab doesn't exist, show overview
   const validTab = useMemo(() => {
     if (activeTab === OVERVIEW_TAB) {
@@ -49,7 +49,7 @@ export const RoutineModal = ({
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen) {
       // Reset to initial tab when opening
-      setActiveTab(initialTab || OVERVIEW_TAB);
+      setActiveTab(initialTab ?? OVERVIEW_TAB);
       return;
     }
     onClose();

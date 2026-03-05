@@ -37,7 +37,7 @@ export const WorkoutList = ({
   view: ListView;
   setGroups: SetGroupWithRelations[];
   units: Units;
-  sessionOrDayId: RoutineDayId | WorkoutSessionId;
+  sessionOrDayId: RoutineDayId;
 }): any => {
   const [, startTransition] = useTransition();
   const [optimisticSetGroups, optimisticUpdateSetGroups] = useOptimistic<

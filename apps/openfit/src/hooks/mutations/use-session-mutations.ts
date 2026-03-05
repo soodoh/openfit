@@ -1,5 +1,7 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseMutationResult } from "@tanstack/react-query";
 type CreateSessionInput = {
   name?: string;
   notes?: string;
@@ -17,70 +19,73 @@ type UpdateSessionInput = {
   endTime?: number | undefined;
 };
 // Create session
-async function createSession(input: CreateSessionInput) {
+async function createSession(input: CreateSessionInput): Promise<unknown> {
   const response = await fetch("/api/sessions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to create session");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to create session");
 }
 // Update session
-async function updateSession({ id, ...input }: UpdateSessionInput) {
+async function updateSession({
+  id,
+  ...input
+}: UpdateSessionInput): Promise<unknown> {
   const response = await fetch(`/api/sessions/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to update session");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to update session");
 }
 // Delete session
-async function deleteSession(id: string) {
+async function deleteSession(id: string): Promise<unknown> {
   const response = await fetch(`/api/sessions/${id}`, {
     method: "DELETE",
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to delete session");
-  }
-  return response.json();
+  return fetchJson<unknown>(response, "Failed to delete session");
 }
-export function useCreateSession(): any {
+export function useCreateSession(): UseMutationResult<
+  unknown,
+  Error,
+  CreateSessionInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createSession,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
     },
   });
 }
-export function useUpdateSession(): any {
+export function useUpdateSession(): UseMutationResult<
+  unknown,
+  Error,
+  UpdateSessionInput
+> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateSession,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.sessions.detail(variables.id),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.current() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.lists() });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.sessions.current(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.sessions.lists(),
+      });
     },
   });
 }
-export function useDeleteSession(): any {
+export function useDeleteSession(): UseMutationResult<unknown, Error, string> {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteSession,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
     },
   });
 }

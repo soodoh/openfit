@@ -68,7 +68,7 @@ export class LogsPage extends BasePage {
    */
   async getCurrentMonthYear(): Promise<string | undefined> {
     if (await this.isVisible(this.calendarHeader)) {
-      return await this.calendarHeader.textContent();
+      return this.calendarHeader.textContent();
     }
     // Try to find it in session count text
     const sessionCountText = await this.sessionCount.textContent();
@@ -227,7 +227,7 @@ export class LogsPage extends BasePage {
         break;
       }
       // Determine direction
-      const currentDate = new Date(current || "");
+      const currentDate = new Date(current ?? "");
       const targetDate = new Date(`${month} 1, ${year}`);
       await (currentDate < targetDate
         ? this.goToNextMonth()

@@ -2,16 +2,34 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { createId } from "@paralleldrive/cuid2";
 import { eq } from "drizzle-orm";
 export const Route = createFileRoute("/api/admin/exercises/$id")({
   server: {
     handlers: {
-      PATCH: async ({ request, params }) => {
+      PATCH: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         try {
           await requireAdmin(request);
           const { id } = params;
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            name?: string;
+            level?: string;
+            force?: string | undefined;
+            mechanic?: string | undefined;
+            equipmentId?: string | undefined;
+            categoryId?: string;
+            primaryMuscleIds?: string[];
+            secondaryMuscleIds?: string[];
+            instructions?: string[];
+            imageUrls?: string[];
+          }>(request);
           // Update exercise
           await db
             .update(schema.exercises)
@@ -100,7 +118,13 @@ export const Route = createFileRoute("/api/admin/exercises/$id")({
           );
         }
       },
-      DELETE: async ({ request, params }) => {
+      DELETE: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         try {
           await requireAdmin(request);
           const { id } = params;

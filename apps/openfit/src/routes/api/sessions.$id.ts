@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { asc, eq } from "drizzle-orm";
 // Helper to get first image URL for an exercise
 async function getFirstImageUrl(
@@ -60,7 +61,13 @@ export const Route = createFileRoute("/api/sessions/$id")({
   server: {
     handlers: {
       // GET /api/sessions/[id] - Get single session
-      GET: async ({ request, params }) => {
+      GET: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let authSession;
         try {
           authSession = await requireAuth(request);
@@ -84,7 +91,13 @@ export const Route = createFileRoute("/api/sessions/$id")({
         return Response.json(sessionWithData);
       },
       // PATCH /api/sessions/[id] - Update session
-      PATCH: async ({ request, params }) => {
+      PATCH: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let authSession;
         try {
           authSession = await requireAuth(request);
@@ -108,7 +121,13 @@ export const Route = createFileRoute("/api/sessions/$id")({
           if (session.userId !== authSession.user.id) {
             return Response.json({ error: "Unauthorized" }, { status: 403 });
           }
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            name?: string;
+            notes?: string;
+            impression?: string | undefined;
+            startTime?: string | number;
+            endTime?: string | number | undefined;
+          }>(request);
           const { name, notes, impression, startTime, endTime } = body;
           await db
             .update(schema.workoutSessions)
@@ -135,7 +154,13 @@ export const Route = createFileRoute("/api/sessions/$id")({
         }
       },
       // DELETE /api/sessions/[id] - Delete session (cascades)
-      DELETE: async ({ request, params }) => {
+      DELETE: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let authSession;
         try {
           authSession = await requireAuth(request);

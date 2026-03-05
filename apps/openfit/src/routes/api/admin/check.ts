@@ -7,7 +7,7 @@ export const Route = createFileRoute("/api/admin/check")({
   server: {
     handlers: {
       // GET /api/admin/check - Check if current user is admin
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);

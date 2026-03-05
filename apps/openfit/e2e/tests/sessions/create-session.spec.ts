@@ -53,7 +53,7 @@ e2eTest.describe("Create Session", () => {
         .getByRole("dialog")
         .isVisible({ timeout: 1000 })
         .catch(() => false));
-      e2eExpect(onWorkoutPage || modalClosed).toBe(true);
+      e2eExpect(onWorkoutPage ?? modalClosed).toBe(true);
     }
   });
   e2eTest(

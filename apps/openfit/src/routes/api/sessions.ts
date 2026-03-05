@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
 import { nanoid } from "nanoid";
 // Helper to get first image URL for an exercise
@@ -61,7 +62,7 @@ export const Route = createFileRoute("/api/sessions")({
   server: {
     handlers: {
       // GET /api/sessions - List sessions
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -114,7 +115,7 @@ export const Route = createFileRoute("/api/sessions")({
         return Response.json(sessionsWithData);
       },
       // POST /api/sessions - Create session
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -125,7 +126,14 @@ export const Route = createFileRoute("/api/sessions")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
         try {
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            name?: string;
+            notes?: string;
+            startTime?: string | number;
+            endTime?: string | number;
+            impression?: string | undefined;
+            templateId?: string;
+          }>(request);
           const { name, notes, startTime, endTime, impression, templateId } =
             body;
           // If templateId provided, fetch the template
@@ -146,8 +154,8 @@ export const Route = createFileRoute("/api/sessions")({
           }
           // Derive session name from template if not provided
           const sessionName = (
-            name?.trim() ||
-            routineDay?.description ||
+            name?.trim() ??
+            routineDay?.description ??
             ""
           ).trim();
           // Create the session
@@ -156,11 +164,11 @@ export const Route = createFileRoute("/api/sessions")({
             id: sessionId,
             userId: session.user.id,
             name: sessionName,
-            notes: notes?.trim() || "",
+            notes: notes?.trim() ?? "",
             startTime: startTime ? new Date(startTime) : new Date(),
             endTime: endTime ? new Date(endTime) : null,
             impression,
-            templateId: templateId || null,
+            templateId: templateId ?? null,
           });
           // If no template, return the session
           if (!routineDay) {

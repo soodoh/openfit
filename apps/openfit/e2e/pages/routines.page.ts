@@ -95,7 +95,7 @@ export class RoutinesPage extends BasePage {
    */
   async getRoutineCardsCount(): Promise<number> {
     await this.waitForConvexData();
-    return await this.routineCards.count();
+    return this.routineCards.count();
   }
   /**
    * Check if the empty state is displayed
@@ -114,7 +114,7 @@ export class RoutinesPage extends BasePage {
    */
   async getResultsCountText(): Promise<string | undefined> {
     if (await this.isVisible(this.resultsCount, 2000)) {
-      return await this.resultsCount.textContent();
+      return this.resultsCount.textContent();
     }
     return null;
   }

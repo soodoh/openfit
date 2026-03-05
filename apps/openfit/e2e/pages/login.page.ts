@@ -84,7 +84,7 @@ export class LoginPage extends BasePage {
   async getEmailError(): Promise<string | undefined> {
     const errorLocator = this.page.locator(".text-destructive").first();
     if (await this.isVisible(errorLocator, 2000)) {
-      return await errorLocator.textContent();
+      return errorLocator.textContent();
     }
     return null;
   }
@@ -97,7 +97,7 @@ export class LoginPage extends BasePage {
       .filter({ hasText: /password/i })
       .locator(".text-destructive");
     if (await this.isVisible(errorLocator, 2000)) {
-      return await errorLocator.textContent();
+      return errorLocator.textContent();
     }
     return null;
   }

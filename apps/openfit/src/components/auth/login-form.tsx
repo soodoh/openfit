@@ -74,7 +74,7 @@ const OAUTH_PROVIDERS = [
   },
   {
     id: "oidc",
-    name: import.meta.env.VITE_AUTH_OIDC_PROVIDER_NAME || "SSO",
+    name: String(import.meta.env.VITE_AUTH_OIDC_PROVIDER_NAME ?? "SSO"),
     enabled: Boolean(import.meta.env.VITE_AUTH_OIDC_ENABLED),
   },
 ].filter((p) => p.enabled);
@@ -89,7 +89,7 @@ export const LoginForm = ({ register }: { register?: boolean }): any => {
   const [passwordError, setPasswordError] = useState<string[]>([]);
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      navigate({ to: "/", replace: true });
+      void navigate({ to: "/", replace: true });
     }
   }, [authLoading, isAuthenticated, navigate]);
   const handleSubmit = async (event: React.FormEvent) => {
@@ -99,8 +99,8 @@ export const LoginForm = ({ register }: { register?: boolean }): any => {
     const validation = SignUpSchema.safeParse({ email, password });
     if (validation.error) {
       const errors = flattenError(validation.error);
-      setEmailError(errors.fieldErrors.email || []);
-      setPasswordError(errors.fieldErrors.password || []);
+      setEmailError(errors.fieldErrors.email ?? []);
+      setPasswordError(errors.fieldErrors.password ?? []);
       return;
     }
     setLoading(true);
@@ -112,20 +112,20 @@ export const LoginForm = ({ register }: { register?: boolean }): any => {
           name: email.split("@")[0],
         });
         if (error) {
-          setPasswordError([error.message || "Registration failed"]);
+          setPasswordError([error.message ?? "Registration failed"]);
           setLoading(false);
           return;
         }
       } else {
         const { error } = await signIn.email({ email, password });
         if (error) {
-          setPasswordError([error.message || "Authentication failed"]);
+          setPasswordError([error.message ?? "Authentication failed"]);
           setLoading(false);
           return;
         }
       }
       const { data: session, error: sessionError } = await getSession();
-      if (sessionError || !session) {
+      if (sessionError ?? !session) {
         setPasswordError([
           "Authentication succeeded but session was not ready",
         ]);
@@ -133,7 +133,7 @@ export const LoginForm = ({ register }: { register?: boolean }): any => {
         return;
       }
       // Redirect to dashboard after successful auth and session refresh
-      navigate({ to: "/", replace: true });
+      void navigate({ to: "/", replace: true });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Authentication failed";
@@ -176,7 +176,7 @@ export const LoginForm = ({ register }: { register?: boolean }): any => {
           <>
             <div className="flex flex-col gap-2">
               {OAUTH_PROVIDERS.map((provider) => {
-                const icon = PROVIDER_ICONS[provider.id] || (
+                const icon = PROVIDER_ICONS[provider.id] ?? (
                   <span className="h-5 w-5 flex items-center justify-center text-xs font-bold">
                     {provider.name.charAt(0)}
                   </span>
@@ -188,7 +188,7 @@ export const LoginForm = ({ register }: { register?: boolean }): any => {
                     variant="outline"
                     className="w-full"
                     disabled={oauthLoading !== null}
-                    onClick={() => handleOAuthSignIn(provider.id)}
+                    onClick={async () => handleOAuthSignIn(provider.id)}
                   >
                     {oauthLoading === provider.id ? (
                       <span className="animate-spin mr-2">⏳</span>

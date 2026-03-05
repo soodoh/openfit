@@ -14,7 +14,7 @@ e2eTest.describe("Active Workout", () => {
     // Should show either no active session or active session content
     const hasNoSession = await workoutPage.hasNoActiveSession();
     const hasSession = await workoutPage.hasActiveSession();
-    e2eExpect(hasNoSession || hasSession).toBe(true);
+    e2eExpect(hasNoSession ?? hasSession).toBe(true);
   });
   e2eTest(
     "should show no active session state when appropriate",

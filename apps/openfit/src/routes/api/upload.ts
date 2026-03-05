@@ -17,7 +17,7 @@ async function ensureUploadDir() {
 export const Route = createFileRoute("/api/upload")({
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         try {
           // Only admins can upload files
           await requireAdmin(request);
@@ -51,7 +51,7 @@ export const Route = createFileRoute("/api/upload")({
             );
           }
           // Generate unique filename
-          const ext = file.name.split(".").pop() || "jpg";
+          const ext = file.name.split(".").pop() ?? "jpg";
           const filename = `${nanoid()}.${ext}`;
           const filepath = path.join(UPLOAD_DIR, filename);
           // Write file to disk
@@ -68,7 +68,7 @@ export const Route = createFileRoute("/api/upload")({
           );
         }
       },
-      DELETE: async ({ request }) => {
+      DELETE: async ({ request }: { request: Request }) => {
         try {
           await requireAdmin(request);
         } catch (error) {

@@ -50,9 +50,7 @@ export const ReplaceExerciseModal = ({
   setGroupId: string;
 }): any => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedGymId, setSelectedGymId] = useState<
-    string | "all" | undefined
-  >(null);
+  const [selectedGymId, setSelectedGymId] = useState<string | undefined>(null);
   const [selectedExercise, setSelectedExercise] = useState<
     Exercise | undefined
   >(null);
@@ -109,7 +107,7 @@ export const ReplaceExerciseModal = ({
       setIsPending(false);
     }
   };
-  const handleGymChange = (gymId: string | "all") => {
+  const handleGymChange = (gymId: string) => {
     setSelectedGymId(gymId);
   };
   const selectedGymName =

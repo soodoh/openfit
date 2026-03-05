@@ -7,7 +7,7 @@ import { and, desc, eq, isNotNull } from "drizzle-orm";
 export const Route = createFileRoute("/api/dashboard/recent-sessions")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);

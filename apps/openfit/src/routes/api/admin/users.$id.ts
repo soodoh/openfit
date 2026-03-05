@@ -2,15 +2,22 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { eq } from "drizzle-orm";
 export const Route = createFileRoute("/api/admin/users/$id")({
   server: {
     handlers: {
-      PATCH: async ({ request, params }) => {
+      PATCH: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         try {
           await requireAdmin(request);
           const { id } = params;
-          const body = await request.json();
+          const body = await parseJsonBody<{ role: string }>(request);
           const updated = await db
             .update(schema.userProfiles)
             .set({ role: body.role })

@@ -280,7 +280,7 @@ function Home() {
   const navigate = useNavigate();
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate({ to: "/signin" });
+      void navigate({ to: "/signin" });
     }
   }, [authLoading, isAuthenticated, navigate]);
   if (authLoading) {

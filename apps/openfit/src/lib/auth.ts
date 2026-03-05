@@ -6,8 +6,8 @@ import { genericOAuth } from "better-auth/plugins";
 import { nanoid } from "nanoid";
 
 const authBaseURL =
-  process.env.BETTER_AUTH_BASE_URL ||
-  process.env.VITE_APP_URL ||
+  process.env.BETTER_AUTH_BASE_URL ??
+  process.env.VITE_APP_URL ??
   (process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000");
 
 export const auth = betterAuth({

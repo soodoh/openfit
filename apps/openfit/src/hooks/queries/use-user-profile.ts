@@ -1,5 +1,7 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
+import type { UseQueryResult } from "@tanstack/react-query";
 type UserProfile = {
   id: string;
   userId: string;
@@ -32,14 +34,13 @@ type UserProfile = {
 // Fetch user profile
 async function fetchUserProfile(): Promise<UserProfile | undefined> {
   const response = await fetch("/api/user-profile");
-  if (!response.ok) {
-    throw new Error("Failed to fetch user profile");
-  }
-  const data = await response.json();
-  return data;
+  return fetchJson<UserProfile | undefined>(
+    response,
+    "Failed to fetch user profile",
+  );
 }
 // Hook for user profile
-export function useUserProfile(): any {
+export function useUserProfile(): UseQueryResult<UserProfile | undefined> {
   return useQuery({
     queryKey: queryKeys.userProfile.current(),
     queryFn: fetchUserProfile,

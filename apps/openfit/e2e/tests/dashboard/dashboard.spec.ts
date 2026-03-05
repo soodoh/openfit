@@ -137,7 +137,7 @@ e2eTest.describe("Dashboard", () => {
         .isVisible({ timeout: 2000 })
         .catch(() => false);
       // One of them should be visible
-      e2eExpect(hasEmpty || hasCards).toBe(true);
+      e2eExpect(hasEmpty ?? hasCards).toBe(true);
     },
   );
   e2eTest(

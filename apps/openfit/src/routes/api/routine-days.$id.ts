@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { asc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 // Helper to get first image URL for an exercise
@@ -18,7 +19,13 @@ export const Route = createFileRoute("/api/routine-days/$id")({
   server: {
     handlers: {
       // GET /api/routine-days/[id] - Get single routine day with full data
-      GET: async ({ request, params }) => {
+      GET: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -85,7 +92,13 @@ export const Route = createFileRoute("/api/routine-days/$id")({
         });
       },
       // PATCH /api/routine-days/[id] - Update routine day
-      PATCH: async ({ request, params }) => {
+      PATCH: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -109,7 +122,10 @@ export const Route = createFileRoute("/api/routine-days/$id")({
           if (routineDay.userId !== session.user.id) {
             return Response.json({ error: "Unauthorized" }, { status: 403 });
           }
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            description?: string;
+            weekdays?: number[];
+          }>(request);
           const { description, weekdays } = body;
           const trimmedDescription = description?.trim();
           if (description !== undefined && !trimmedDescription) {
@@ -164,7 +180,7 @@ export const Route = createFileRoute("/api/routine-days/$id")({
           });
           return Response.json({
             ...updated,
-            weekdays: updated?.weekdays.map((w) => w.weekday) || [],
+            weekdays: updated?.weekdays.map((w) => w.weekday) ?? [],
           });
         } catch {
           return Response.json(
@@ -174,7 +190,13 @@ export const Route = createFileRoute("/api/routine-days/$id")({
         }
       },
       // DELETE /api/routine-days/[id] - Delete routine day (cascades)
-      DELETE: async ({ request, params }) => {
+      DELETE: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let session;
         try {
           session = await requireAuth(request);

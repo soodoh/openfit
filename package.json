@@ -29,10 +29,7 @@
     "version": "changeset version"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "oxlint --fix",
-      "prettier --write"
-    ],
+    "*.{js,jsx,ts,tsx}": "prettier --write",
     "*.{css,html,json,md,mdx,yaml,yml}": "prettier --write"
   },
   "devDependencies": {

@@ -53,7 +53,7 @@ export type WorkoutSetGroup = {
   userId: string;
   routineDayId: string | undefined;
   sessionId: string | undefined;
-  type: SetGroupType | string;
+  type: string;
   order: number;
   comment: string | undefined;
 };
@@ -62,7 +62,7 @@ export type WorkoutSet = {
   userId: string;
   setGroupId: string;
   exerciseId: string;
-  type: SetType | string;
+  type: string;
   order: number;
   reps: number;
   repetitionUnitId: string;

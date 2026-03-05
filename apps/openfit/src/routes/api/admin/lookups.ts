@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { createId } from "@paralleldrive/cuid2";
 import { asc, count, like } from "drizzle-orm";
 type LookupType =
@@ -20,7 +21,7 @@ const tableMap = {
 export const Route = createFileRoute("/api/admin/lookups")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         try {
           await requireAdmin(request);
           const { searchParams } = new URL(request.url);
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/api/admin/lookups")({
             1,
             Number(searchParams.get("pageSize")) || 10,
           );
-          const search = searchParams.get("search")?.trim() || "";
+          const search = searchParams.get("search")?.trim() ?? "";
           const table = tableMap[type];
           const conditions = search
             ? like(table.name, `%${search}%`)
@@ -68,10 +69,12 @@ export const Route = createFileRoute("/api/admin/lookups")({
           );
         }
       },
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         try {
           await requireAdmin(request);
-          const body = await request.json();
+          const body = await parseJsonBody<{ type: string; name: string }>(
+            request,
+          );
           const type = body.type as LookupType;
           if (!type || !tableMap[type]) {
             return Response.json({ error: "Invalid type" }, { status: 400 });

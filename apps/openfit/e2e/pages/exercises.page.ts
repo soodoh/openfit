@@ -94,31 +94,15 @@ export class ExercisesPage extends BasePage {
     filterType: "equipment" | "level" | "category" | "muscle",
     value: string,
   ): Promise<void> {
-    let trigger: Locator;
     // Get the specific combobox by position/placeholder
     const comboboxes = this.page.getByRole("combobox");
-    switch (filterType) {
-      case "equipment": {
-        trigger = comboboxes.first();
-        break;
-      }
-      case "level": {
-        trigger = comboboxes.nth(1);
-        break;
-      }
-      case "category": {
-        trigger = comboboxes.nth(2);
-        break;
-      }
-      case "muscle": {
-        trigger = comboboxes.nth(3);
-        break;
-      }
-      default: {
-        trigger = comboboxes.first();
-        break;
-      }
-    }
+    const filterIndex = {
+      equipment: 0,
+      level: 1,
+      category: 2,
+      muscle: 3,
+    } as const;
+    const trigger = comboboxes.nth(filterIndex[filterType]);
     await trigger.click();
     await this.page
       .getByRole("option", { name: new RegExp(value, "i") })
@@ -146,7 +130,7 @@ export class ExercisesPage extends BasePage {
   async getExerciseCardsCount(): Promise<number> {
     await this.waitForConvexData();
     const cards = this.page.locator(".grid > div[class*='rounded']");
-    return await cards.count();
+    return cards.count();
   }
   /**
    * Check if the empty state is displayed
@@ -165,7 +149,7 @@ export class ExercisesPage extends BasePage {
    */
   async getResultsCountText(): Promise<string | undefined> {
     if (await this.isVisible(this.resultsCount, 2000)) {
-      return await this.resultsCount.textContent();
+      return this.resultsCount.textContent();
     }
     return null;
   }

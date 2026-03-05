@@ -1,5 +1,7 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import type { UseQueryResult } from "@tanstack/react-query";
 type UserWithProfile = {
   id: string;
   userId: string;
@@ -66,11 +68,7 @@ async function fetchPaginatedAdmin<T>(
     searchParams.set("search", params.search);
   }
   const response = await fetch(`${url}?${searchParams}`, { signal });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to fetch data");
-  }
-  return response.json();
+  return fetchJson<PaginatedResponse<T>>(response, "Failed to fetch data");
 }
 async function fetchPaginatedLookup(
   type: string,
@@ -88,35 +86,37 @@ async function fetchPaginatedLookup(
   const response = await fetch(`/api/admin/lookups?${searchParams}`, {
     signal,
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to fetch lookups");
-  }
-  return response.json();
+  return fetchJson<PaginatedResponse<LookupItem>>(
+    response,
+    "Failed to fetch lookups",
+  );
 }
 // --- Non-paginated fetch helpers (for dropdowns / form selects) ---
 async function fetchAdminLookups(type: string): Promise<LookupItem[]> {
   const response = await fetch(`/api/admin/lookups?type=${type}&pageSize=1000`);
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to fetch lookups");
-  }
-  const result: PaginatedResponse<LookupItem> = await response.json();
+  const result = await fetchJson<PaginatedResponse<LookupItem>>(
+    response,
+    "Failed to fetch lookups",
+  );
   return result.items;
 }
 // --- Paginated hooks (for admin tables) ---
-export function useAdminUsersPaginated(params: AdminPaginationParams): any {
+export function useAdminUsersPaginated(
+  params: AdminPaginationParams,
+): UseQueryResult<PaginatedResponse<UserWithProfile>> {
   return useQuery({
     queryKey: queryKeys.admin.userList(params),
-    queryFn: ({ signal }) =>
+    queryFn: async ({ signal }) =>
       fetchPaginatedAdmin<UserWithProfile>("/api/admin/users", params, signal),
     placeholderData: keepPreviousData,
   });
 }
-export function useAdminExercisesPaginated(params: AdminPaginationParams): any {
+export function useAdminExercisesPaginated(
+  params: AdminPaginationParams,
+): UseQueryResult<PaginatedResponse<ExerciseWithRelations>> {
   return useQuery({
     queryKey: queryKeys.admin.exerciseList(params),
-    queryFn: ({ signal }) =>
+    queryFn: async ({ signal }) =>
       fetchPaginatedAdmin<ExerciseWithRelations>(
         "/api/admin/exercises",
         params,
@@ -128,7 +128,7 @@ export function useAdminExercisesPaginated(params: AdminPaginationParams): any {
 export function useAdminLookupPaginated(
   type: string,
   params: AdminPaginationParams,
-): any {
+): UseQueryResult<PaginatedResponse<LookupItem>> {
   const keyFn = {
     equipment: queryKeys.admin.equipmentList,
     categories: queryKeys.admin.categoryList,
@@ -140,39 +140,39 @@ export function useAdminLookupPaginated(
     queryKey: keyFn
       ? keyFn(params)
       : [...queryKeys.admin.all, type, "list", params],
-    queryFn: ({ signal }) => fetchPaginatedLookup(type, params, signal),
+    queryFn: async ({ signal }) => fetchPaginatedLookup(type, params, signal),
     placeholderData: keepPreviousData,
   });
 }
 // --- Non-paginated hooks (for dropdowns in ExerciseFormModal, etc.) ---
-export function useAdminEquipment(): any {
+export function useAdminEquipment(): UseQueryResult<LookupItem[]> {
   return useQuery({
     queryKey: queryKeys.admin.equipment(),
-    queryFn: () => fetchAdminLookups("equipment"),
+    queryFn: async () => fetchAdminLookups("equipment"),
   });
 }
-export function useAdminCategories(): any {
+export function useAdminCategories(): UseQueryResult<LookupItem[]> {
   return useQuery({
     queryKey: queryKeys.admin.categories(),
-    queryFn: () => fetchAdminLookups("categories"),
+    queryFn: async () => fetchAdminLookups("categories"),
   });
 }
-export function useAdminMuscleGroups(): any {
+export function useAdminMuscleGroups(): UseQueryResult<LookupItem[]> {
   return useQuery({
     queryKey: queryKeys.admin.muscleGroups(),
-    queryFn: () => fetchAdminLookups("muscleGroups"),
+    queryFn: async () => fetchAdminLookups("muscleGroups"),
   });
 }
-export function useAdminRepetitionUnits(): any {
+export function useAdminRepetitionUnits(): UseQueryResult<LookupItem[]> {
   return useQuery({
     queryKey: queryKeys.admin.repetitionUnits(),
-    queryFn: () => fetchAdminLookups("repetitionUnits"),
+    queryFn: async () => fetchAdminLookups("repetitionUnits"),
   });
 }
-export function useAdminWeightUnits(): any {
+export function useAdminWeightUnits(): UseQueryResult<LookupItem[]> {
   return useQuery({
     queryKey: queryKeys.admin.weightUnits(),
-    queryFn: () => fetchAdminLookups("weightUnits"),
+    queryFn: async () => fetchAdminLookups("weightUnits"),
   });
 }
 export type {

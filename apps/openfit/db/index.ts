@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument -- bun:sqlite types are not resolvable by oxlint */
 import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
@@ -6,7 +7,7 @@ import path from "node:path";
 import { schema } from "./schema";
 
 const dbPath =
-  process.env.DATABASE_URL?.replace("file:", "") ||
+  process.env.DATABASE_URL?.replace("file:", "") ??
   path.join(process.cwd(), "data", "openfit.db");
 
 // Lazy initialization for the database connection
@@ -27,6 +28,7 @@ function getDb(): BunSQLiteDatabase<typeof schema> {
   }
   return _db;
 }
+/* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 
 // Export a proxy that lazily initializes the database
 export const db = new Proxy({} as BunSQLiteDatabase<typeof schema>, {

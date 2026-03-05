@@ -25,16 +25,16 @@ import { Check, ChevronDown, Dumbbell } from "lucide-react";
 import { useRef, useState } from "react";
 import type { Exercise } from "@/lib/types";
 function resolveEffectiveGymId(
-  selectedGymId: string | "all" | "default" | undefined,
+  selectedGymId: string | undefined,
   defaultGymId: string | undefined,
-): string | "all" | undefined {
+): string | undefined {
   if (selectedGymId !== "default") {
     return selectedGymId;
   }
   return defaultGymId ?? undefined;
 }
 function getGymDisplayName(
-  effectiveGymId: string | "all" | undefined,
+  effectiveGymId: string | undefined,
   userGyms: Array<{ id: string; name: string }> | undefined,
 ): string {
   if (!effectiveGymId || effectiveGymId === "all") {
@@ -84,9 +84,7 @@ export const AutocompleteExercise = ({
 }): any => {
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
-  const [selectedGymId, setSelectedGymId] = useState<
-    string | "all" | "default"
-  >("default");
+  const [selectedGymId, setSelectedGymId] = useState<string>("default");
   const inputRef = useRef<HTMLInputElement>(null);
   const { getMuscleGroupNames } = useExerciseLookups();
   // Fetch user profile for default gym
@@ -128,7 +126,7 @@ export const AutocompleteExercise = ({
       setOpen,
     });
   };
-  const handleGymChange = (gymId: string | "all") => {
+  const handleGymChange = (gymId: string) => {
     setSelectedGymId(gymId);
   };
   const gymDisplayName = getGymDisplayName(effectiveGymId, userGyms);
@@ -139,7 +137,7 @@ export const AutocompleteExercise = ({
           <Input
             ref={inputRef}
             placeholder="Search exercises..."
-            value={value?.name || searchTerm}
+            value={value?.name ?? searchTerm}
             onChange={(e) => {
               // If there's a selected value, keyDown handler takes care of clearing
               // This onChange is only for when there's no selected value

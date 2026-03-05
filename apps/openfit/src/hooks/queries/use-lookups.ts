@@ -1,5 +1,7 @@
+import { fetchJson } from "@/lib/request-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
+import type { UseQueryResult } from "@tanstack/react-query";
 type Equipment = {
   id: string;
   name: string;
@@ -32,37 +34,25 @@ type Units = {
 // Fetch equipment
 async function fetchEquipment(): Promise<Equipment[]> {
   const response = await fetch("/api/lookups/equipment");
-  if (!response.ok) {
-    throw new Error("Failed to fetch equipment");
-  }
-  return response.json();
+  return fetchJson<Equipment[]>(response, "Failed to fetch equipment");
 }
 // Fetch muscle groups
 async function fetchMuscleGroups(): Promise<MuscleGroup[]> {
   const response = await fetch("/api/lookups/muscle-groups");
-  if (!response.ok) {
-    throw new Error("Failed to fetch muscle groups");
-  }
-  return response.json();
+  return fetchJson<MuscleGroup[]>(response, "Failed to fetch muscle groups");
 }
 // Fetch categories
 async function fetchCategories(): Promise<Category[]> {
   const response = await fetch("/api/lookups/categories");
-  if (!response.ok) {
-    throw new Error("Failed to fetch categories");
-  }
-  return response.json();
+  return fetchJson<Category[]>(response, "Failed to fetch categories");
 }
 // Fetch units
 async function fetchUnits(): Promise<Units> {
   const response = await fetch("/api/lookups/units");
-  if (!response.ok) {
-    throw new Error("Failed to fetch units");
-  }
-  return response.json();
+  return fetchJson<Units>(response, "Failed to fetch units");
 }
 // Hook for equipment
-export function useEquipment(): any {
+export function useEquipment(): UseQueryResult<Equipment[]> {
   return useQuery({
     queryKey: queryKeys.lookups.equipment(),
     queryFn: fetchEquipment,
@@ -70,7 +60,7 @@ export function useEquipment(): any {
   });
 }
 // Hook for muscle groups
-export function useMuscleGroups(): any {
+export function useMuscleGroups(): UseQueryResult<MuscleGroup[]> {
   return useQuery({
     queryKey: queryKeys.lookups.muscleGroups(),
     queryFn: fetchMuscleGroups,
@@ -78,7 +68,7 @@ export function useMuscleGroups(): any {
   });
 }
 // Hook for categories
-export function useCategories(): any {
+export function useCategories(): UseQueryResult<Category[]> {
   return useQuery({
     queryKey: queryKeys.lookups.categories(),
     queryFn: fetchCategories,
@@ -86,7 +76,7 @@ export function useCategories(): any {
   });
 }
 // Hook for units
-export function useUnits(): any {
+export function useUnits(): UseQueryResult<Units> {
   return useQuery({
     queryKey: queryKeys.lookups.units(),
     queryFn: fetchUnits,

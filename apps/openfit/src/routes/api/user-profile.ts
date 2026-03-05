@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { getOptionalSession, requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
 // GET /api/user-profile - Get current user's profile
@@ -8,7 +9,7 @@ import { eq } from "drizzle-orm";
 export const Route = createFileRoute("/api/user-profile")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         const session = await getOptionalSession(request);
         if (!session) {
           return Response.json(null);
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/api/user-profile")({
         }
         return Response.json(profile);
       },
-      PATCH: async ({ request }) => {
+      PATCH: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -37,7 +38,12 @@ export const Route = createFileRoute("/api/user-profile")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
         try {
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            theme?: string;
+            defaultRepetitionUnitId?: string;
+            defaultWeightUnitId?: string;
+            defaultGymId?: string | undefined;
+          }>(request);
           const {
             theme,
             defaultRepetitionUnitId,

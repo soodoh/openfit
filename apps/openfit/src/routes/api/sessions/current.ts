@@ -17,7 +17,7 @@ export const Route = createFileRoute("/api/sessions/current")({
   server: {
     handlers: {
       // GET /api/sessions/current - Get the current active session
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         const session = await getOptionalSession(request);
         if (!session) {
           return Response.json(null);

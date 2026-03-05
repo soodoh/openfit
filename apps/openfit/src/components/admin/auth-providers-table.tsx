@@ -27,7 +27,7 @@ const PROVIDER_INFO: Record<
     envVars: { id: "AUTH_DISCORD_ID", secret: "AUTH_DISCORD_SECRET" },
   },
   oidc: {
-    label: import.meta.env.VITE_AUTH_OIDC_PROVIDER_NAME || "OIDC",
+    label: String(import.meta.env.VITE_AUTH_OIDC_PROVIDER_NAME ?? "OIDC"),
     envVars: {
       id: "AUTH_OIDC_CLIENT_ID",
       secret: "AUTH_OIDC_CLIENT_SECRET",
@@ -50,7 +50,7 @@ export function AuthProvidersTable(): any {
     const loadProviderStatus = async () => {
       try {
         const response = await fetch("/api/auth/providers");
-        const data = await response.json();
+        const data = (await response.json()) as ProviderStatus;
         if (isMounted) {
           setProviderStatus(data);
         }
@@ -68,7 +68,7 @@ export function AuthProvidersTable(): any {
   const providers = Object.entries(PROVIDER_INFO).map(([key, info]) => ({
     id: key,
     displayName: info.label,
-    type: key as keyof typeof PROVIDER_INFO,
+    type: key,
     envVars: info.envVars,
     isConfigured: providerStatus?.[key as keyof ProviderStatus] ?? false,
   }));

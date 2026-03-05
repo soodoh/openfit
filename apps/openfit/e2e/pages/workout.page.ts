@@ -100,7 +100,7 @@ export class WorkoutPage extends BasePage {
    */
   async getSessionTitle(): Promise<string | undefined> {
     if (await this.isVisible(this.sessionTitle)) {
-      return await this.sessionTitle.textContent();
+      return this.sessionTitle.textContent();
     }
     return null;
   }
@@ -152,7 +152,7 @@ export class WorkoutPage extends BasePage {
    * Get the number of exercises in the current session
    */
   async getExerciseCount(): Promise<number> {
-    return await this.exerciseList.count();
+    return this.exerciseList.count();
   }
   /**
    * Close any open modal

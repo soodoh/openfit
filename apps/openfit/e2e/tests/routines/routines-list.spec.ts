@@ -70,7 +70,7 @@ e2eTest.describe("Routines List", () => {
       const hasEmpty = await routinesPage.hasEmptyState();
       const cardCount = await routinesPage.getRoutineCardsCount();
       // Either has empty state or has cards
-      e2eExpect(hasEmpty || cardCount > 0).toBe(true);
+      e2eExpect(hasEmpty ?? cardCount > 0).toBe(true);
     },
   );
   e2eTest(

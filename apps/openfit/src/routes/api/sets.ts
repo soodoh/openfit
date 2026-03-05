@@ -2,13 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 export const Route = createFileRoute("/api/sets")({
   server: {
     handlers: {
       // POST /api/sets - Create a new set
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -19,7 +20,16 @@ export const Route = createFileRoute("/api/sets")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
         try {
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            setGroupId: string;
+            exerciseId: string;
+            type?: string;
+            reps?: number;
+            repetitionUnitId?: string;
+            weight?: number;
+            weightUnitId?: string;
+            restTime?: number;
+          }>(request);
           const {
             setGroupId,
             exerciseId,
@@ -75,9 +85,9 @@ export const Route = createFileRoute("/api/sets")({
             type,
             order: maxOrder + 1,
             reps: reps ?? 10,
-            repetitionUnitId: repetitionUnitId || repUnits[0]?.id,
+            repetitionUnitId: repetitionUnitId ?? repUnits[0]?.id,
             weight: weight ?? 0,
-            weightUnitId: weightUnitId || weightUnits[0]?.id,
+            weightUnitId: weightUnitId ?? weightUnits[0]?.id,
             restTime: restTime ?? 0,
             completed: shouldAutoComplete,
           });

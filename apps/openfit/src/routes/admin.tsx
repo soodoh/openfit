@@ -9,7 +9,7 @@ function AdminRoute() {
   const [isAdmin, setIsAdmin] = useState<boolean | undefined>(null);
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate({ to: "/signin" });
+      void navigate({ to: "/signin" });
       return;
     }
     if (!isAuthenticated) {
@@ -19,17 +19,17 @@ function AdminRoute() {
       try {
         const res = await fetch("/api/admin/check");
         if (!res.ok) {
-          navigate({ to: "/" });
+          void navigate({ to: "/" });
           return;
         }
-        const data = await res.json();
+        const data = (await res.json()) as { isAdmin?: boolean };
         if (data?.isAdmin) {
           setIsAdmin(true);
           return;
         }
-        navigate({ to: "/" });
+        void navigate({ to: "/" });
       } catch {
-        navigate({ to: "/" });
+        void navigate({ to: "/" });
       }
     };
     void checkAdmin();

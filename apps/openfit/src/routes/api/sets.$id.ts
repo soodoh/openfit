@@ -2,12 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { eq } from "drizzle-orm";
 export const Route = createFileRoute("/api/sets/$id")({
   server: {
     handlers: {
       // PATCH /api/sets/[id] - Update set
-      PATCH: async ({ request, params }) => {
+      PATCH: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let session;
         try {
           session = await requireAuth(request);
@@ -28,7 +35,15 @@ export const Route = createFileRoute("/api/sets/$id")({
           if (set.userId !== session.user.id) {
             return Response.json({ error: "Unauthorized" }, { status: 403 });
           }
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            type?: string;
+            reps?: number;
+            repetitionUnitId?: string;
+            weight?: number;
+            weightUnitId?: string;
+            restTime?: number;
+            completed?: boolean;
+          }>(request);
           const {
             type,
             reps,
@@ -68,7 +83,13 @@ export const Route = createFileRoute("/api/sets/$id")({
         }
       },
       // DELETE /api/sets/[id] - Delete set (also deletes set group if last set)
-      DELETE: async ({ request, params }) => {
+      DELETE: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         let session;
         try {
           session = await requireAuth(request);

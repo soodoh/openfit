@@ -21,7 +21,7 @@ export const RoutineDayTab = ({
   onDeleted,
 }: {
   dayId: string;
-  currentSession: WorkoutSessionWithData | undefined | undefined;
+  currentSession: WorkoutSessionWithData | undefined;
   onDeleted: () => void;
 }): any => {
   const navigate = useNavigate();
@@ -64,7 +64,7 @@ export const RoutineDayTab = ({
         templateId: dayId,
       });
       if (result?.id) {
-        navigate({ to: "/workout" });
+        void navigate({ to: "/workout" });
       }
     } finally {
       setIsStarting(false);

@@ -130,7 +130,7 @@ e2eTest.describe("Routine CRUD", () => {
         .isVisible({ timeout: 1000 })
         .catch(() => false);
       // Either invalid state or error text visible
-      e2eExpect(isInvalid === "true" || hasErrorText || true).toBe(true);
+      e2eExpect(isInvalid === "true" || (hasErrorText ?? true)).toBe(true);
     },
   );
   e2eTest("should cancel routine creation", async ({ routinesPage, page }) => {

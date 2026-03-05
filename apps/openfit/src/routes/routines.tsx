@@ -56,7 +56,7 @@ function RoutinesPage() {
   const { ref: sentinelRef, inView } = useInView();
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
+      void fetchNextPage();
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
   return (

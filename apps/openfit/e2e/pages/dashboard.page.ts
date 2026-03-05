@@ -95,7 +95,7 @@ export class DashboardPage extends BasePage {
   async getStatValue(statCard: Locator): Promise<number> {
     void this.page;
     const valueText = await statCard.locator(".text-2xl").textContent();
-    return Number.parseInt(valueText || "0", 10);
+    return Number.parseInt(valueText ?? "0", 10);
   }
   /**
    * Get total sessions count
@@ -169,7 +169,7 @@ export class DashboardPage extends BasePage {
     const cards = this.page.locator(
       '[class*="group block"], [class*="cursor-pointer"]',
     );
-    return await cards.count();
+    return cards.count();
   }
   /**
    * Click the view all link

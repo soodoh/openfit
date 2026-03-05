@@ -2,12 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { createId } from "@paralleldrive/cuid2";
 import { asc, count, like } from "drizzle-orm";
 export const Route = createFileRoute("/api/admin/exercises")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         try {
           await requireAdmin(request);
           const { searchParams } = new URL(request.url);
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/api/admin/exercises")({
             1,
             Number(searchParams.get("pageSize")) || 10,
           );
-          const search = searchParams.get("search")?.trim() || "";
+          const search = searchParams.get("search")?.trim() ?? "";
           const conditions = search
             ? like(schema.exercises.name, `%${search}%`)
             : undefined;
@@ -99,10 +100,21 @@ export const Route = createFileRoute("/api/admin/exercises")({
           );
         }
       },
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         try {
           await requireAdmin(request);
-          const body = await request.json();
+          const body = await parseJsonBody<{
+            name: string;
+            level?: string;
+            force?: string | undefined;
+            mechanic?: string | undefined;
+            equipmentId?: string | undefined;
+            categoryId: string;
+            primaryMuscleIds?: string[];
+            secondaryMuscleIds?: string[];
+            instructions?: string[];
+            imageUrls?: string[];
+          }>(request);
           const exerciseId = createId();
           // Create exercise
           await db.insert(schema.exercises).values({

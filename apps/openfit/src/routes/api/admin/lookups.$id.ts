@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
 import { eq } from "drizzle-orm";
 type LookupType =
   | "equipment"
@@ -19,11 +20,19 @@ const tableMap = {
 export const Route = createFileRoute("/api/admin/lookups/$id")({
   server: {
     handlers: {
-      PATCH: async ({ request, params }) => {
+      PATCH: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         try {
           await requireAdmin(request);
           const { id } = params;
-          const body = await request.json();
+          const body = await parseJsonBody<{ type: string; name: string }>(
+            request,
+          );
           const type = body.type as LookupType;
           if (!type || !tableMap[type]) {
             return Response.json({ error: "Invalid type" }, { status: 400 });
@@ -47,7 +56,13 @@ export const Route = createFileRoute("/api/admin/lookups/$id")({
           );
         }
       },
-      DELETE: async ({ request, params }) => {
+      DELETE: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: Record<string, string>;
+      }) => {
         try {
           await requireAdmin(request);
           const { id } = params;
