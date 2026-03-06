@@ -1,7 +1,7 @@
 {
   "name": "openfit-monorepo",
   "private": true,
-  "packageManager": "bun@1.3.9",
+  "packageManager": "bun@1.3.10",
   "workspaces": [
     "apps/*"
   ],
