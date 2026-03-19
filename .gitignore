@@ -1,8 +1,12 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # Claude Code
+.worktrees/
 .serena/
 .playwright-mcp/
+.claude/worktrees/
+.claude/sessions/
+.claude/plans/
 
 # Database
 /data/
