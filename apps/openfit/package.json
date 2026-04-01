@@ -80,7 +80,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "@standard-config/oxlint": "^1.4.0",
+    "@standard-config/oxlint": "^1.6.2",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
