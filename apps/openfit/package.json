@@ -95,7 +95,7 @@
 		"jsdom": "^28.1.0",
 		"tailwind-merge": "^3.5.0",
 		"tailwindcss": "^4.2.1",
-		"typescript": "^5.9.3",
+		"typescript": "^6.0.2",
 		"vite-tsconfig-paths": "^6.1.1",
 		"vitest": "^4.0.18",
 		"wait-on": "^9.0.4"
