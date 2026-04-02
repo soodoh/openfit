@@ -1,43 +1,43 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const repetitionUnits = sqliteTable("repetition_units", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull().unique(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
+	id: text("id").primaryKey(),
+	name: text("name").notNull().unique(),
+	createdAt: integer("created_at", { mode: "timestamp" })
+		.notNull()
+		.$defaultFn(() => new Date()),
 });
 
 export const weightUnits = sqliteTable("weight_units", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull().unique(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
+	id: text("id").primaryKey(),
+	name: text("name").notNull().unique(),
+	createdAt: integer("created_at", { mode: "timestamp" })
+		.notNull()
+		.$defaultFn(() => new Date()),
 });
 
 export const equipment = sqliteTable("equipment", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull().unique(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
+	id: text("id").primaryKey(),
+	name: text("name").notNull().unique(),
+	createdAt: integer("created_at", { mode: "timestamp" })
+		.notNull()
+		.$defaultFn(() => new Date()),
 });
 
 export const muscleGroups = sqliteTable("muscle_groups", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull().unique(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
+	id: text("id").primaryKey(),
+	name: text("name").notNull().unique(),
+	createdAt: integer("created_at", { mode: "timestamp" })
+		.notNull()
+		.$defaultFn(() => new Date()),
 });
 
 export const categories = sqliteTable("categories", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull().unique(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
+	id: text("id").primaryKey(),
+	name: text("name").notNull().unique(),
+	createdAt: integer("created_at", { mode: "timestamp" })
+		.notNull()
+		.$defaultFn(() => new Date()),
 });
 
 export type RepetitionUnit = typeof repetitionUnits.$inferSelect;

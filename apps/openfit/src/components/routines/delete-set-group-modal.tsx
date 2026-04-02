@@ -1,50 +1,52 @@
+import type { ReactNode } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
 } from "@/components/ui/dialog";
 import { useDeleteSetGroup } from "@/hooks";
 import type { WorkoutSetGroup } from "@/lib/types";
 export const DeleteSetGroupModal = ({
-  open,
-  onClose,
-  setGroup,
+	open,
+	onClose,
+	setGroup,
 }: {
-  open: boolean;
-  onClose: () => void;
-  setGroup: WorkoutSetGroup;
-}): any => {
-  const deleteSetGroupMutation = useDeleteSetGroup();
-  return (
-    <Dialog open={open} onOpenChange={() => onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Delete Exercise</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete this exercise and its group of sets?
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            No
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={async () => {
-              await deleteSetGroupMutation.mutateAsync(setGroup.id);
-              onClose();
-            }}
-          >
-            Yes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+	open: boolean;
+	onClose: () => void;
+	setGroup: WorkoutSetGroup;
+}): ReactNode => {
+	const deleteSetGroupMutation = useDeleteSetGroup();
+	return (
+		<Dialog open={open} onOpenChange={() => onClose()}>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Delete Exercise</DialogTitle>
+					<DialogDescription>
+						Are you sure you want to delete this exercise and its group of sets?
+					</DialogDescription>
+				</DialogHeader>
+				<DialogFooter>
+					<Button variant="outline" onClick={onClose}>
+						No
+					</Button>
+					<Button
+						variant="destructive"
+						onClick={async () => {
+							await deleteSetGroupMutation.mutateAsync(setGroup.id);
+							onClose();
+						}}
+					>
+						Yes
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
+	);
 };
 
 export default DeleteSetGroupModal;

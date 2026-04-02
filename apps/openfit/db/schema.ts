@@ -7,13 +7,13 @@ import * as userData from "./schema/user-data";
 import * as workouts from "./schema/workouts";
 
 export const schema = {
-  ...auth,
-  ...userData,
-  ...reference,
-  ...exercises,
-  ...routines,
-  ...workouts,
-  ...relations,
+	...auth,
+	...userData,
+	...reference,
+	...exercises,
+	...routines,
+	...workouts,
+	...relations,
 };
 
 export default schema;

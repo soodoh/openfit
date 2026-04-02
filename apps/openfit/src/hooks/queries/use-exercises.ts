@@ -1,195 +1,196 @@
-import { fetchJson } from "@/lib/request-helpers";
-import { queryKeys } from "@/lib/query-keys";
-import {
-  keepPreviousData,
-  useInfiniteQuery,
-  useQuery,
-} from "@tanstack/react-query";
 import type {
-  InfiniteData,
-  UseInfiniteQueryResult,
-  UseQueryResult,
+	InfiniteData,
+	UseInfiniteQueryResult,
+	UseQueryResult,
 } from "@tanstack/react-query";
+import {
+	keepPreviousData,
+	useInfiniteQuery,
+	useQuery,
+} from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { fetchJson } from "@/lib/request-helpers";
 import type { ExerciseWithImageUrl } from "@/lib/types";
+
 type ExerciseFilters = {
-  search?: string;
-  equipmentId?: string;
-  equipmentIds?: string[];
-  level?: "beginner" | "intermediate" | "expert";
-  categoryId?: string;
-  primaryMuscleId?: string;
+	search?: string;
+	equipmentId?: string;
+	equipmentIds?: string[];
+	level?: "beginner" | "intermediate" | "expert";
+	categoryId?: string;
+	primaryMuscleId?: string;
 };
 // Use the proper type from convex-types
 type Exercise = ExerciseWithImageUrl;
 type PaginatedResponse<T> = {
-  page: T[];
-  isDone: boolean;
-  continueCursor: string | undefined;
+	page: T[];
+	isDone: boolean;
+	continueCursor: string | undefined;
 };
 // Helper to build query string
 function buildExerciseQueryString(
-  filters: ExerciseFilters,
-  cursor?: string,
-  limit?: number,
+	filters: ExerciseFilters,
+	cursor?: string,
+	limit?: number,
 ): string {
-  const params = new URLSearchParams();
-  if (filters.search) {
-    params.set("search", filters.search);
-  }
-  if (filters.equipmentId) {
-    params.set("equipmentId", filters.equipmentId);
-  }
-  if (filters.equipmentIds) {
-    for (const id of filters.equipmentIds) {
-      params.append("equipmentIds", id);
-    }
-  }
-  if (filters.level) {
-    params.set("level", filters.level);
-  }
-  if (filters.categoryId) {
-    params.set("categoryId", filters.categoryId);
-  }
-  if (filters.primaryMuscleId) {
-    params.set("primaryMuscleId", filters.primaryMuscleId);
-  }
-  if (cursor) {
-    params.set("cursor", cursor);
-  }
-  if (limit) {
-    params.set("limit", String(limit));
-  }
-  return params.toString();
+	const params = new URLSearchParams();
+	if (filters.search) {
+		params.set("search", filters.search);
+	}
+	if (filters.equipmentId) {
+		params.set("equipmentId", filters.equipmentId);
+	}
+	if (filters.equipmentIds) {
+		for (const id of filters.equipmentIds) {
+			params.append("equipmentIds", id);
+		}
+	}
+	if (filters.level) {
+		params.set("level", filters.level);
+	}
+	if (filters.categoryId) {
+		params.set("categoryId", filters.categoryId);
+	}
+	if (filters.primaryMuscleId) {
+		params.set("primaryMuscleId", filters.primaryMuscleId);
+	}
+	if (cursor) {
+		params.set("cursor", cursor);
+	}
+	if (limit) {
+		params.set("limit", String(limit));
+	}
+	return params.toString();
 }
 // Fetch paginated exercises
 async function fetchExercises(
-  filters: ExerciseFilters = {},
-  cursor?: string,
-  limit = 20,
-  signal?: AbortSignal,
+	filters: ExerciseFilters = {},
+	cursor?: string,
+	limit = 20,
+	signal?: AbortSignal,
 ): Promise<PaginatedResponse<Exercise>> {
-  const queryString = buildExerciseQueryString(filters, cursor, limit);
-  const response = await fetch(`/api/exercises?${queryString}`, { signal });
-  return fetchJson<PaginatedResponse<Exercise>>(
-    response,
-    "Failed to fetch exercises",
-  );
+	const queryString = buildExerciseQueryString(filters, cursor, limit);
+	const response = await fetch(`/api/exercises?${queryString}`, { signal });
+	return fetchJson<PaginatedResponse<Exercise>>(
+		response,
+		"Failed to fetch exercises",
+	);
 }
 // Fetch single exercise
 async function fetchExercise(id: string): Promise<Exercise | undefined> {
-  const response = await fetch(`/api/exercises/${id}`);
-  if (response.status === 404) {
-    return undefined;
-  }
-  return fetchJson<Exercise>(response, "Failed to fetch exercise");
+	const response = await fetch(`/api/exercises/${id}`);
+	if (response.status === 404) {
+		return undefined;
+	}
+	return fetchJson<Exercise>(response, "Failed to fetch exercise");
 }
 // Search exercises (simple list, not paginated)
 async function searchExercises(
-  term: string,
-  equipmentIds?: string[],
-  limit = 20,
-  signal?: AbortSignal,
+	term: string,
+	equipmentIds?: string[],
+	limit = 20,
+	signal?: AbortSignal,
 ): Promise<Exercise[]> {
-  const params = new URLSearchParams();
-  if (term) {
-    params.set("q", term);
-  }
-  if (equipmentIds) {
-    for (const id of equipmentIds) {
-      params.append("equipmentIds", id);
-    }
-  }
-  params.set("limit", String(limit));
-  const response = await fetch(`/api/exercises/search?${params}`, { signal });
-  return fetchJson<Exercise[]>(response, "Failed to search exercises");
+	const params = new URLSearchParams();
+	if (term) {
+		params.set("q", term);
+	}
+	if (equipmentIds) {
+		for (const id of equipmentIds) {
+			params.append("equipmentIds", id);
+		}
+	}
+	params.set("limit", String(limit));
+	const response = await fetch(`/api/exercises/search?${params}`, { signal });
+	return fetchJson<Exercise[]>(response, "Failed to search exercises");
 }
 // Search similar exercises
 async function searchSimilarExercises(
-  primaryMuscleIds: string[],
-  options: {
-    search?: string;
-    equipmentIds?: string[];
-    excludeExerciseId?: string;
-    limit?: number;
-  } = {},
+	primaryMuscleIds: string[],
+	options: {
+		search?: string;
+		equipmentIds?: string[];
+		excludeExerciseId?: string;
+		limit?: number;
+	} = {},
 ): Promise<Exercise[]> {
-  const params = new URLSearchParams();
-  if (options.search) {
-    params.set("q", options.search);
-  }
-  if (options.equipmentIds) {
-    for (const id of options.equipmentIds) {
-      params.append("equipmentIds", id);
-    }
-  }
-  for (const id of primaryMuscleIds) {
-    params.append("primaryMuscleIds", id);
-  }
-  if (options.excludeExerciseId) {
-    params.set("exclude", options.excludeExerciseId);
-  }
-  if (options.limit) {
-    params.set("limit", String(options.limit));
-  }
-  const response = await fetch(`/api/exercises/similar?${params}`);
-  return fetchJson<Exercise[]>(response, "Failed to search similar exercises");
+	const params = new URLSearchParams();
+	if (options.search) {
+		params.set("q", options.search);
+	}
+	if (options.equipmentIds) {
+		for (const id of options.equipmentIds) {
+			params.append("equipmentIds", id);
+		}
+	}
+	for (const id of primaryMuscleIds) {
+		params.append("primaryMuscleIds", id);
+	}
+	if (options.excludeExerciseId) {
+		params.set("exclude", options.excludeExerciseId);
+	}
+	if (options.limit) {
+		params.set("limit", String(options.limit));
+	}
+	const response = await fetch(`/api/exercises/similar?${params}`);
+	return fetchJson<Exercise[]>(response, "Failed to search similar exercises");
 }
 // Hook for paginated exercise list
 export function useExercises(
-  filters: ExerciseFilters = {},
+	filters: ExerciseFilters = {},
 ): UseInfiniteQueryResult<
-  InfiniteData<PaginatedResponse<Exercise>, string | undefined>
+	InfiniteData<PaginatedResponse<Exercise>, string | undefined>
 > {
-  return useInfiniteQuery({
-    queryKey: queryKeys.exercises.list(filters as Record<string, unknown>),
-    queryFn: async ({ pageParam, signal }) =>
-      fetchExercises(filters, pageParam, 20, signal),
-    getNextPageParam: (lastPage) =>
-      lastPage.isDone ? undefined : lastPage.continueCursor,
-    initialPageParam: undefined as string | undefined,
-  });
+	return useInfiniteQuery({
+		queryKey: queryKeys.exercises.list(filters as Record<string, unknown>),
+		queryFn: async ({ pageParam, signal }) =>
+			fetchExercises(filters, pageParam, 20, signal),
+		getNextPageParam: (lastPage) =>
+			lastPage.isDone ? undefined : lastPage.continueCursor,
+		initialPageParam: undefined as string | undefined,
+	});
 }
 // Hook for single exercise
 export function useExercise(
-  id: string | undefined,
+	id: string | undefined,
 ): UseQueryResult<Exercise | undefined> {
-  return useQuery({
-    queryKey: queryKeys.exercises.detail(id ?? ""),
-    queryFn: async () => fetchExercise(id!),
-    enabled: Boolean(id),
-  });
+	return useQuery({
+		queryKey: queryKeys.exercises.detail(id ?? ""),
+		queryFn: async () => fetchExercise(id ?? ""),
+		enabled: Boolean(id),
+	});
 }
 // Hook for exercise search (simple list)
 export function useExerciseSearch(
-  term: string,
-  equipmentIds?: string[],
-  limit = 20,
+	term: string,
+	equipmentIds?: string[],
+	limit = 20,
 ): UseQueryResult<Exercise[]> {
-  return useQuery({
-    queryKey: queryKeys.exercises.search(term, { equipmentIds }),
-    queryFn: async ({ signal }) =>
-      searchExercises(term, equipmentIds, limit, signal),
-    enabled: true,
-    placeholderData: keepPreviousData,
-  });
+	return useQuery({
+		queryKey: queryKeys.exercises.search(term, { equipmentIds }),
+		queryFn: async ({ signal }) =>
+			searchExercises(term, equipmentIds, limit, signal),
+		enabled: true,
+		placeholderData: keepPreviousData,
+	});
 }
 // Hook for similar exercises
 export function useSimilarExercises(
-  primaryMuscleIds: string[] | undefined,
-  options: {
-    search?: string;
-    equipmentIds?: string[];
-    excludeExerciseId?: string;
-    limit?: number;
-  } = {},
+	primaryMuscleIds: string[] | undefined,
+	options: {
+		search?: string;
+		equipmentIds?: string[];
+		excludeExerciseId?: string;
+		limit?: number;
+	} = {},
 ): UseQueryResult<Exercise[]> {
-  const muscleIds = primaryMuscleIds ?? [];
-  return useQuery({
-    queryKey: queryKeys.exercises.similar({
-      primaryMuscleIds: muscleIds,
-      ...options,
-    }),
-    queryFn: async () => searchSimilarExercises(muscleIds, options),
-    enabled: muscleIds.length > 0,
-  });
+	const muscleIds = primaryMuscleIds ?? [];
+	return useQuery({
+		queryKey: queryKeys.exercises.similar({
+			primaryMuscleIds: muscleIds,
+			...options,
+		}),
+		queryFn: async () => searchSimilarExercises(muscleIds, options),
+		enabled: muscleIds.length > 0,
+	});
 }

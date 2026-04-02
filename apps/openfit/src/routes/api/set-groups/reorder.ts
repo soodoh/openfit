@@ -1,63 +1,63 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
-import { requireAuth } from "@/lib/auth-middleware";
+import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
-import { eq } from "drizzle-orm";
 export const Route = createFileRoute("/api/set-groups/reorder")({
-  server: {
-    handlers: {
-      // POST /api/set-groups/reorder - Reorder set groups
-      POST: async ({ request }: { request: Request }) => {
-        let session;
-        try {
-          session = await requireAuth(request);
-        } catch (error) {
-          if (error instanceof Response) {
-            return error;
-          }
-          return Response.json({ error: "Unauthorized" }, { status: 401 });
-        }
-        try {
-          const body = await parseJsonBody<{
-            setGroupIds: string[];
-          }>(request);
-          const { setGroupIds } = body;
-          if (!Array.isArray(setGroupIds)) {
-            return Response.json(
-              { error: "setGroupIds must be an array" },
-              { status: 400 },
-            );
-          }
-          // Update the order for each set group
-          for (const [index, setGroupId] of setGroupIds.entries()) {
-            const setGroup = await db.query.workoutSetGroups.findFirst({
-              where: eq(schema.workoutSetGroups.id, setGroupId),
-            });
-            if (!setGroup) {
-              continue;
-            }
-            if (setGroup.userId !== session.user.id) {
-              return Response.json({ error: "Unauthorized" }, { status: 403 });
-            }
-            await db
-              .update(schema.workoutSetGroups)
-              .set({
-                order: index,
-                updatedAt: new Date(),
-              })
-              .where(eq(schema.workoutSetGroups.id, setGroupId));
-          }
-          return Response.json({ success: true });
-        } catch {
-          return Response.json(
-            { error: "Failed to reorder set groups" },
-            { status: 500 },
-          );
-        }
-      },
-    },
-  },
+	server: {
+		handlers: {
+			// POST /api/set-groups/reorder - Reorder set groups
+			POST: async ({ request }: { request: Request }) => {
+				let session: NonNullable<AuthSession>;
+				try {
+					session = await requireAuth(request);
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
+					return Response.json({ error: "Unauthorized" }, { status: 401 });
+				}
+				try {
+					const body = await parseJsonBody<{
+						setGroupIds: string[];
+					}>(request);
+					const { setGroupIds } = body;
+					if (!Array.isArray(setGroupIds)) {
+						return Response.json(
+							{ error: "setGroupIds must be an array" },
+							{ status: 400 },
+						);
+					}
+					// Update the order for each set group
+					for (const [index, setGroupId] of setGroupIds.entries()) {
+						const setGroup = await db.query.workoutSetGroups.findFirst({
+							where: eq(schema.workoutSetGroups.id, setGroupId),
+						});
+						if (!setGroup) {
+							continue;
+						}
+						if (setGroup.userId !== session.user.id) {
+							return Response.json({ error: "Unauthorized" }, { status: 403 });
+						}
+						await db
+							.update(schema.workoutSetGroups)
+							.set({
+								order: index,
+								updatedAt: new Date(),
+							})
+							.where(eq(schema.workoutSetGroups.id, setGroupId));
+					}
+					return Response.json({ success: true });
+				} catch {
+					return Response.json(
+						{ error: "Failed to reorder set groups" },
+						{ status: 500 },
+					);
+				}
+			},
+		},
+	},
 });
 
 export default Route;

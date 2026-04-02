@@ -1,5 +1,5 @@
-import { expect, test as setup } from "@playwright/test";
 import path from "node:path";
+import { expect, test as setup } from "@playwright/test";
 
 const authFile = path.join(import.meta.dirname, ".auth/user.json");
 
@@ -16,35 +16,35 @@ const authFile = path.join(import.meta.dirname, ".auth/user.json");
  * - ADMIN_PASSWORD: password
  */
 setup("authenticate", async ({ page }) => {
-  const adminUser = process.env.ADMIN_USER;
-  const adminPassword = process.env.ADMIN_PASSWORD;
+	const adminUser = process.env.ADMIN_USER;
+	const adminPassword = process.env.ADMIN_PASSWORD;
 
-  if (!adminUser || !adminPassword) {
-    throw new Error(
-      "ADMIN_USER and ADMIN_PASSWORD environment variables are required. " +
-        "Please set them in .env.local",
-    );
-  }
+	if (!adminUser || !adminPassword) {
+		throw new Error(
+			"ADMIN_USER and ADMIN_PASSWORD environment variables are required. " +
+				"Please set them in .env.local",
+		);
+	}
 
-  await page.goto("/signin");
+	await page.goto("/signin");
 
-  // Wait for the login form to load
-  await expect(page.getByRole("button", { name: /login/i })).toBeVisible({
-    timeout: 15_000,
-  });
+	// Wait for the login form to load
+	await expect(page.getByRole("button", { name: /login/i })).toBeVisible({
+		timeout: 15_000,
+	});
 
-  // Fill in credentials
-  await page.getByLabel(/email/i).fill(adminUser);
-  await page.getByLabel(/password/i).fill(adminPassword);
+	// Fill in credentials
+	await page.getByLabel(/email/i).fill(adminUser);
+	await page.getByLabel(/password/i).fill(adminPassword);
 
-  // Submit the form
-  await page.getByRole("button", { name: /login/i }).click();
+	// Submit the form
+	await page.getByRole("button", { name: /login/i }).click();
 
-  // Wait for dashboard content
-  await expect(page.getByText(/welcome back/i)).toBeVisible({
-    timeout: 30_000,
-  });
+	// Wait for dashboard content
+	await expect(page.getByText(/welcome back/i)).toBeVisible({
+		timeout: 30_000,
+	});
 
-  // Save storage state for reuse
-  await page.context().storageState({ path: authFile });
+	// Save storage state for reuse
+	await page.context().storageState({ path: authFile });
 });

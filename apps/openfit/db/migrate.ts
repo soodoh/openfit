@@ -1,6 +1,6 @@
-import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 import { db } from "./index";
 
 const scriptDir = fileURLToPath(new URL(".", import.meta.url));

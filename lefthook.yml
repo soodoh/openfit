@@ -1,14 +1,9 @@
 pre-commit:
   parallel: true
   commands:
-    prettier:
-      glob: "*.{js,jsx,ts,tsx,css,html,json,md,mdx,yaml,yml}"
-      run: bunx prettier --write {staged_files}
-      stage_fixed: true
-    oxlint:
-      glob: "*.{js,jsx,ts,tsx}"
-      root: "apps/openfit/"
-      run: bunx oxlint -c oxlint.config.mjs --fix {staged_files}
+    biome:
+      glob: "*.{js,jsx,ts,tsx,json,css}"
+      run: bunx biome check --write {staged_files}
       stage_fixed: true
 
 commit-msg:

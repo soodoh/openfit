@@ -3,16 +3,16 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  plugins: [tsconfigPaths(), react()],
-  test: {
-    globals: true,
-    environment: "jsdom",
-    setupFiles: ["./vitest.setup.ts"],
-    include: ["src/lib/**/*.test.ts", "src/components/**/*.test.{ts,tsx}"],
-    exclude: ["node_modules", ".output"],
-    coverage: {
-      provider: "v8",
-      reporter: ["text", "html"],
-    },
-  },
+	plugins: [tsconfigPaths(), react()],
+	test: {
+		globals: true,
+		environment: "jsdom",
+		setupFiles: ["./vitest.setup.ts"],
+		include: ["src/lib/**/*.test.ts", "src/components/**/*.test.{ts,tsx}"],
+		exclude: ["node_modules", ".output"],
+		coverage: {
+			provider: "v8",
+			reporter: ["text", "html"],
+		},
+	},
 });
