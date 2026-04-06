@@ -33,7 +33,7 @@
 		"@commitlint/cli": "^20.5.0",
 		"@commitlint/config-conventional": "^20.5.0",
 		"@commitlint/types": "^20.5.0",
-		"lefthook": "^2.1.4",
-		"turbo": "^2.9.3"
+		"lefthook": "^2.1.5",
+		"turbo": "^2.9.4"
 	}
 }
