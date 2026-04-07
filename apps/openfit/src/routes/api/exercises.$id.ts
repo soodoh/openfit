@@ -1,15 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { asc, eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
-import { requireAdmin } from "@/lib/auth-middleware";
-import { parseJsonBody } from "@/lib/request-helpers";
-import { updateUserExerciseSchema } from "@/lib/request-schemas";
+
 export const Route = createFileRoute("/api/exercises/$id")({
 	server: {
 		handlers: {
-			// GET /api/exercises/$id - Get single exercise
 			GET: async ({
 				request: _request,
 				params,
@@ -35,7 +31,6 @@ export const Route = createFileRoute("/api/exercises/$id")({
 						{ status: 404 },
 					);
 				}
-				// Transform to expected format
 				const result = {
 					...exercise,
 					primaryMuscleIds: exercise.primaryMuscles.map(
@@ -49,162 +44,8 @@ export const Route = createFileRoute("/api/exercises/$id")({
 				};
 				return Response.json(result);
 			},
-			// PATCH /api/exercises/$id - Update exercise (admin only)
-			PATCH: async ({
-				request,
-				params,
-			}: {
-				request: Request;
-				params: Record<string, string>;
-			}) => {
-				try {
-					await requireAdmin(request);
-				} catch (error) {
-					if (error instanceof Response) {
-						return error;
-					}
-					return Response.json({ error: "Unauthorized" }, { status: 401 });
-				}
-				const { id } = params;
-				try {
-					const body = await parseJsonBody(request, updateUserExerciseSchema);
-					const {
-						name,
-						equipmentId,
-						force,
-						level,
-						mechanic,
-						categoryId,
-						primaryMuscleIds,
-						secondaryMuscleIds,
-						instructions,
-					} = body;
-					// Check if exercise exists
-					const existing = await db.query.exercises.findFirst({
-						where: eq(schema.exercises.id, id),
-					});
-					if (!existing) {
-						return Response.json(
-							{ error: "Exercise not found" },
-							{ status: 404 },
-						);
-					}
-					// Update exercise
-					await db
-						.update(schema.exercises)
-						.set({
-							...(name !== undefined && { name }),
-							...(equipmentId !== undefined && {
-								equipmentId: equipmentId ?? null,
-							}),
-							...(force !== undefined && { force: force ?? null }),
-							...(level !== undefined && { level }),
-							...(mechanic !== undefined && { mechanic: mechanic ?? null }),
-							...(categoryId !== undefined && { categoryId }),
-							updatedAt: new Date(),
-						})
-						.where(eq(schema.exercises.id, id));
-					// Update primary muscles if provided
-					if (primaryMuscleIds !== undefined) {
-						await db
-							.delete(schema.exercisePrimaryMuscles)
-							.where(eq(schema.exercisePrimaryMuscles.exerciseId, id));
-						for (const muscleGroupId of primaryMuscleIds) {
-							await db.insert(schema.exercisePrimaryMuscles).values({
-								id: nanoid(),
-								exerciseId: id,
-								muscleGroupId,
-							});
-						}
-					}
-					// Update secondary muscles if provided
-					if (secondaryMuscleIds !== undefined) {
-						await db
-							.delete(schema.exerciseSecondaryMuscles)
-							.where(eq(schema.exerciseSecondaryMuscles.exerciseId, id));
-						for (const muscleGroupId of secondaryMuscleIds) {
-							await db.insert(schema.exerciseSecondaryMuscles).values({
-								id: nanoid(),
-								exerciseId: id,
-								muscleGroupId,
-							});
-						}
-					}
-					// Update instructions if provided
-					if (instructions !== undefined) {
-						await db
-							.delete(schema.exerciseInstructions)
-							.where(eq(schema.exerciseInstructions.exerciseId, id));
-						for (let i = 0; i < instructions.length; i += 1) {
-							await db.insert(schema.exerciseInstructions).values({
-								id: nanoid(),
-								exerciseId: id,
-								order: i,
-								instruction: instructions[i],
-							});
-						}
-					}
-					// Fetch updated exercise
-					const updated = await db.query.exercises.findFirst({
-						where: eq(schema.exercises.id, id),
-						with: {
-							equipment: true,
-							category: true,
-							primaryMuscles: { with: { muscleGroup: true } },
-							secondaryMuscles: { with: { muscleGroup: true } },
-							instructions: { orderBy: asc(schema.exerciseInstructions.order) },
-						},
-					});
-					return Response.json(updated);
-				} catch (error) {
-					if (error instanceof Response) {
-						return error;
-					}
-					return Response.json(
-						{ error: "Failed to update exercise" },
-						{ status: 500 },
-					);
-				}
-			},
-			// DELETE /api/exercises/$id - Delete exercise (admin only)
-			DELETE: async ({
-				request,
-				params,
-			}: {
-				request: Request;
-				params: Record<string, string>;
-			}) => {
-				try {
-					await requireAdmin(request);
-				} catch (error) {
-					if (error instanceof Response) {
-						return error;
-					}
-					return Response.json({ error: "Unauthorized" }, { status: 401 });
-				}
-				const { id } = params;
-				try {
-					// Check if exercise exists
-					const existing = await db.query.exercises.findFirst({
-						where: eq(schema.exercises.id, id),
-					});
-					if (!existing) {
-						return Response.json(
-							{ error: "Exercise not found" },
-							{ status: 404 },
-						);
-					}
-					// Delete exercise (cascades to related tables)
-					await db.delete(schema.exercises).where(eq(schema.exercises.id, id));
-					return Response.json({ success: true });
-				} catch {
-					return Response.json(
-						{ error: "Failed to delete exercise" },
-						{ status: 500 },
-					);
-				}
-			},
 		},
 	},
 });
+
 export default Route;

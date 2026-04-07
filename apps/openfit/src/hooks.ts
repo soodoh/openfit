@@ -9,11 +9,6 @@ import {
 	useUploadFile,
 } from "./hooks/mutations/use-admin-mutations";
 import {
-	useCreateExercise,
-	useDeleteExercise,
-	useUpdateExercise,
-} from "./hooks/mutations/use-exercise-mutations";
-import {
 	useCreateGym,
 	useDeleteGym,
 	useUpdateGym,
@@ -128,7 +123,6 @@ export {
 	useBulkEditSetGroup,
 	useCategories,
 	useCountdownTimer,
-	useCreateExercise,
 	useCreateGym,
 	useCreateLookup,
 	useCreateRoutine,
@@ -138,7 +132,6 @@ export {
 	useCreateSetGroup,
 	useCurrentSession,
 	useDashboardStats,
-	useDeleteExercise,
 	useDeleteGym,
 	useDeleteLookup,
 	useDeleteRoutine,
@@ -169,7 +162,6 @@ export {
 	useSetDefaultGym,
 	useSimilarExercises,
 	useUnits,
-	useUpdateExercise,
 	useUpdateGym,
 	useUpdateLookup,
 	useUpdateRoutine,

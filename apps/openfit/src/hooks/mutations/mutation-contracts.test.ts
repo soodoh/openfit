@@ -93,13 +93,13 @@ describe("mutation contracts", () => {
 		>();
 		expectTypeOf<
 			ReturnType<typeof useAdminCreateExercise>["data"]
-		>().toEqualTypeOf<MutationIdResult | undefined>();
+		>().toEqualTypeOf<{ id: string } | undefined>();
 		expectTypeOf<
 			ReturnType<typeof useAdminUpdateExercise>["data"]
-		>().toEqualTypeOf<MutationSuccessResult | undefined>();
+		>().toEqualTypeOf<{ success: true } | undefined>();
 		expectTypeOf<
 			ReturnType<typeof useAdminDeleteExercise>["data"]
-		>().toEqualTypeOf<MutationSuccessResult | undefined>();
+		>().toEqualTypeOf<{ success: true } | undefined>();
 		expectTypeOf<ReturnType<typeof useCreateLookup>["data"]>().toEqualTypeOf<
 			MutationIdResult | undefined
 		>();

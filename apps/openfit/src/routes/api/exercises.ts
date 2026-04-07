@@ -1,19 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, asc, eq, like } from "drizzle-orm";
-import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
-import { requireAdmin } from "@/lib/auth-middleware";
 import { withFirstExerciseImageUrls } from "@/lib/data-loaders";
-import { parseJsonBody, parseSearchParams } from "@/lib/request-helpers";
-import {
-	createUserExerciseSchema,
-	exercisesListQuerySchema,
-} from "@/lib/request-schemas";
+import { parseSearchParams } from "@/lib/request-helpers";
+import { exercisesListQuerySchema } from "@/lib/request-schemas";
+
 export const Route = createFileRoute("/api/exercises")({
 	server: {
 		handlers: {
-			// GET /api/exercises - List exercises with pagination and filters
 			GET: async ({ request }: { request: Request }) => {
 				try {
 					const { searchParams } = new URL(request.url);
@@ -28,7 +23,6 @@ export const Route = createFileRoute("/api/exercises")({
 						primaryMuscleId,
 					} = parseSearchParams(searchParams, exercisesListQuerySchema);
 					const limit = rawLimit ?? 20;
-					// Build query conditions
 					const conditions: Array<ReturnType<typeof eq>> = [];
 					if (equipmentId) {
 						conditions.push(eq(schema.exercises.equipmentId, equipmentId));
@@ -42,7 +36,6 @@ export const Route = createFileRoute("/api/exercises")({
 					if (searchTerm) {
 						conditions.push(like(schema.exercises.name, `%${searchTerm}%`));
 					}
-					// Get exercises
 					let exercises = await db.query.exercises.findMany({
 						where: conditions.length > 0 ? and(...conditions) : undefined,
 						orderBy: asc(schema.exercises.name),
@@ -58,7 +51,6 @@ export const Route = createFileRoute("/api/exercises")({
 							},
 						},
 					});
-					// Apply client-side filtering for primaryMuscleId and equipmentIds
 					if (primaryMuscleId) {
 						exercises = exercises.filter((e) =>
 							e.primaryMuscles.some(
@@ -68,26 +60,22 @@ export const Route = createFileRoute("/api/exercises")({
 					}
 					if (equipmentIds.length > 0) {
 						exercises = exercises.filter((e) => {
-							// Bodyweight exercises (no equipment) are always included
 							if (!e.equipmentId) {
 								return true;
 							}
 							return equipmentIds.includes(e.equipmentId);
 						});
 					}
-					// Check if there are more results
 					const hasMore = exercises.length > limit;
 					if (hasMore) {
 						exercises = exercises.slice(0, limit);
 					}
-					// Add image URLs
 					const exercisesWithImages =
 						await withFirstExerciseImageUrls(exercises);
-					// Transform to match expected format
 					const page = exercisesWithImages.map((e) =>
 						Object.assign(e, {
 							primaryMuscleIds: e.primaryMuscles.map((pm) => pm.muscleGroupId),
-							secondaryMuscleIds: [], // Will be populated if needed
+							secondaryMuscleIds: [],
 						}),
 					);
 					return Response.json({
@@ -105,88 +93,8 @@ export const Route = createFileRoute("/api/exercises")({
 					);
 				}
 			},
-			// POST /api/exercises - Create exercise (admin only)
-			POST: async ({ request }: { request: Request }) => {
-				try {
-					await requireAdmin(request);
-				} catch (error) {
-					if (error instanceof Response) {
-						return error;
-					}
-					return Response.json({ error: "Unauthorized" }, { status: 401 });
-				}
-				try {
-					const body = await parseJsonBody(request, createUserExerciseSchema);
-					const {
-						name,
-						equipmentId,
-						force,
-						level,
-						mechanic,
-						categoryId,
-						primaryMuscleIds = [],
-						secondaryMuscleIds = [],
-						instructions = [],
-					} = body;
-					// Create exercise
-					const exerciseId = nanoid();
-					await db.insert(schema.exercises).values({
-						id: exerciseId,
-						name,
-						equipmentId: equipmentId ?? null,
-						force: force ?? null,
-						level: level ?? "beginner",
-						mechanic: mechanic ?? null,
-						categoryId,
-					});
-					// Create primary muscles
-					for (const muscleGroupId of primaryMuscleIds) {
-						await db.insert(schema.exercisePrimaryMuscles).values({
-							id: nanoid(),
-							exerciseId,
-							muscleGroupId,
-						});
-					}
-					// Create secondary muscles
-					for (const muscleGroupId of secondaryMuscleIds) {
-						await db.insert(schema.exerciseSecondaryMuscles).values({
-							id: nanoid(),
-							exerciseId,
-							muscleGroupId,
-						});
-					}
-					// Create instructions
-					for (let i = 0; i < instructions.length; i += 1) {
-						await db.insert(schema.exerciseInstructions).values({
-							id: nanoid(),
-							exerciseId,
-							order: i,
-							instruction: instructions[i],
-						});
-					}
-					// Fetch the created exercise with relations
-					const exercise = await db.query.exercises.findFirst({
-						where: eq(schema.exercises.id, exerciseId),
-						with: {
-							equipment: true,
-							category: true,
-							primaryMuscles: { with: { muscleGroup: true } },
-							secondaryMuscles: { with: { muscleGroup: true } },
-							instructions: { orderBy: asc(schema.exerciseInstructions.order) },
-						},
-					});
-					return Response.json(exercise, { status: 201 });
-				} catch (error) {
-					if (error instanceof Response) {
-						return error;
-					}
-					return Response.json(
-						{ error: "Failed to create exercise" },
-						{ status: 500 },
-					);
-				}
-			},
 		},
 	},
 });
+
 export default Route;
