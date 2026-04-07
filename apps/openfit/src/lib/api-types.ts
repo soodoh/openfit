@@ -23,7 +23,7 @@ export type RoutineDto = {
 	id: string;
 	userId: string;
 	name: string;
-	description: string | null | undefined;
+	description: string | null;
 	createdAt: Date | string;
 	updatedAt: Date | string;
 	routineDays: RoutineDayDto[];
@@ -33,7 +33,7 @@ export type RoutineRelationDto = {
 	id: string;
 	userId: string;
 	name: string;
-	description: string | null | undefined;
+	description: string | null;
 	createdAt: Date | string;
 	updatedAt: Date | string;
 };
@@ -53,26 +53,23 @@ export type WorkoutSetDto = {
 	completed: boolean;
 	createdAt: Date | string;
 	updatedAt: Date | string;
-	exercise:
-		| {
-				id: string;
-				name: string;
-				imageUrl: string | null | undefined;
-		  }
-		| null
-		| undefined;
-	repetitionUnit: LookupItemDto | null | undefined;
-	weightUnit: LookupItemDto | null | undefined;
+	exercise: {
+		id: string;
+		name: string;
+		imageUrl: string | null;
+	} | null;
+	repetitionUnit: LookupItemDto | null;
+	weightUnit: LookupItemDto | null;
 };
 
 export type RoutineDaySetGroupDto = {
 	id: string;
 	userId: string;
-	routineDayId: string | null | undefined;
-	sessionId: string | null | undefined;
+	routineDayId: string | null;
+	sessionId: string | null;
 	type: string;
 	order: number;
-	comment: string | null | undefined;
+	comment: string | null;
 	createdAt: Date | string;
 	updatedAt: Date | string;
 	sets: WorkoutSetDto[];
@@ -86,6 +83,6 @@ export type RoutineDayDto = {
 	createdAt: Date | string;
 	updatedAt: Date | string;
 	weekdays: number[];
-	routine: RoutineRelationDto | null | undefined;
+	routine?: RoutineRelationDto | null;
 	setGroups?: RoutineDaySetGroupDto[];
 };

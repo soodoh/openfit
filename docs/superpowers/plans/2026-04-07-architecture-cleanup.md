@@ -88,7 +88,7 @@ describe("api-types", () => {
 		expectTypeOf<CursorPage<RoutineDto>>().toMatchTypeOf<{
 			page: RoutineDto[];
 			isDone: boolean;
-			continueCursor: string | undefined;
+			continueCursor: string | null;
 		}>();
 	});
 
@@ -121,7 +121,7 @@ export type MutationIdResult = { id: string };
 export type CursorPage<T> = {
 	page: T[];
 	isDone: boolean;
-	continueCursor: string | undefined;
+	continueCursor: string | null;
 };
 
 export type AdminPage<T> = {
@@ -740,4 +740,3 @@ Type consistency:
 
 - Shared DTO names are consistent across tasks: `CursorPage`, `MutationSuccessResult`, `MutationIdResult`, `RoutineDto`, `RoutineDayDto`.
 - Serializer/helper names are consistent across tasks: `serializeRoutine`, `serializeRoutineDay`, `serializeGym`, `requireOwnedRoutine`.
-
