@@ -47,11 +47,7 @@ export const SelectTemplate = ({
 						key={option.id}
 						value={option.description}
 						onSelect={() => {
-							onChange(
-								option.id === value?.id
-									? null
-									: (option as unknown as RoutineDayWithRoutine),
-							);
+							onChange(option.id === value?.id ? undefined : option);
 							setOpen(false);
 						}}
 					>

@@ -29,6 +29,10 @@ const LEVEL_OPTIONS = [
 
 type Level = (typeof LEVEL_OPTIONS)[number]["value"];
 
+function isLevel(value: string): value is Level {
+	return LEVEL_OPTIONS.some((option) => option.value === value);
+}
+
 type FiltersProps = {
 	equipmentId: string | undefined;
 	level: Level | undefined;
@@ -140,7 +144,7 @@ function ExercisesFilters({
 			<Select
 				value={level ?? ""}
 				onValueChange={(value) =>
-					onLevelChange(value === "" ? undefined : (value as Level))
+					onLevelChange(value === "" || !isLevel(value) ? undefined : value)
 				}
 			>
 				<SelectTrigger className="w-[140px]">

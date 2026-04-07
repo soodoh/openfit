@@ -120,7 +120,7 @@ export const AutocompleteExercise = ({
 		handleAutocompleteKeyDown({
 			event,
 			value,
-			options: options as Exercise[] | undefined,
+			options,
 			onChange,
 			onSelect: handleSelect,
 			setSearchTerm,
@@ -233,7 +233,7 @@ export const AutocompleteExercise = ({
 									<CommandItem
 										key={option.id}
 										value={option.id}
-										onSelect={() => handleSelect(option as unknown as Exercise)}
+										onSelect={() => handleSelect(option)}
 										className={`flex items-center gap-3 p-3 cursor-pointer ${index === 0 ? "bg-accent" : ""}`}
 									>
 										<div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">

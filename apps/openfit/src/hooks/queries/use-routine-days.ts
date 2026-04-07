@@ -2,78 +2,8 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
+import type { RoutineDayWithData, RoutineDayWithRoutine } from "@/lib/types";
 
-type SetWithRelations = {
-	id: string;
-	userId: string;
-	setGroupId: string;
-	exerciseId: string;
-	type: string;
-	order: number;
-	reps: number;
-	repetitionUnitId: string;
-	weight: number;
-	weightUnitId: string;
-	restTime: number;
-	completed: boolean;
-	exercise:
-		| {
-				id: string;
-				name: string;
-				imageUrl: string | undefined;
-		  }
-		| undefined;
-	repetitionUnit:
-		| {
-				id: string;
-				name: string;
-		  }
-		| undefined;
-	weightUnit:
-		| {
-				id: string;
-				name: string;
-		  }
-		| undefined;
-};
-type SetGroupWithSets = {
-	id: string;
-	userId: string;
-	routineDayId: string | undefined;
-	sessionId: string | undefined;
-	type: string;
-	order: number;
-	comment: string | undefined;
-	sets: SetWithRelations[];
-};
-type RoutineDayWithData = {
-	id: string;
-	routineId: string;
-	userId: string;
-	description: string;
-	weekdays: number[];
-	routine:
-		| {
-				id: string;
-				name: string;
-		  }
-		| undefined;
-	setGroups: SetGroupWithSets[];
-	createdAt: Date;
-	updatedAt: Date;
-};
-type RoutineDayWithRoutine = {
-	id: string;
-	routineId: string;
-	description: string;
-	weekdays: number[];
-	routine:
-		| {
-				id: string;
-				name: string;
-		  }
-		| undefined;
-};
 // Fetch routine day with full data
 async function fetchRoutineDay(
 	id: string,
