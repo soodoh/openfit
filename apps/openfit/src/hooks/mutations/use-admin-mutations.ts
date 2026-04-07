@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
 	MutationIdResult,
 	MutationSuccessResult,
-	UserProfileBaseDto,
+	UserProfileBaseResult,
 } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
@@ -44,13 +44,16 @@ type DeleteLookupInput = {
 async function updateUserRole({
 	id,
 	role,
-}: UpdateUserRoleInput): Promise<UserProfileBaseDto> {
+}: UpdateUserRoleInput): Promise<UserProfileBaseResult> {
 	const response = await fetch(`/api/admin/users/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ role }),
 	});
-	return fetchJson<UserProfileBaseDto>(response, "Failed to update user role");
+	return fetchJson<UserProfileBaseResult>(
+		response,
+		"Failed to update user role",
+	);
 }
 // Create exercise
 async function createExercise(
@@ -138,7 +141,7 @@ async function uploadFile(file: File): Promise<string> {
 	return result.path;
 }
 export function useUpdateUserRole(): UseMutationResult<
-	UserProfileBaseDto,
+	UserProfileBaseResult,
 	Error,
 	UpdateUserRoleInput
 > {

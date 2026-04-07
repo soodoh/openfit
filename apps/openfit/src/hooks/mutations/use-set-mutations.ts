@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
 	MutationSuccessResult,
 	SetDeleteResult,
-	WorkoutSetDto,
+	WorkoutSetMutationResult,
 } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
@@ -33,25 +33,27 @@ type ReorderSetsInput = {
 	setIds: string[];
 };
 // Create set
-async function createSet(input: CreateSetInput): Promise<WorkoutSetDto> {
+async function createSet(
+	input: CreateSetInput,
+): Promise<WorkoutSetMutationResult> {
 	const response = await fetch("/api/sets", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<WorkoutSetDto>(response, "Failed to create set");
+	return fetchJson<WorkoutSetMutationResult>(response, "Failed to create set");
 }
 // Update set
 async function updateSet({
 	id,
 	...input
-}: UpdateSetInput): Promise<WorkoutSetDto> {
+}: UpdateSetInput): Promise<WorkoutSetMutationResult> {
 	const response = await fetch(`/api/sets/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<WorkoutSetDto>(response, "Failed to update set");
+	return fetchJson<WorkoutSetMutationResult>(response, "Failed to update set");
 }
 // Delete set
 async function deleteSet(id: string): Promise<SetDeleteResult> {
@@ -72,7 +74,7 @@ async function reorderSets(
 	return fetchJson<MutationSuccessResult>(response, "Failed to reorder sets");
 }
 export function useCreateSet(): UseMutationResult<
-	WorkoutSetDto,
+	WorkoutSetMutationResult,
 	Error,
 	CreateSetInput
 > {
@@ -88,7 +90,7 @@ export function useCreateSet(): UseMutationResult<
 	});
 }
 export function useUpdateSet(): UseMutationResult<
-	WorkoutSetDto,
+	WorkoutSetMutationResult,
 	Error,
 	UpdateSetInput
 > {

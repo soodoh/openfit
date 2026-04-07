@@ -1,10 +1,7 @@
 import { describe, expectTypeOf, it } from "vitest";
 import type {
 	CursorPage,
-	ExerciseRelationDto,
-	GymRelationDto,
 	LookupItemDto,
-	LookupRowDto,
 	MutationIdResult,
 	MutationSuccessResult,
 	RoutineDayDetailDto,
@@ -19,7 +16,6 @@ import type {
 	RoutineQueryResult,
 	RoutineRelationDto,
 	RoutineRelationResult,
-	SessionExerciseRelationDto,
 } from "./api-types";
 
 describe("api-types", () => {
@@ -74,13 +70,17 @@ describe("api-types", () => {
 		>();
 		expectTypeOf<
 			RoutineDaySetGroupDto["sets"][number]["exercise"]
-		>().toEqualTypeOf<ExerciseRelationDto | null>();
+		>().toEqualTypeOf<{
+			id: string;
+			name: string;
+			imageUrl?: string | null;
+		} | null>();
 		expectTypeOf<
 			RoutineDaySetGroupDto["sets"][number]["repetitionUnit"]
-		>().toEqualTypeOf<LookupRowDto | null>();
+		>().toEqualTypeOf<LookupItemDto | null>();
 		expectTypeOf<
 			RoutineDaySetGroupDto["sets"][number]["weightUnit"]
-		>().toEqualTypeOf<LookupRowDto | null>();
+		>().toEqualTypeOf<LookupItemDto | null>();
 		expectTypeOf<RoutineDaySearchDto["createdAt"]>().toEqualTypeOf<string>();
 		expectTypeOf<RoutineDaySearchDto["routine"]>().toEqualTypeOf<
 			RoutineRelationDto | null | undefined
@@ -95,8 +95,14 @@ describe("api-types", () => {
 		>().toEqualTypeOf<Date>();
 		expectTypeOf<
 			RoutineDayDetailDto["setGroups"][number]["sets"][number]["exercise"]
-		>().toEqualTypeOf<SessionExerciseRelationDto | null>();
-		expectTypeOf<LookupRowDto>().toMatchTypeOf<LookupItemDto>();
-		expectTypeOf<GymRelationDto["userId"]>().toEqualTypeOf<string>();
+		>().toEqualTypeOf<
+			| {
+					id: string;
+					name: string;
+					imageUrl: string | null | undefined;
+			  }
+			| null
+			| undefined
+		>();
 	});
 });

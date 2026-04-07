@@ -2,8 +2,8 @@ import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
 	MutationSuccessResult,
-	WorkoutSetGroupDto,
-	WorkoutSetGroupWithSetsDto,
+	WorkoutSetGroupMutationResult,
+	WorkoutSetGroupWithMutationSetsResult,
 } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
@@ -38,13 +38,13 @@ type BulkEditInput = {
 // Create set group
 async function createSetGroup(
 	input: CreateSetGroupInput,
-): Promise<WorkoutSetGroupWithSetsDto> {
+): Promise<WorkoutSetGroupWithMutationSetsResult> {
 	const response = await fetch("/api/set-groups", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<WorkoutSetGroupWithSetsDto>(
+	return fetchJson<WorkoutSetGroupWithMutationSetsResult>(
 		response,
 		"Failed to create set group",
 	);
@@ -53,13 +53,16 @@ async function createSetGroup(
 async function updateSetGroup({
 	id,
 	...input
-}: UpdateSetGroupInput): Promise<WorkoutSetGroupDto> {
+}: UpdateSetGroupInput): Promise<WorkoutSetGroupMutationResult> {
 	const response = await fetch(`/api/set-groups/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<WorkoutSetGroupDto>(response, "Failed to update set group");
+	return fetchJson<WorkoutSetGroupMutationResult>(
+		response,
+		"Failed to update set group",
+	);
 }
 // Delete set group
 async function deleteSetGroup(id: string): Promise<MutationSuccessResult> {
@@ -113,7 +116,7 @@ async function bulkEditSetGroup({
 	return fetchJson<MutationSuccessResult>(response, "Failed to bulk edit");
 }
 export function useCreateSetGroup(): UseMutationResult<
-	WorkoutSetGroupWithSetsDto,
+	WorkoutSetGroupWithMutationSetsResult,
 	Error,
 	CreateSetGroupInput
 > {
@@ -129,7 +132,7 @@ export function useCreateSetGroup(): UseMutationResult<
 	});
 }
 export function useUpdateSetGroup(): UseMutationResult<
-	WorkoutSetGroupDto,
+	WorkoutSetGroupMutationResult,
 	Error,
 	UpdateSetGroupInput
 > {

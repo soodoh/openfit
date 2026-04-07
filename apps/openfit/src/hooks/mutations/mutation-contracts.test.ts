@@ -1,19 +1,19 @@
 import { describe, expectTypeOf, it } from "vitest";
 import type {
-	ExerciseRelationDto,
+	ExerciseResult,
 	GymDto,
-	GymRelationDto,
-	LookupRowDto,
+	GymResult,
+	LookupResult,
 	MutationIdResult,
 	MutationSuccessResult,
-	SessionDto,
-	SessionExerciseRelationDto,
+	SessionResult,
 	SetDeleteResult,
-	UserProfileBaseDto,
-	UserProfileDto,
-	WorkoutSetDto,
-	WorkoutSetGroupDto,
-	WorkoutSetGroupWithSetsDto,
+	UserProfileBaseResult,
+	UserProfileResult,
+	WorkoutSetGroupMutationResult,
+	WorkoutSetGroupWithMutationSetsResult,
+	WorkoutSetMutationResult,
+	WorkoutSetResult,
 } from "@/lib/api-types";
 import type {
 	useAdminCreateExercise,
@@ -54,40 +54,41 @@ import type {
 } from "./use-user-profile-mutations";
 
 describe("mutation contracts", () => {
-	it("keeps the remaining mutation response contracts explicit", () => {
+	it("uses honest shared result types for raw mutation payloads", () => {
 		expectTypeOf<GymDto["equipmentIds"]>().toEqualTypeOf<string[]>();
-		expectTypeOf<SessionDto["setGroups"]>().toEqualTypeOf<
-			SessionDto["setGroups"]
-		>();
+		expectTypeOf<SessionResult["createdAt"]>().toEqualTypeOf<Date>();
 		expectTypeOf<
-			SessionDto["setGroups"][number]["sets"][number]["exercise"]
-		>().toEqualTypeOf<SessionExerciseRelationDto | null>();
+			SessionResult["setGroups"][number]["sets"][number]["exercise"]
+		>().toEqualTypeOf<(ExerciseResult & { imageUrl: string | null }) | null>();
 		expectTypeOf<
-			SessionDto["setGroups"][number]["sets"][number]["repetitionUnit"]
-		>().toEqualTypeOf<LookupRowDto | null>();
-		expectTypeOf<WorkoutSetGroupDto["comment"]>().toEqualTypeOf<
+			SessionResult["setGroups"][number]["sets"][number]["repetitionUnit"]
+		>().toEqualTypeOf<LookupResult | null>();
+		expectTypeOf<
+			WorkoutSetGroupMutationResult["createdAt"]
+		>().toEqualTypeOf<Date>();
+		expectTypeOf<WorkoutSetGroupMutationResult["comment"]>().toEqualTypeOf<
 			string | null
 		>();
-		expectTypeOf<WorkoutSetDto["createdAt"]>().toEqualTypeOf<string>();
+		expectTypeOf<WorkoutSetMutationResult["createdAt"]>().toEqualTypeOf<Date>();
 		expectTypeOf<
-			WorkoutSetDto["exercise"]
-		>().toEqualTypeOf<ExerciseRelationDto | null>();
+			WorkoutSetMutationResult["exercise"]
+		>().toEqualTypeOf<ExerciseResult | null>();
 		expectTypeOf<
-			WorkoutSetDto["weightUnit"]
-		>().toEqualTypeOf<LookupRowDto | null>();
+			WorkoutSetMutationResult["weightUnit"]
+		>().toEqualTypeOf<LookupResult | null>();
 		expectTypeOf<
-			UserProfileDto["defaultGym"]
-		>().toEqualTypeOf<GymRelationDto | null>();
+			UserProfileResult["defaultGym"]
+		>().toEqualTypeOf<GymResult | null>();
 		expectTypeOf<
-			UserProfileDto["defaultRepetitionUnit"]
-		>().toEqualTypeOf<LookupRowDto | null>();
+			UserProfileResult["defaultRepetitionUnit"]
+		>().toEqualTypeOf<LookupResult | null>();
 		expectTypeOf<SetDeleteResult>().toMatchTypeOf<{
 			success: true;
 			setGroupDeleted: boolean;
 		}>();
 
 		expectTypeOf<ReturnType<typeof useUpdateUserRole>["data"]>().toEqualTypeOf<
-			UserProfileBaseDto | undefined
+			UserProfileBaseResult | undefined
 		>();
 		expectTypeOf<
 			ReturnType<typeof useAdminCreateExercise>["data"]
@@ -117,19 +118,19 @@ describe("mutation contracts", () => {
 			MutationSuccessResult | undefined
 		>();
 		expectTypeOf<ReturnType<typeof useCreateSession>["data"]>().toEqualTypeOf<
-			SessionDto | undefined
+			SessionResult | undefined
 		>();
 		expectTypeOf<ReturnType<typeof useUpdateSession>["data"]>().toEqualTypeOf<
-			SessionDto | undefined
+			SessionResult | undefined
 		>();
 		expectTypeOf<ReturnType<typeof useDeleteSession>["data"]>().toEqualTypeOf<
 			MutationSuccessResult | undefined
 		>();
 		expectTypeOf<ReturnType<typeof useCreateSetGroup>["data"]>().toEqualTypeOf<
-			WorkoutSetGroupWithSetsDto | undefined
+			WorkoutSetGroupWithMutationSetsResult | undefined
 		>();
 		expectTypeOf<ReturnType<typeof useUpdateSetGroup>["data"]>().toEqualTypeOf<
-			WorkoutSetGroupDto | undefined
+			WorkoutSetGroupMutationResult | undefined
 		>();
 		expectTypeOf<ReturnType<typeof useDeleteSetGroup>["data"]>().toEqualTypeOf<
 			MutationSuccessResult | undefined
@@ -144,10 +145,10 @@ describe("mutation contracts", () => {
 			ReturnType<typeof useBulkEditSetGroup>["data"]
 		>().toEqualTypeOf<MutationSuccessResult | undefined>();
 		expectTypeOf<ReturnType<typeof useCreateSet>["data"]>().toEqualTypeOf<
-			WorkoutSetDto | undefined
+			WorkoutSetMutationResult | undefined
 		>();
 		expectTypeOf<ReturnType<typeof useUpdateSet>["data"]>().toEqualTypeOf<
-			WorkoutSetDto | undefined
+			WorkoutSetMutationResult | undefined
 		>();
 		expectTypeOf<ReturnType<typeof useDeleteSet>["data"]>().toEqualTypeOf<
 			SetDeleteResult | undefined
@@ -157,9 +158,9 @@ describe("mutation contracts", () => {
 		>();
 		expectTypeOf<
 			ReturnType<typeof useUpdateUserProfile>["data"]
-		>().toEqualTypeOf<UserProfileDto | undefined>();
+		>().toEqualTypeOf<UserProfileResult | undefined>();
 		expectTypeOf<ReturnType<typeof useSetDefaultGym>["data"]>().toEqualTypeOf<
-			UserProfileDto | undefined
+			UserProfileResult | undefined
 		>();
 	});
 });

@@ -70,34 +70,13 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 						const setsWithImages = await Promise.all(
 							sets.map(async (set) => {
 								const imageUrl = set.exercise
-									? ((await getFirstExerciseImageUrl(set.exercise.id)) ?? null)
+									? await getFirstExerciseImageUrl(set.exercise.id)
 									: null;
 								return {
 									...set,
 									createdAt: serializeTimestamp(set.createdAt),
 									updatedAt: serializeTimestamp(set.updatedAt),
-									exercise: set.exercise
-										? {
-												...set.exercise,
-												createdAt: serializeTimestamp(set.exercise.createdAt),
-												updatedAt: serializeTimestamp(set.exercise.updatedAt),
-												imageUrl,
-											}
-										: null,
-									repetitionUnit: set.repetitionUnit
-										? {
-												...set.repetitionUnit,
-												createdAt: serializeTimestamp(
-													set.repetitionUnit.createdAt,
-												),
-											}
-										: null,
-									weightUnit: set.weightUnit
-										? {
-												...set.weightUnit,
-												createdAt: serializeTimestamp(set.weightUnit.createdAt),
-											}
-										: null,
+									exercise: set.exercise ? { ...set.exercise, imageUrl } : null,
 								};
 							}),
 						);

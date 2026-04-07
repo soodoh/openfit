@@ -1,6 +1,6 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { MutationSuccessResult, SessionDto } from "@/lib/api-types";
+import type { MutationSuccessResult, SessionResult } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
 
@@ -21,25 +21,27 @@ type UpdateSessionInput = {
 	endTime?: number | undefined;
 };
 // Create session
-async function createSession(input: CreateSessionInput): Promise<SessionDto> {
+async function createSession(
+	input: CreateSessionInput,
+): Promise<SessionResult> {
 	const response = await fetch("/api/sessions", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<SessionDto>(response, "Failed to create session");
+	return fetchJson<SessionResult>(response, "Failed to create session");
 }
 // Update session
 async function updateSession({
 	id,
 	...input
-}: UpdateSessionInput): Promise<SessionDto> {
+}: UpdateSessionInput): Promise<SessionResult> {
 	const response = await fetch(`/api/sessions/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<SessionDto>(response, "Failed to update session");
+	return fetchJson<SessionResult>(response, "Failed to update session");
 }
 // Delete session
 async function deleteSession(id: string): Promise<MutationSuccessResult> {
@@ -49,7 +51,7 @@ async function deleteSession(id: string): Promise<MutationSuccessResult> {
 	return fetchJson<MutationSuccessResult>(response, "Failed to delete session");
 }
 export function useCreateSession(): UseMutationResult<
-	SessionDto,
+	SessionResult,
 	Error,
 	CreateSessionInput
 > {
@@ -62,7 +64,7 @@ export function useCreateSession(): UseMutationResult<
 	});
 }
 export function useUpdateSession(): UseMutationResult<
-	SessionDto,
+	SessionResult,
 	Error,
 	UpdateSessionInput
 > {
