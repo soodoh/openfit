@@ -44,11 +44,7 @@ export async function loadGymWithEquipment(id: string) {
 	return db.query.gyms.findFirst({
 		where: eq(schema.gyms.id, id),
 		with: {
-			equipment: {
-				with: {
-					equipment: true,
-				},
-			},
+			equipment: true,
 		},
 	});
 }

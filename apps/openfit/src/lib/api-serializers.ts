@@ -71,7 +71,9 @@ export function serializeRoutine(routine: SerializableRoutine): RoutineDto {
 
 export function serializeGym(gym: SerializableGym) {
 	return {
-		...gym,
+		id: gym.id,
+		userId: gym.userId,
+		name: gym.name,
 		createdAt: serializeTimestamp(gym.createdAt),
 		updatedAt: serializeTimestamp(gym.updatedAt),
 		equipmentIds: gym.equipment.map((entry) => entry.equipmentId),

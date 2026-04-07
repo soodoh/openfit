@@ -19,14 +19,15 @@ describe("api serializers", () => {
 			],
 		});
 
-		expect(gym).toEqual(
-			expect.objectContaining({
-				id: "gym_123",
-				createdAt: "2026-04-01T00:00:00.000Z",
-				updatedAt: "2026-04-02T00:00:00.000Z",
-				equipmentIds: ["rack", "barbell"],
-			}),
-		);
+		expect(gym).toEqual({
+			id: "gym_123",
+			userId: "user_123",
+			name: "Home Gym",
+			createdAt: "2026-04-01T00:00:00.000Z",
+			updatedAt: "2026-04-02T00:00:00.000Z",
+			equipmentIds: ["rack", "barbell"],
+		});
+		expect(gym).not.toHaveProperty("equipment");
 	});
 
 	it("serializeRoutineDay converts weekday rows to number arrays", () => {
