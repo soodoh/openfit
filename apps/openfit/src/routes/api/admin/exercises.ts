@@ -4,8 +4,11 @@ import { asc, count, like } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
-import { parseJsonBody } from "@/lib/request-helpers";
-import { createAdminExerciseSchema } from "@/lib/request-schemas";
+import { parseJsonBody, parseSearchParams } from "@/lib/request-helpers";
+import {
+	adminExerciseListQuerySchema,
+	createAdminExerciseSchema,
+} from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/admin/exercises")({
 	server: {
 		handlers: {
@@ -13,12 +16,10 @@ export const Route = createFileRoute("/api/admin/exercises")({
 				try {
 					await requireAdmin(request);
 					const { searchParams } = new URL(request.url);
-					const page = Math.max(1, Number(searchParams.get("page")) || 1);
-					const pageSize = Math.max(
-						1,
-						Number(searchParams.get("pageSize")) || 10,
+					const { page, pageSize, search } = parseSearchParams(
+						searchParams,
+						adminExerciseListQuerySchema,
 					);
-					const search = searchParams.get("search")?.trim() ?? "";
 					const conditions = search
 						? like(schema.exercises.name, `%${search}%`)
 						: undefined;

@@ -3,8 +3,11 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
-import { parseJsonBody } from "@/lib/request-helpers";
-import { adminLookupMutationSchema } from "@/lib/request-schemas";
+import { parseJsonBody, parseSearchParams } from "@/lib/request-helpers";
+import {
+	adminLookupDeleteQuerySchema,
+	adminLookupMutationSchema,
+} from "@/lib/request-schemas";
 
 type LookupType =
 	| "equipment"
@@ -64,10 +67,10 @@ export const Route = createFileRoute("/api/admin/lookups/$id")({
 					await requireAdmin(request);
 					const { id } = params;
 					const { searchParams } = new URL(request.url);
-					const type = searchParams.get("type") as LookupType;
-					if (!type || !tableMap[type]) {
-						return Response.json({ error: "Invalid type" }, { status: 400 });
-					}
+					const { type } = parseSearchParams(
+						searchParams,
+						adminLookupDeleteQuerySchema,
+					);
 					const table = tableMap[type];
 					await db.delete(table).where(eq(table.id, id));
 					return Response.json({ success: true });

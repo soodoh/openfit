@@ -1,8 +1,18 @@
 import type { ZodType } from "zod";
+
 /**
  * Type-safe wrappers for JSON request/response handling.
  * These avoid no-unsafe-assignment/member-access lint errors from fetch API's `any` return types.
  */
+
+function formatZodIssues(error: {
+	issues: Array<{ message: string; path: PropertyKey[] }>;
+}) {
+	return error.issues.map((issue) => ({
+		message: issue.message,
+		path: issue.path,
+	}));
+}
 
 /** Parse a request body as JSON with a specific type. */
 export async function parseJsonBody<T>(request: Request): Promise<T>;
@@ -30,10 +40,48 @@ export async function parseJsonBody<T>(
 		throw Response.json(
 			{
 				error: "Invalid request body",
-				issues: result.error.issues.map((issue) => ({
-					message: issue.message,
-					path: issue.path,
-				})),
+				issues: formatZodIssues(result.error),
+			},
+			{ status: 400 },
+		);
+	}
+
+	return result.data;
+}
+
+function searchParamsToObject(
+	searchParams: URLSearchParams,
+): Record<string, string | string[]> {
+	const entries = new Map<string, string[]>();
+
+	for (const [key, value] of searchParams.entries()) {
+		const values = entries.get(key);
+		if (values) {
+			values.push(value);
+			continue;
+		}
+		entries.set(key, [value]);
+	}
+
+	return Object.fromEntries(
+		Array.from(entries.entries(), ([key, values]) => [
+			key,
+			values.length === 1 ? values[0] : values,
+		]),
+	);
+}
+
+/** Parse URL search params with a specific schema. */
+export function parseSearchParams<T>(
+	searchParams: URLSearchParams,
+	schema: ZodType<T>,
+): T {
+	const result = schema.safeParse(searchParamsToObject(searchParams));
+	if (!result.success) {
+		throw Response.json(
+			{
+				error: "Invalid query parameters",
+				issues: formatZodIssues(result.error),
 			},
 			{ status: 400 },
 		);

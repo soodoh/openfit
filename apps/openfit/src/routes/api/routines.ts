@@ -4,8 +4,11 @@ import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
-import { parseJsonBody } from "@/lib/request-helpers";
-import { createRoutineSchema } from "@/lib/request-schemas";
+import { parseJsonBody, parseSearchParams } from "@/lib/request-helpers";
+import {
+	createRoutineSchema,
+	routinesListQuerySchema,
+} from "@/lib/request-schemas";
 
 // Helper to get routine days with weekdays
 async function getRoutineDaysWithWeekdays(routineId: string) {
@@ -35,44 +38,51 @@ export const Route = createFileRoute("/api/routines")({
 					}
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
-				const { searchParams } = new URL(request.url);
-				const cursor = searchParams.get("cursor");
-				const limit = Math.min(
-					Number.parseInt(searchParams.get("limit") ?? "20", 10),
-					100,
-				);
-				const searchTerm = searchParams.get("search") ?? "";
-				// Build query conditions
-				const conditions = [eq(schema.routines.userId, session.user.id)];
-				if (searchTerm) {
-					conditions.push(like(schema.routines.name, `%${searchTerm}%`));
+				try {
+					const { searchParams } = new URL(request.url);
+					const {
+						cursor,
+						limit,
+						search: searchTerm,
+					} = parseSearchParams(searchParams, routinesListQuerySchema);
+					// Build query conditions
+					const conditions = [eq(schema.routines.userId, session.user.id)];
+					if (searchTerm) {
+						conditions.push(like(schema.routines.name, `%${searchTerm}%`));
+					}
+					// Get routines ordered by most recently updated
+					const routines = await db.query.routines.findMany({
+						where: and(...conditions),
+						orderBy: desc(schema.routines.updatedAt),
+						limit: limit + 1,
+						offset: cursor ?? 0,
+					});
+					// Check if there are more results
+					const hasMore = routines.length > limit;
+					const page = hasMore ? routines.slice(0, limit) : routines;
+					// Fetch routine days for each routine
+					const routinesWithDays = await Promise.all(
+						page.map(async (routine) => {
+							const routineDays = await getRoutineDaysWithWeekdays(routine.id);
+							return Object.assign(routine, {
+								routineDays,
+							});
+						}),
+					);
+					return Response.json({
+						page: routinesWithDays,
+						isDone: !hasMore,
+						continueCursor: hasMore ? String((cursor ?? 0) + limit) : null,
+					});
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
+					return Response.json(
+						{ error: "Failed to fetch routines" },
+						{ status: 500 },
+					);
 				}
-				// Get routines ordered by most recently updated
-				const routines = await db.query.routines.findMany({
-					where: and(...conditions),
-					orderBy: desc(schema.routines.updatedAt),
-					limit: limit + 1,
-					offset: cursor ? Number.parseInt(cursor, 10) : 0,
-				});
-				// Check if there are more results
-				const hasMore = routines.length > limit;
-				const page = hasMore ? routines.slice(0, limit) : routines;
-				// Fetch routine days for each routine
-				const routinesWithDays = await Promise.all(
-					page.map(async (routine) => {
-						const routineDays = await getRoutineDaysWithWeekdays(routine.id);
-						return Object.assign(routine, {
-							routineDays,
-						});
-					}),
-				);
-				return Response.json({
-					page: routinesWithDays,
-					isDone: !hasMore,
-					continueCursor: hasMore
-						? String((cursor ? Number.parseInt(cursor, 10) : 0) + limit)
-						: null,
-				});
 			},
 			// POST /api/routines - Create routine
 			POST: async ({ request }: { request: Request }) => {

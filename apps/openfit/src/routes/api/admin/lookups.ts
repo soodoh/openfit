@@ -4,8 +4,11 @@ import { asc, count, like } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
-import { parseJsonBody } from "@/lib/request-helpers";
-import { adminLookupMutationSchema } from "@/lib/request-schemas";
+import { parseJsonBody, parseSearchParams } from "@/lib/request-helpers";
+import {
+	adminLookupListQuerySchema,
+	adminLookupMutationSchema,
+} from "@/lib/request-schemas";
 
 type LookupType =
 	| "equipment"
@@ -27,16 +30,12 @@ export const Route = createFileRoute("/api/admin/lookups")({
 				try {
 					await requireAdmin(request);
 					const { searchParams } = new URL(request.url);
-					const type = searchParams.get("type") as LookupType;
-					if (!type || !tableMap[type]) {
-						return Response.json({ error: "Invalid type" }, { status: 400 });
-					}
-					const page = Math.max(1, Number(searchParams.get("page")) || 1);
-					const pageSize = Math.max(
-						1,
-						Number(searchParams.get("pageSize")) || 10,
+					const query = parseSearchParams(
+						searchParams,
+						adminLookupListQuerySchema,
 					);
-					const search = searchParams.get("search")?.trim() ?? "";
+					const type = query.type as LookupType;
+					const { page, pageSize, search } = query;
 					const table = tableMap[type];
 					const conditions = search
 						? like(table.name, `%${search}%`)

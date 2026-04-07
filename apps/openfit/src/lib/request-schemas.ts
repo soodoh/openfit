@@ -1,4 +1,4 @@
-import { boolean, number, object, string } from "zod";
+import { boolean, number, object, preprocess, string } from "zod";
 import {
 	ExerciseForceEnum,
 	ExerciseLevelEnum,
@@ -11,6 +11,48 @@ const nonEmptyString = string().trim().min(1);
 const nonNegativeInteger = number().int().min(0);
 const nonNegativeNumber = number().min(0);
 const weekdayArraySchema = nonNegativeInteger.max(6).array();
+
+function normalizeParamString(value: unknown) {
+	return typeof value === "string" ? value.trim() : value;
+}
+
+function integerQueryParam(options: {
+	defaultValue?: number;
+	max?: number;
+	min?: number;
+	optional?: boolean;
+}) {
+	const { defaultValue, max, min = 0, optional = false } = options;
+	let schema = number().int().min(min);
+
+	if (max !== undefined) {
+		schema = schema.max(max);
+	}
+
+	if (optional) {
+		return preprocess((value) => {
+			const normalized = normalizeParamString(value);
+			if (normalized === undefined || normalized === "") {
+				return undefined;
+			}
+			if (typeof normalized === "string" && /^-?\d+$/.test(normalized)) {
+				return Number.parseInt(normalized, 10);
+			}
+			return normalized;
+		}, schema.optional());
+	}
+
+	return preprocess((value) => {
+		const normalized = normalizeParamString(value);
+		if (normalized === undefined || normalized === "") {
+			return defaultValue;
+		}
+		if (typeof normalized === "string" && /^-?\d+$/.test(normalized)) {
+			return Number.parseInt(normalized, 10);
+		}
+		return normalized;
+	}, schema);
+}
 
 function requireAtLeastOneField<T extends Record<string, unknown>>(value: T) {
 	return Object.values(value).some((field) => field !== undefined);
@@ -49,6 +91,32 @@ const exerciseMechanicSchema = string()
 			value === ExerciseMechanicEnum.compound ||
 			value === ExerciseMechanicEnum.isolation,
 	);
+const trimmedStringQueryParam = preprocess((value) => {
+	const normalized = normalizeParamString(value);
+	return normalized === undefined ? "" : normalized;
+}, string());
+const optionalNonEmptyStringQueryParam = preprocess((value) => {
+	const normalized = normalizeParamString(value);
+	return normalized === "" ? undefined : normalized;
+}, nonEmptyString.optional());
+const optionalStringArrayQueryParam = preprocess((value) => {
+	if (value === undefined) {
+		return undefined;
+	}
+	return Array.isArray(value) ? value : [value];
+}, nonEmptyString.array().optional());
+const optionalExerciseLevelQueryParam = preprocess((value) => {
+	const normalized = normalizeParamString(value);
+	return normalized === "" ? undefined : normalized;
+}, exerciseLevelSchema.optional());
+const optionalLookupTypeQueryParam = preprocess((value) => {
+	const normalized = normalizeParamString(value);
+	return normalized === "" ? undefined : normalized;
+}, lookupTypeSchema.optional());
+const timestampQueryParam = integerQueryParam({
+	min: 0,
+	optional: true,
+});
 const trimmedStringArraySchema = nonEmptyString.array();
 const sessionTimestampSchema = number().finite().or(nonEmptyString);
 const sessionImpressionSchema = number().int().min(1).max(5);
@@ -85,9 +153,110 @@ export const adminLookupMutationSchema = object({
 	name: nonEmptyString,
 });
 
+export const adminLookupListQuerySchema = object({
+	type: optionalLookupTypeQueryParam,
+	page: integerQueryParam({
+		defaultValue: 1,
+		min: 1,
+	}),
+	pageSize: integerQueryParam({
+		defaultValue: 10,
+		min: 1,
+		max: 100,
+	}),
+	search: trimmedStringQueryParam,
+}).refine((value) => value.type !== undefined, {
+	message: "Type is required",
+	path: ["type"],
+});
+
+export const adminLookupDeleteQuerySchema = object({
+	type: optionalLookupTypeQueryParam,
+}).refine((value) => value.type !== undefined, {
+	message: "Type is required",
+	path: ["type"],
+});
+
+export const adminUserListQuerySchema = object({
+	page: integerQueryParam({
+		defaultValue: 1,
+		min: 1,
+	}),
+	pageSize: integerQueryParam({
+		defaultValue: 10,
+		min: 1,
+		max: 100,
+	}),
+	search: trimmedStringQueryParam,
+});
+
+export const adminExerciseListQuerySchema = adminUserListQuerySchema;
+
 export const createGymSchema = object({
 	name: nonEmptyString,
 	equipmentIds: nonEmptyString.array().optional(),
+});
+
+export const exercisesListQuerySchema = object({
+	cursor: integerQueryParam({
+		min: 0,
+		optional: true,
+	}),
+	limit: integerQueryParam({
+		defaultValue: 20,
+		min: 1,
+		max: 100,
+	}),
+	search: trimmedStringQueryParam,
+	equipmentId: optionalNonEmptyStringQueryParam,
+	equipmentIds: optionalStringArrayQueryParam,
+	level: optionalExerciseLevelQueryParam,
+	categoryId: optionalNonEmptyStringQueryParam,
+	primaryMuscleId: optionalNonEmptyStringQueryParam,
+});
+
+export const exerciseSearchQuerySchema = object({
+	q: trimmedStringQueryParam,
+	equipmentIds: optionalStringArrayQueryParam,
+	limit: integerQueryParam({
+		defaultValue: 20,
+		min: 1,
+		max: 50,
+	}),
+});
+
+export const similarExercisesQuerySchema = object({
+	q: trimmedStringQueryParam,
+	equipmentIds: optionalStringArrayQueryParam,
+	primaryMuscleIds: optionalStringArrayQueryParam,
+	exclude: optionalNonEmptyStringQueryParam,
+	limit: integerQueryParam({
+		defaultValue: 20,
+		min: 1,
+		max: 50,
+	}),
+});
+
+export const routineDaysListQuerySchema = object({
+	search: trimmedStringQueryParam,
+	limit: integerQueryParam({
+		defaultValue: 10,
+		min: 1,
+		max: 50,
+	}),
+});
+
+export const routinesListQuerySchema = object({
+	cursor: integerQueryParam({
+		min: 0,
+		optional: true,
+	}),
+	limit: integerQueryParam({
+		defaultValue: 20,
+		min: 1,
+		max: 100,
+	}),
+	search: trimmedStringQueryParam,
 });
 
 export const updateGymSchema = object({
@@ -178,6 +347,19 @@ export const updateSessionSchema = object({
 }).refine(requireAtLeastOneField, {
 	message: "At least one field must be provided",
 });
+
+export const sessionListQuerySchema = object({
+	startDate: timestampQueryParam,
+	endDate: timestampQueryParam,
+}).refine(
+	(value) =>
+		(value.startDate === undefined && value.endDate === undefined) ||
+		(value.startDate !== undefined && value.endDate !== undefined),
+	{
+		message: "startDate and endDate must be provided together",
+		path: ["startDate"],
+	},
+);
 
 export const createSetGroupSchema = object({
 	sessionId: nonEmptyString.optional(),

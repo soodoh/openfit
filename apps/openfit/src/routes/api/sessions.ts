@@ -4,8 +4,11 @@ import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
-import { parseJsonBody } from "@/lib/request-helpers";
-import { createSessionSchema } from "@/lib/request-schemas";
+import { parseJsonBody, parseSearchParams } from "@/lib/request-helpers";
+import {
+	createSessionSchema,
+	sessionListQuerySchema,
+} from "@/lib/request-schemas";
 
 // Helper to get first image URL for an exercise
 async function getFirstImageUrl(
@@ -74,47 +77,55 @@ export const Route = createFileRoute("/api/sessions")({
 					}
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
-				const { searchParams } = new URL(request.url);
-				const startDate = searchParams.get("startDate");
-				const endDate = searchParams.get("endDate");
-				// Build query conditions
-				const conditions = [eq(schema.workoutSessions.userId, session.user.id)];
-				if (startDate && endDate) {
-					conditions.push(
-						gte(
-							schema.workoutSessions.startTime,
-							new Date(Number.parseInt(startDate, 10)),
-						),
+				try {
+					const { searchParams } = new URL(request.url);
+					const { startDate, endDate } = parseSearchParams(
+						searchParams,
+						sessionListQuerySchema,
 					);
-					conditions.push(
-						lt(
-							schema.workoutSessions.startTime,
-							new Date(Number.parseInt(endDate, 10)),
-						),
+					// Build query conditions
+					const conditions = [
+						eq(schema.workoutSessions.userId, session.user.id),
+					];
+					if (startDate !== undefined && endDate !== undefined) {
+						conditions.push(
+							gte(schema.workoutSessions.startTime, new Date(startDate)),
+						);
+						conditions.push(
+							lt(schema.workoutSessions.startTime, new Date(endDate)),
+						);
+					}
+					const sessions = await db.query.workoutSessions.findMany({
+						where: and(...conditions),
+						orderBy: desc(schema.workoutSessions.startTime),
+					});
+					// If date range specified, return minimal data for calendar
+					if (startDate !== undefined && endDate !== undefined) {
+						return Response.json(
+							sessions.map((s) => ({
+								id: s.id,
+								createdAt: s.createdAt,
+								name: s.name,
+								startTime: s.startTime,
+								endTime: s.endTime,
+								impression: s.impression,
+							})),
+						);
+					}
+					// Otherwise return full data
+					const sessionsWithData = await Promise.all(
+						sessions.map(async (s) => getSessionWithData(s.id)),
 					);
-				}
-				const sessions = await db.query.workoutSessions.findMany({
-					where: and(...conditions),
-					orderBy: desc(schema.workoutSessions.startTime),
-				});
-				// If date range specified, return minimal data for calendar
-				if (startDate && endDate) {
+					return Response.json(sessionsWithData);
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
-						sessions.map((s) => ({
-							id: s.id,
-							createdAt: s.createdAt,
-							name: s.name,
-							startTime: s.startTime,
-							endTime: s.endTime,
-							impression: s.impression,
-						})),
+						{ error: "Failed to fetch sessions" },
+						{ status: 500 },
 					);
 				}
-				// Otherwise return full data
-				const sessionsWithData = await Promise.all(
-					sessions.map(async (s) => getSessionWithData(s.id)),
-				);
-				return Response.json(sessionsWithData);
 			},
 			// POST /api/sessions - Create session
 			POST: async ({ request }: { request: Request }) => {

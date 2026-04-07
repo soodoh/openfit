@@ -3,6 +3,8 @@ import { count, eq, like } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
+import { parseSearchParams } from "@/lib/request-helpers";
+import { adminUserListQuerySchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/admin/users")({
 	server: {
 		handlers: {
@@ -10,12 +12,10 @@ export const Route = createFileRoute("/api/admin/users")({
 				try {
 					await requireAdmin(request);
 					const { searchParams } = new URL(request.url);
-					const page = Math.max(1, Number(searchParams.get("page")) || 1);
-					const pageSize = Math.max(
-						1,
-						Number(searchParams.get("pageSize")) || 10,
+					const { page, pageSize, search } = parseSearchParams(
+						searchParams,
+						adminUserListQuerySchema,
 					);
-					const search = searchParams.get("search")?.trim() ?? "";
 					const conditions = search
 						? like(schema.users.email, `%${search}%`)
 						: undefined;
@@ -49,11 +49,8 @@ export const Route = createFileRoute("/api/admin/users")({
 						pageSize,
 					});
 				} catch (error) {
-					if (error instanceof Error && error.message === "Unauthorized") {
-						return Response.json({ error: "Unauthorized" }, { status: 401 });
-					}
-					if (error instanceof Error && error.message === "Forbidden") {
-						return Response.json({ error: "Forbidden" }, { status: 403 });
+					if (error instanceof Response) {
+						return error;
 					}
 					return Response.json(
 						{ error: "Failed to fetch users" },

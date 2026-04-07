@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+	adminExerciseListQuerySchema,
+	adminLookupDeleteQuerySchema,
+	adminLookupListQuerySchema,
 	adminLookupMutationSchema,
+	adminUserListQuerySchema,
 	adminUserRoleUpdateSchema,
 	createAdminExerciseSchema,
 	createGymSchema,
@@ -10,9 +14,15 @@ import {
 	createSetGroupSchema,
 	createSetSchema,
 	createUserExerciseSchema,
+	exerciseSearchQuerySchema,
+	exercisesListQuerySchema,
 	reorderSetGroupsSchema,
 	reorderSetsSchema,
 	replaceExerciseSchema,
+	routineDaysListQuerySchema,
+	routinesListQuerySchema,
+	sessionListQuerySchema,
+	similarExercisesQuerySchema,
 	updateAdminExerciseSchema,
 	updateGymSchema,
 	updateRoutineDaySchema,
@@ -70,6 +80,113 @@ describe("adminLookupMutationSchema", () => {
 			adminLookupMutationSchema.safeParse({
 				type: "bad-type",
 				name: "Whatever",
+			}).success,
+		).toBe(false);
+	});
+});
+
+describe("query schemas", () => {
+	it("parses exercise list filters and pagination", () => {
+		expect(
+			exercisesListQuerySchema.safeParse({
+				cursor: "25",
+				limit: "40",
+				search: " bench ",
+				equipmentIds: ["barbell", "rack"],
+				level: "beginner",
+			}).data,
+		).toEqual({
+			cursor: 25,
+			limit: 40,
+			search: "bench",
+			equipmentIds: ["barbell", "rack"],
+			level: "beginner",
+		});
+	});
+
+	it("rejects invalid exercise query limits", () => {
+		expect(
+			exercisesListQuerySchema.safeParse({
+				limit: "0",
+			}).success,
+		).toBe(false);
+	});
+
+	it("parses exercise search params with defaults", () => {
+		expect(exerciseSearchQuerySchema.parse({})).toEqual({
+			q: "",
+			limit: 20,
+		});
+	});
+
+	it("requires primary muscle ids to be arrays of non-empty ids", () => {
+		expect(
+			similarExercisesQuerySchema.safeParse({
+				primaryMuscleIds: [""],
+			}).success,
+		).toBe(false);
+	});
+
+	it("parses routine search params", () => {
+		expect(
+			routinesListQuerySchema.parse({
+				cursor: "10",
+				search: " push ",
+			}),
+		).toEqual({
+			cursor: 10,
+			limit: 20,
+			search: "push",
+		});
+		expect(routineDaysListQuerySchema.parse({ limit: "12" })).toEqual({
+			search: "",
+			limit: 12,
+		});
+	});
+
+	it("requires session date filters to be provided together", () => {
+		expect(
+			sessionListQuerySchema.safeParse({
+				startDate: "123",
+			}).success,
+		).toBe(false);
+		expect(
+			sessionListQuerySchema.parse({
+				startDate: "123",
+				endDate: "456",
+			}),
+		).toEqual({
+			startDate: 123,
+			endDate: 456,
+		});
+	});
+
+	it("validates admin lookup queries", () => {
+		expect(
+			adminLookupListQuerySchema.parse({
+				type: "equipment",
+				page: "2",
+				pageSize: "25",
+				search: " rack ",
+			}),
+		).toEqual({
+			type: "equipment",
+			page: 2,
+			pageSize: 25,
+			search: "rack",
+		});
+		expect(adminLookupDeleteQuerySchema.safeParse({}).success).toBe(false);
+	});
+
+	it("caps admin pagination to valid integer ranges", () => {
+		expect(
+			adminUserListQuerySchema.safeParse({
+				page: "0",
+			}).success,
+		).toBe(false);
+		expect(
+			adminExerciseListQuerySchema.safeParse({
+				pageSize: "101",
 			}).success,
 		).toBe(false);
 	});

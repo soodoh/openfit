@@ -8,8 +8,11 @@ import {
 	getOptionalSession,
 	requireAuth,
 } from "@/lib/auth-middleware";
-import { parseJsonBody } from "@/lib/request-helpers";
-import { createRoutineDaySchema } from "@/lib/request-schemas";
+import { parseJsonBody, parseSearchParams } from "@/lib/request-helpers";
+import {
+	createRoutineDaySchema,
+	routineDaysListQuerySchema,
+} from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/routine-days")({
 	server: {
 		handlers: {
@@ -19,34 +22,43 @@ export const Route = createFileRoute("/api/routine-days")({
 				if (!session) {
 					return Response.json([]);
 				}
-				const { searchParams } = new URL(request.url);
-				const searchTerm = searchParams.get("search") ?? "";
-				const limit = Math.min(
-					Number.parseInt(searchParams.get("limit") ?? "10", 10),
-					50,
-				);
-				// Build query conditions
-				const conditions = [eq(schema.routineDays.userId, session.user.id)];
-				if (searchTerm) {
-					conditions.push(
-						like(schema.routineDays.description, `%${searchTerm}%`),
+				try {
+					const { searchParams } = new URL(request.url);
+					const { search: searchTerm, limit } = parseSearchParams(
+						searchParams,
+						routineDaysListQuerySchema,
+					);
+					// Build query conditions
+					const conditions = [eq(schema.routineDays.userId, session.user.id)];
+					if (searchTerm) {
+						conditions.push(
+							like(schema.routineDays.description, `%${searchTerm}%`),
+						);
+					}
+					const days = await db.query.routineDays.findMany({
+						where: and(...conditions),
+						limit,
+						with: {
+							routine: true,
+							weekdays: true,
+						},
+					});
+					// Transform to expected format
+					const result = days.map((day) =>
+						Object.assign(day, {
+							weekdays: day.weekdays.map((w) => w.weekday),
+						}),
+					);
+					return Response.json(result);
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
+					return Response.json(
+						{ error: "Failed to fetch routine days" },
+						{ status: 500 },
 					);
 				}
-				const days = await db.query.routineDays.findMany({
-					where: and(...conditions),
-					limit,
-					with: {
-						routine: true,
-						weekdays: true,
-					},
-				});
-				// Transform to expected format
-				const result = days.map((day) =>
-					Object.assign(day, {
-						weekdays: day.weekdays.map((w) => w.weekday),
-					}),
-				);
-				return Response.json(result);
 			},
 			// POST /api/routine-days - Create routine day
 			POST: async ({ request }: { request: Request }) => {
