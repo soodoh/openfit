@@ -29,6 +29,20 @@ export type RoutineDto = {
 	routineDays: RoutineDayDto[];
 };
 
+export type RoutineQueryDto = Omit<
+	RoutineDto,
+	"createdAt" | "updatedAt" | "routineDays"
+> & {
+	createdAt: Date;
+	updatedAt: Date;
+	routineDays: Array<
+		Omit<RoutineDayDto, "createdAt" | "updatedAt"> & {
+			createdAt: Date;
+			updatedAt: Date;
+		}
+	>;
+};
+
 export type RoutineRelationDto = {
 	id: string;
 	userId: string;
@@ -75,6 +89,24 @@ export type RoutineDaySetGroupDto = {
 	sets: WorkoutSetDto[];
 };
 
+export type RoutineDayDetailSetGroupDto = Omit<
+	RoutineDaySetGroupDto,
+	"sets"
+> & {
+	sets: Array<
+		Omit<RoutineDaySetGroupDto["sets"][number], "exercise"> & {
+			exercise:
+				| {
+						id: string;
+						name: string;
+						imageUrl: string | null | undefined;
+				  }
+				| null
+				| undefined;
+		}
+	>;
+};
+
 export type RoutineDayDto = {
 	id: string;
 	routineId: string;
@@ -85,4 +117,17 @@ export type RoutineDayDto = {
 	weekdays: number[];
 	routine?: RoutineRelationDto | null;
 	setGroups?: RoutineDaySetGroupDto[];
+};
+
+export type RoutineDaySearchDto = Omit<
+	RoutineDayDto,
+	"createdAt" | "updatedAt" | "routine"
+> & {
+	createdAt: Date;
+	updatedAt: Date;
+	routine: RoutineRelationDto | null | undefined;
+};
+
+export type RoutineDayDetailDto = Omit<RoutineDaySearchDto, "setGroups"> & {
+	setGroups: RoutineDayDetailSetGroupDto[];
 };

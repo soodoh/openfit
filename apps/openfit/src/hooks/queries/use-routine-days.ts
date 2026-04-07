@@ -1,40 +1,8 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
-import type {
-	RoutineDayDto,
-	RoutineDaySetGroupDto,
-	RoutineRelationDto,
-} from "@/lib/api-types";
+import type { RoutineDayDetailDto, RoutineDaySearchDto } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
-
-type RoutineDaySearchDto = Omit<
-	RoutineDayDto,
-	"createdAt" | "updatedAt" | "routine"
-> & {
-	createdAt: Date;
-	updatedAt: Date;
-	routine: RoutineRelationDto | null | undefined;
-};
-
-type RoutineDayDetailSetGroupDto = Omit<RoutineDaySetGroupDto, "sets"> & {
-	sets: Array<
-		Omit<RoutineDaySetGroupDto["sets"][number], "exercise"> & {
-			exercise:
-				| {
-						id: string;
-						name: string;
-						imageUrl: string | null | undefined;
-				  }
-				| null
-				| undefined;
-		}
-	>;
-};
-
-type RoutineDayDetailDto = RoutineDaySearchDto & {
-	setGroups: RoutineDayDetailSetGroupDto[];
-};
 
 // Fetch routine day with full data
 async function fetchRoutineDay(

@@ -4,9 +4,12 @@ import type {
 	LookupItemDto,
 	MutationIdResult,
 	MutationSuccessResult,
+	RoutineDayDetailDto,
 	RoutineDayDto,
+	RoutineDaySearchDto,
 	RoutineDaySetGroupDto,
 	RoutineDto,
+	RoutineQueryDto,
 	RoutineRelationDto,
 } from "./api-types";
 
@@ -27,6 +30,10 @@ describe("api-types", () => {
 	it("models routines as API DTOs instead of DB records", () => {
 		expectTypeOf<RoutineDto["description"]>().toEqualTypeOf<string | null>();
 		expectTypeOf<RoutineDto["routineDays"]>().toEqualTypeOf<RoutineDayDto[]>();
+		expectTypeOf<RoutineQueryDto["createdAt"]>().toEqualTypeOf<Date>();
+		expectTypeOf<
+			RoutineQueryDto["routineDays"][number]["updatedAt"]
+		>().toEqualTypeOf<Date>();
 		expectTypeOf<RoutineRelationDto["description"]>().toEqualTypeOf<
 			string | null
 		>();
@@ -62,5 +69,23 @@ describe("api-types", () => {
 		expectTypeOf<
 			RoutineDaySetGroupDto["sets"][number]["weightUnit"]
 		>().toEqualTypeOf<LookupItemDto | null>();
+		expectTypeOf<RoutineDaySearchDto["createdAt"]>().toEqualTypeOf<Date>();
+		expectTypeOf<RoutineDaySearchDto["routine"]>().toEqualTypeOf<
+			RoutineRelationDto | null | undefined
+		>();
+		expectTypeOf<RoutineDayDetailDto["setGroups"]>().toEqualTypeOf<
+			RoutineDayDetailDto["setGroups"]
+		>();
+		expectTypeOf<
+			RoutineDayDetailDto["setGroups"][number]["sets"][number]["exercise"]
+		>().toEqualTypeOf<
+			| {
+					id: string;
+					name: string;
+					imageUrl: string | null | undefined;
+			  }
+			| null
+			| undefined
+		>();
 	});
 });

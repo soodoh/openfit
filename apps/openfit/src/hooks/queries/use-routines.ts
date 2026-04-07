@@ -4,23 +4,9 @@ import type {
 	UseQueryResult,
 } from "@tanstack/react-query";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import type { CursorPage, RoutineDayDto, RoutineDto } from "@/lib/api-types";
+import type { CursorPage, RoutineQueryDto } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
-
-type RoutineQueryDto = Omit<
-	RoutineDto,
-	"createdAt" | "updatedAt" | "routineDays"
-> & {
-	createdAt: Date;
-	updatedAt: Date;
-	routineDays: Array<
-		Omit<RoutineDayDto, "createdAt" | "updatedAt"> & {
-			createdAt: Date;
-			updatedAt: Date;
-		}
-	>;
-};
 
 type RoutineFilters = Record<string, unknown> & {
 	search?: string;
