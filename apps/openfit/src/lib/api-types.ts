@@ -143,8 +143,8 @@ export type WorkoutSetMutationResult = {
 	weightUnitId: string;
 	restTime: number;
 	completed: boolean;
-	createdAt: Date;
-	updatedAt: Date;
+	createdAt: string;
+	updatedAt: string;
 	exercise: ExerciseResult | null;
 	repetitionUnit: LookupResult | null;
 	weightUnit: LookupResult | null;
@@ -189,8 +189,8 @@ export type WorkoutSetGroupMutationResult = {
 	type: string;
 	order: number;
 	comment: string | null;
-	createdAt: Date;
-	updatedAt: Date;
+	createdAt: string;
+	updatedAt: string;
 };
 
 export type WorkoutSetGroupWithSetsResult = WorkoutSetGroupResult & {
@@ -308,15 +308,15 @@ export type RoutineQueryResult = Omit<
 };
 
 export type LookupResult = LookupItemDto & {
-	createdAt: Date;
+	createdAt: string;
 };
 
 export type GymResult = {
 	id: string;
 	userId: string;
 	name: string;
-	createdAt: Date;
-	updatedAt: Date;
+	createdAt: string;
+	updatedAt: string;
 };
 
 export type ExerciseResult = {
@@ -327,18 +327,18 @@ export type ExerciseResult = {
 	level: ExerciseLevel;
 	mechanic: ExerciseMechanic | null;
 	categoryId: string;
-	createdAt: Date;
-	updatedAt: Date;
+	createdAt: string;
+	updatedAt: string;
 };
 
 export type SessionResult = {
 	id: string;
 	userId: string;
 	name: string;
-	createdAt: Date;
-	updatedAt: Date;
-	startTime: Date;
-	endTime: Date | null;
+	createdAt: string;
+	updatedAt: string;
+	startTime: string;
+	endTime: string | null;
 	impression: number | null;
 	notes: string;
 	templateId: string | null;
@@ -353,8 +353,8 @@ export type UserProfileBaseResult = {
 	defaultRepetitionUnitId: string | null;
 	defaultWeightUnitId: string | null;
 	defaultGymId: string | null;
-	createdAt: Date;
-	updatedAt: Date;
+	createdAt: string;
+	updatedAt: string;
 };
 
 export type UserProfileResult = UserProfileBaseResult & {

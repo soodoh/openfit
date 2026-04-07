@@ -13,7 +13,6 @@ import type {
 	WorkoutSetGroupMutationResult,
 	WorkoutSetGroupWithMutationSetsResult,
 	WorkoutSetMutationResult,
-	WorkoutSetResult,
 } from "@/lib/api-types";
 import type {
 	useAdminCreateExercise,
@@ -56,7 +55,7 @@ import type {
 describe("mutation contracts", () => {
 	it("uses honest shared result types for raw mutation payloads", () => {
 		expectTypeOf<GymDto["equipmentIds"]>().toEqualTypeOf<string[]>();
-		expectTypeOf<SessionResult["createdAt"]>().toEqualTypeOf<Date>();
+		expectTypeOf<SessionResult["createdAt"]>().toEqualTypeOf<string>();
 		expectTypeOf<
 			SessionResult["setGroups"][number]["sets"][number]["exercise"]
 		>().toEqualTypeOf<(ExerciseResult & { imageUrl: string | null }) | null>();
@@ -65,11 +64,13 @@ describe("mutation contracts", () => {
 		>().toEqualTypeOf<LookupResult | null>();
 		expectTypeOf<
 			WorkoutSetGroupMutationResult["createdAt"]
-		>().toEqualTypeOf<Date>();
+		>().toEqualTypeOf<string>();
 		expectTypeOf<WorkoutSetGroupMutationResult["comment"]>().toEqualTypeOf<
 			string | null
 		>();
-		expectTypeOf<WorkoutSetMutationResult["createdAt"]>().toEqualTypeOf<Date>();
+		expectTypeOf<
+			WorkoutSetMutationResult["createdAt"]
+		>().toEqualTypeOf<string>();
 		expectTypeOf<
 			WorkoutSetMutationResult["exercise"]
 		>().toEqualTypeOf<ExerciseResult | null>();
