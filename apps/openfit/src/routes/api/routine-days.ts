@@ -3,7 +3,7 @@ import { and, eq, like } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
-import type { RoutineDayDto } from "@/lib/api-types";
+import { serializeRoutineDay } from "@/lib/api-serializers";
 import {
 	type AuthSession,
 	getOptionalSession,
@@ -14,46 +14,6 @@ import {
 	createRoutineDaySchema,
 	routineDaysListQuerySchema,
 } from "@/lib/request-schemas";
-
-function serializeTimestamp(value: Date | string): string {
-	return typeof value === "string" ? value : value.toISOString();
-}
-
-function serializeRoutineDay(
-	routineDay: Omit<
-		RoutineDayDto,
-		"createdAt" | "updatedAt" | "weekdays" | "routine"
-	> & {
-		createdAt: Date | string;
-		updatedAt: Date | string;
-		routine?:
-			| (Omit<
-					NonNullable<RoutineDayDto["routine"]>,
-					"createdAt" | "updatedAt"
-			  > & {
-					createdAt: Date | string;
-					updatedAt: Date | string;
-			  })
-			| null;
-		weekdays: Array<number | { weekday: number }>;
-	},
-): RoutineDayDto {
-	return {
-		...routineDay,
-		createdAt: serializeTimestamp(routineDay.createdAt),
-		updatedAt: serializeTimestamp(routineDay.updatedAt),
-		routine: routineDay.routine
-			? {
-					...routineDay.routine,
-					createdAt: serializeTimestamp(routineDay.routine.createdAt),
-					updatedAt: serializeTimestamp(routineDay.routine.updatedAt),
-				}
-			: routineDay.routine,
-		weekdays: routineDay.weekdays.map((weekday) =>
-			typeof weekday === "number" ? weekday : weekday.weekday,
-		),
-	};
-}
 
 export const Route = createFileRoute("/api/routine-days")({
 	server: {

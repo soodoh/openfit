@@ -30,40 +30,36 @@ describe("api serializers", () => {
 		expect(gym).not.toHaveProperty("equipment");
 	});
 
-	it("serializeRoutineDay converts weekday rows to number arrays", () => {
+	it("serializes routine days with nested routine timestamps", () => {
 		const routineDay = serializeRoutineDay({
-			id: "day_123",
-			routineId: "routine_123",
+			id: "day_1",
+			routineId: "routine_1",
 			userId: "user_123",
 			description: "Push",
-			createdAt: new Date("2026-04-01T00:00:00.000Z"),
-			updatedAt: new Date("2026-04-02T00:00:00.000Z"),
-			weekdays: [
-				{ id: "weekday_1", routineDayId: "day_123", weekday: 1 },
-				{ id: "weekday_3", routineDayId: "day_123", weekday: 3 },
-			],
+			createdAt: new Date("2026-01-01T00:00:00.000Z"),
+			updatedAt: new Date("2026-01-02T00:00:00.000Z"),
+			weekdays: [{ weekday: 1 }, { weekday: 3 }],
 			routine: {
-				id: "routine_123",
+				id: "routine_1",
 				userId: "user_123",
-				name: "Upper A",
+				name: "Upper",
 				description: null,
-				createdAt: new Date("2026-03-01T00:00:00.000Z"),
-				updatedAt: new Date("2026-03-02T00:00:00.000Z"),
+				createdAt: new Date("2026-01-01T00:00:00.000Z"),
+				updatedAt: new Date("2026-01-02T00:00:00.000Z"),
 			},
 		});
 
-		expect(routineDay).toEqual(
-			expect.objectContaining({
-				id: "day_123",
-				createdAt: "2026-04-01T00:00:00.000Z",
-				updatedAt: "2026-04-02T00:00:00.000Z",
-				weekdays: [1, 3],
-				routine: expect.objectContaining({
-					createdAt: "2026-03-01T00:00:00.000Z",
-					updatedAt: "2026-03-02T00:00:00.000Z",
-				}),
-			}),
-		);
+		expect(routineDay).toMatchObject({
+			id: "day_1",
+			routineId: "routine_1",
+			createdAt: "2026-01-01T00:00:00.000Z",
+			updatedAt: "2026-01-02T00:00:00.000Z",
+			weekdays: [1, 3],
+			routine: {
+				createdAt: "2026-01-01T00:00:00.000Z",
+				updatedAt: "2026-01-02T00:00:00.000Z",
+			},
+		});
 	});
 
 	it("serializeRoutine serializes routines with nested routine days", () => {

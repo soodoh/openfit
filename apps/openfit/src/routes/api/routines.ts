@@ -3,7 +3,8 @@ import { and, desc, eq, like } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
-import type { CursorPage, RoutineDayDto, RoutineDto } from "@/lib/api-types";
+import { serializeRoutine } from "@/lib/api-serializers";
+import type { CursorPage, RoutineDto } from "@/lib/api-types";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { getRoutineDaysWithWeekdays } from "@/lib/data-loaders";
 import { parseJsonBody, parseSearchParams } from "@/lib/request-helpers";
@@ -11,48 +12,6 @@ import {
 	createRoutineSchema,
 	routinesListQuerySchema,
 } from "@/lib/request-schemas";
-
-function serializeTimestamp(value: Date | string): string {
-	return typeof value === "string" ? value : value.toISOString();
-}
-
-function serializeRoutineDay(
-	routineDay: Omit<RoutineDayDto, "createdAt" | "updatedAt" | "weekdays"> & {
-		createdAt: Date | string;
-		updatedAt: Date | string;
-		weekdays: Array<number | { weekday: number }>;
-	},
-): RoutineDayDto {
-	return {
-		...routineDay,
-		createdAt: serializeTimestamp(routineDay.createdAt),
-		updatedAt: serializeTimestamp(routineDay.updatedAt),
-		weekdays: routineDay.weekdays.map((weekday) =>
-			typeof weekday === "number" ? weekday : weekday.weekday,
-		),
-	};
-}
-
-function serializeRoutine(
-	routine: Omit<RoutineDto, "createdAt" | "updatedAt" | "routineDays"> & {
-		createdAt: Date | string;
-		updatedAt: Date | string;
-		routineDays: Array<
-			Omit<RoutineDayDto, "createdAt" | "updatedAt" | "weekdays"> & {
-				createdAt: Date | string;
-				updatedAt: Date | string;
-				weekdays: Array<number | { weekday: number }>;
-			}
-		>;
-	},
-): RoutineDto {
-	return {
-		...routine,
-		createdAt: serializeTimestamp(routine.createdAt),
-		updatedAt: serializeTimestamp(routine.updatedAt),
-		routineDays: routine.routineDays.map(serializeRoutineDay),
-	};
-}
 
 export const Route = createFileRoute("/api/routines")({
 	server: {
