@@ -1,5 +1,10 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type {
+	MutationIdResult,
+	MutationSuccessResult,
+	UserProfileBaseDto,
+} from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
 
@@ -39,73 +44,84 @@ type DeleteLookupInput = {
 async function updateUserRole({
 	id,
 	role,
-}: UpdateUserRoleInput): Promise<unknown> {
+}: UpdateUserRoleInput): Promise<UserProfileBaseDto> {
 	const response = await fetch(`/api/admin/users/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ role }),
 	});
-	return fetchJson<unknown>(response, "Failed to update user role");
+	return fetchJson<UserProfileBaseDto>(response, "Failed to update user role");
 }
 // Create exercise
-async function createExercise(input: CreateExerciseInput): Promise<unknown> {
+async function createExercise(
+	input: CreateExerciseInput,
+): Promise<MutationIdResult> {
 	const response = await fetch("/api/admin/exercises", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to create exercise");
+	return fetchJson<MutationIdResult>(response, "Failed to create exercise");
 }
 // Update exercise
 async function updateExercise({
 	id,
 	...input
-}: UpdateExerciseInput): Promise<unknown> {
+}: UpdateExerciseInput): Promise<MutationSuccessResult> {
 	const response = await fetch(`/api/admin/exercises/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to update exercise");
+	return fetchJson<MutationSuccessResult>(
+		response,
+		"Failed to update exercise",
+	);
 }
 // Delete exercise
-async function deleteExercise(id: string): Promise<unknown> {
+async function deleteExercise(id: string): Promise<MutationSuccessResult> {
 	const response = await fetch(`/api/admin/exercises/${id}`, {
 		method: "DELETE",
 	});
-	return fetchJson<unknown>(response, "Failed to delete exercise");
+	return fetchJson<MutationSuccessResult>(
+		response,
+		"Failed to delete exercise",
+	);
 }
 // Create lookup
 async function createLookup({
 	type,
 	name,
-}: CreateLookupInput): Promise<unknown> {
+}: CreateLookupInput): Promise<MutationIdResult> {
 	const response = await fetch("/api/admin/lookups", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ type, name }),
 	});
-	return fetchJson<unknown>(response, "Failed to create lookup");
+	return fetchJson<MutationIdResult>(response, "Failed to create lookup");
 }
 // Update lookup
 async function updateLookup({
 	id,
 	type,
 	name,
-}: UpdateLookupInput): Promise<unknown> {
+}: UpdateLookupInput): Promise<MutationSuccessResult> {
 	const response = await fetch(`/api/admin/lookups/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ type, name }),
 	});
-	return fetchJson<unknown>(response, "Failed to update lookup");
+	return fetchJson<MutationSuccessResult>(response, "Failed to update lookup");
 }
 // Delete lookup
-async function deleteLookup({ id, type }: DeleteLookupInput): Promise<unknown> {
+async function deleteLookup({
+	id,
+	type,
+}: DeleteLookupInput): Promise<MutationSuccessResult> {
 	const response = await fetch(`/api/admin/lookups/${id}?type=${type}`, {
 		method: "DELETE",
 	});
-	return fetchJson<unknown>(response, "Failed to delete lookup");
+	return fetchJson<MutationSuccessResult>(response, "Failed to delete lookup");
 }
 // Upload file
 async function uploadFile(file: File): Promise<string> {
@@ -122,7 +138,7 @@ async function uploadFile(file: File): Promise<string> {
 	return result.path;
 }
 export function useUpdateUserRole(): UseMutationResult<
-	unknown,
+	UserProfileBaseDto,
 	Error,
 	UpdateUserRoleInput
 > {
@@ -135,7 +151,7 @@ export function useUpdateUserRole(): UseMutationResult<
 	});
 }
 export function useAdminCreateExercise(): UseMutationResult<
-	unknown,
+	MutationIdResult,
 	Error,
 	CreateExerciseInput
 > {
@@ -151,7 +167,7 @@ export function useAdminCreateExercise(): UseMutationResult<
 	});
 }
 export function useAdminUpdateExercise(): UseMutationResult<
-	unknown,
+	MutationSuccessResult,
 	Error,
 	UpdateExerciseInput
 > {
@@ -167,7 +183,7 @@ export function useAdminUpdateExercise(): UseMutationResult<
 	});
 }
 export function useAdminDeleteExercise(): UseMutationResult<
-	unknown,
+	MutationSuccessResult,
 	Error,
 	string
 > {
@@ -183,7 +199,7 @@ export function useAdminDeleteExercise(): UseMutationResult<
 	});
 }
 export function useCreateLookup(): UseMutationResult<
-	unknown,
+	MutationIdResult,
 	Error,
 	CreateLookupInput
 > {
@@ -197,7 +213,7 @@ export function useCreateLookup(): UseMutationResult<
 	});
 }
 export function useUpdateLookup(): UseMutationResult<
-	unknown,
+	MutationSuccessResult,
 	Error,
 	UpdateLookupInput
 > {
@@ -211,7 +227,7 @@ export function useUpdateLookup(): UseMutationResult<
 	});
 }
 export function useDeleteLookup(): UseMutationResult<
-	unknown,
+	MutationSuccessResult,
 	Error,
 	DeleteLookupInput
 > {

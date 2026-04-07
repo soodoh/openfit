@@ -1,9 +1,28 @@
+import type {
+	ExerciseForce,
+	ExerciseLevel,
+	ExerciseMechanic,
+} from "@/db/schema/exercises";
+import type { Role, Theme } from "@/db/schema/user-data";
+
 export type MutationSuccessResult = { success: true };
 export type MutationIdResult = { id: string };
+export type SetDeleteResult = MutationSuccessResult & {
+	setGroupDeleted: boolean;
+};
 
 export type LookupItemDto = {
 	id: string;
 	name: string;
+};
+
+export type GymDto = {
+	id: string;
+	userId: string;
+	name: string;
+	createdAt: string;
+	updatedAt: string;
+	equipmentIds: string[];
 };
 
 export type CursorPage<T> = {
@@ -100,7 +119,7 @@ export type WorkoutSetResult = Omit<
 		| undefined;
 };
 
-export type RoutineDaySetGroupDto = {
+export type WorkoutSetGroupDto = {
 	id: string;
 	userId: string;
 	routineDayId: string | null;
@@ -110,8 +129,13 @@ export type RoutineDaySetGroupDto = {
 	comment: string | null;
 	createdAt: string;
 	updatedAt: string;
+};
+
+export type WorkoutSetGroupWithSetsDto = WorkoutSetGroupDto & {
 	sets: WorkoutSetDto[];
 };
+
+export type RoutineDaySetGroupDto = WorkoutSetGroupWithSetsDto;
 
 export type RoutineDaySetGroupResult = Omit<
 	RoutineDaySetGroupDto,
@@ -210,4 +234,54 @@ export type RoutineQueryResult = Omit<
 	createdAt: Date;
 	updatedAt: Date;
 	routineDays: RoutineDayResult[];
+};
+
+export type SessionDto = {
+	id: string;
+	userId: string;
+	name: string;
+	createdAt: string;
+	updatedAt: string;
+	startTime: string;
+	endTime: string | null;
+	impression: number | null;
+	notes: string | null;
+	templateId: string | null;
+	setGroups: WorkoutSetGroupWithSetsDto[];
+};
+
+export type UserProfileBaseDto = {
+	id: string;
+	userId: string;
+	role: Role;
+	theme: Theme;
+	defaultRepetitionUnitId: string | null;
+	defaultWeightUnitId: string | null;
+	defaultGymId: string | null;
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type UserProfileDto = UserProfileBaseDto & {
+	defaultRepetitionUnit: LookupItemDto | null;
+	defaultWeightUnit: LookupItemDto | null;
+	defaultGym: LookupItemDto | null;
+};
+
+export type AdminExerciseDto = {
+	id: string;
+	name: string;
+	level: ExerciseLevel;
+	force: ExerciseForce | null;
+	mechanic: ExerciseMechanic | null;
+	equipmentId: string | null;
+	categoryId: string;
+	primaryMuscleIds: string[];
+	secondaryMuscleIds: string[];
+	instructions: string[];
+	imageUrls: string[];
+	equipment: LookupItemDto | null;
+	category: LookupItemDto | null;
+	primaryMuscles: LookupItemDto[];
+	secondaryMuscles: LookupItemDto[];
 };

@@ -1,5 +1,6 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { GymDto, MutationSuccessResult } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
 
@@ -13,32 +14,32 @@ type UpdateGymInput = {
 	equipmentIds?: string[];
 };
 // Create gym
-async function createGym(input: CreateGymInput): Promise<unknown> {
+async function createGym(input: CreateGymInput): Promise<GymDto> {
 	const response = await fetch("/api/gyms", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to create gym");
+	return fetchJson<GymDto>(response, "Failed to create gym");
 }
 // Update gym
-async function updateGym({ id, ...input }: UpdateGymInput): Promise<unknown> {
+async function updateGym({ id, ...input }: UpdateGymInput): Promise<GymDto> {
 	const response = await fetch(`/api/gyms/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to update gym");
+	return fetchJson<GymDto>(response, "Failed to update gym");
 }
 // Delete gym
-async function deleteGym(id: string): Promise<unknown> {
+async function deleteGym(id: string): Promise<MutationSuccessResult> {
 	const response = await fetch(`/api/gyms/${id}`, {
 		method: "DELETE",
 	});
-	return fetchJson<unknown>(response, "Failed to delete gym");
+	return fetchJson<MutationSuccessResult>(response, "Failed to delete gym");
 }
 export function useCreateGym(): UseMutationResult<
-	unknown,
+	GymDto,
 	Error,
 	CreateGymInput
 > {
@@ -51,7 +52,7 @@ export function useCreateGym(): UseMutationResult<
 	});
 }
 export function useUpdateGym(): UseMutationResult<
-	unknown,
+	GymDto,
 	Error,
 	UpdateGymInput
 > {
@@ -66,7 +67,11 @@ export function useUpdateGym(): UseMutationResult<
 		},
 	});
 }
-export function useDeleteGym(): UseMutationResult<unknown, Error, string> {
+export function useDeleteGym(): UseMutationResult<
+	MutationSuccessResult,
+	Error,
+	string
+> {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: deleteGym,

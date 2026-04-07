@@ -1,5 +1,6 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { MutationSuccessResult, SessionDto } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
 
@@ -11,9 +12,6 @@ type CreateSessionInput = {
 	impression?: number;
 	templateId?: string;
 };
-type CreateSessionResponse = {
-	id: string;
-};
 type UpdateSessionInput = {
 	id: string;
 	name?: string;
@@ -23,37 +21,35 @@ type UpdateSessionInput = {
 	endTime?: number | undefined;
 };
 // Create session
-async function createSession(
-	input: CreateSessionInput,
-): Promise<CreateSessionResponse> {
+async function createSession(input: CreateSessionInput): Promise<SessionDto> {
 	const response = await fetch("/api/sessions", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<CreateSessionResponse>(response, "Failed to create session");
+	return fetchJson<SessionDto>(response, "Failed to create session");
 }
 // Update session
 async function updateSession({
 	id,
 	...input
-}: UpdateSessionInput): Promise<unknown> {
+}: UpdateSessionInput): Promise<SessionDto> {
 	const response = await fetch(`/api/sessions/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to update session");
+	return fetchJson<SessionDto>(response, "Failed to update session");
 }
 // Delete session
-async function deleteSession(id: string): Promise<unknown> {
+async function deleteSession(id: string): Promise<MutationSuccessResult> {
 	const response = await fetch(`/api/sessions/${id}`, {
 		method: "DELETE",
 	});
-	return fetchJson<unknown>(response, "Failed to delete session");
+	return fetchJson<MutationSuccessResult>(response, "Failed to delete session");
 }
 export function useCreateSession(): UseMutationResult<
-	CreateSessionResponse,
+	SessionDto,
 	Error,
 	CreateSessionInput
 > {
@@ -66,7 +62,7 @@ export function useCreateSession(): UseMutationResult<
 	});
 }
 export function useUpdateSession(): UseMutationResult<
-	unknown,
+	SessionDto,
 	Error,
 	UpdateSessionInput
 > {
@@ -86,7 +82,11 @@ export function useUpdateSession(): UseMutationResult<
 		},
 	});
 }
-export function useDeleteSession(): UseMutationResult<unknown, Error, string> {
+export function useDeleteSession(): UseMutationResult<
+	MutationSuccessResult,
+	Error,
+	string
+> {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: deleteSession,

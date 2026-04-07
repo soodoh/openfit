@@ -1,5 +1,10 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type {
+	MutationSuccessResult,
+	SetDeleteResult,
+	WorkoutSetDto,
+} from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
 
@@ -28,41 +33,46 @@ type ReorderSetsInput = {
 	setIds: string[];
 };
 // Create set
-async function createSet(input: CreateSetInput): Promise<unknown> {
+async function createSet(input: CreateSetInput): Promise<WorkoutSetDto> {
 	const response = await fetch("/api/sets", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to create set");
+	return fetchJson<WorkoutSetDto>(response, "Failed to create set");
 }
 // Update set
-async function updateSet({ id, ...input }: UpdateSetInput): Promise<unknown> {
+async function updateSet({
+	id,
+	...input
+}: UpdateSetInput): Promise<WorkoutSetDto> {
 	const response = await fetch(`/api/sets/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to update set");
+	return fetchJson<WorkoutSetDto>(response, "Failed to update set");
 }
 // Delete set
-async function deleteSet(id: string): Promise<unknown> {
+async function deleteSet(id: string): Promise<SetDeleteResult> {
 	const response = await fetch(`/api/sets/${id}`, {
 		method: "DELETE",
 	});
-	return fetchJson<unknown>(response, "Failed to delete set");
+	return fetchJson<SetDeleteResult>(response, "Failed to delete set");
 }
 // Reorder sets
-async function reorderSets(input: ReorderSetsInput): Promise<unknown> {
+async function reorderSets(
+	input: ReorderSetsInput,
+): Promise<MutationSuccessResult> {
 	const response = await fetch("/api/sets/reorder", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to reorder sets");
+	return fetchJson<MutationSuccessResult>(response, "Failed to reorder sets");
 }
 export function useCreateSet(): UseMutationResult<
-	unknown,
+	WorkoutSetDto,
 	Error,
 	CreateSetInput
 > {
@@ -78,7 +88,7 @@ export function useCreateSet(): UseMutationResult<
 	});
 }
 export function useUpdateSet(): UseMutationResult<
-	unknown,
+	WorkoutSetDto,
 	Error,
 	UpdateSetInput
 > {
@@ -93,7 +103,11 @@ export function useUpdateSet(): UseMutationResult<
 		},
 	});
 }
-export function useDeleteSet(): UseMutationResult<unknown, Error, string> {
+export function useDeleteSet(): UseMutationResult<
+	SetDeleteResult,
+	Error,
+	string
+> {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: deleteSet,
@@ -106,7 +120,7 @@ export function useDeleteSet(): UseMutationResult<unknown, Error, string> {
 	});
 }
 export function useReorderSets(): UseMutationResult<
-	unknown,
+	MutationSuccessResult,
 	Error,
 	ReorderSetsInput
 > {

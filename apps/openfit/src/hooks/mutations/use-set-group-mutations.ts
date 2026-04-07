@@ -1,5 +1,10 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type {
+	MutationSuccessResult,
+	WorkoutSetGroupDto,
+	WorkoutSetGroupWithSetsDto,
+} from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
 
@@ -31,70 +36,84 @@ type BulkEditInput = {
 	restTime?: number;
 };
 // Create set group
-async function createSetGroup(input: CreateSetGroupInput): Promise<unknown> {
+async function createSetGroup(
+	input: CreateSetGroupInput,
+): Promise<WorkoutSetGroupWithSetsDto> {
 	const response = await fetch("/api/set-groups", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to create set group");
+	return fetchJson<WorkoutSetGroupWithSetsDto>(
+		response,
+		"Failed to create set group",
+	);
 }
 // Update set group
 async function updateSetGroup({
 	id,
 	...input
-}: UpdateSetGroupInput): Promise<unknown> {
+}: UpdateSetGroupInput): Promise<WorkoutSetGroupDto> {
 	const response = await fetch(`/api/set-groups/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to update set group");
+	return fetchJson<WorkoutSetGroupDto>(response, "Failed to update set group");
 }
 // Delete set group
-async function deleteSetGroup(id: string): Promise<unknown> {
+async function deleteSetGroup(id: string): Promise<MutationSuccessResult> {
 	const response = await fetch(`/api/set-groups/${id}`, {
 		method: "DELETE",
 	});
-	return fetchJson<unknown>(response, "Failed to delete set group");
+	return fetchJson<MutationSuccessResult>(
+		response,
+		"Failed to delete set group",
+	);
 }
 // Reorder set groups
 async function reorderSetGroups(
 	input: ReorderSetGroupsInput,
-): Promise<unknown> {
+): Promise<MutationSuccessResult> {
 	const response = await fetch("/api/set-groups/reorder", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to reorder set groups");
+	return fetchJson<MutationSuccessResult>(
+		response,
+		"Failed to reorder set groups",
+	);
 }
 // Replace exercise in set group
 async function replaceExercise({
 	id,
 	exerciseId,
-}: ReplaceExerciseInput): Promise<unknown> {
+}: ReplaceExerciseInput): Promise<MutationSuccessResult> {
 	const response = await fetch(`/api/set-groups/${id}/replace-exercise`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ exerciseId }),
 	});
-	return fetchJson<unknown>(response, "Failed to replace exercise");
+	return fetchJson<MutationSuccessResult>(
+		response,
+		"Failed to replace exercise",
+	);
 }
 // Bulk edit sets in set group
 async function bulkEditSetGroup({
 	id,
 	...input
-}: BulkEditInput): Promise<unknown> {
+}: BulkEditInput): Promise<MutationSuccessResult> {
 	const response = await fetch(`/api/set-groups/${id}/bulk-edit`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to bulk edit");
+	return fetchJson<MutationSuccessResult>(response, "Failed to bulk edit");
 }
 export function useCreateSetGroup(): UseMutationResult<
-	unknown,
+	WorkoutSetGroupWithSetsDto,
 	Error,
 	CreateSetGroupInput
 > {
@@ -110,7 +129,7 @@ export function useCreateSetGroup(): UseMutationResult<
 	});
 }
 export function useUpdateSetGroup(): UseMutationResult<
-	unknown,
+	WorkoutSetGroupDto,
 	Error,
 	UpdateSetGroupInput
 > {
@@ -125,7 +144,11 @@ export function useUpdateSetGroup(): UseMutationResult<
 		},
 	});
 }
-export function useDeleteSetGroup(): UseMutationResult<unknown, Error, string> {
+export function useDeleteSetGroup(): UseMutationResult<
+	MutationSuccessResult,
+	Error,
+	string
+> {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: deleteSetGroup,
@@ -138,7 +161,7 @@ export function useDeleteSetGroup(): UseMutationResult<unknown, Error, string> {
 	});
 }
 export function useReorderSetGroups(): UseMutationResult<
-	unknown,
+	MutationSuccessResult,
 	Error,
 	ReorderSetGroupsInput
 > {
@@ -154,7 +177,7 @@ export function useReorderSetGroups(): UseMutationResult<
 	});
 }
 export function useReplaceExercise(): UseMutationResult<
-	unknown,
+	MutationSuccessResult,
 	Error,
 	ReplaceExerciseInput
 > {
@@ -170,7 +193,7 @@ export function useReplaceExercise(): UseMutationResult<
 	});
 }
 export function useBulkEditSetGroup(): UseMutationResult<
-	unknown,
+	MutationSuccessResult,
 	Error,
 	BulkEditInput
 > {

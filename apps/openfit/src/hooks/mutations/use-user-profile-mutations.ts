@@ -1,5 +1,6 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UserProfileDto } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
 
@@ -12,16 +13,16 @@ type UpdateUserProfileInput = {
 // Update user profile
 async function updateUserProfile(
 	input: UpdateUserProfileInput,
-): Promise<unknown> {
+): Promise<UserProfileDto> {
 	const response = await fetch("/api/user-profile", {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to update profile");
+	return fetchJson<UserProfileDto>(response, "Failed to update profile");
 }
 export function useUpdateUserProfile(): UseMutationResult<
-	unknown,
+	UserProfileDto,
 	Error,
 	UpdateUserProfileInput
 > {
@@ -36,10 +37,14 @@ export function useUpdateUserProfile(): UseMutationResult<
 	});
 }
 // Set default gym
-async function setDefaultGym(gymId: string): Promise<unknown> {
+async function setDefaultGym(gymId: string): Promise<UserProfileDto> {
 	return updateUserProfile({ defaultGymId: gymId });
 }
-export function useSetDefaultGym(): UseMutationResult<unknown, Error, string> {
+export function useSetDefaultGym(): UseMutationResult<
+	UserProfileDto,
+	Error,
+	string
+> {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: setDefaultGym,

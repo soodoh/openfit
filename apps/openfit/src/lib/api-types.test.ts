@@ -1,6 +1,44 @@
 import { describe, expectTypeOf, it } from "vitest";
 import type {
+	useAdminCreateExercise,
+	useAdminDeleteExercise,
+	useAdminUpdateExercise,
+	useCreateLookup,
+	useDeleteLookup,
+	useUpdateLookup,
+	useUpdateUserRole,
+} from "@/hooks/mutations/use-admin-mutations";
+import type {
+	useCreateGym,
+	useDeleteGym,
+	useUpdateGym,
+} from "@/hooks/mutations/use-gym-mutations";
+import type {
+	useCreateSession,
+	useDeleteSession,
+	useUpdateSession,
+} from "@/hooks/mutations/use-session-mutations";
+import type {
+	useBulkEditSetGroup,
+	useCreateSetGroup,
+	useDeleteSetGroup,
+	useReorderSetGroups,
+	useReplaceExercise,
+	useUpdateSetGroup,
+} from "@/hooks/mutations/use-set-group-mutations";
+import type {
+	useCreateSet,
+	useDeleteSet,
+	useReorderSets,
+	useUpdateSet,
+} from "@/hooks/mutations/use-set-mutations";
+import type {
+	useSetDefaultGym,
+	useUpdateUserProfile,
+} from "@/hooks/mutations/use-user-profile-mutations";
+import type {
 	CursorPage,
+	GymDto,
 	LookupItemDto,
 	MutationIdResult,
 	MutationSuccessResult,
@@ -16,6 +54,13 @@ import type {
 	RoutineQueryResult,
 	RoutineRelationDto,
 	RoutineRelationResult,
+	SessionDto,
+	SetDeleteResult,
+	UserProfileBaseDto,
+	UserProfileDto,
+	WorkoutSetDto,
+	WorkoutSetGroupDto,
+	WorkoutSetGroupWithSetsDto,
 } from "./api-types";
 
 describe("api-types", () => {
@@ -103,6 +148,100 @@ describe("api-types", () => {
 			  }
 			| null
 			| undefined
+		>();
+	});
+
+	it("shares explicit mutation response contracts with the remaining hooks", () => {
+		expectTypeOf<GymDto["equipmentIds"]>().toEqualTypeOf<string[]>();
+		expectTypeOf<SessionDto["setGroups"]>().toEqualTypeOf<
+			WorkoutSetGroupWithSetsDto[]
+		>();
+		expectTypeOf<WorkoutSetGroupDto["comment"]>().toEqualTypeOf<
+			string | null
+		>();
+		expectTypeOf<WorkoutSetDto["createdAt"]>().toEqualTypeOf<string>();
+		expectTypeOf<
+			UserProfileDto["defaultGym"]
+		>().toEqualTypeOf<LookupItemDto | null>();
+		expectTypeOf<SetDeleteResult>().toMatchTypeOf<{
+			success: true;
+			setGroupDeleted: boolean;
+		}>();
+
+		expectTypeOf<ReturnType<typeof useUpdateUserRole>["data"]>().toEqualTypeOf<
+			UserProfileBaseDto | undefined
+		>();
+		expectTypeOf<
+			ReturnType<typeof useAdminCreateExercise>["data"]
+		>().toEqualTypeOf<MutationIdResult | undefined>();
+		expectTypeOf<
+			ReturnType<typeof useAdminUpdateExercise>["data"]
+		>().toEqualTypeOf<MutationSuccessResult | undefined>();
+		expectTypeOf<
+			ReturnType<typeof useAdminDeleteExercise>["data"]
+		>().toEqualTypeOf<MutationSuccessResult | undefined>();
+		expectTypeOf<ReturnType<typeof useCreateLookup>["data"]>().toEqualTypeOf<
+			MutationIdResult | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useUpdateLookup>["data"]>().toEqualTypeOf<
+			MutationSuccessResult | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useDeleteLookup>["data"]>().toEqualTypeOf<
+			MutationSuccessResult | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useCreateGym>["data"]>().toEqualTypeOf<
+			GymDto | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useUpdateGym>["data"]>().toEqualTypeOf<
+			GymDto | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useDeleteGym>["data"]>().toEqualTypeOf<
+			MutationSuccessResult | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useCreateSession>["data"]>().toEqualTypeOf<
+			SessionDto | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useUpdateSession>["data"]>().toEqualTypeOf<
+			SessionDto | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useDeleteSession>["data"]>().toEqualTypeOf<
+			MutationSuccessResult | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useCreateSetGroup>["data"]>().toEqualTypeOf<
+			WorkoutSetGroupWithSetsDto | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useUpdateSetGroup>["data"]>().toEqualTypeOf<
+			WorkoutSetGroupDto | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useDeleteSetGroup>["data"]>().toEqualTypeOf<
+			MutationSuccessResult | undefined
+		>();
+		expectTypeOf<
+			ReturnType<typeof useReorderSetGroups>["data"]
+		>().toEqualTypeOf<MutationSuccessResult | undefined>();
+		expectTypeOf<ReturnType<typeof useReplaceExercise>["data"]>().toEqualTypeOf<
+			MutationSuccessResult | undefined
+		>();
+		expectTypeOf<
+			ReturnType<typeof useBulkEditSetGroup>["data"]
+		>().toEqualTypeOf<MutationSuccessResult | undefined>();
+		expectTypeOf<ReturnType<typeof useCreateSet>["data"]>().toEqualTypeOf<
+			WorkoutSetDto | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useUpdateSet>["data"]>().toEqualTypeOf<
+			WorkoutSetDto | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useDeleteSet>["data"]>().toEqualTypeOf<
+			SetDeleteResult | undefined
+		>();
+		expectTypeOf<ReturnType<typeof useReorderSets>["data"]>().toEqualTypeOf<
+			MutationSuccessResult | undefined
+		>();
+		expectTypeOf<
+			ReturnType<typeof useUpdateUserProfile>["data"]
+		>().toEqualTypeOf<UserProfileDto | undefined>();
+		expectTypeOf<ReturnType<typeof useSetDefaultGym>["data"]>().toEqualTypeOf<
+			UserProfileDto | undefined
 		>();
 	});
 });
