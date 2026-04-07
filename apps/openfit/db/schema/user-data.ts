@@ -17,6 +17,20 @@ export const ThemeEnum = {
 } as const;
 export type Theme = (typeof ThemeEnum)[keyof typeof ThemeEnum];
 
+export const gyms = sqliteTable("gyms", {
+	id: text("id").primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+	name: text("name").notNull(),
+	createdAt: integer("created_at", { mode: "timestamp" })
+		.notNull()
+		.$defaultFn(() => new Date()),
+	updatedAt: integer("updated_at", { mode: "timestamp" })
+		.notNull()
+		.$defaultFn(() => new Date()),
+});
+
 export const userProfiles = sqliteTable("user_profiles", {
 	id: text("id").primaryKey(),
 	userId: text("user_id")
@@ -35,21 +49,9 @@ export const userProfiles = sqliteTable("user_profiles", {
 	theme: text("theme", { enum: ["light", "dark", "system"] })
 		.notNull()
 		.default("system"),
-	defaultGymId: text("default_gym_id"),
-	createdAt: integer("created_at", { mode: "timestamp" })
-		.notNull()
-		.$defaultFn(() => new Date()),
-	updatedAt: integer("updated_at", { mode: "timestamp" })
-		.notNull()
-		.$defaultFn(() => new Date()),
-});
-
-export const gyms = sqliteTable("gyms", {
-	id: text("id").primaryKey(),
-	userId: text("user_id")
-		.notNull()
-		.references(() => users.id, { onDelete: "cascade" }),
-	name: text("name").notNull(),
+	defaultGymId: text("default_gym_id").references(() => gyms.id, {
+		onDelete: "set null",
+	}),
 	createdAt: integer("created_at", { mode: "timestamp" })
 		.notNull()
 		.$defaultFn(() => new Date()),

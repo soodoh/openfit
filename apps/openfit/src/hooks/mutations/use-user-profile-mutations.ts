@@ -8,7 +8,7 @@ type UpdateUserProfileInput = {
 	theme?: "light" | "dark" | "system";
 	defaultRepetitionUnitId?: string;
 	defaultWeightUnitId?: string;
-	defaultGymId?: string | undefined;
+	defaultGymId?: string | null;
 };
 // Update user profile
 async function updateUserProfile(

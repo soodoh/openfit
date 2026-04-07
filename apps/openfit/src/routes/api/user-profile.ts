@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { object, string } from "zod";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import {
@@ -8,7 +9,26 @@ import {
 	requireAuth,
 } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
-import { updateUserProfileSchema } from "@/lib/request-schemas";
+
+const nonEmptyString = string().trim().min(1);
+
+const updateUserProfileRouteSchema = object({
+	theme: string()
+		.trim()
+		.refine(
+			(value) => value === "light" || value === "dark" || value === "system",
+		)
+		.optional(),
+	defaultRepetitionUnitId: nonEmptyString.optional(),
+	defaultWeightUnitId: nonEmptyString.optional(),
+	defaultGymId: nonEmptyString.nullable().optional(),
+}).refine(
+	(value) => Object.values(value).some((field) => field !== undefined),
+	{
+		message: "At least one field must be provided",
+	},
+);
+
 // GET /api/user-profile - Get current user's profile
 // PATCH /api/user-profile - Update current user's profile
 export const Route = createFileRoute("/api/user-profile")({
@@ -43,7 +63,10 @@ export const Route = createFileRoute("/api/user-profile")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				try {
-					const body = await parseJsonBody(request, updateUserProfileSchema);
+					const body = await parseJsonBody(
+						request,
+						updateUserProfileRouteSchema,
+					);
 					const {
 						theme,
 						defaultRepetitionUnitId,
@@ -58,6 +81,20 @@ export const Route = createFileRoute("/api/user-profile")({
 							{ error: "Profile not found" },
 							{ status: 404 },
 						);
+					}
+					if (defaultGymId !== undefined && defaultGymId !== null) {
+						const defaultGym = await db.query.gyms.findFirst({
+							where: and(
+								eq(schema.gyms.id, defaultGymId),
+								eq(schema.gyms.userId, session.user.id),
+							),
+						});
+						if (!defaultGym) {
+							return Response.json(
+								{ error: "Default gym not found" },
+								{ status: 400 },
+							);
+						}
 					}
 					await db
 						.update(schema.userProfiles)
