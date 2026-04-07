@@ -12,13 +12,21 @@ import {
 	routinesListQuerySchema,
 } from "@/lib/request-schemas";
 
+function serializeTimestamp(value: Date | string): string {
+	return typeof value === "string" ? value : value.toISOString();
+}
+
 function serializeRoutineDay(
-	routineDay: Omit<RoutineDayDto, "weekdays"> & {
+	routineDay: Omit<RoutineDayDto, "createdAt" | "updatedAt" | "weekdays"> & {
+		createdAt: Date | string;
+		updatedAt: Date | string;
 		weekdays: Array<number | { weekday: number }>;
 	},
 ): RoutineDayDto {
 	return {
 		...routineDay,
+		createdAt: serializeTimestamp(routineDay.createdAt),
+		updatedAt: serializeTimestamp(routineDay.updatedAt),
 		weekdays: routineDay.weekdays.map((weekday) =>
 			typeof weekday === "number" ? weekday : weekday.weekday,
 		),
@@ -26,9 +34,13 @@ function serializeRoutineDay(
 }
 
 function serializeRoutine(
-	routine: Omit<RoutineDto, "routineDays"> & {
+	routine: Omit<RoutineDto, "createdAt" | "updatedAt" | "routineDays"> & {
+		createdAt: Date | string;
+		updatedAt: Date | string;
 		routineDays: Array<
-			Omit<RoutineDayDto, "weekdays"> & {
+			Omit<RoutineDayDto, "createdAt" | "updatedAt" | "weekdays"> & {
+				createdAt: Date | string;
+				updatedAt: Date | string;
 				weekdays: Array<number | { weekday: number }>;
 			}
 		>;
@@ -36,6 +48,8 @@ function serializeRoutine(
 ): RoutineDto {
 	return {
 		...routine,
+		createdAt: serializeTimestamp(routine.createdAt),
+		updatedAt: serializeTimestamp(routine.updatedAt),
 		routineDays: routine.routineDays.map(serializeRoutineDay),
 	};
 }

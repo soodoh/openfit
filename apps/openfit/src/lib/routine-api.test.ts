@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
 	findFirstRoutine: vi.fn(),
 	findFirstRoutineDay: vi.fn(),
 	findManyRoutineDays: vi.fn(),
+	findManyWorkoutSetGroups: vi.fn(),
+	findManyWorkoutSets: vi.fn(),
 	deleteRoutineWhere: vi.fn(),
 	deleteRoutineDayWhere: vi.fn(),
 	schema: {
@@ -17,6 +19,14 @@ const mocks = vi.hoisted(() => ({
 			id: "routine_days.id",
 			userId: "routine_days.user_id",
 			description: "routine_days.description",
+		},
+		workoutSetGroups: {
+			routineDayId: "workout_set_groups.routine_day_id",
+			order: "workout_set_groups.order",
+		},
+		workoutSets: {
+			setGroupId: "workout_sets.set_group_id",
+			order: "workout_sets.order",
 		},
 	},
 }));
@@ -30,6 +40,12 @@ vi.mock("@/db", () => ({
 			routineDays: {
 				findMany: mocks.findManyRoutineDays,
 				findFirst: mocks.findFirstRoutineDay,
+			},
+			workoutSetGroups: {
+				findMany: mocks.findManyWorkoutSetGroups,
+			},
+			workoutSets: {
+				findMany: mocks.findManyWorkoutSets,
 			},
 		},
 		delete: vi.fn((table) => {
@@ -75,6 +91,10 @@ const routineDetailHandlers = RoutineDetailRoute.options.server?.handlers as {
 
 const routineDayDetailHandlers = RoutineDayDetailRoute.options.server
 	?.handlers as {
+	GET: (args: {
+		request: Request;
+		params: Record<string, string>;
+	}) => Promise<Response>;
 	DELETE: (args: {
 		request: Request;
 		params: Record<string, string>;
@@ -90,6 +110,8 @@ describe("routine api contracts", () => {
 		vi.clearAllMocks();
 		mocks.requireAuth.mockResolvedValue({ user: { id: "user_123" } });
 		mocks.getOptionalSession.mockResolvedValue({ user: { id: "user_123" } });
+		mocks.findManyWorkoutSetGroups.mockResolvedValue([]);
+		mocks.findManyWorkoutSets.mockResolvedValue([]);
 	});
 
 	it("serializes routine-day weekdays to plain numbers in search responses", async () => {
@@ -159,13 +181,53 @@ describe("routine api contracts", () => {
 
 		await expect(response.json()).resolves.toEqual(
 			expect.objectContaining({
+				createdAt: "2026-04-01T00:00:00.000Z",
+				updatedAt: "2026-04-02T00:00:00.000Z",
 				id: "routine_123",
 				routineDays: [
 					expect.objectContaining({
+						createdAt: "2026-04-01T00:00:00.000Z",
+						updatedAt: "2026-04-02T00:00:00.000Z",
 						id: "day_123",
 						weekdays: [2, 4],
 					}),
 				],
+			}),
+		);
+	});
+
+	it("serializes routine-day detail timestamps as strings", async () => {
+		mocks.findFirstRoutineDay.mockResolvedValue({
+			id: "day_123",
+			routineId: "routine_123",
+			userId: "user_123",
+			description: "Push",
+			createdAt: new Date("2026-04-01T00:00:00.000Z"),
+			updatedAt: new Date("2026-04-02T00:00:00.000Z"),
+			routine: {
+				id: "routine_123",
+				userId: "user_123",
+				name: "Upper",
+				description: null,
+				createdAt: new Date("2026-03-01T00:00:00.000Z"),
+				updatedAt: new Date("2026-03-02T00:00:00.000Z"),
+			},
+			weekdays: [{ id: "weekday_1", routineDayId: "day_123", weekday: 1 }],
+		});
+
+		const response = await routineDayDetailHandlers.GET({
+			request: new Request("http://localhost/api/routine-days/day_123"),
+			params: { id: "day_123" },
+		});
+
+		await expect(response.json()).resolves.toEqual(
+			expect.objectContaining({
+				createdAt: "2026-04-01T00:00:00.000Z",
+				updatedAt: "2026-04-02T00:00:00.000Z",
+				routine: expect.objectContaining({
+					createdAt: "2026-03-01T00:00:00.000Z",
+					updatedAt: "2026-03-02T00:00:00.000Z",
+				}),
 			}),
 		);
 	});

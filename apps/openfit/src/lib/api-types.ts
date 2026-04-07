@@ -24,8 +24,8 @@ export type RoutineDto = {
 	userId: string;
 	name: string;
 	description: string | null;
-	createdAt: Date | string;
-	updatedAt: Date | string;
+	createdAt: string;
+	updatedAt: string;
 	routineDays: RoutineDayDto[];
 };
 
@@ -33,12 +33,12 @@ export type RoutineQueryDto = Omit<
 	RoutineDto,
 	"createdAt" | "updatedAt" | "routineDays"
 > & {
-	createdAt: Date;
-	updatedAt: Date;
+	createdAt: string;
+	updatedAt: string;
 	routineDays: Array<
 		Omit<RoutineDayDto, "createdAt" | "updatedAt"> & {
-			createdAt: Date;
-			updatedAt: Date;
+			createdAt: string;
+			updatedAt: string;
 		}
 	>;
 };
@@ -48,8 +48,16 @@ export type RoutineRelationDto = {
 	userId: string;
 	name: string;
 	description: string | null;
-	createdAt: Date | string;
-	updatedAt: Date | string;
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type RoutineRelationResult = Omit<
+	RoutineRelationDto,
+	"createdAt" | "updatedAt"
+> & {
+	createdAt: Date;
+	updatedAt: Date;
 };
 
 export type WorkoutSetDto = {
@@ -65,8 +73,8 @@ export type WorkoutSetDto = {
 	weightUnitId: string;
 	restTime: number;
 	completed: boolean;
-	createdAt: Date | string;
-	updatedAt: Date | string;
+	createdAt: string;
+	updatedAt: string;
 	exercise: {
 		id: string;
 		name: string;
@@ -74,6 +82,22 @@ export type WorkoutSetDto = {
 	} | null;
 	repetitionUnit: LookupItemDto | null;
 	weightUnit: LookupItemDto | null;
+};
+
+export type WorkoutSetResult = Omit<
+	WorkoutSetDto,
+	"createdAt" | "updatedAt" | "exercise"
+> & {
+	createdAt: Date;
+	updatedAt: Date;
+	exercise:
+		| {
+				id: string;
+				name: string;
+				imageUrl: string | null | undefined;
+		  }
+		| null
+		| undefined;
 };
 
 export type RoutineDaySetGroupDto = {
@@ -84,9 +108,18 @@ export type RoutineDaySetGroupDto = {
 	type: string;
 	order: number;
 	comment: string | null;
-	createdAt: Date | string;
-	updatedAt: Date | string;
+	createdAt: string;
+	updatedAt: string;
 	sets: WorkoutSetDto[];
+};
+
+export type RoutineDaySetGroupResult = Omit<
+	RoutineDaySetGroupDto,
+	"createdAt" | "updatedAt" | "sets"
+> & {
+	createdAt: Date;
+	updatedAt: Date;
+	sets: WorkoutSetResult[];
 };
 
 export type RoutineDayDetailSetGroupDto = Omit<
@@ -112,22 +145,69 @@ export type RoutineDayDto = {
 	routineId: string;
 	userId: string;
 	description: string;
-	createdAt: Date | string;
-	updatedAt: Date | string;
+	createdAt: string;
+	updatedAt: string;
 	weekdays: number[];
 	routine?: RoutineRelationDto | null;
 	setGroups?: RoutineDaySetGroupDto[];
+};
+
+export type RoutineDayResult = Omit<
+	RoutineDayDto,
+	"createdAt" | "updatedAt" | "routine" | "setGroups"
+> & {
+	createdAt: Date;
+	updatedAt: Date;
+	routine?: RoutineRelationResult | null;
+	setGroups?: RoutineDaySetGroupResult[];
 };
 
 export type RoutineDaySearchDto = Omit<
 	RoutineDayDto,
 	"createdAt" | "updatedAt" | "routine"
 > & {
+	createdAt: string;
+	updatedAt: string;
+	routine: RoutineRelationDto | null | undefined;
+};
+
+export type RoutineDaySearchResult = Omit<
+	RoutineDaySearchDto,
+	"createdAt" | "updatedAt" | "routine"
+> & {
 	createdAt: Date;
 	updatedAt: Date;
-	routine: RoutineRelationDto | null | undefined;
+	routine: RoutineRelationResult | null | undefined;
 };
 
 export type RoutineDayDetailDto = Omit<RoutineDaySearchDto, "setGroups"> & {
 	setGroups: RoutineDayDetailSetGroupDto[];
+};
+
+export type RoutineDayDetailResult = Omit<
+	RoutineDayDetailDto,
+	"createdAt" | "updatedAt" | "routine" | "setGroups"
+> & {
+	createdAt: Date;
+	updatedAt: Date;
+	routine: RoutineRelationResult | null | undefined;
+	setGroups: RoutineDaySetGroupResult[];
+};
+
+export type RoutineResult = Omit<
+	RoutineDto,
+	"createdAt" | "updatedAt" | "routineDays"
+> & {
+	createdAt: Date;
+	updatedAt: Date;
+	routineDays: RoutineDayResult[];
+};
+
+export type RoutineQueryResult = Omit<
+	RoutineQueryDto,
+	"createdAt" | "updatedAt" | "routineDays"
+> & {
+	createdAt: Date;
+	updatedAt: Date;
+	routineDays: RoutineDayResult[];
 };

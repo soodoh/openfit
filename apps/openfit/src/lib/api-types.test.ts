@@ -5,12 +5,17 @@ import type {
 	MutationIdResult,
 	MutationSuccessResult,
 	RoutineDayDetailDto,
+	RoutineDayDetailResult,
 	RoutineDayDto,
+	RoutineDayResult,
 	RoutineDaySearchDto,
+	RoutineDaySearchResult,
 	RoutineDaySetGroupDto,
 	RoutineDto,
 	RoutineQueryDto,
+	RoutineQueryResult,
 	RoutineRelationDto,
+	RoutineRelationResult,
 } from "./api-types";
 
 describe("api-types", () => {
@@ -28,19 +33,26 @@ describe("api-types", () => {
 	});
 
 	it("models routines as API DTOs instead of DB records", () => {
+		expectTypeOf<RoutineDto["createdAt"]>().toEqualTypeOf<string>();
 		expectTypeOf<RoutineDto["description"]>().toEqualTypeOf<string | null>();
 		expectTypeOf<RoutineDto["routineDays"]>().toEqualTypeOf<RoutineDayDto[]>();
-		expectTypeOf<RoutineQueryDto["createdAt"]>().toEqualTypeOf<Date>();
+		expectTypeOf<RoutineQueryDto["createdAt"]>().toEqualTypeOf<string>();
 		expectTypeOf<
 			RoutineQueryDto["routineDays"][number]["updatedAt"]
+		>().toEqualTypeOf<string>();
+		expectTypeOf<RoutineQueryResult["createdAt"]>().toEqualTypeOf<Date>();
+		expectTypeOf<
+			RoutineQueryResult["routineDays"][number]["updatedAt"]
 		>().toEqualTypeOf<Date>();
 		expectTypeOf<RoutineRelationDto["description"]>().toEqualTypeOf<
 			string | null
 		>();
+		expectTypeOf<RoutineRelationResult["createdAt"]>().toEqualTypeOf<Date>();
 	});
 
 	it("models routine days as explicit transport DTOs", () => {
 		expectTypeOf<RoutineDayDto["description"]>().toEqualTypeOf<string>();
+		expectTypeOf<RoutineDayDto["createdAt"]>().toEqualTypeOf<string>();
 		expectTypeOf<RoutineDayDto["routine"]>().toEqualTypeOf<
 			RoutineRelationDto | null | undefined
 		>();
@@ -69,13 +81,18 @@ describe("api-types", () => {
 		expectTypeOf<
 			RoutineDaySetGroupDto["sets"][number]["weightUnit"]
 		>().toEqualTypeOf<LookupItemDto | null>();
-		expectTypeOf<RoutineDaySearchDto["createdAt"]>().toEqualTypeOf<Date>();
+		expectTypeOf<RoutineDaySearchDto["createdAt"]>().toEqualTypeOf<string>();
 		expectTypeOf<RoutineDaySearchDto["routine"]>().toEqualTypeOf<
 			RoutineRelationDto | null | undefined
 		>();
+		expectTypeOf<RoutineDaySearchResult["createdAt"]>().toEqualTypeOf<Date>();
+		expectTypeOf<RoutineDayResult["updatedAt"]>().toEqualTypeOf<Date>();
 		expectTypeOf<RoutineDayDetailDto["setGroups"]>().toEqualTypeOf<
 			RoutineDayDetailDto["setGroups"]
 		>();
+		expectTypeOf<
+			RoutineDayDetailResult["setGroups"][number]["createdAt"]
+		>().toEqualTypeOf<Date>();
 		expectTypeOf<
 			RoutineDayDetailDto["setGroups"][number]["sets"][number]["exercise"]
 		>().toEqualTypeOf<

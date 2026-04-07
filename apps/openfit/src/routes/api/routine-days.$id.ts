@@ -3,19 +3,50 @@ import { asc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
-import type { MutationSuccessResult, RoutineDayDto } from "@/lib/api-types";
+import type {
+	MutationSuccessResult,
+	RoutineDayDetailDto,
+	RoutineDayDto,
+} from "@/lib/api-types";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { getFirstExerciseImageUrl } from "@/lib/data-loaders";
 import { parseJsonBody } from "@/lib/request-helpers";
 import { updateRoutineDaySchema } from "@/lib/request-schemas";
 
+function serializeTimestamp(value: Date | string): string {
+	return typeof value === "string" ? value : value.toISOString();
+}
+
 function serializeRoutineDay(
-	routineDay: Omit<RoutineDayDto, "weekdays"> & {
+	routineDay: Omit<
+		RoutineDayDto,
+		"createdAt" | "updatedAt" | "weekdays" | "routine"
+	> & {
+		createdAt: Date | string;
+		updatedAt: Date | string;
+		routine?:
+			| (Omit<
+					NonNullable<RoutineDayDto["routine"]>,
+					"createdAt" | "updatedAt"
+			  > & {
+					createdAt: Date | string;
+					updatedAt: Date | string;
+			  })
+			| null;
 		weekdays: Array<number | { weekday: number }>;
 	},
 ): RoutineDayDto {
 	return {
 		...routineDay,
+		createdAt: serializeTimestamp(routineDay.createdAt),
+		updatedAt: serializeTimestamp(routineDay.updatedAt),
+		routine: routineDay.routine
+			? {
+					...routineDay.routine,
+					createdAt: serializeTimestamp(routineDay.routine.createdAt),
+					updatedAt: serializeTimestamp(routineDay.routine.updatedAt),
+				}
+			: routineDay.routine,
 		weekdays: routineDay.weekdays.map((weekday) =>
 			typeof weekday === "number" ? weekday : weekday.weekday,
 		),
@@ -82,20 +113,29 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 								const imageUrl = set.exercise
 									? await getFirstExerciseImageUrl(set.exercise.id)
 									: null;
-								return Object.assign(set, {
+								return {
+									...set,
+									createdAt: serializeTimestamp(set.createdAt),
+									updatedAt: serializeTimestamp(set.updatedAt),
 									exercise: set.exercise ? { ...set.exercise, imageUrl } : null,
-								});
+								};
 							}),
 						);
-						return Object.assign(group, {
+						return {
+							...group,
+							createdAt: serializeTimestamp(group.createdAt),
+							updatedAt: serializeTimestamp(group.updatedAt),
 							sets: setsWithImages,
-						});
+						};
 					}),
 				);
-				return Response.json({
-					...serializeRoutineDay(routineDay),
+				const serializedRoutineDay = serializeRoutineDay(routineDay);
+				const payload = {
+					...serializedRoutineDay,
+					routine: serializedRoutineDay.routine ?? null,
 					setGroups: setGroupsWithSets,
-				});
+				} satisfies RoutineDayDetailDto;
+				return Response.json(payload);
 			},
 			// PATCH /api/routine-days/[id] - Update routine day
 			PATCH: async ({
