@@ -56,7 +56,7 @@ export type WorkoutSetDto = {
 	exercise: {
 		id: string;
 		name: string;
-		imageUrl: string | null;
+		imageUrl?: string | null;
 	} | null;
 	repetitionUnit: LookupItemDto | null;
 	weightUnit: LookupItemDto | null;

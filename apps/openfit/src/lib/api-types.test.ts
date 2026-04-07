@@ -54,7 +54,7 @@ describe("api-types", () => {
 		>().toEqualTypeOf<{
 			id: string;
 			name: string;
-			imageUrl: string | null;
+			imageUrl?: string | null;
 		} | null>();
 		expectTypeOf<
 			RoutineDaySetGroupDto["sets"][number]["repetitionUnit"]
