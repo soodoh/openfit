@@ -46,11 +46,14 @@ import ExerciseDetailRoute from "@/routes/api/exercises.$id";
 
 describe("public exercise routes", () => {
 	it("exposes GET-only handlers", () => {
-		const exercisesHandlers = ExercisesRoute.options.server?.handlers as
-			| Record<string, unknown>
-			| undefined;
-		const exerciseDetailHandlers = ExerciseDetailRoute.options.server
-			?.handlers as Record<string, unknown> | undefined;
+		const exercisesHandlers =
+			(ExercisesRoute.options.server?.handlers as Record<string, unknown>) ??
+			{};
+		const exerciseDetailHandlers =
+			(ExerciseDetailRoute.options.server?.handlers as Record<
+				string,
+				unknown
+			>) ?? {};
 
 		expect(exercisesHandlers).toBeDefined();
 		expect(exercisesHandlers?.GET).toBeTypeOf("function");
