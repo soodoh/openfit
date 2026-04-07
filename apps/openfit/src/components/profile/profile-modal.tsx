@@ -6,8 +6,7 @@ import {
 	Settings,
 	X,
 } from "lucide-react";
-import { useTheme } from "next-themes";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { DeleteGymModal } from "@/components/gyms/delete-gym-modal";
 import { EquipmentSelector } from "@/components/gyms/equipment-selector";
 import { GymCard } from "@/components/gyms/gym-card";
@@ -30,47 +29,17 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { type Theme, ThemeEnum } from "@/db/schema/user-data";
-import {
-	useCreateGym,
-	useGyms,
-	useUnits,
-	useUpdateGym,
-	useUpdateUserProfile,
-	useUserProfile,
-} from "@/hooks";
-import type { Gym } from "@/lib/types";
+import { type Tab, useProfileSettingsForm } from "./use-profile-settings-form";
 
-type Tab = "settings" | "equipment";
 const TAB_ICONS = {
 	settings: Settings,
 	equipment: Dumbbell,
 } as const;
-const TAB_VALUES: readonly Tab[] = ["settings", "equipment"];
 const THEME_OPTIONS = [
 	{ value: "light", label: "Light" },
 	{ value: "dark", label: "Dark" },
 	{ value: "system", label: "System" },
 ];
-
-function isTab(value: string): value is Tab {
-	return TAB_VALUES.some((tab) => tab === value);
-}
-
-function isTheme(value: string | undefined): value is Theme {
-	return (
-		value === ThemeEnum.light ||
-		value === ThemeEnum.dark ||
-		value === ThemeEnum.system
-	);
-}
-
-function getSettingsLoading(
-	profileLoading: boolean,
-	unitsLoading: boolean,
-): boolean {
-	return profileLoading || unitsLoading;
-}
 export const ProfileModal = ({
 	open,
 	onClose,
@@ -78,128 +47,44 @@ export const ProfileModal = ({
 	open: boolean;
 	onClose: () => void;
 }): ReactNode => {
-	const { data: profile, isLoading: profileLoading } = useUserProfile();
-	const { data: gymsData, isLoading: gymsLoading } = useGyms();
-	const { data: units, isLoading: unitsLoading } = useUnits();
-	const updateProfileMutation = useUpdateUserProfile();
-	const createGymMutation = useCreateGym();
-	const updateGymMutation = useUpdateGym();
-	const { setTheme } = useTheme();
-	const [activeTab, setActiveTab] = useState<Tab>("settings");
+	const {
+		activeTab,
+		defaultRepUnitId,
+		defaultWeightUnitId,
+		editingGym,
+		error,
+		gymError,
+		gymName,
+		gymSubmitLabel,
+		gymToDelete,
+		gymsData,
+		handleEditGym,
+		handleOpenAddGym,
+		handleSubmitGym,
+		handleSubmitSettings,
+		handleTabChange,
+		handleThemeChange,
+		isAddingGym,
+		isGymPending,
+		isGymsLoading,
+		isLoading,
+		isPending,
+		profile,
+		resetGymForm,
+		selectedEquipmentIds,
+		selectedTheme,
+		setDefaultRepUnitId,
+		setDefaultWeightUnitId,
+		setGymName,
+		setGymToDelete,
+		setSelectedEquipmentIds,
+		showGymList,
+		units,
+	} = useProfileSettingsForm({
+		open,
+		onClose,
+	});
 	const ActiveTabIcon = TAB_ICONS[activeTab];
-	const [defaultRepUnitId, setDefaultRepUnitId] = useState<string>("");
-	const [defaultWeightUnitId, setDefaultWeightUnitId] = useState<string>("");
-	const [selectedTheme, setSelectedTheme] = useState<Theme>("system");
-	const [isPending, setIsPending] = useState(false);
-	const [error, setError] = useState<string | undefined>(undefined);
-	// Gym form state
-	const [isAddingGym, setIsAddingGym] = useState(false);
-	const [editingGym, setEditingGym] = useState<Gym | undefined>(undefined);
-	const [gymName, setGymName] = useState("");
-	const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>(
-		[],
-	);
-	const [gymError, setGymError] = useState<string | undefined>(undefined);
-	const [isGymPending, setIsGymPending] = useState(false);
-	// Delete modal state
-	const [gymToDelete, setGymToDelete] = useState<Gym | undefined>(undefined);
-	const resetGymForm = useCallback(() => {
-		setIsAddingGym(false);
-		setEditingGym(undefined);
-		setGymName("");
-		setSelectedEquipmentIds([]);
-		setGymError(undefined);
-	}, []);
-	// Reset form when modal opens or profile data changes
-	useEffect(() => {
-		if (open && profile && units) {
-			const repUnitId =
-				profile.defaultRepetitionUnitId ??
-				units.repetitionUnits.find((u) => u.name === "Repetitions")?.id ??
-				units.repetitionUnits[0]?.id ??
-				"";
-			const weightUnitId =
-				profile.defaultWeightUnitId ??
-				units.weightUnits.find((u) => u.name === "lb")?.id ??
-				units.weightUnits[0]?.id ??
-				"";
-			const theme = isTheme(profile.theme) ? profile.theme : ThemeEnum.system;
-			setDefaultRepUnitId(repUnitId);
-			setDefaultWeightUnitId(weightUnitId);
-			setSelectedTheme(theme);
-			setError(undefined);
-			setActiveTab("settings");
-			resetGymForm();
-		}
-	}, [open, profile, units, resetGymForm]);
-	const handleEditGym = (gym: Gym) => {
-		setEditingGym(gym);
-		setGymName(gym.name);
-		setSelectedEquipmentIds(gym.equipmentIds || []);
-		setIsAddingGym(true);
-	};
-	const handleSubmitSettings = async (
-		event: React.SubmitEvent<HTMLFormElement>,
-	) => {
-		event.preventDefault();
-		if (!defaultRepUnitId || !defaultWeightUnitId) {
-			setError("Please select both units");
-			return;
-		}
-		setIsPending(true);
-		setError(undefined);
-		try {
-			await updateProfileMutation.mutateAsync({
-				defaultRepetitionUnitId: defaultRepUnitId,
-				defaultWeightUnitId: defaultWeightUnitId,
-				theme: selectedTheme,
-			});
-			setTheme(selectedTheme);
-			onClose();
-		} catch {
-			setError("Failed to save profile settings");
-		} finally {
-			setIsPending(false);
-		}
-	};
-	const handleSubmitGym = async (event: React.SubmitEvent<HTMLFormElement>) => {
-		event.preventDefault();
-		setGymError(undefined);
-		if (!gymName.trim()) {
-			setGymError("Gym name is required");
-			return;
-		}
-		if (selectedEquipmentIds.length === 0) {
-			setGymError("Select at least one piece of equipment");
-			return;
-		}
-		setIsGymPending(true);
-		try {
-			await (editingGym
-				? updateGymMutation.mutateAsync({
-						id: editingGym.id,
-						name: gymName.trim(),
-						equipmentIds: selectedEquipmentIds,
-					})
-				: createGymMutation.mutateAsync({
-						name: gymName.trim(),
-						equipmentIds: selectedEquipmentIds,
-					}));
-			resetGymForm();
-		} catch (caughtError) {
-			setGymError(
-				caughtError instanceof Error
-					? caughtError.message
-					: `Failed to ${editingGym ? "update" : "create"} gym`,
-			);
-		} finally {
-			setIsGymPending(false);
-		}
-	};
-	const isLoading = getSettingsLoading(profileLoading, unitsLoading);
-	const isGymsLoading = gymsLoading;
-	const gymSubmitLabel = editingGym ? "Save Changes" : "Add Gym";
-	const showGymList = !isGymsLoading && !isAddingGym;
 	return (
 		<Dialog open={open} onOpenChange={() => onClose()}>
 			<DialogContent className="sm:max-w-[520px] p-0 overflow-hidden max-h-[85vh] flex flex-col">
@@ -221,13 +106,7 @@ export const ProfileModal = ({
 				{/* Tabs */}
 				<Tabs
 					value={activeTab}
-					onValueChange={(value) => {
-						if (!isTab(value)) {
-							return;
-						}
-						setActiveTab(value);
-						resetGymForm();
-					}}
+					onValueChange={handleTabChange}
 					className="flex-1 flex flex-col min-h-0"
 				>
 					<TabsList className="ml-6 w-fit shrink-0">
@@ -323,11 +202,7 @@ export const ProfileModal = ({
 											</p>
 											<Select
 												value={selectedTheme}
-												onValueChange={(value) => {
-													if (isTheme(value)) {
-														setSelectedTheme(value);
-													}
-												}}
+												onValueChange={handleThemeChange}
 											>
 												<SelectTrigger id="theme" className="h-11">
 													<SelectValue placeholder="Select theme" />
@@ -479,7 +354,7 @@ export const ProfileModal = ({
 													variant="outline"
 													size="sm"
 													className="w-full mt-2"
-													onClick={() => setIsAddingGym(true)}
+													onClick={handleOpenAddGym}
 												>
 													<Plus className="h-4 w-4 mr-1" />
 													Add Gym
@@ -503,7 +378,7 @@ export const ProfileModal = ({
 													type="button"
 													variant="outline"
 													size="sm"
-													onClick={() => setIsAddingGym(true)}
+													onClick={handleOpenAddGym}
 												>
 													<Plus className="h-4 w-4 mr-1" />
 													Add Your First Gym
