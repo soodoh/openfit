@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 
@@ -12,17 +12,42 @@ export async function getFirstExerciseImageUrl(
 	return image?.path ?? undefined;
 }
 
+export async function getFirstExerciseImageUrls(
+	exerciseIds: string[],
+): Promise<Map<string, string>> {
+	const uniqueExerciseIds = Array.from(new Set(exerciseIds));
+	if (uniqueExerciseIds.length === 0) {
+		return new Map();
+	}
+
+	const images = await db.query.exerciseImages.findMany({
+		where: inArray(schema.exerciseImages.exerciseId, uniqueExerciseIds),
+		orderBy: asc(schema.exerciseImages.order),
+	});
+	const firstImageUrls = new Map<string, string>();
+
+	for (const image of images) {
+		if (!firstImageUrls.has(image.exerciseId)) {
+			firstImageUrls.set(image.exerciseId, image.path);
+		}
+	}
+
+	return firstImageUrls;
+}
+
 export async function withFirstExerciseImageUrls<
 	T extends {
 		id: string;
 	},
 >(items: T[]): Promise<Array<T & { imageUrl: string | undefined }>> {
-	return Promise.all(
-		items.map(async (item) => ({
-			...item,
-			imageUrl: await getFirstExerciseImageUrl(item.id),
-		})),
+	const imageUrls = await getFirstExerciseImageUrls(
+		items.map((item) => item.id),
 	);
+
+	return items.map((item) => ({
+		...item,
+		imageUrl: imageUrls.get(item.id),
+	}));
 }
 
 export async function getRoutineDaysWithWeekdays(routineId: string) {
@@ -39,6 +64,96 @@ export async function getRoutineDaysWithWeekdays(routineId: string) {
 	);
 }
 
+async function hydrateSessionsWithData<
+	T extends {
+		id: string;
+	},
+>(sessions: T[]) {
+	const uniqueSessionIds = Array.from(
+		new Set(sessions.map((session) => session.id)),
+	);
+	if (uniqueSessionIds.length === 0) {
+		return [];
+	}
+
+	const setGroups = await db.query.workoutSetGroups.findMany({
+		where: inArray(schema.workoutSetGroups.sessionId, uniqueSessionIds),
+		orderBy: asc(schema.workoutSetGroups.order),
+	});
+	const setGroupIds = setGroups.map((group) => group.id);
+	const sets =
+		setGroupIds.length > 0
+			? await db.query.workoutSets.findMany({
+					where: inArray(schema.workoutSets.setGroupId, setGroupIds),
+					orderBy: asc(schema.workoutSets.order),
+					with: {
+						exercise: true,
+						repetitionUnit: true,
+						weightUnit: true,
+					},
+				})
+			: [];
+	const exerciseImageUrls = await getFirstExerciseImageUrls(
+		sets.flatMap((set) => (set.exercise ? [set.exercise.id] : [])),
+	);
+	const setsByGroupId = new Map<string, typeof sets>();
+
+	for (const set of sets) {
+		const existingSets = setsByGroupId.get(set.setGroupId) ?? [];
+		existingSets.push(
+			Object.assign(set, {
+				exercise: set.exercise
+					? {
+							...set.exercise,
+							imageUrl: exerciseImageUrls.get(set.exercise.id) ?? null,
+						}
+					: null,
+			}),
+		);
+		setsByGroupId.set(set.setGroupId, existingSets);
+	}
+
+	const setGroupsBySessionId = new Map<
+		string,
+		Array<(typeof setGroups)[number]>
+	>();
+
+	for (const group of setGroups) {
+		const existingGroups =
+			setGroupsBySessionId.get(group.sessionId ?? "") ?? [];
+		existingGroups.push(
+			Object.assign(group, {
+				sets: setsByGroupId.get(group.id) ?? [],
+			}),
+		);
+		if (group.sessionId) {
+			setGroupsBySessionId.set(group.sessionId, existingGroups);
+		}
+	}
+
+	return sessions.map((session) => ({
+		...session,
+		setGroups: setGroupsBySessionId.get(session.id) ?? [],
+	}));
+}
+
+export async function getSessionsWithData(sessionIds: string[]) {
+	const uniqueSessionIds = Array.from(new Set(sessionIds));
+	if (uniqueSessionIds.length === 0) {
+		return [];
+	}
+
+	const sessions = await db.query.workoutSessions.findMany({
+		where: inArray(schema.workoutSessions.id, uniqueSessionIds),
+	});
+	const hydratedSessions = await hydrateSessionsWithData(sessions);
+	const sessionsById = new Map(
+		hydratedSessions.map((session) => [session.id, session]),
+	);
+
+	return sessionIds.map((sessionId) => sessionsById.get(sessionId) ?? null);
+}
+
 export async function getSessionWithData(sessionId: string) {
 	const session = await db.query.workoutSessions.findFirst({
 		where: eq(schema.workoutSessions.id, sessionId),
@@ -47,39 +162,6 @@ export async function getSessionWithData(sessionId: string) {
 		return null;
 	}
 
-	const setGroups = await db.query.workoutSetGroups.findMany({
-		where: eq(schema.workoutSetGroups.sessionId, sessionId),
-		orderBy: asc(schema.workoutSetGroups.order),
-	});
-	const setGroupsWithSets = await Promise.all(
-		setGroups.map(async (group) => {
-			const sets = await db.query.workoutSets.findMany({
-				where: eq(schema.workoutSets.setGroupId, group.id),
-				orderBy: asc(schema.workoutSets.order),
-				with: {
-					exercise: true,
-					repetitionUnit: true,
-					weightUnit: true,
-				},
-			});
-			const setsWithImages = await Promise.all(
-				sets.map(async (set) => {
-					const imageUrl = set.exercise
-						? ((await getFirstExerciseImageUrl(set.exercise.id)) ?? null)
-						: null;
-					return Object.assign(set, {
-						exercise: set.exercise ? { ...set.exercise, imageUrl } : null,
-					});
-				}),
-			);
-			return Object.assign(group, {
-				sets: setsWithImages,
-			});
-		}),
-	);
-
-	return {
-		...session,
-		setGroups: setGroupsWithSets,
-	};
+	const [sessionWithData] = await hydrateSessionsWithData([session]);
+	return sessionWithData ?? null;
 }

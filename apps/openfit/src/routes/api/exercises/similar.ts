@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { asc, like } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
-import { getFirstExerciseImageUrl } from "@/lib/data-loaders";
+import { withFirstExerciseImageUrls } from "@/lib/data-loaders";
 import { parseSearchParams } from "@/lib/request-helpers";
 import { similarExercisesQuerySchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/exercises/similar")({
@@ -56,18 +56,14 @@ export const Route = createFileRoute("/api/exercises/similar")({
 					}
 					// Limit results
 					exercises = exercises.slice(0, limit);
-					// Add image URLs
-					const results = [];
-					for (const exercise of exercises) {
-						const imageUrl = await getFirstExerciseImageUrl(exercise.id);
-						results.push({
-							...exercise,
-							imageUrl,
-							primaryMuscleIds: exercise.primaryMuscles.map(
-								(pm) => pm.muscleGroupId,
-							),
-						});
-					}
+					const exercisesWithImages =
+						await withFirstExerciseImageUrls(exercises);
+					const results = exercisesWithImages.map((exercise) => ({
+						...exercise,
+						primaryMuscleIds: exercise.primaryMuscles.map(
+							(pm) => pm.muscleGroupId,
+						),
+					}));
 					return Response.json(results);
 				} catch (error) {
 					if (error instanceof Response) {
