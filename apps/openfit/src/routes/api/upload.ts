@@ -3,15 +3,17 @@ import path from "node:path";
 import { createFileRoute } from "@tanstack/react-router";
 import { nanoid } from "nanoid";
 import { requireAdmin } from "@/lib/auth-middleware";
+import {
+	buildUploadFilename,
+	resolveUploadPath,
+	UploadValidationError,
+	validateUploadFile,
+} from "@/lib/uploads";
 
 const UPLOAD_DIR = path.join(process.cwd(), "data", "uploads");
 // Ensure upload directory exists
 async function ensureUploadDir() {
-	try {
-		await fs.mkdir(UPLOAD_DIR, { recursive: true });
-	} catch {
-		// Directory already exists
-	}
+	await fs.mkdir(UPLOAD_DIR, { recursive: true });
 }
 // POST /api/upload - Upload a file
 // DELETE /api/upload - Delete a file
@@ -31,30 +33,22 @@ export const Route = createFileRoute("/api/upload")({
 				try {
 					await ensureUploadDir();
 					const formData = await request.formData();
-					const file = formData.get("file") as File | undefined;
-					if (!file) {
+					const file = formData.get("file");
+					if (!(file instanceof File)) {
 						return Response.json(
 							{ error: "No file provided" },
 							{ status: 400 },
 						);
 					}
-					// Validate file type (SVG excluded to prevent stored XSS)
-					const allowedTypes = [
-						"image/jpeg",
-						"image/png",
-						"image/gif",
-						"image/webp",
-					];
-					if (!allowedTypes.includes(file.type)) {
+					const { mimeType } = validateUploadFile(file);
+					const filename = buildUploadFilename(mimeType, nanoid);
+					const filepath = resolveUploadPath(UPLOAD_DIR, filename);
+					if (!filepath) {
 						return Response.json(
-							{ error: "Invalid file type. Only images are allowed." },
-							{ status: 400 },
+							{ error: "Failed to prepare upload destination" },
+							{ status: 500 },
 						);
 					}
-					// Generate unique filename
-					const ext = file.name.split(".").pop() ?? "jpg";
-					const filename = `${nanoid()}.${ext}`;
-					const filepath = path.join(UPLOAD_DIR, filename);
 					// Write file to disk
 					const buffer = Buffer.from(await file.arrayBuffer());
 					await fs.writeFile(filepath, buffer);
@@ -62,7 +56,13 @@ export const Route = createFileRoute("/api/upload")({
 						path: `/api/uploads/${filename}`,
 						filename,
 					});
-				} catch {
+				} catch (error) {
+					if (error instanceof UploadValidationError) {
+						return Response.json(
+							{ error: error.message },
+							{ status: error.status },
+						);
+					}
 					return Response.json(
 						{ error: "Failed to upload file" },
 						{ status: 500 },
@@ -87,12 +87,20 @@ export const Route = createFileRoute("/api/upload")({
 							{ status: 400 },
 						);
 					}
-					// Prevent directory traversal
-					const sanitizedFilename = path.basename(filename);
-					const filepath = path.join(UPLOAD_DIR, sanitizedFilename);
+					const filepath = resolveUploadPath(UPLOAD_DIR, filename);
+					if (!filepath) {
+						return Response.json(
+							{ error: "Invalid filename" },
+							{ status: 400 },
+						);
+					}
 					await fs.unlink(filepath);
 					return Response.json({ success: true });
-				} catch {
+				} catch (error) {
+					const fileError = error as NodeJS.ErrnoException;
+					if (fileError.code === "ENOENT") {
+						return Response.json({ error: "File not found" }, { status: 404 });
+					}
 					return Response.json(
 						{ error: "Failed to delete file" },
 						{ status: 500 },

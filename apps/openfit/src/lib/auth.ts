@@ -4,11 +4,18 @@ import { genericOAuth } from "better-auth/plugins";
 import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
+import {
+	getOidcProviderConfig,
+	getSocialProviderConfigs,
+} from "@/lib/auth-config";
 
 const authBaseURL =
 	process.env.BETTER_AUTH_BASE_URL ??
 	process.env.VITE_APP_URL ??
 	(process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000");
+
+const socialProviders = getSocialProviderConfigs(process.env);
+const oidcProviderConfig = getOidcProviderConfig(process.env);
 
 export const auth = betterAuth({
 	...(authBaseURL ? { baseURL: authBaseURL } : {}),
@@ -24,41 +31,14 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
-	socialProviders: {
-		...(process.env.AUTH_GOOGLE_ID && {
-			google: {
-				clientId: process.env.AUTH_GOOGLE_ID,
-				// biome-ignore lint/style/noNonNullAssertion: secret is expected to exist when ID is set
-				clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-			},
-		}),
-		...(process.env.AUTH_GITHUB_ID && {
-			github: {
-				clientId: process.env.AUTH_GITHUB_ID,
-				// biome-ignore lint/style/noNonNullAssertion: secret is expected to exist when ID is set
-				clientSecret: process.env.AUTH_GITHUB_SECRET!,
-			},
-		}),
-		...(process.env.AUTH_DISCORD_ID && {
-			discord: {
-				clientId: process.env.AUTH_DISCORD_ID,
-				// biome-ignore lint/style/noNonNullAssertion: secret is expected to exist when ID is set
-				clientSecret: process.env.AUTH_DISCORD_SECRET!,
-			},
-		}),
-	},
-	plugins: process.env.AUTH_OIDC_CLIENT_ID
+	socialProviders,
+	plugins: oidcProviderConfig
 		? [
 				genericOAuth({
 					config: [
 						{
 							providerId: "oidc",
-							clientId: process.env.AUTH_OIDC_CLIENT_ID,
-							// biome-ignore lint/style/noNonNullAssertion: secret is expected to exist when client ID is set
-							clientSecret: process.env.AUTH_OIDC_CLIENT_SECRET!,
-							discoveryUrl: `${process.env.AUTH_OIDC_ISSUER}/.well-known/openid-configuration`,
-							scopes: ["openid", "email", "profile"],
-							pkce: true,
+							...oidcProviderConfig,
 						},
 					],
 				}),

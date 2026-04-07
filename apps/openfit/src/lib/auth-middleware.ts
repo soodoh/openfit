@@ -32,23 +32,3 @@ export async function getOptionalSession(
 ): Promise<AuthSession> {
 	return getSession(request);
 }
-export async function getUserProfile(
-	userId: string,
-): Promise<
-	Awaited<ReturnType<typeof db.query.userProfiles.findFirst>> | undefined
-> {
-	return db.query.userProfiles.findFirst({
-		where: eq(schema.userProfiles.userId, userId),
-		with: {
-			defaultRepetitionUnit: true,
-			defaultWeightUnit: true,
-			defaultGym: true,
-		},
-	});
-}
-export async function isAdmin(userId: string): Promise<boolean> {
-	const profile = await db.query.userProfiles.findFirst({
-		where: eq(schema.userProfiles.userId, userId),
-	});
-	return profile?.role === "ADMIN";
-}
