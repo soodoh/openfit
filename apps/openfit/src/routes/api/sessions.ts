@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
-import { getSessionsWithData, getSessionWithData } from "@/lib/data-loaders";
+import { getSessionWithData, withSessionsData } from "@/lib/data-loaders";
 import { parseJsonBody, parseSearchParams } from "@/lib/request-helpers";
 import {
 	createSessionSchema,
@@ -60,9 +60,7 @@ export const Route = createFileRoute("/api/sessions")({
 						);
 					}
 					// Otherwise return full data
-					const sessionsWithData = await getSessionsWithData(
-						sessions.map((s) => s.id),
-					);
+					const sessionsWithData = await withSessionsData(sessions);
 					return Response.json(sessionsWithData);
 				} catch (error) {
 					if (error instanceof Response) {

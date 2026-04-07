@@ -1,6 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+	selectResults: [] as unknown[],
+	dbSelect: vi.fn((fields?: Record<string, unknown>) => {
+		const builder = {
+			from: vi.fn(() => builder),
+			where: vi.fn(() => builder),
+			groupBy: vi.fn(() => builder),
+			innerJoin: vi.fn(() => builder),
+			orderBy: vi.fn(() => Promise.resolve(mocks.selectResults.shift() ?? [])),
+			as: vi.fn(() => fields ?? {}),
+		};
+		return builder;
+	}),
 	findFirstExerciseImage: vi.fn(),
 	findManyExerciseImages: vi.fn(),
 	findFirstWorkoutSession: vi.fn(),
@@ -12,6 +24,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/db", () => ({
 	db: {
+		select: mocks.dbSelect,
 		query: {
 			exerciseImages: {
 				findFirst: mocks.findFirstExerciseImage,
@@ -45,6 +58,7 @@ import {
 describe("data-loaders", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mocks.selectResults.length = 0;
 	});
 
 	it("returns the first exercise image path when available", async () => {
@@ -57,17 +71,15 @@ describe("data-loaders", () => {
 		);
 	});
 
-	it("loads first image urls for many exercises with one image query", async () => {
-		mocks.findManyExerciseImages.mockResolvedValue([
+	it("loads first image urls for many exercises with one SQL query result", async () => {
+		mocks.selectResults.push([
 			{
 				exerciseId: "exercise_1",
-				path: "/api/uploads/e1.jpg",
-				order: 0,
+				path: "/api/uploads/e1-first.jpg",
 			},
 			{
 				exerciseId: "exercise_2",
-				path: "/api/uploads/e2.jpg",
-				order: 0,
+				path: "/api/uploads/e2-first.jpg",
 			},
 		]);
 
@@ -75,12 +87,28 @@ describe("data-loaders", () => {
 			getFirstExerciseImageUrls(["exercise_1", "exercise_2"]),
 		).resolves.toEqual(
 			new Map([
-				["exercise_1", "/api/uploads/e1.jpg"],
-				["exercise_2", "/api/uploads/e2.jpg"],
+				["exercise_1", "/api/uploads/e1-first.jpg"],
+				["exercise_2", "/api/uploads/e2-first.jpg"],
 			]),
 		);
 
-		expect(mocks.findManyExerciseImages).toHaveBeenCalledTimes(1);
+		expect(mocks.dbSelect).toHaveBeenCalledTimes(2);
+		expect(mocks.findManyExerciseImages).not.toHaveBeenCalled();
+	});
+
+	it("returns the first ordered image for each exercise from the batched SQL result", async () => {
+		mocks.selectResults.push([
+			{
+				exerciseId: "exercise_1",
+				path: "/api/uploads/e1-order-0.jpg",
+			},
+		]);
+
+		await expect(getFirstExerciseImageUrls(["exercise_1"])).resolves.toEqual(
+			new Map([["exercise_1", "/api/uploads/e1-order-0.jpg"]]),
+		);
+
+		expect(mocks.dbSelect).toHaveBeenCalledTimes(2);
 	});
 
 	it("maps routine day weekdays into a flat array", async () => {
@@ -132,11 +160,10 @@ describe("data-loaders", () => {
 				weightUnit: null,
 			},
 		]);
-		mocks.findManyExerciseImages.mockResolvedValue([
+		mocks.selectResults.push([
 			{
 				exerciseId: "exercise_123",
 				path: "/api/uploads/bench.webp",
-				order: 0,
 			},
 		]);
 
@@ -170,12 +197,12 @@ describe("data-loaders", () => {
 	it("hydrates many sessions with one session, set group, set, and image query", async () => {
 		mocks.findManyWorkoutSessions.mockResolvedValue([
 			{
-				id: "session_1",
-				name: "Morning Workout",
-			},
-			{
 				id: "session_2",
 				name: "Evening Workout",
+			},
+			{
+				id: "session_1",
+				name: "Morning Workout",
 			},
 		]);
 		mocks.findManyWorkoutSetGroups.mockResolvedValue([
@@ -214,16 +241,14 @@ describe("data-loaders", () => {
 				weightUnit: null,
 			},
 		]);
-		mocks.findManyExerciseImages.mockResolvedValue([
+		mocks.selectResults.push([
 			{
 				exerciseId: "exercise_1",
 				path: "/api/uploads/bench.webp",
-				order: 0,
 			},
 			{
 				exerciseId: "exercise_2",
 				path: "/api/uploads/row.webp",
-				order: 0,
 			},
 		]);
 
@@ -285,6 +310,82 @@ describe("data-loaders", () => {
 		expect(mocks.findManyWorkoutSessions).toHaveBeenCalledTimes(1);
 		expect(mocks.findManyWorkoutSetGroups).toHaveBeenCalledTimes(1);
 		expect(mocks.findManyWorkoutSets).toHaveBeenCalledTimes(1);
-		expect(mocks.findManyExerciseImages).toHaveBeenCalledTimes(1);
+		expect(mocks.dbSelect).toHaveBeenCalledTimes(2);
+		expect(mocks.findManyExerciseImages).not.toHaveBeenCalled();
+	});
+
+	it("returns null placeholders for missing session ids without breaking order", async () => {
+		mocks.findManyWorkoutSessions.mockResolvedValue([
+			{
+				id: "session_3",
+				name: "Third Workout",
+			},
+			{
+				id: "session_1",
+				name: "First Workout",
+			},
+		]);
+		mocks.findManyWorkoutSetGroups.mockResolvedValue([
+			{
+				id: "group_3",
+				sessionId: "session_3",
+				order: 0,
+			},
+		]);
+		mocks.findManyWorkoutSets.mockResolvedValue([
+			{
+				id: "set_3",
+				setGroupId: "group_3",
+				order: 0,
+				exercise: {
+					id: "exercise_3",
+					name: "Deadlift",
+				},
+				repetitionUnit: null,
+				weightUnit: null,
+			},
+		]);
+		mocks.selectResults.push([
+			{
+				exerciseId: "exercise_3",
+				path: "/api/uploads/deadlift.webp",
+			},
+		]);
+
+		await expect(
+			getSessionsWithData(["session_1", "missing_session", "session_3"]),
+		).resolves.toEqual([
+			{
+				id: "session_1",
+				name: "First Workout",
+				setGroups: [],
+			},
+			null,
+			{
+				id: "session_3",
+				name: "Third Workout",
+				setGroups: [
+					{
+						id: "group_3",
+						sessionId: "session_3",
+						order: 0,
+						sets: [
+							{
+								id: "set_3",
+								setGroupId: "group_3",
+								order: 0,
+								exercise: {
+									id: "exercise_3",
+									name: "Deadlift",
+									imageUrl: "/api/uploads/deadlift.webp",
+								},
+								repetitionUnit: null,
+								weightUnit: null,
+							},
+						],
+					},
+				],
+			},
+		]);
 	});
 });

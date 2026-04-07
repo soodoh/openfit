@@ -1,4 +1,4 @@
-import { asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, min } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 
@@ -20,19 +20,34 @@ export async function getFirstExerciseImageUrls(
 		return new Map();
 	}
 
-	const images = await db.query.exerciseImages.findMany({
-		where: inArray(schema.exerciseImages.exerciseId, uniqueExerciseIds),
-		orderBy: asc(schema.exerciseImages.order),
-	});
-	const firstImageUrls = new Map<string, string>();
+	const firstImageOrders = db
+		.select({
+			exerciseId: schema.exerciseImages.exerciseId,
+			minOrder: min(schema.exerciseImages.order).as("minOrder"),
+		})
+		.from(schema.exerciseImages)
+		.where(inArray(schema.exerciseImages.exerciseId, uniqueExerciseIds))
+		.groupBy(schema.exerciseImages.exerciseId)
+		.as("first_exercise_image_orders");
 
-	for (const image of images) {
-		if (!firstImageUrls.has(image.exerciseId)) {
-			firstImageUrls.set(image.exerciseId, image.path);
-		}
-	}
+	const firstImages = await db
+		.select({
+			exerciseId: schema.exerciseImages.exerciseId,
+			path: schema.exerciseImages.path,
+		})
+		.from(schema.exerciseImages)
+		.innerJoin(
+			firstImageOrders,
+			and(
+				eq(schema.exerciseImages.exerciseId, firstImageOrders.exerciseId),
+				eq(schema.exerciseImages.order, firstImageOrders.minOrder),
+			),
+		)
+		.orderBy(asc(schema.exerciseImages.exerciseId));
 
-	return firstImageUrls;
+	return new Map(
+		firstImages.map((image) => [image.exerciseId, image.path] as const),
+	);
 }
 
 export async function withFirstExerciseImageUrls<
@@ -64,7 +79,7 @@ export async function getRoutineDaysWithWeekdays(routineId: string) {
 	);
 }
 
-async function hydrateSessionsWithData<
+export async function withSessionsData<
 	T extends {
 		id: string;
 	},
@@ -146,7 +161,7 @@ export async function getSessionsWithData(sessionIds: string[]) {
 	const sessions = await db.query.workoutSessions.findMany({
 		where: inArray(schema.workoutSessions.id, uniqueSessionIds),
 	});
-	const hydratedSessions = await hydrateSessionsWithData(sessions);
+	const hydratedSessions = await withSessionsData(sessions);
 	const sessionsById = new Map(
 		hydratedSessions.map((session) => [session.id, session]),
 	);
@@ -162,6 +177,6 @@ export async function getSessionWithData(sessionId: string) {
 		return null;
 	}
 
-	const [sessionWithData] = await hydrateSessionsWithData([session]);
+	const [sessionWithData] = await withSessionsData([session]);
 	return sessionWithData ?? null;
 }
