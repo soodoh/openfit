@@ -1,3 +1,8 @@
+import type {
+	ExerciseForce,
+	ExerciseLevel,
+	ExerciseMechanic,
+} from "@/db/schema/exercises";
 import type { Role, Theme } from "@/db/schema/user-data";
 
 export type MutationSuccessResult = { success: true };
@@ -11,6 +16,10 @@ export type LookupItemDto = {
 	name: string;
 };
 
+export type LookupRowDto = LookupItemDto & {
+	createdAt: string;
+};
+
 export type GymDto = {
 	id: string;
 	userId: string;
@@ -18,6 +27,34 @@ export type GymDto = {
 	createdAt: string;
 	updatedAt: string;
 	equipmentIds: string[];
+};
+
+export type GymRelationDto = {
+	id: string;
+	userId: string;
+	name: string;
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type ExerciseRelationDto = {
+	id: string;
+	name: string;
+	equipmentId: string | null;
+	force: ExerciseForce | null;
+	level: ExerciseLevel;
+	mechanic: ExerciseMechanic | null;
+	categoryId: string;
+	createdAt: string;
+	updatedAt: string;
+	imageUrl?: string | null;
+};
+
+export type SessionExerciseRelationDto = Omit<
+	ExerciseRelationDto,
+	"imageUrl"
+> & {
+	imageUrl: string | null;
 };
 
 export type CursorPage<T> = {
@@ -89,13 +126,13 @@ export type WorkoutSetDto = {
 	completed: boolean;
 	createdAt: string;
 	updatedAt: string;
-	exercise: {
-		id: string;
-		name: string;
-		imageUrl?: string | null;
-	} | null;
-	repetitionUnit: LookupItemDto | null;
-	weightUnit: LookupItemDto | null;
+	exercise: ExerciseRelationDto | null;
+	repetitionUnit: LookupRowDto | null;
+	weightUnit: LookupRowDto | null;
+};
+
+export type SessionWorkoutSetDto = Omit<WorkoutSetDto, "exercise"> & {
+	exercise: SessionExerciseRelationDto | null;
 };
 
 export type WorkoutSetResult = Omit<
@@ -130,6 +167,10 @@ export type WorkoutSetGroupWithSetsDto = WorkoutSetGroupDto & {
 	sets: WorkoutSetDto[];
 };
 
+export type SessionWorkoutSetGroupDto = WorkoutSetGroupDto & {
+	sets: SessionWorkoutSetDto[];
+};
+
 export type RoutineDaySetGroupDto = WorkoutSetGroupWithSetsDto;
 
 export type RoutineDaySetGroupResult = Omit<
@@ -142,21 +183,10 @@ export type RoutineDaySetGroupResult = Omit<
 };
 
 export type RoutineDayDetailSetGroupDto = Omit<
-	RoutineDaySetGroupDto,
+	SessionWorkoutSetGroupDto,
 	"sets"
 > & {
-	sets: Array<
-		Omit<RoutineDaySetGroupDto["sets"][number], "exercise"> & {
-			exercise:
-				| {
-						id: string;
-						name: string;
-						imageUrl: string | null | undefined;
-				  }
-				| null
-				| undefined;
-		}
-	>;
+	sets: SessionWorkoutSetDto[];
 };
 
 export type RoutineDayDto = {
@@ -240,9 +270,9 @@ export type SessionDto = {
 	startTime: string;
 	endTime: string | null;
 	impression: number | null;
-	notes: string | null;
+	notes: string;
 	templateId: string | null;
-	setGroups: WorkoutSetGroupWithSetsDto[];
+	setGroups: SessionWorkoutSetGroupDto[];
 };
 
 export type UserProfileBaseDto = {
@@ -258,7 +288,7 @@ export type UserProfileBaseDto = {
 };
 
 export type UserProfileDto = UserProfileBaseDto & {
-	defaultRepetitionUnit: LookupItemDto | null;
-	defaultWeightUnit: LookupItemDto | null;
-	defaultGym: LookupItemDto | null;
+	defaultRepetitionUnit: LookupRowDto | null;
+	defaultWeightUnit: LookupRowDto | null;
+	defaultGym: GymRelationDto | null;
 };

@@ -65,7 +65,7 @@ export async function getSessionWithData(sessionId: string) {
 			const setsWithImages = await Promise.all(
 				sets.map(async (set) => {
 					const imageUrl = set.exercise
-						? await getFirstExerciseImageUrl(set.exercise.id)
+						? ((await getFirstExerciseImageUrl(set.exercise.id)) ?? null)
 						: null;
 					return Object.assign(set, {
 						exercise: set.exercise ? { ...set.exercise, imageUrl } : null,

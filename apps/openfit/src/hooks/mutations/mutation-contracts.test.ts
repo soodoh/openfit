@@ -1,10 +1,13 @@
 import { describe, expectTypeOf, it } from "vitest";
 import type {
+	ExerciseRelationDto,
 	GymDto,
-	LookupItemDto,
+	GymRelationDto,
+	LookupRowDto,
 	MutationIdResult,
 	MutationSuccessResult,
 	SessionDto,
+	SessionExerciseRelationDto,
 	SetDeleteResult,
 	UserProfileBaseDto,
 	UserProfileDto,
@@ -54,15 +57,30 @@ describe("mutation contracts", () => {
 	it("keeps the remaining mutation response contracts explicit", () => {
 		expectTypeOf<GymDto["equipmentIds"]>().toEqualTypeOf<string[]>();
 		expectTypeOf<SessionDto["setGroups"]>().toEqualTypeOf<
-			WorkoutSetGroupWithSetsDto[]
+			SessionDto["setGroups"]
 		>();
+		expectTypeOf<
+			SessionDto["setGroups"][number]["sets"][number]["exercise"]
+		>().toEqualTypeOf<SessionExerciseRelationDto | null>();
+		expectTypeOf<
+			SessionDto["setGroups"][number]["sets"][number]["repetitionUnit"]
+		>().toEqualTypeOf<LookupRowDto | null>();
 		expectTypeOf<WorkoutSetGroupDto["comment"]>().toEqualTypeOf<
 			string | null
 		>();
 		expectTypeOf<WorkoutSetDto["createdAt"]>().toEqualTypeOf<string>();
 		expectTypeOf<
+			WorkoutSetDto["exercise"]
+		>().toEqualTypeOf<ExerciseRelationDto | null>();
+		expectTypeOf<
+			WorkoutSetDto["weightUnit"]
+		>().toEqualTypeOf<LookupRowDto | null>();
+		expectTypeOf<
 			UserProfileDto["defaultGym"]
-		>().toEqualTypeOf<LookupItemDto | null>();
+		>().toEqualTypeOf<GymRelationDto | null>();
+		expectTypeOf<
+			UserProfileDto["defaultRepetitionUnit"]
+		>().toEqualTypeOf<LookupRowDto | null>();
 		expectTypeOf<SetDeleteResult>().toMatchTypeOf<{
 			success: true;
 			setGroupDeleted: boolean;
