@@ -4,7 +4,9 @@ import type {
 	MutationIdResult,
 	MutationSuccessResult,
 	RoutineDayDto,
+	RoutineDaySetGroupDto,
 	RoutineDto,
+	RoutineRelationDto,
 } from "./api-types";
 
 describe("api-types", () => {
@@ -12,7 +14,7 @@ describe("api-types", () => {
 		expectTypeOf<CursorPage<RoutineDto>>().toMatchTypeOf<{
 			page: RoutineDto[];
 			isDone: boolean;
-			continueCursor: string | undefined;
+			continueCursor: string | null;
 		}>();
 	});
 
@@ -22,6 +24,32 @@ describe("api-types", () => {
 	});
 
 	it("models routines as API DTOs instead of DB records", () => {
-		expectTypeOf<RoutineDto["routineDays"]>().toEqualTypeOf<RoutineDayDto[]>();
+		expectTypeOf<RoutineDto>().toMatchObjectType<{
+			id: string;
+			userId: string;
+			name: string;
+			description: string | null | undefined;
+			createdAt: Date | string;
+			updatedAt: Date | string;
+			routineDays: RoutineDayDto[];
+		}>();
+	});
+
+	it("models routine days as explicit transport DTOs", () => {
+		expectTypeOf<RoutineDayDto>().toMatchObjectType<{
+			id: string;
+			routineId: string;
+			userId: string;
+			description: string;
+			createdAt: Date | string;
+			updatedAt: Date | string;
+			weekdays: number[];
+		}>();
+		expectTypeOf<RoutineDayDto["routine"]>().toEqualTypeOf<
+			RoutineRelationDto | null | undefined
+		>();
+		expectTypeOf<RoutineDayDto["setGroups"]>().toEqualTypeOf<
+			RoutineDaySetGroupDto[] | undefined
+		>();
 	});
 });
