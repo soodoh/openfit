@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, eq } from "drizzle-orm";
-import { object, string } from "zod";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import {
@@ -9,25 +8,7 @@ import {
 	requireAuth,
 } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
-
-const nonEmptyString = string().trim().min(1);
-
-const updateUserProfileRouteSchema = object({
-	theme: string()
-		.trim()
-		.refine(
-			(value) => value === "light" || value === "dark" || value === "system",
-		)
-		.optional(),
-	defaultRepetitionUnitId: nonEmptyString.optional(),
-	defaultWeightUnitId: nonEmptyString.optional(),
-	defaultGymId: nonEmptyString.nullable().optional(),
-}).refine(
-	(value) => Object.values(value).some((field) => field !== undefined),
-	{
-		message: "At least one field must be provided",
-	},
-);
+import { updateUserProfileSchema } from "@/lib/request-schemas";
 
 // GET /api/user-profile - Get current user's profile
 // PATCH /api/user-profile - Update current user's profile
@@ -63,10 +44,7 @@ export const Route = createFileRoute("/api/user-profile")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				try {
-					const body = await parseJsonBody(
-						request,
-						updateUserProfileRouteSchema,
-					);
+					const body = await parseJsonBody(request, updateUserProfileSchema);
 					const {
 						theme,
 						defaultRepetitionUnitId,

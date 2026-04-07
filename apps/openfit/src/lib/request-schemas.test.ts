@@ -59,6 +59,14 @@ describe("updateUserProfileSchema", () => {
 		).toBe(true);
 	});
 
+	it("accepts clearing the default gym with null", () => {
+		expect(
+			updateUserProfileSchema.safeParse({
+				defaultGymId: null,
+			}).success,
+		).toBe(true);
+	});
+
 	it("rejects invalid theme values", () => {
 		expect(
 			updateUserProfileSchema.safeParse({ theme: "midnight" }).success,

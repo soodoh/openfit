@@ -37,13 +37,13 @@ export function useUpdateUserProfile(): UseMutationResult<
 	});
 }
 // Set default gym
-async function setDefaultGym(gymId: string): Promise<UserProfileResult> {
+async function setDefaultGym(gymId: string | null): Promise<UserProfileResult> {
 	return updateUserProfile({ defaultGymId: gymId });
 }
 export function useSetDefaultGym(): UseMutationResult<
 	UserProfileResult,
 	Error,
-	string
+	string | null
 > {
 	const queryClient = useQueryClient();
 	return useMutation({

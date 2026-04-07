@@ -152,7 +152,7 @@ export const updateUserProfileSchema = object({
 		.optional(),
 	defaultRepetitionUnitId: nonEmptyString.optional(),
 	defaultWeightUnitId: nonEmptyString.optional(),
-	defaultGymId: nonEmptyString.optional(),
+	defaultGymId: nonEmptyString.nullable().optional(),
 }).refine(requireAtLeastOneField, {
 	message: "At least one field must be provided",
 });
