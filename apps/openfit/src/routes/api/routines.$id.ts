@@ -2,10 +2,44 @@ import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
+import type {
+	MutationSuccessResult,
+	RoutineDayDto,
+	RoutineDto,
+} from "@/lib/api-types";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { getRoutineDaysWithWeekdays } from "@/lib/data-loaders";
 import { parseJsonBody } from "@/lib/request-helpers";
 import { updateRoutineSchema } from "@/lib/request-schemas";
+
+function serializeRoutineDay(
+	routineDay: Omit<RoutineDayDto, "weekdays"> & {
+		weekdays: Array<number | { weekday: number }>;
+	},
+): RoutineDayDto {
+	return {
+		...routineDay,
+		weekdays: routineDay.weekdays.map((weekday) =>
+			typeof weekday === "number" ? weekday : weekday.weekday,
+		),
+	};
+}
+
+function serializeRoutine(
+	routine: Omit<RoutineDto, "routineDays"> & {
+		routineDays: Array<
+			Omit<RoutineDayDto, "weekdays"> & {
+				weekdays: Array<number | { weekday: number }>;
+			}
+		>;
+	},
+): RoutineDto {
+	return {
+		...routine,
+		routineDays: routine.routineDays.map(serializeRoutineDay),
+	};
+}
+
 export const Route = createFileRoute("/api/routines/$id")({
 	server: {
 		handlers: {
@@ -37,10 +71,12 @@ export const Route = createFileRoute("/api/routines/$id")({
 					return Response.json({ error: "Unauthorized" }, { status: 403 });
 				}
 				const routineDays = await getRoutineDaysWithWeekdays(id);
-				return Response.json({
-					...routine,
-					routineDays,
-				});
+				return Response.json(
+					serializeRoutine({
+						...routine,
+						routineDays,
+					}),
+				);
 			},
 			// PATCH /api/routines/[id] - Update routine
 			PATCH: async ({
@@ -89,10 +125,18 @@ export const Route = createFileRoute("/api/routines/$id")({
 						where: eq(schema.routines.id, id),
 					});
 					const routineDays = await getRoutineDaysWithWeekdays(id);
-					return Response.json({
-						...updated,
-						routineDays,
-					});
+					if (!updated) {
+						return Response.json(
+							{ error: "Routine not found" },
+							{ status: 404 },
+						);
+					}
+					return Response.json(
+						serializeRoutine({
+							...updated,
+							routineDays,
+						}),
+					);
 				} catch (error) {
 					if (error instanceof Response) {
 						return error;
@@ -136,7 +180,9 @@ export const Route = createFileRoute("/api/routines/$id")({
 					}
 					// Delete routine (cascades to routine days, set groups, sets via FK)
 					await db.delete(schema.routines).where(eq(schema.routines.id, id));
-					return Response.json({ success: true });
+					return Response.json({
+						success: true,
+					} satisfies MutationSuccessResult);
 				} catch {
 					return Response.json(
 						{ error: "Failed to delete routine" },

@@ -3,10 +3,25 @@ import { asc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
+import type { MutationSuccessResult, RoutineDayDto } from "@/lib/api-types";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { getFirstExerciseImageUrl } from "@/lib/data-loaders";
 import { parseJsonBody } from "@/lib/request-helpers";
 import { updateRoutineDaySchema } from "@/lib/request-schemas";
+
+function serializeRoutineDay(
+	routineDay: Omit<RoutineDayDto, "weekdays"> & {
+		weekdays: Array<number | { weekday: number }>;
+	},
+): RoutineDayDto {
+	return {
+		...routineDay,
+		weekdays: routineDay.weekdays.map((weekday) =>
+			typeof weekday === "number" ? weekday : weekday.weekday,
+		),
+	};
+}
+
 export const Route = createFileRoute("/api/routine-days/$id")({
 	server: {
 		handlers: {
@@ -78,8 +93,7 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 					}),
 				);
 				return Response.json({
-					...routineDay,
-					weekdays: routineDay.weekdays.map((w) => w.weekday),
+					...serializeRoutineDay(routineDay),
 					setGroups: setGroupsWithSets,
 				});
 			},
@@ -149,10 +163,13 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 							weekdays: true,
 						},
 					});
-					return Response.json({
-						...updated,
-						weekdays: updated?.weekdays.map((w) => w.weekday) ?? [],
-					});
+					if (!updated) {
+						return Response.json(
+							{ error: "Routine day not found" },
+							{ status: 404 },
+						);
+					}
+					return Response.json(serializeRoutineDay(updated));
 				} catch (error) {
 					if (error instanceof Response) {
 						return error;
@@ -198,7 +215,9 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 					await db
 						.delete(schema.routineDays)
 						.where(eq(schema.routineDays.id, id));
-					return Response.json({ success: true });
+					return Response.json({
+						success: true,
+					} satisfies MutationSuccessResult);
 				} catch {
 					return Response.json(
 						{ error: "Failed to delete routine day" },

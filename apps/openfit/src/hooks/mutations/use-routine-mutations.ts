@@ -1,5 +1,6 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { MutationSuccessResult, RoutineDto } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
 
@@ -13,35 +14,35 @@ type UpdateRoutineInput = {
 	description?: string;
 };
 // Create routine
-async function createRoutine(input: CreateRoutineInput): Promise<unknown> {
+async function createRoutine(input: CreateRoutineInput): Promise<RoutineDto> {
 	const response = await fetch("/api/routines", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to create routine");
+	return fetchJson<RoutineDto>(response, "Failed to create routine");
 }
 // Update routine
 async function updateRoutine({
 	id,
 	...input
-}: UpdateRoutineInput): Promise<unknown> {
+}: UpdateRoutineInput): Promise<RoutineDto> {
 	const response = await fetch(`/api/routines/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to update routine");
+	return fetchJson<RoutineDto>(response, "Failed to update routine");
 }
 // Delete routine
-async function deleteRoutine(id: string): Promise<unknown> {
+async function deleteRoutine(id: string): Promise<MutationSuccessResult> {
 	const response = await fetch(`/api/routines/${id}`, {
 		method: "DELETE",
 	});
-	return fetchJson<unknown>(response, "Failed to delete routine");
+	return fetchJson<MutationSuccessResult>(response, "Failed to delete routine");
 }
 export function useCreateRoutine(): UseMutationResult<
-	unknown,
+	RoutineDto,
 	Error,
 	CreateRoutineInput
 > {
@@ -54,7 +55,7 @@ export function useCreateRoutine(): UseMutationResult<
 	});
 }
 export function useUpdateRoutine(): UseMutationResult<
-	unknown,
+	RoutineDto,
 	Error,
 	UpdateRoutineInput
 > {
@@ -71,7 +72,11 @@ export function useUpdateRoutine(): UseMutationResult<
 		},
 	});
 }
-export function useDeleteRoutine(): UseMutationResult<unknown, Error, string> {
+export function useDeleteRoutine(): UseMutationResult<
+	MutationSuccessResult,
+	Error,
+	string
+> {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: deleteRoutine,

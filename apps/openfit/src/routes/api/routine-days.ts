@@ -3,6 +3,7 @@ import { and, eq, like } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
+import type { RoutineDayDto } from "@/lib/api-types";
 import {
 	type AuthSession,
 	getOptionalSession,
@@ -13,6 +14,20 @@ import {
 	createRoutineDaySchema,
 	routineDaysListQuerySchema,
 } from "@/lib/request-schemas";
+
+function serializeRoutineDay(
+	routineDay: Omit<RoutineDayDto, "weekdays"> & {
+		weekdays: Array<number | { weekday: number }>;
+	},
+): RoutineDayDto {
+	return {
+		...routineDay,
+		weekdays: routineDay.weekdays.map((weekday) =>
+			typeof weekday === "number" ? weekday : weekday.weekday,
+		),
+	};
+}
+
 export const Route = createFileRoute("/api/routine-days")({
 	server: {
 		handlers: {
@@ -43,12 +58,7 @@ export const Route = createFileRoute("/api/routine-days")({
 							weekdays: true,
 						},
 					});
-					// Transform to expected format
-					const result = days.map((day) =>
-						Object.assign(day, {
-							weekdays: day.weekdays.map((w) => w.weekday),
-						}),
-					);
+					const result = days.map(serializeRoutineDay);
 					return Response.json(result);
 				} catch (error) {
 					if (error instanceof Response) {
@@ -105,13 +115,15 @@ export const Route = createFileRoute("/api/routine-days")({
 							weekdays: true,
 						},
 					});
-					return Response.json(
-						{
-							...routineDay,
-							weekdays: routineDay?.weekdays.map((w) => w.weekday) ?? [],
-						},
-						{ status: 201 },
-					);
+					if (!routineDay) {
+						return Response.json(
+							{ error: "Failed to create routine day" },
+							{ status: 500 },
+						);
+					}
+					return Response.json(serializeRoutineDay(routineDay), {
+						status: 201,
+					});
 				} catch (error) {
 					if (error instanceof Response) {
 						return error;

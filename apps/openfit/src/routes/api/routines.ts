@@ -3,6 +3,7 @@ import { and, desc, eq, like } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
+import type { CursorPage, RoutineDayDto, RoutineDto } from "@/lib/api-types";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { getRoutineDaysWithWeekdays } from "@/lib/data-loaders";
 import { parseJsonBody, parseSearchParams } from "@/lib/request-helpers";
@@ -10,6 +11,35 @@ import {
 	createRoutineSchema,
 	routinesListQuerySchema,
 } from "@/lib/request-schemas";
+
+function serializeRoutineDay(
+	routineDay: Omit<RoutineDayDto, "weekdays"> & {
+		weekdays: Array<number | { weekday: number }>;
+	},
+): RoutineDayDto {
+	return {
+		...routineDay,
+		weekdays: routineDay.weekdays.map((weekday) =>
+			typeof weekday === "number" ? weekday : weekday.weekday,
+		),
+	};
+}
+
+function serializeRoutine(
+	routine: Omit<RoutineDto, "routineDays"> & {
+		routineDays: Array<
+			Omit<RoutineDayDto, "weekdays"> & {
+				weekdays: Array<number | { weekday: number }>;
+			}
+		>;
+	},
+): RoutineDto {
+	return {
+		...routine,
+		routineDays: routine.routineDays.map(serializeRoutineDay),
+	};
+}
+
 export const Route = createFileRoute("/api/routines")({
 	server: {
 		handlers: {
@@ -51,7 +81,8 @@ export const Route = createFileRoute("/api/routines")({
 					const routinesWithDays = await Promise.all(
 						page.map(async (routine) => {
 							const routineDays = await getRoutineDaysWithWeekdays(routine.id);
-							return Object.assign(routine, {
+							return serializeRoutine({
+								...routine,
 								routineDays,
 							});
 						}),
@@ -60,7 +91,7 @@ export const Route = createFileRoute("/api/routines")({
 						page: routinesWithDays,
 						isDone: !hasMore,
 						continueCursor: hasMore ? String((cursor ?? 0) + limit) : null,
-					});
+					} satisfies CursorPage<RoutineDto>);
 				} catch (error) {
 					if (error instanceof Response) {
 						return error;
@@ -96,8 +127,14 @@ export const Route = createFileRoute("/api/routines")({
 					const routine = await db.query.routines.findFirst({
 						where: eq(schema.routines.id, routineId),
 					});
+					if (!routine) {
+						return Response.json(
+							{ error: "Failed to create routine" },
+							{ status: 500 },
+						);
+					}
 					return Response.json(
-						{ ...routine, routineDays: [] },
+						serializeRoutine({ ...routine, routineDays: [] }),
 						{ status: 201 },
 					);
 				} catch (error) {

@@ -1,5 +1,6 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { MutationSuccessResult, RoutineDayDto } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
 
@@ -16,35 +17,38 @@ type UpdateRoutineDayInput = {
 // Create routine day
 async function createRoutineDay(
 	input: CreateRoutineDayInput,
-): Promise<unknown> {
+): Promise<RoutineDayDto> {
 	const response = await fetch("/api/routine-days", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to create routine day");
+	return fetchJson<RoutineDayDto>(response, "Failed to create routine day");
 }
 // Update routine day
 async function updateRoutineDay({
 	id,
 	...input
-}: UpdateRoutineDayInput): Promise<unknown> {
+}: UpdateRoutineDayInput): Promise<RoutineDayDto> {
 	const response = await fetch(`/api/routine-days/${id}`, {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to update routine day");
+	return fetchJson<RoutineDayDto>(response, "Failed to update routine day");
 }
 // Delete routine day
-async function deleteRoutineDay(id: string): Promise<unknown> {
+async function deleteRoutineDay(id: string): Promise<MutationSuccessResult> {
 	const response = await fetch(`/api/routine-days/${id}`, {
 		method: "DELETE",
 	});
-	return fetchJson<unknown>(response, "Failed to delete routine day");
+	return fetchJson<MutationSuccessResult>(
+		response,
+		"Failed to delete routine day",
+	);
 }
 export function useCreateRoutineDay(): UseMutationResult<
-	unknown,
+	RoutineDayDto,
 	Error,
 	CreateRoutineDayInput
 > {
@@ -56,15 +60,13 @@ export function useCreateRoutineDay(): UseMutationResult<
 				queryKey: queryKeys.routineDays.all,
 			});
 			void queryClient.invalidateQueries({
-				queryKey: queryKeys.routines.detail(
-					(data as { routineId: string }).routineId,
-				),
+				queryKey: queryKeys.routines.detail(data.routineId),
 			});
 		},
 	});
 }
 export function useUpdateRoutineDay(): UseMutationResult<
-	unknown,
+	RoutineDayDto,
 	Error,
 	UpdateRoutineDayInput
 > {
@@ -75,18 +77,16 @@ export function useUpdateRoutineDay(): UseMutationResult<
 			void queryClient.invalidateQueries({
 				queryKey: queryKeys.routineDays.detail(variables.id),
 			});
-			if ((data as { routineId?: string }).routineId) {
+			if (data.routineId) {
 				void queryClient.invalidateQueries({
-					queryKey: queryKeys.routines.detail(
-						(data as { routineId: string }).routineId,
-					),
+					queryKey: queryKeys.routines.detail(data.routineId),
 				});
 			}
 		},
 	});
 }
 export function useDeleteRoutineDay(): UseMutationResult<
-	unknown,
+	MutationSuccessResult,
 	Error,
 	string
 > {
