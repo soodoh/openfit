@@ -2,46 +2,22 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
+import type { UserProfileWithDefaults } from "@/lib/types";
 
-type UserProfile = {
-	id: string;
-	userId: string;
-	role: "USER" | "ADMIN";
-	defaultRepetitionUnitId: string | undefined;
-	defaultWeightUnitId: string | undefined;
-	theme: "light" | "dark" | "system";
-	defaultGymId: string | undefined;
-	defaultRepetitionUnit:
-		| {
-				id: string;
-				name: string;
-		  }
-		| undefined;
-	defaultWeightUnit:
-		| {
-				id: string;
-				name: string;
-		  }
-		| undefined;
-	defaultGym:
-		| {
-				id: string;
-				name: string;
-		  }
-		| undefined;
-	createdAt: Date;
-	updatedAt: Date;
-};
 // Fetch user profile
-async function fetchUserProfile(): Promise<UserProfile | undefined> {
+async function fetchUserProfile(): Promise<
+	UserProfileWithDefaults | undefined
+> {
 	const response = await fetch("/api/user-profile");
-	return fetchJson<UserProfile | undefined>(
+	return fetchJson<UserProfileWithDefaults | undefined>(
 		response,
 		"Failed to fetch user profile",
 	);
 }
 // Hook for user profile
-export function useUserProfile(): UseQueryResult<UserProfile | undefined> {
+export function useUserProfile(): UseQueryResult<
+	UserProfileWithDefaults | undefined
+> {
 	return useQuery({
 		queryKey: queryKeys.userProfile.current(),
 		queryFn: fetchUserProfile,

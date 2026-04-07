@@ -46,7 +46,9 @@ export function UserTable() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-	const [editUser, setEditUser] = useState<UserWithProfile | undefined>(null);
+	const [editUser, setEditUser] = useState<UserWithProfile | undefined>(
+		undefined,
+	);
 	const { data, isLoading } = useAdminUsersPaginated({
 		page: currentPage,
 		pageSize,
@@ -163,7 +165,7 @@ export function UserTable() {
 				</CardContent>
 			</Card>
 
-			<UserRoleModal user={editUser} onClose={() => setEditUser(null)} />
+			<UserRoleModal user={editUser} onClose={() => setEditUser(undefined)} />
 		</>
 	);
 }

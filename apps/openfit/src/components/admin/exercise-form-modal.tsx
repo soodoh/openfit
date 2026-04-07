@@ -112,10 +112,10 @@ export function ExerciseFormModal({
 	const [secondaryMuscleIds, setSecondaryMuscleIds] = useState<string[]>([]);
 	const [instructions, setInstructions] = useState<string[]>([""]);
 	const [images, setImages] = useState<ImageItem[]>([]);
-	const [error, setError] = useState<string | undefined>(null);
+	const [error, setError] = useState<string | undefined>(undefined);
 	const [isPending, setIsPending] = useState(false);
 	const [uploadProgress, setUploadProgress] = useState<string | undefined>(
-		null,
+		undefined,
 	);
 	const isEditMode = Boolean(exercise);
 	const { title, description, submitLabel } = getExerciseFormText(isEditMode);
@@ -153,13 +153,13 @@ export function ExerciseFormModal({
 				setInstructions([""]);
 				setImages([]);
 			}
-			setError(null);
-			setUploadProgress(null);
+			setError(undefined);
+			setUploadProgress(undefined);
 		}
 	}, [open, exercise]);
 	const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setError(null);
+		setError(undefined);
 		if (!name.trim()) {
 			setError("Exercise name is required");
 			return;
@@ -195,7 +195,7 @@ export function ExerciseFormModal({
 					);
 				}
 			}
-			setUploadProgress(null);
+			setUploadProgress(undefined);
 			const args = {
 				name: name.trim(),
 				equipmentId: equipmentId || undefined,
@@ -223,7 +223,7 @@ export function ExerciseFormModal({
 			);
 		} finally {
 			setIsPending(false);
-			setUploadProgress(null);
+			setUploadProgress(undefined);
 		}
 	};
 	const handleInstructionChange = (index: number, value: string) => {

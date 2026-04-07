@@ -2,71 +2,11 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
+import type {
+	WorkoutSessionSummary,
+	WorkoutSessionWithData,
+} from "@/lib/types";
 
-type SetWithRelations = {
-	id: string;
-	userId: string;
-	setGroupId: string;
-	exerciseId: string;
-	type: string;
-	order: number;
-	reps: number;
-	repetitionUnitId: string;
-	weight: number;
-	weightUnitId: string;
-	restTime: number;
-	completed: boolean;
-	exercise:
-		| {
-				id: string;
-				name: string;
-				imageUrl: string | undefined;
-		  }
-		| undefined;
-	repetitionUnit:
-		| {
-				id: string;
-				name: string;
-		  }
-		| undefined;
-	weightUnit:
-		| {
-				id: string;
-				name: string;
-		  }
-		| undefined;
-};
-type SetGroupWithSets = {
-	id: string;
-	userId: string;
-	routineDayId: string | undefined;
-	sessionId: string | undefined;
-	type: string;
-	order: number;
-	comment: string | undefined;
-	sets: SetWithRelations[];
-};
-type WorkoutSessionWithData = {
-	id: string;
-	userId: string;
-	name: string;
-	notes: string;
-	impression: number | undefined;
-	startTime: Date;
-	endTime: Date | undefined;
-	templateId: string | undefined;
-	setGroups: SetGroupWithSets[];
-	createdAt: Date;
-	updatedAt: Date;
-};
-type WorkoutSessionSummary = {
-	id: string;
-	createdAt: Date;
-	name: string;
-	startTime: Date;
-	endTime: Date | undefined;
-	impression: number | undefined;
-};
 // Fetch all sessions
 async function fetchSessions(): Promise<WorkoutSessionWithData[]> {
 	const response = await fetch("/api/sessions");

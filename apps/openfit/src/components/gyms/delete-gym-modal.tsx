@@ -23,15 +23,15 @@ export function DeleteGymModal({
 	isLastGym = false,
 	onClose,
 }: DeleteGymModalProps) {
-	const open = gym !== null;
+	const open = Boolean(gym);
 	const deleteGymMutation = useDeleteGym();
-	const [error, setError] = useState<string | undefined>(null);
+	const [error, setError] = useState<string | undefined>(undefined);
 	const [isPending, setIsPending] = useState(false);
 	const handleDelete = async () => {
 		if (!gym) {
 			return;
 		}
-		setError(null);
+		setError(undefined);
 		setIsPending(true);
 		try {
 			await deleteGymMutation.mutateAsync(gym.id);
@@ -51,7 +51,7 @@ export function DeleteGymModal({
 		}
 	};
 	const handleClose = () => {
-		setError(null);
+		setError(undefined);
 		onClose();
 	};
 	let bodyContent: ReactNode;

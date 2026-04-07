@@ -2,36 +2,8 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
+import type { Category, Equipment, MuscleGroup, Units } from "@/lib/types";
 
-type Equipment = {
-	id: string;
-	name: string;
-	createdAt: Date;
-};
-type MuscleGroup = {
-	id: string;
-	name: string;
-	createdAt: Date;
-};
-type Category = {
-	id: string;
-	name: string;
-	createdAt: Date;
-};
-type RepetitionUnit = {
-	id: string;
-	name: string;
-	createdAt: Date;
-};
-type WeightUnit = {
-	id: string;
-	name: string;
-	createdAt: Date;
-};
-type Units = {
-	repetitionUnits: RepetitionUnit[];
-	weightUnits: WeightUnit[];
-};
 // Fetch equipment
 async function fetchEquipment(): Promise<Equipment[]> {
 	const response = await fetch("/api/lookups/equipment");

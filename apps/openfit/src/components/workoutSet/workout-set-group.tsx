@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import {
 	type ReactNode,
+	useEffect,
 	useMemo,
 	useOptimistic,
 	useState,
@@ -82,7 +83,7 @@ export const WorkoutSetGroup = ({
 				imageUrl: string | undefined;
 		  }
 		| undefined
-	>(null);
+	>(undefined);
 	const [showBulkEdit, setShowBulkEdit] = useState(false);
 	const [showComment, setShowComment] = useState(false);
 	const [showDelete, setShowDelete] = useState(false);
@@ -92,13 +93,11 @@ export const WorkoutSetGroup = ({
 	// Auto-close when all sets become completed in the active session view
 	const allSetsCompleted =
 		view === ListView.CurrentSession && sets.every((set) => set.completed);
-	const [prevAllCompleted, setPrevAllCompleted] = useState(allSetsCompleted);
-	if (allSetsCompleted !== prevAllCompleted) {
-		setPrevAllCompleted(allSetsCompleted);
+	useEffect(() => {
 		if (allSetsCompleted) {
 			setExpanded(false);
 		}
-	}
+	}, [allSetsCompleted]);
 	const exercise = sets[0]?.exercise;
 	const setIds = useMemo(() => sets.map((s) => s.id), [sets]);
 	const setsWithNumber = useMemo(() => {
@@ -149,7 +148,7 @@ export const WorkoutSetGroup = ({
 				<ExerciseDetailModal
 					exercise={selectedExercise}
 					open={Boolean(selectedExercise)}
-					onClose={() => setSelectedExercise(null)}
+					onClose={() => setSelectedExercise(undefined)}
 				/>
 			)}
 			<BulkEditSetModal

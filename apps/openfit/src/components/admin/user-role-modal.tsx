@@ -17,6 +17,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { type Role, RoleEnum } from "@/db/schema/user-data";
 import type { UserWithProfile } from "@/hooks";
 import { useUpdateUserRole } from "@/hooks";
 
@@ -24,17 +25,22 @@ type UserRoleModalProps = {
 	user: UserWithProfile | undefined;
 	onClose: () => void;
 };
+
+function isRole(value: string): value is Role {
+	return value === RoleEnum.USER || value === RoleEnum.ADMIN;
+}
+
 export function UserRoleModal({ user, onClose }: UserRoleModalProps) {
-	const open = user !== null;
+	const open = Boolean(user);
 	const updateUserRoleMutation = useUpdateUserRole();
-	const [role, setRole] = useState<"USER" | "ADMIN">("USER");
-	const [error, setError] = useState<string | undefined>(null);
+	const [role, setRole] = useState<Role>(RoleEnum.USER);
+	const [error, setError] = useState<string | undefined>(undefined);
 	const [isPending, setIsPending] = useState(false);
 	// Reset form when modal opens
 	useEffect(() => {
 		if (open && user) {
 			setRole(user.role);
-			setError(null);
+			setError(undefined);
 		}
 	}, [open, user]);
 	const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -42,7 +48,7 @@ export function UserRoleModal({ user, onClose }: UserRoleModalProps) {
 		if (!user) {
 			return;
 		}
-		setError(null);
+		setError(undefined);
 		setIsPending(true);
 		try {
 			await updateUserRoleMutation.mutateAsync({
@@ -61,7 +67,7 @@ export function UserRoleModal({ user, onClose }: UserRoleModalProps) {
 		}
 	};
 	const handleClose = () => {
-		setError(null);
+		setError(undefined);
 		onClose();
 	};
 	const hasChanged = user?.role !== role;
@@ -88,7 +94,11 @@ export function UserRoleModal({ user, onClose }: UserRoleModalProps) {
 							<Label>Role</Label>
 							<Select
 								value={role}
-								onValueChange={(v) => setRole(v as "USER" | "ADMIN")}
+								onValueChange={(value) => {
+									if (isRole(value)) {
+										setRole(value);
+									}
+								}}
 							>
 								<SelectTrigger>
 									<SelectValue />

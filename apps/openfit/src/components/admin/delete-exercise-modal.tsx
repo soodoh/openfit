@@ -24,14 +24,14 @@ export function DeleteExerciseModal({
 	onClose,
 	onDelete,
 }: DeleteExerciseModalProps) {
-	const open = exercise !== null;
-	const [error, setError] = useState<string | undefined>(null);
+	const open = Boolean(exercise);
+	const [error, setError] = useState<string | undefined>(undefined);
 	const [isPending, setIsPending] = useState(false);
 	const handleDelete = () => {
 		if (!exercise) {
 			return;
 		}
-		setError(null);
+		setError(undefined);
 		setIsPending(true);
 		try {
 			onDelete(exercise.id);
@@ -47,7 +47,7 @@ export function DeleteExerciseModal({
 		}
 	};
 	const handleClose = () => {
-		setError(null);
+		setError(undefined);
 		onClose();
 	};
 	return (

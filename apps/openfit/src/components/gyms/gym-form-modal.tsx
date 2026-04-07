@@ -27,7 +27,7 @@ export function GymFormModal({ open, onClose, gym }: GymFormModalProps) {
 	const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>(
 		[],
 	);
-	const [error, setError] = useState<string | undefined>(null);
+	const [error, setError] = useState<string | undefined>(undefined);
 	const [isPending, setIsPending] = useState(false);
 	const isEditMode = Boolean(gym);
 	const dialogDescription = isEditMode
@@ -44,12 +44,12 @@ export function GymFormModal({ open, onClose, gym }: GymFormModalProps) {
 				setName("");
 				setSelectedEquipmentIds([]);
 			}
-			setError(null);
+			setError(undefined);
 		}
 	}, [open, gym]);
 	const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setError(null);
+		setError(undefined);
 		if (!name.trim()) {
 			setError("Gym name is required");
 			return;

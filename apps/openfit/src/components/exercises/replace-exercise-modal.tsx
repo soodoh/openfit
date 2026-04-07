@@ -51,10 +51,12 @@ export const ReplaceExerciseModal = ({
 	setGroupId: string;
 }): ReactNode => {
 	const [searchTerm, setSearchTerm] = useState("");
-	const [selectedGymId, setSelectedGymId] = useState<string | undefined>(null);
+	const [selectedGymId, setSelectedGymId] = useState<string | undefined>(
+		undefined,
+	);
 	const [selectedExercise, setSelectedExercise] = useState<
 		Exercise | undefined
-	>(null);
+	>(undefined);
 	const [isPending, setIsPending] = useState(false);
 	const { getMuscleGroupNames } = useExerciseLookups();
 	const replaceExerciseMutation = useReplaceExercise();
@@ -67,7 +69,7 @@ export const ReplaceExerciseModal = ({
 	);
 	// Set selected gym to user's default gym on initial load
 	useEffect(() => {
-		if (userProfile?.defaultGymId && selectedGymId === null) {
+		if (userProfile?.defaultGymId && selectedGymId === undefined) {
 			setSelectedGymId(userProfile.defaultGymId);
 		}
 	}, [selectedGymId, userProfile?.defaultGymId]);
@@ -75,7 +77,7 @@ export const ReplaceExerciseModal = ({
 	useEffect(() => {
 		if (open) {
 			setSearchTerm("");
-			setSelectedExercise(null);
+			setSelectedExercise(undefined);
 		}
 	}, [open]);
 	// Determine equipment IDs for filtering

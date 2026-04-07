@@ -2,59 +2,14 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
+import type {
+	AdminExerciseWithRelations,
+	AdminPaginationParams,
+	AdminUserWithProfile,
+	LookupItem,
+	PaginatedResponse,
+} from "@/lib/types";
 
-type UserWithProfile = {
-	id: string;
-	userId: string;
-	email: string;
-	role: "USER" | "ADMIN";
-};
-type MuscleInfo = {
-	id: string;
-	name: string;
-};
-type ExerciseWithRelations = {
-	id: string;
-	name: string;
-	level: "beginner" | "intermediate" | "expert";
-	force?: "push" | "pull" | "static" | undefined;
-	mechanic?: "compound" | "isolation" | undefined;
-	equipmentId?: string;
-	categoryId: string;
-	primaryMuscleIds: string[];
-	secondaryMuscleIds: string[];
-	instructions: string[];
-	imageUrls: Array<string | undefined>;
-	equipment:
-		| {
-				id: string;
-				name: string;
-		  }
-		| undefined;
-	category:
-		| {
-				id: string;
-				name: string;
-		  }
-		| undefined;
-	primaryMuscles: MuscleInfo[];
-	secondaryMuscles: MuscleInfo[];
-};
-type LookupItem = {
-	id: string;
-	name: string;
-};
-type PaginatedResponse<T> = {
-	items: T[];
-	total: number;
-	page: number;
-	pageSize: number;
-};
-type AdminPaginationParams = {
-	page: number;
-	pageSize: number;
-	search?: string;
-};
 // --- Paginated fetch helpers ---
 async function fetchPaginatedAdmin<T>(
 	url: string,
@@ -104,21 +59,25 @@ async function fetchAdminLookups(type: string): Promise<LookupItem[]> {
 // --- Paginated hooks (for admin tables) ---
 export function useAdminUsersPaginated(
 	params: AdminPaginationParams,
-): UseQueryResult<PaginatedResponse<UserWithProfile>> {
+): UseQueryResult<PaginatedResponse<AdminUserWithProfile>> {
 	return useQuery({
 		queryKey: queryKeys.admin.userList(params),
 		queryFn: async ({ signal }) =>
-			fetchPaginatedAdmin<UserWithProfile>("/api/admin/users", params, signal),
+			fetchPaginatedAdmin<AdminUserWithProfile>(
+				"/api/admin/users",
+				params,
+				signal,
+			),
 		placeholderData: keepPreviousData,
 	});
 }
 export function useAdminExercisesPaginated(
 	params: AdminPaginationParams,
-): UseQueryResult<PaginatedResponse<ExerciseWithRelations>> {
+): UseQueryResult<PaginatedResponse<AdminExerciseWithRelations>> {
 	return useQuery({
 		queryKey: queryKeys.admin.exerciseList(params),
 		queryFn: async ({ signal }) =>
-			fetchPaginatedAdmin<ExerciseWithRelations>(
+			fetchPaginatedAdmin<AdminExerciseWithRelations>(
 				"/api/admin/exercises",
 				params,
 				signal,
@@ -177,9 +136,9 @@ export function useAdminWeightUnits(): UseQueryResult<LookupItem[]> {
 	});
 }
 export type {
+	AdminExerciseWithRelations as ExerciseWithRelations,
 	AdminPaginationParams,
-	ExerciseWithRelations,
+	AdminUserWithProfile as UserWithProfile,
 	LookupItem,
 	PaginatedResponse,
-	UserWithProfile,
 };

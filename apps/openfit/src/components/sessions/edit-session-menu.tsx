@@ -20,9 +20,9 @@ export const EditSessionMenu = ({
 }: {
 	session: WorkoutSessionWithData;
 }): ReactNode => {
-	const [modal, setModal] = useState<Modal | undefined>(null);
+	const [modal, setModal] = useState<Modal | undefined>(undefined);
 	const [menuOpen, setMenuOpen] = useState(false);
-	const handleClose = () => setModal(null);
+	const handleClose = () => setModal(undefined);
 	useEffect(() => {
 		if (modal) {
 			setMenuOpen(false);

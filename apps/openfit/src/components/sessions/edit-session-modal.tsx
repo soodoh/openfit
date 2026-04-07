@@ -40,20 +40,20 @@ export const EditSessionModal = ({
 	const [name, setName] = useState<string>(session?.name ?? "");
 	const [notes, setNotes] = useState<string>(session?.notes ?? "");
 	const [impression, setImpression] = useState<number | undefined>(
-		session?.impression ?? null,
+		session?.impression ?? undefined,
 	);
 	const [startTime, setStartTime] = useState<Date | undefined>(
 		session?.startTime ? new Date(session.startTime) : new Date(),
 	);
 	const [endTime, setEndTime] = useState<Date | undefined>(
-		session?.endTime ? new Date(session.endTime) : null,
+		session?.endTime ? new Date(session.endTime) : undefined,
 	);
 	const [workoutTemplate, setWorkoutTemplate] = useState<
 		RoutineDayWithRoutine | undefined
-	>(null);
-	const [hoveredStar, setHoveredStar] = useState<number | undefined>(null);
+	>(undefined);
+	const [hoveredStar, setHoveredStar] = useState<number | undefined>(undefined);
 	const [isPending, setIsPending] = useState(false);
-	const [error, setError] = useState<string | undefined>(null);
+	const [error, setError] = useState<string | undefined>(undefined);
 	const createSessionMutation = useCreateSession();
 	const updateSessionMutation = useUpdateSession();
 	const dialogDescription = isEditingDescription(session);
@@ -63,25 +63,23 @@ export const EditSessionModal = ({
 		if (open) {
 			setName(session?.name ?? "");
 			setNotes(session?.notes ?? "");
-			setImpression(session?.impression ?? null);
+			setImpression(session?.impression ?? undefined);
 			setStartTime(
 				session?.startTime
 					? new Date(session.startTime)
 					: (defaultStartDate ?? new Date()),
 			);
-			setEndTime(session?.endTime ? new Date(session.endTime) : null);
-			setWorkoutTemplate(null);
-			setHoveredStar(null);
-			setError(null);
+			setEndTime(session?.endTime ? new Date(session.endTime) : undefined);
+			setWorkoutTemplate(undefined);
+			setHoveredStar(undefined);
+			setError(undefined);
 		}
 	}, [open, session, defaultStartDate]);
 	const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setError(null);
-		// Must be null or valid date
-		const isStartValid =
-			startTime === null || !Number.isNaN(startTime.getTime());
-		const isEndValid = endTime === null || !Number.isNaN(endTime.getTime());
+		setError(undefined);
+		const isStartValid = !startTime || !Number.isNaN(startTime.getTime());
+		const isEndValid = !endTime || !Number.isNaN(endTime.getTime());
 		// Prevent negative durations (if both are valid dates)
 		const isDurationValid =
 			!startTime || !endTime || startTime.getTime() < endTime.getTime();
@@ -211,7 +209,7 @@ export const EditSessionModal = ({
 											type="button"
 											onClick={() => setImpression(starValue)}
 											onMouseEnter={() => setHoveredStar(starValue)}
-											onMouseLeave={() => setHoveredStar(null)}
+											onMouseLeave={() => setHoveredStar(undefined)}
 											className="p-1 rounded-md transition-all duration-150 hover:scale-110 focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-1"
 										>
 											<Star
@@ -227,7 +225,7 @@ export const EditSessionModal = ({
 								{impression && (
 									<button
 										type="button"
-										onClick={() => setImpression(null)}
+										onClick={() => setImpression(undefined)}
 										className="ml-2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
 									>
 										<X className="h-4 w-4" />

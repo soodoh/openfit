@@ -12,7 +12,7 @@ export const AddExerciseRow = ({
 	sessionOrDayId: RoutineDayId;
 	isSession: boolean;
 }): ReactNode => {
-	const [exercise, setExercise] = useState<Exercise | undefined>(null);
+	const [exercise, setExercise] = useState<Exercise | undefined>(undefined);
 	const [numSets, setNumSets] = useState<string>("1");
 	const createSetGroupMutation = useCreateSetGroup();
 	const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
@@ -27,7 +27,7 @@ export const AddExerciseRow = ({
 			exerciseId: exercise.id,
 			numSets: Number.parseInt(numSets, 10),
 		});
-		setExercise(null);
+		setExercise(undefined);
 		setNumSets("1");
 	};
 	return (

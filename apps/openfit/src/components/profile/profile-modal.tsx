@@ -91,24 +91,24 @@ export const ProfileModal = ({
 	const [defaultWeightUnitId, setDefaultWeightUnitId] = useState<string>("");
 	const [selectedTheme, setSelectedTheme] = useState<Theme>("system");
 	const [isPending, setIsPending] = useState(false);
-	const [error, setError] = useState<string | undefined>(null);
+	const [error, setError] = useState<string | undefined>(undefined);
 	// Gym form state
 	const [isAddingGym, setIsAddingGym] = useState(false);
-	const [editingGym, setEditingGym] = useState<Gym | undefined>(null);
+	const [editingGym, setEditingGym] = useState<Gym | undefined>(undefined);
 	const [gymName, setGymName] = useState("");
 	const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>(
 		[],
 	);
-	const [gymError, setGymError] = useState<string | undefined>(null);
+	const [gymError, setGymError] = useState<string | undefined>(undefined);
 	const [isGymPending, setIsGymPending] = useState(false);
 	// Delete modal state
-	const [gymToDelete, setGymToDelete] = useState<Gym | undefined>(null);
+	const [gymToDelete, setGymToDelete] = useState<Gym | undefined>(undefined);
 	const resetGymForm = useCallback(() => {
 		setIsAddingGym(false);
-		setEditingGym(null);
+		setEditingGym(undefined);
 		setGymName("");
 		setSelectedEquipmentIds([]);
-		setGymError(null);
+		setGymError(undefined);
 	}, []);
 	// Reset form when modal opens or profile data changes
 	useEffect(() => {
@@ -127,7 +127,7 @@ export const ProfileModal = ({
 			setDefaultRepUnitId(repUnitId);
 			setDefaultWeightUnitId(weightUnitId);
 			setSelectedTheme(theme);
-			setError(null);
+			setError(undefined);
 			setActiveTab("settings");
 			resetGymForm();
 		}
@@ -147,7 +147,7 @@ export const ProfileModal = ({
 			return;
 		}
 		setIsPending(true);
-		setError(null);
+		setError(undefined);
 		try {
 			await updateProfileMutation.mutateAsync({
 				defaultRepetitionUnitId: defaultRepUnitId,
@@ -164,7 +164,7 @@ export const ProfileModal = ({
 	};
 	const handleSubmitGym = async (event: React.SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		setGymError(null);
+		setGymError(undefined);
 		if (!gymName.trim()) {
 			setGymError("Gym name is required");
 			return;
@@ -530,7 +530,7 @@ export const ProfileModal = ({
 			<DeleteGymModal
 				gym={gymToDelete}
 				isLastGym={gymsData?.length === 1}
-				onClose={() => setGymToDelete(null)}
+				onClose={() => setGymToDelete(undefined)}
 			/>
 		</Dialog>
 	);

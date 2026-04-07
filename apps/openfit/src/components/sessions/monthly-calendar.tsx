@@ -178,10 +178,10 @@ export const MonthlyCalendar = ({
 }): ReactNode => {
 	const [selectedSessionId, setSelectedSessionId] = useState<
 		string | undefined
-	>(null);
+	>(undefined);
 	const [createSessionDate, setCreateSessionDate] = useState<
 		dayjs.Dayjs | undefined
-	>(null);
+	>(undefined);
 	// Build calendar grid
 	const startOfMonth = currentMonth.startOf("month");
 	const endOfMonth = currentMonth.endOf("month");
@@ -285,14 +285,14 @@ export const MonthlyCalendar = ({
 				sessionId={selectedSessionId}
 				units={units}
 				open={Boolean(selectedSessionId)}
-				onClose={() => setSelectedSessionId(null)}
+				onClose={() => setSelectedSessionId(undefined)}
 				isActive={selectedSessionId === currentSessionId}
 			/>
 
 			{/* Create Session Modal */}
 			<EditSessionModal
 				open={Boolean(createSessionDate)}
-				onClose={() => setCreateSessionDate(null)}
+				onClose={() => setCreateSessionDate(undefined)}
 				defaultStartDate={createSessionDate
 					?.hour(9)
 					.minute(0)

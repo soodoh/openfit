@@ -9,11 +9,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import type { LookupItem } from "@/lib/types";
 
-type LookupItem = {
-	id: string;
-	name: string;
-};
 type DeleteLookupModalProps = {
 	item: LookupItem | undefined;
 	title: string;
@@ -28,13 +25,13 @@ export function DeleteLookupModal({
 	onDelete,
 	isPending,
 }: DeleteLookupModalProps) {
-	const open = item !== null;
-	const [error, setError] = useState<string | undefined>(null);
+	const open = Boolean(item);
+	const [error, setError] = useState<string | undefined>(undefined);
 	const handleDelete = async () => {
 		if (!item) {
 			return;
 		}
-		setError(null);
+		setError(undefined);
 		try {
 			await onDelete(item);
 		} catch (caughtError) {
@@ -46,7 +43,7 @@ export function DeleteLookupModal({
 		}
 	};
 	const handleClose = () => {
-		setError(null);
+		setError(undefined);
 		onClose();
 	};
 	return (

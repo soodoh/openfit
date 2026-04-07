@@ -60,10 +60,10 @@ export function ExerciseTable() {
 	const [formModalOpen, setFormModalOpen] = useState(false);
 	const [editExercise, setEditExercise] = useState<
 		ExerciseWithRelations | undefined
-	>(null);
+	>(undefined);
 	const [deleteExercise, setDeleteExercise] = useState<
 		ExerciseWithRelations | undefined
-	>(null);
+	>(undefined);
 	const { data, isLoading } = useAdminExercisesPaginated({
 		page: currentPage,
 		pageSize,
@@ -92,7 +92,7 @@ export function ExerciseTable() {
 		setCurrentPage(1);
 	}, []);
 	const handleCreate = () => {
-		setEditExercise(null);
+		setEditExercise(undefined);
 		setFormModalOpen(true);
 	};
 	const handleEdit = (exercise: ExerciseWithRelations) => {
@@ -101,7 +101,7 @@ export function ExerciseTable() {
 	};
 	const handleCloseForm = () => {
 		setFormModalOpen(false);
-		setEditExercise(null);
+		setEditExercise(undefined);
 	};
 	if (isLoading && !data) {
 		return <ExerciseTableSkeleton />;
@@ -228,7 +228,7 @@ export function ExerciseTable() {
 
 			<DeleteExerciseModal
 				exercise={deleteExercise}
-				onClose={() => setDeleteExercise(null)}
+				onClose={() => setDeleteExercise(undefined)}
 				onDelete={(id: string) => deleteExerciseMutation.mutate(id)}
 			/>
 		</>

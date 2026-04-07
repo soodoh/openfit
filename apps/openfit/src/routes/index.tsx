@@ -134,7 +134,7 @@ function RecentActivitySkeleton() {
 function DashboardContent() {
 	const [selectedSessionId, setSelectedSessionId] = useState<
 		string | undefined
-	>(null);
+	>(undefined);
 	const { data: stats, isLoading: statsLoading } = useDashboardStats();
 	const { data: recentSessions, isLoading: recentLoading } =
 		useRecentSessions();
@@ -269,7 +269,7 @@ function DashboardContent() {
 					sessionId={selectedSessionId}
 					units={units}
 					open={Boolean(selectedSessionId)}
-					onClose={() => setSelectedSessionId(null)}
+					onClose={() => setSelectedSessionId(undefined)}
 				/>
 			)}
 		</div>

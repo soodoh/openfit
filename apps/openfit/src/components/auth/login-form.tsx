@@ -94,7 +94,9 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 	const navigate = useNavigate();
 	const { isAuthenticated, isLoading: authLoading } = useAuth();
 	const [loading, setLoading] = useState(false);
-	const [oauthLoading, setOauthLoading] = useState<string | undefined>(null);
+	const [oauthLoading, setOauthLoading] = useState<string | undefined>(
+		undefined,
+	);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [emailError, setEmailError] = useState<string[]>([]);
@@ -169,7 +171,7 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 			const message =
 				error instanceof Error ? error.message : "OAuth sign-in failed";
 			setPasswordError([message]);
-			setOauthLoading(null);
+			setOauthLoading(undefined);
 		}
 	};
 	const hasOAuthProviders = OAUTH_PROVIDERS.length > 0;
@@ -199,7 +201,7 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 										type="button"
 										variant="outline"
 										className="w-full"
-										disabled={oauthLoading !== null}
+										disabled={oauthLoading !== undefined}
 										onClick={async () => handleOAuthSignIn(provider.id)}
 									>
 										{oauthLoading === provider.id ? (

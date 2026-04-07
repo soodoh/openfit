@@ -29,8 +29,8 @@ export function GymMenu({
 	onEdit,
 	onDelete,
 }: GymMenuProps) {
-	const [modal, setModal] = useState<Modal | undefined>(null);
-	const handleClose = () => setModal(null);
+	const [modal, setModal] = useState<Modal | undefined>(undefined);
+	const handleClose = () => setModal(undefined);
 	const setDefaultGymMutation = useSetDefaultGym();
 	const handleSetDefault = async () => {
 		await setDefaultGymMutation.mutateAsync(gym.id);
@@ -61,7 +61,7 @@ export function GymMenu({
 			)}
 			{!onDelete && (
 				<DeleteGymModal
-					gym={modal === Modal.DELETE ? gym : null}
+					gym={modal === Modal.DELETE ? gym : undefined}
 					onClose={handleClose}
 				/>
 			)}

@@ -130,8 +130,12 @@ export const RoutineOverviewTab = ({
 	const [isEditing, setIsEditing] = useState(false);
 	const [isAddingDay, setIsAddingDay] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
-	const [startingDayId, setStartingDayId] = useState<string | undefined>(null);
-	const [deletingDayId, setDeletingDayId] = useState<string | undefined>(null);
+	const [startingDayId, setStartingDayId] = useState<string | undefined>(
+		undefined,
+	);
+	const [deletingDayId, setDeletingDayId] = useState<string | undefined>(
+		undefined,
+	);
 	const createSessionMutation = useCreateSession();
 	const handleStartWorkout = async (dayId: string) => {
 		setStartingDayId(dayId);
@@ -143,7 +147,7 @@ export const RoutineOverviewTab = ({
 				void navigate({ to: "/workout" });
 			}
 		} finally {
-			setStartingDayId(null);
+			setStartingDayId(undefined);
 		}
 	};
 	const handleDayAdded = (dayId: string) => {
@@ -268,7 +272,7 @@ export const RoutineOverviewTab = ({
 			{deletingDayId && (
 				<DeleteDayModal
 					open={Boolean(deletingDayId)}
-					onClose={() => setDeletingDayId(null)}
+					onClose={() => setDeletingDayId(undefined)}
 					dayId={deletingDayId}
 				/>
 			)}

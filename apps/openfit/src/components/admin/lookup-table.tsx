@@ -26,10 +26,6 @@ type LookupTableProps = {
 	singularTitle: string;
 	lookupType: LookupType;
 };
-// Local type for items with id
-type LookupItemWithId = {
-	id: string;
-} & LookupItem;
 function LookupTableSkeleton({ title }: { title: string }) {
 	return (
 		<Card>
@@ -69,9 +65,9 @@ export function LookupTable({
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [formModalOpen, setFormModalOpen] = useState(false);
-	const [editItem, setEditItem] = useState<LookupItemWithId | undefined>(null);
-	const [deleteItem, setDeleteItem] = useState<LookupItemWithId | undefined>(
-		null,
+	const [editItem, setEditItem] = useState<LookupItem | undefined>(undefined);
+	const [deleteItem, setDeleteItem] = useState<LookupItem | undefined>(
+		undefined,
 	);
 	const { data, isLoading } = useAdminLookupPaginated(lookupType, {
 		page: currentPage,
@@ -103,16 +99,16 @@ export function LookupTable({
 		setCurrentPage(1);
 	}, []);
 	const handleCreate = () => {
-		setEditItem(null);
+		setEditItem(undefined);
 		setFormModalOpen(true);
 	};
-	const handleEdit = (item: LookupItemWithId) => {
+	const handleEdit = (item: LookupItem) => {
 		setEditItem(item);
 		setFormModalOpen(true);
 	};
 	const handleCloseForm = () => {
 		setFormModalOpen(false);
-		setEditItem(null);
+		setEditItem(undefined);
 	};
 	const handleFormSubmit = async (name: string) => {
 		await (editItem
@@ -127,12 +123,12 @@ export function LookupTable({
 				}));
 		handleCloseForm();
 	};
-	const handleDelete = async (item: LookupItemWithId) => {
+	const handleDelete = async (item: LookupItem) => {
 		await deleteLookupMutation.mutateAsync({
 			id: item.id,
 			type: lookupType,
 		});
-		setDeleteItem(null);
+		setDeleteItem(undefined);
 	};
 	if (isLoading && !data) {
 		return <LookupTableSkeleton title={title} />;
@@ -231,7 +227,7 @@ export function LookupTable({
 			<DeleteLookupModal
 				item={deleteItem}
 				title={singularTitle}
-				onClose={() => setDeleteItem(null)}
+				onClose={() => setDeleteItem(undefined)}
 				onDelete={handleDelete}
 				isPending={deleteLookupMutation.isPending}
 			/>

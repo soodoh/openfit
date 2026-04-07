@@ -2,45 +2,17 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
+import type { DashboardRecentSession, DashboardStats } from "@/lib/types";
 
-type DashboardStats = {
-	totalSessions: number;
-	totalRoutines: number;
-	thisWeekSessions: number;
-	currentStreak: number;
-};
-type RecentSession = {
-	id: string;
-	name: string;
-	startTime: string;
-	endTime: string | undefined;
-	impression: number | undefined;
-	setGroups: Array<{
-		id: string;
-		type: string;
-		order: number;
-		sets: Array<{
-			id: string;
-			exerciseId: string;
-			exercise:
-				| {
-						id: string;
-						name: string;
-						imageUrl: string | undefined;
-				  }
-				| undefined;
-		}>;
-	}>;
-};
 // Fetch dashboard stats
 async function fetchDashboardStats(): Promise<DashboardStats> {
 	const response = await fetch("/api/dashboard/stats");
 	return fetchJson<DashboardStats>(response, "Failed to fetch dashboard stats");
 }
 // Fetch recent sessions
-async function fetchRecentSessions(): Promise<RecentSession[]> {
+async function fetchRecentSessions(): Promise<DashboardRecentSession[]> {
 	const response = await fetch("/api/dashboard/recent-sessions");
-	return fetchJson<RecentSession[]>(
+	return fetchJson<DashboardRecentSession[]>(
 		response,
 		"Failed to fetch recent sessions",
 	);
@@ -53,7 +25,7 @@ export function useDashboardStats(): UseQueryResult<DashboardStats> {
 	});
 }
 // Hook for recent sessions
-export function useRecentSessions(): UseQueryResult<RecentSession[]> {
+export function useRecentSessions(): UseQueryResult<DashboardRecentSession[]> {
 	return useQuery({
 		queryKey: queryKeys.dashboard.recentSessions(),
 		queryFn: fetchRecentSessions,

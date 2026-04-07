@@ -1,5 +1,5 @@
 import { AlertCircle, Loader2, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -11,11 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { LookupItem } from "@/lib/types";
 
-type LookupItem = {
-	id: string;
-	name: string;
-};
 type LookupFormModalProps = {
 	open: boolean;
 	onClose: () => void;
@@ -33,21 +30,21 @@ export function LookupFormModal({
 	isPending,
 }: LookupFormModalProps) {
 	const [name, setName] = useState(item?.name ?? "");
-	const [error, setError] = useState<string | undefined>(null);
-	const [prevOpen, setPrevOpen] = useState(open);
-	// Reset form when modal opens (adjusting state during render)
-	if (open && !prevOpen) {
+	const [error, setError] = useState<string | undefined>(undefined);
+
+	useEffect(() => {
+		if (!open) {
+			return;
+		}
 		setName(item?.name ?? "");
-		setError(null);
-	}
-	if (open !== prevOpen) {
-		setPrevOpen(open);
-	}
+		setError(undefined);
+	}, [item?.name, open]);
+
 	const isEditMode = Boolean(item);
 	const submitLabel = isEditMode ? "Save Changes" : "Create";
 	const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setError(null);
+		setError(undefined);
 		const trimmedName = name.trim();
 		if (!trimmedName) {
 			setError(`${title} name is required`);
