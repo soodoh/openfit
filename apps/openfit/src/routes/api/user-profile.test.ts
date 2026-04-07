@@ -70,12 +70,44 @@ describe("PATCH /api/user-profile", () => {
 		mocks.updateUserProfilesWhere.mockResolvedValue(undefined);
 	});
 
-	it("returns 400 when the default gym is not owned by the current user", async () => {
+	it("returns 400 when the default gym belongs to another user", async () => {
 		mocks.findFirstUserProfile.mockResolvedValue({
 			id: "profile_123",
 			userId: "user_123",
 		});
-		mocks.findFirstGym.mockResolvedValue(null);
+		mocks.findFirstGym.mockImplementation(({ where }) => {
+			if (
+				where.type === "eq" &&
+				where.left === mocks.schema.gyms.id &&
+				where.right === "gym_other_user"
+			) {
+				return {
+					id: "gym_other_user",
+					userId: "user_999",
+					name: "Other User Gym",
+				};
+			}
+
+			if (
+				where.type === "and" &&
+				where.conditions.some(
+					(condition) =>
+						condition.type === "eq" &&
+						condition.left === mocks.schema.gyms.id &&
+						condition.right === "gym_other_user",
+				) &&
+				where.conditions.some(
+					(condition) =>
+						condition.type === "eq" &&
+						condition.left === mocks.schema.gyms.userId &&
+						condition.right === "user_123",
+				)
+			) {
+				return null;
+			}
+
+			return null;
+		});
 
 		const response = await handlers.PATCH({
 			request: new Request("http://localhost/api/user-profile", {
@@ -90,6 +122,23 @@ describe("PATCH /api/user-profile", () => {
 			error: "Default gym not found",
 		});
 		expect(mocks.updateUserProfiles).not.toHaveBeenCalled();
+		expect(mocks.findFirstGym).toHaveBeenCalledWith({
+			where: expect.objectContaining({
+				type: "and",
+				conditions: expect.arrayContaining([
+					expect.objectContaining({
+						type: "eq",
+						left: mocks.schema.gyms.id,
+						right: "gym_other_user",
+					}),
+					expect.objectContaining({
+						type: "eq",
+						left: mocks.schema.gyms.userId,
+						right: "user_123",
+					}),
+				]),
+			}),
+		});
 	});
 
 	it("accepts an owned default gym id", async () => {
