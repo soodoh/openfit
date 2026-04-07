@@ -15,6 +15,8 @@ import type {
 } from "@/db/schema/user-data";
 import type { WorkoutSession as DbWorkoutSession } from "@/db/schema/workouts";
 
+export type { AdminPage as PaginatedResponse } from "./api-types";
+
 // Re-export base types from DB schema
 export type {
 	DbUserProfile as UserProfile,
@@ -55,12 +57,6 @@ export type MuscleGroup = LookupItem & {
 };
 export type Category = LookupItem & {
 	createdAt?: Date;
-};
-export type PaginatedResponse<T> = {
-	items: T[];
-	total: number;
-	page: number;
-	pageSize: number;
 };
 export type AdminPaginationParams = {
 	page: number;
