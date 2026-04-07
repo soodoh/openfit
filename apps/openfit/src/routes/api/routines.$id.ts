@@ -2,57 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
-import type {
-	MutationSuccessResult,
-	RoutineDayDto,
-	RoutineDto,
-} from "@/lib/api-types";
+import {
+	loadRoutineById,
+	requireOwnedRoutine,
+} from "@/lib/api-resource-helpers";
+import { serializeRoutine } from "@/lib/api-serializers";
+import type { MutationSuccessResult } from "@/lib/api-types";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { getRoutineDaysWithWeekdays } from "@/lib/data-loaders";
 import { parseJsonBody } from "@/lib/request-helpers";
 import { updateRoutineSchema } from "@/lib/request-schemas";
-
-function serializeTimestamp(value: Date | string): string {
-	return typeof value === "string" ? value : value.toISOString();
-}
-
-function serializeRoutineDay(
-	routineDay: Omit<RoutineDayDto, "createdAt" | "updatedAt" | "weekdays"> & {
-		createdAt: Date | string;
-		updatedAt: Date | string;
-		weekdays: Array<number | { weekday: number }>;
-	},
-): RoutineDayDto {
-	return {
-		...routineDay,
-		createdAt: serializeTimestamp(routineDay.createdAt),
-		updatedAt: serializeTimestamp(routineDay.updatedAt),
-		weekdays: routineDay.weekdays.map((weekday) =>
-			typeof weekday === "number" ? weekday : weekday.weekday,
-		),
-	};
-}
-
-function serializeRoutine(
-	routine: Omit<RoutineDto, "createdAt" | "updatedAt" | "routineDays"> & {
-		createdAt: Date | string;
-		updatedAt: Date | string;
-		routineDays: Array<
-			Omit<RoutineDayDto, "createdAt" | "updatedAt" | "weekdays"> & {
-				createdAt: Date | string;
-				updatedAt: Date | string;
-				weekdays: Array<number | { weekday: number }>;
-			}
-		>;
-	},
-): RoutineDto {
-	return {
-		...routine,
-		createdAt: serializeTimestamp(routine.createdAt),
-		updatedAt: serializeTimestamp(routine.updatedAt),
-		routineDays: routine.routineDays.map(serializeRoutineDay),
-	};
-}
 
 export const Route = createFileRoute("/api/routines/$id")({
 	server: {
@@ -75,19 +34,17 @@ export const Route = createFileRoute("/api/routines/$id")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				const { id } = params;
-				const routine = await db.query.routines.findFirst({
-					where: eq(schema.routines.id, id),
-				});
-				if (!routine) {
-					return Response.json({ error: "Routine not found" }, { status: 404 });
-				}
-				if (routine.userId !== session.user.id) {
-					return Response.json({ error: "Unauthorized" }, { status: 403 });
+				const ownership = await requireOwnedRoutine(session.user.id, id);
+				if (ownership.status !== 200) {
+					return Response.json(
+						{ error: ownership.error },
+						{ status: ownership.status },
+					);
 				}
 				const routineDays = await getRoutineDaysWithWeekdays(id);
 				return Response.json(
 					serializeRoutine({
-						...routine,
+						...ownership.routine,
 						routineDays,
 					}),
 				);
@@ -111,17 +68,12 @@ export const Route = createFileRoute("/api/routines/$id")({
 				}
 				const { id } = params;
 				try {
-					const routine = await db.query.routines.findFirst({
-						where: eq(schema.routines.id, id),
-					});
-					if (!routine) {
+					const ownership = await requireOwnedRoutine(session.user.id, id);
+					if (ownership.status !== 200) {
 						return Response.json(
-							{ error: "Routine not found" },
-							{ status: 404 },
+							{ error: ownership.error },
+							{ status: ownership.status },
 						);
-					}
-					if (routine.userId !== session.user.id) {
-						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
 					const body = await parseJsonBody(request, updateRoutineSchema);
 					const { name, description } = body;
@@ -135,9 +87,7 @@ export const Route = createFileRoute("/api/routines/$id")({
 							updatedAt: new Date(),
 						})
 						.where(eq(schema.routines.id, id));
-					const updated = await db.query.routines.findFirst({
-						where: eq(schema.routines.id, id),
-					});
+					const updated = await loadRoutineById(id);
 					const routineDays = await getRoutineDaysWithWeekdays(id);
 					if (!updated) {
 						return Response.json(
@@ -180,17 +130,12 @@ export const Route = createFileRoute("/api/routines/$id")({
 				}
 				const { id } = params;
 				try {
-					const routine = await db.query.routines.findFirst({
-						where: eq(schema.routines.id, id),
-					});
-					if (!routine) {
+					const ownership = await requireOwnedRoutine(session.user.id, id);
+					if (ownership.status !== 200) {
 						return Response.json(
-							{ error: "Routine not found" },
-							{ status: 404 },
+							{ error: ownership.error },
+							{ status: ownership.status },
 						);
-					}
-					if (routine.userId !== session.user.id) {
-						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
 					// Delete routine (cascades to routine days, set groups, sets via FK)
 					await db.delete(schema.routines).where(eq(schema.routines.id, id));

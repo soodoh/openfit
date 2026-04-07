@@ -3,9 +3,12 @@ import { asc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
+import { loadGymWithEquipment } from "@/lib/api-resource-helpers";
+import { serializeGym } from "@/lib/api-serializers";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
 import { createGymSchema } from "@/lib/request-schemas";
+
 export const Route = createFileRoute("/api/gyms")({
 	server: {
 		handlers: {
@@ -31,13 +34,7 @@ export const Route = createFileRoute("/api/gyms")({
 						},
 					},
 				});
-				// Transform to include equipment IDs array
-				const gymsWithEquipment = gyms.map((gym) =>
-					Object.assign(gym, {
-						equipmentIds: gym.equipment.map((ge) => ge.equipmentId),
-					}),
-				);
-				return Response.json(gymsWithEquipment);
+				return Response.json(gyms.map(serializeGym));
 			},
 			// POST /api/gyms - Create a new gym
 			POST: async ({ request }: { request: Request }) => {
@@ -68,23 +65,14 @@ export const Route = createFileRoute("/api/gyms")({
 							equipmentId,
 						});
 					}
-					const gym = await db.query.gyms.findFirst({
-						where: eq(schema.gyms.id, gymId),
-						with: {
-							equipment: {
-								with: {
-									equipment: true,
-								},
-							},
-						},
-					});
-					return Response.json(
-						{
-							...gym,
-							equipmentIds: gym?.equipment.map((ge) => ge.equipmentId) ?? [],
-						},
-						{ status: 201 },
-					);
+					const gym = await loadGymWithEquipment(gymId);
+					if (!gym) {
+						return Response.json(
+							{ error: "Failed to create gym" },
+							{ status: 500 },
+						);
+					}
+					return Response.json(serializeGym(gym), { status: 201 });
 				} catch (error) {
 					if (error instanceof Response) {
 						return error;

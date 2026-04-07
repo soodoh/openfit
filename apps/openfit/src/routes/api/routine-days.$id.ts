@@ -3,10 +3,14 @@ import { asc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
+import {
+	loadRoutineDayWithRelations,
+	requireOwnedRoutineDay,
+} from "@/lib/api-resource-helpers";
+import { serializeRoutineDay } from "@/lib/api-serializers";
 import type {
 	MutationSuccessResult,
 	RoutineDayDetailDto,
-	RoutineDayDto,
 } from "@/lib/api-types";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { getFirstExerciseImageUrl } from "@/lib/data-loaders";
@@ -15,42 +19,6 @@ import { updateRoutineDaySchema } from "@/lib/request-schemas";
 
 function serializeTimestamp(value: Date | string): string {
 	return typeof value === "string" ? value : value.toISOString();
-}
-
-function serializeRoutineDay(
-	routineDay: Omit<
-		RoutineDayDto,
-		"createdAt" | "updatedAt" | "weekdays" | "routine"
-	> & {
-		createdAt: Date | string;
-		updatedAt: Date | string;
-		routine?:
-			| (Omit<
-					NonNullable<RoutineDayDto["routine"]>,
-					"createdAt" | "updatedAt"
-			  > & {
-					createdAt: Date | string;
-					updatedAt: Date | string;
-			  })
-			| null;
-		weekdays: Array<number | { weekday: number }>;
-	},
-): RoutineDayDto {
-	return {
-		...routineDay,
-		createdAt: serializeTimestamp(routineDay.createdAt),
-		updatedAt: serializeTimestamp(routineDay.updatedAt),
-		routine: routineDay.routine
-			? {
-					...routineDay.routine,
-					createdAt: serializeTimestamp(routineDay.routine.createdAt),
-					updatedAt: serializeTimestamp(routineDay.routine.updatedAt),
-				}
-			: routineDay.routine,
-		weekdays: routineDay.weekdays.map((weekday) =>
-			typeof weekday === "number" ? weekday : weekday.weekday,
-		),
-	};
 }
 
 export const Route = createFileRoute("/api/routine-days/$id")({
@@ -74,21 +42,12 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				const { id } = params;
-				const routineDay = await db.query.routineDays.findFirst({
-					where: eq(schema.routineDays.id, id),
-					with: {
-						routine: true,
-						weekdays: true,
-					},
-				});
-				if (!routineDay) {
+				const ownership = await requireOwnedRoutineDay(session.user.id, id);
+				if (ownership.status !== 200) {
 					return Response.json(
-						{ error: "Routine day not found" },
-						{ status: 404 },
+						{ error: ownership.error },
+						{ status: ownership.status },
 					);
-				}
-				if (routineDay.userId !== session.user.id) {
-					return Response.json({ error: "Unauthorized" }, { status: 403 });
 				}
 				// Fetch set groups ordered by order field
 				const setGroups = await db.query.workoutSetGroups.findMany({
@@ -129,7 +88,7 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 						};
 					}),
 				);
-				const serializedRoutineDay = serializeRoutineDay(routineDay);
+				const serializedRoutineDay = serializeRoutineDay(ownership.routineDay);
 				const payload = {
 					...serializedRoutineDay,
 					routine: serializedRoutineDay.routine ?? null,
@@ -156,17 +115,12 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 				}
 				const { id } = params;
 				try {
-					const routineDay = await db.query.routineDays.findFirst({
-						where: eq(schema.routineDays.id, id),
-					});
-					if (!routineDay) {
+					const ownership = await requireOwnedRoutineDay(session.user.id, id);
+					if (ownership.status !== 200) {
 						return Response.json(
-							{ error: "Routine day not found" },
-							{ status: 404 },
+							{ error: ownership.error },
+							{ status: ownership.status },
 						);
-					}
-					if (routineDay.userId !== session.user.id) {
-						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
 					const body = await parseJsonBody(request, updateRoutineDaySchema);
 					const { description, weekdays } = body;
@@ -196,13 +150,7 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 						}
 					}
 					// Fetch updated routine day
-					const updated = await db.query.routineDays.findFirst({
-						where: eq(schema.routineDays.id, id),
-						with: {
-							routine: true,
-							weekdays: true,
-						},
-					});
+					const updated = await loadRoutineDayWithRelations(id);
 					if (!updated) {
 						return Response.json(
 							{ error: "Routine day not found" },
@@ -239,17 +187,12 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 				}
 				const { id } = params;
 				try {
-					const routineDay = await db.query.routineDays.findFirst({
-						where: eq(schema.routineDays.id, id),
-					});
-					if (!routineDay) {
+					const ownership = await requireOwnedRoutineDay(session.user.id, id);
+					if (ownership.status !== 200) {
 						return Response.json(
-							{ error: "Routine day not found" },
-							{ status: 404 },
+							{ error: ownership.error },
+							{ status: ownership.status },
 						);
-					}
-					if (routineDay.userId !== session.user.id) {
-						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
 					// Delete routine day (cascades to weekdays, set groups, sets via FK)
 					await db

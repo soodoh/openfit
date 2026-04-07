@@ -3,9 +3,15 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
+import {
+	loadGymWithEquipment,
+	requireOwnedGym,
+} from "@/lib/api-resource-helpers";
+import { serializeGym } from "@/lib/api-serializers";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
 import { updateGymSchema } from "@/lib/request-schemas";
+
 export const Route = createFileRoute("/api/gyms/$id")({
 	server: {
 		handlers: {
@@ -27,26 +33,14 @@ export const Route = createFileRoute("/api/gyms/$id")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				const { id } = params;
-				const gym = await db.query.gyms.findFirst({
-					where: eq(schema.gyms.id, id),
-					with: {
-						equipment: {
-							with: {
-								equipment: true,
-							},
-						},
-					},
-				});
-				if (!gym) {
-					return Response.json({ error: "Gym not found" }, { status: 404 });
+				const ownership = await requireOwnedGym(session.user.id, id);
+				if (ownership.status !== 200) {
+					return Response.json(
+						{ error: ownership.error },
+						{ status: ownership.status },
+					);
 				}
-				if (gym.userId !== session.user.id) {
-					return Response.json({ error: "Unauthorized" }, { status: 403 });
-				}
-				return Response.json({
-					...gym,
-					equipmentIds: gym.equipment.map((ge) => ge.equipmentId),
-				});
+				return Response.json(serializeGym(ownership.gym));
 			},
 			// PATCH /api/gyms/[id] - Update gym
 			PATCH: async ({
@@ -67,14 +61,12 @@ export const Route = createFileRoute("/api/gyms/$id")({
 				}
 				const { id } = params;
 				try {
-					const gym = await db.query.gyms.findFirst({
-						where: eq(schema.gyms.id, id),
-					});
-					if (!gym) {
-						return Response.json({ error: "Gym not found" }, { status: 404 });
-					}
-					if (gym.userId !== session.user.id) {
-						return Response.json({ error: "Unauthorized" }, { status: 403 });
+					const ownership = await requireOwnedGym(session.user.id, id);
+					if (ownership.status !== 200) {
+						return Response.json(
+							{ error: ownership.error },
+							{ status: ownership.status },
+						);
 					}
 					const body = await parseJsonBody(request, updateGymSchema);
 					const { name, equipmentIds } = body;
@@ -101,20 +93,11 @@ export const Route = createFileRoute("/api/gyms/$id")({
 							});
 						}
 					}
-					const updated = await db.query.gyms.findFirst({
-						where: eq(schema.gyms.id, id),
-						with: {
-							equipment: {
-								with: {
-									equipment: true,
-								},
-							},
-						},
-					});
-					return Response.json({
-						...updated,
-						equipmentIds: updated?.equipment.map((ge) => ge.equipmentId) ?? [],
-					});
+					const updated = await loadGymWithEquipment(id);
+					if (!updated) {
+						return Response.json({ error: "Gym not found" }, { status: 404 });
+					}
+					return Response.json(serializeGym(updated));
 				} catch (error) {
 					if (error instanceof Response) {
 						return error;
@@ -144,14 +127,12 @@ export const Route = createFileRoute("/api/gyms/$id")({
 				}
 				const { id } = params;
 				try {
-					const gym = await db.query.gyms.findFirst({
-						where: eq(schema.gyms.id, id),
-					});
-					if (!gym) {
-						return Response.json({ error: "Gym not found" }, { status: 404 });
-					}
-					if (gym.userId !== session.user.id) {
-						return Response.json({ error: "Unauthorized" }, { status: 403 });
+					const ownership = await requireOwnedGym(session.user.id, id);
+					if (ownership.status !== 200) {
+						return Response.json(
+							{ error: ownership.error },
+							{ status: ownership.status },
+						);
 					}
 					// Delete gym (cascades to equipment via FK)
 					await db.delete(schema.gyms).where(eq(schema.gyms.id, id));
