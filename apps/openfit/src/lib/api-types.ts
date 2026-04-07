@@ -1,8 +1,3 @@
-import type {
-	ExerciseForce,
-	ExerciseLevel,
-	ExerciseMechanic,
-} from "@/db/schema/exercises";
 import type { Role, Theme } from "@/db/schema/user-data";
 
 export type MutationSuccessResult = { success: true };
@@ -266,22 +261,4 @@ export type UserProfileDto = UserProfileBaseDto & {
 	defaultRepetitionUnit: LookupItemDto | null;
 	defaultWeightUnit: LookupItemDto | null;
 	defaultGym: LookupItemDto | null;
-};
-
-export type AdminExerciseDto = {
-	id: string;
-	name: string;
-	level: ExerciseLevel;
-	force: ExerciseForce | null;
-	mechanic: ExerciseMechanic | null;
-	equipmentId: string | null;
-	categoryId: string;
-	primaryMuscleIds: string[];
-	secondaryMuscleIds: string[];
-	instructions: string[];
-	imageUrls: string[];
-	equipment: LookupItemDto | null;
-	category: LookupItemDto | null;
-	primaryMuscles: LookupItemDto[];
-	secondaryMuscles: LookupItemDto[];
 };
