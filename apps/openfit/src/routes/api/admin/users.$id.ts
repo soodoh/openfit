@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { adminUserRoleUpdateSchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/admin/users/$id")({
 	server: {
 		handlers: {
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/api/admin/users/$id")({
 				try {
 					await requireAdmin(request);
 					const { id } = params;
-					const body = await parseJsonBody<{ role: string }>(request);
+					const body = await parseJsonBody(request, adminUserRoleUpdateSchema);
 					const updated = await db
 						.update(schema.userProfiles)
 						.set({ role: body.role })
@@ -28,11 +29,8 @@ export const Route = createFileRoute("/api/admin/users/$id")({
 					}
 					return Response.json(updated[0]);
 				} catch (error) {
-					if (error instanceof Error && error.message === "Unauthorized") {
-						return Response.json({ error: "Unauthorized" }, { status: 401 });
-					}
-					if (error instanceof Error && error.message === "Forbidden") {
-						return Response.json({ error: "Forbidden" }, { status: 403 });
+					if (error instanceof Response) {
+						return error;
 					}
 					return Response.json(
 						{ error: "Failed to update user" },

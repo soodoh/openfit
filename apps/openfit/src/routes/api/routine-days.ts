@@ -9,6 +9,7 @@ import {
 	requireAuth,
 } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { createRoutineDaySchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/routine-days")({
 	server: {
 		handlers: {
@@ -59,11 +60,7 @@ export const Route = createFileRoute("/api/routine-days")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				try {
-					const body = await parseJsonBody<{
-						routineId: string;
-						description: string;
-						weekdays?: number[];
-					}>(request);
+					const body = await parseJsonBody(request, createRoutineDaySchema);
 					const { routineId, description, weekdays = [] } = body;
 					// Verify routine ownership
 					const routine = await db.query.routines.findFirst({
@@ -72,29 +69,13 @@ export const Route = createFileRoute("/api/routine-days")({
 					if (!routine || routine.userId !== session.user.id) {
 						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
-					const trimmedDescription = description?.trim();
-					if (!trimmedDescription) {
-						return Response.json(
-							{ error: "Description cannot be empty" },
-							{ status: 400 },
-						);
-					}
-					// Validate weekdays
-					for (const day of weekdays) {
-						if (day < 0 || day > 6 || !Number.isInteger(day)) {
-							return Response.json(
-								{ error: "Weekdays must be integers between 0 and 6" },
-								{ status: 400 },
-							);
-						}
-					}
 					// Create routine day
 					const routineDayId = nanoid();
 					await db.insert(schema.routineDays).values({
 						id: routineDayId,
 						routineId,
 						userId: session.user.id,
-						description: trimmedDescription,
+						description,
 					});
 					// Create weekday entries
 					for (const weekday of weekdays) {
@@ -119,7 +100,10 @@ export const Route = createFileRoute("/api/routine-days")({
 						},
 						{ status: 201 },
 					);
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to create routine day" },
 						{ status: 500 },

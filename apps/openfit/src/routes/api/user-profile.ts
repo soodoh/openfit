@@ -8,6 +8,7 @@ import {
 	requireAuth,
 } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { updateUserProfileSchema } from "@/lib/request-schemas";
 // GET /api/user-profile - Get current user's profile
 // PATCH /api/user-profile - Update current user's profile
 export const Route = createFileRoute("/api/user-profile")({
@@ -42,12 +43,7 @@ export const Route = createFileRoute("/api/user-profile")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				try {
-					const body = await parseJsonBody<{
-						theme?: string;
-						defaultRepetitionUnitId?: string;
-						defaultWeightUnitId?: string;
-						defaultGymId?: string | undefined;
-					}>(request);
+					const body = await parseJsonBody(request, updateUserProfileSchema);
 					const {
 						theme,
 						defaultRepetitionUnitId,
@@ -84,7 +80,10 @@ export const Route = createFileRoute("/api/user-profile")({
 						},
 					});
 					return Response.json(updated);
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to update profile" },
 						{ status: 500 },

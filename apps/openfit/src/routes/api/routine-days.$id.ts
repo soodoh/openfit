@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { updateRoutineDaySchema } from "@/lib/request-schemas";
 
 // Helper to get first image URL for an exercise
 async function getFirstImageUrl(
@@ -123,35 +124,14 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 					if (routineDay.userId !== session.user.id) {
 						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
-					const body = await parseJsonBody<{
-						description?: string;
-						weekdays?: number[];
-					}>(request);
+					const body = await parseJsonBody(request, updateRoutineDaySchema);
 					const { description, weekdays } = body;
-					const trimmedDescription = description?.trim();
-					if (description !== undefined && !trimmedDescription) {
-						return Response.json(
-							{ error: "Description cannot be empty" },
-							{ status: 400 },
-						);
-					}
-					// Validate weekdays
-					if (weekdays !== undefined) {
-						for (const day of weekdays) {
-							if (day < 0 || day > 6 || !Number.isInteger(day)) {
-								return Response.json(
-									{ error: "Weekdays must be integers between 0 and 6" },
-									{ status: 400 },
-								);
-							}
-						}
-					}
 					// Update routine day
 					await db
 						.update(schema.routineDays)
 						.set({
-							...(trimmedDescription !== undefined && {
-								description: trimmedDescription,
+							...(description !== undefined && {
+								description,
 							}),
 							updatedAt: new Date(),
 						})
@@ -183,7 +163,10 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 						...updated,
 						weekdays: updated?.weekdays.map((w) => w.weekday) ?? [],
 					});
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to update routine day" },
 						{ status: 500 },

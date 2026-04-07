@@ -4,6 +4,8 @@ import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
+import { parseJsonBody } from "@/lib/request-helpers";
+import { createSetGroupSchema } from "@/lib/request-schemas";
 
 type CreateSetGroupBody = {
 	sessionId?: string;
@@ -157,9 +159,15 @@ export const Route = createFileRoute("/api/set-groups")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				try {
-					const body = (await request.json()) as CreateSetGroupBody;
+					const body = await parseJsonBody<CreateSetGroupBody>(
+						request,
+						createSetGroupSchema,
+					);
 					return await createSetGroupResponse(session.user.id, body);
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to create set group" },
 						{ status: 500 },

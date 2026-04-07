@@ -1,11 +1,45 @@
+import type { ZodType } from "zod";
 /**
  * Type-safe wrappers for JSON request/response handling.
  * These avoid no-unsafe-assignment/member-access lint errors from fetch API's `any` return types.
  */
 
 /** Parse a request body as JSON with a specific type. */
-export async function parseJsonBody<T>(request: Request): Promise<T> {
-	return (await request.json()) as T;
+export async function parseJsonBody<T>(request: Request): Promise<T>;
+export async function parseJsonBody<T>(
+	request: Request,
+	schema: ZodType<T>,
+): Promise<T>;
+export async function parseJsonBody<T>(
+	request: Request,
+	schema?: ZodType<T>,
+): Promise<T> {
+	let body: unknown;
+	try {
+		body = await request.json();
+	} catch {
+		throw Response.json({ error: "Invalid JSON body" }, { status: 400 });
+	}
+
+	if (!schema) {
+		return body as T;
+	}
+
+	const result = schema.safeParse(body);
+	if (!result.success) {
+		throw Response.json(
+			{
+				error: "Invalid request body",
+				issues: result.error.issues.map((issue) => ({
+					message: issue.message,
+					path: issue.path,
+				})),
+			},
+			{ status: 400 },
+		);
+	}
+
+	return result.data;
 }
 
 /** Parse a response body as JSON with a specific type. Throws on non-OK responses. */

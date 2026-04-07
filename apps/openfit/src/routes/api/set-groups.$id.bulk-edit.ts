@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { bulkEditSetGroupSchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/set-groups/$id/bulk-edit")({
 	server: {
 		handlers: {
@@ -38,13 +39,7 @@ export const Route = createFileRoute("/api/set-groups/$id/bulk-edit")({
 					if (setGroup.userId !== session.user.id) {
 						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
-					const body = await parseJsonBody<{
-						reps?: number;
-						weight?: number;
-						repetitionUnitId?: string;
-						weightUnitId?: string;
-						restTime?: number;
-					}>(request);
+					const body = await parseJsonBody(request, bulkEditSetGroupSchema);
 					const { reps, weight, repetitionUnitId, weightUnitId, restTime } =
 						body;
 					// Get all sets in this set group
@@ -66,7 +61,10 @@ export const Route = createFileRoute("/api/set-groups/$id/bulk-edit")({
 							.where(eq(schema.workoutSets.id, set.id));
 					}
 					return Response.json({ success: true });
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to bulk edit" },
 						{ status: 500 },

@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { replaceExerciseSchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/set-groups/$id/replace-exercise")({
 	server: {
 		handlers: {
@@ -38,14 +39,8 @@ export const Route = createFileRoute("/api/set-groups/$id/replace-exercise")({
 					if (setGroup.userId !== session.user.id) {
 						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
-					const body = await parseJsonBody<{ exerciseId: string }>(request);
+					const body = await parseJsonBody(request, replaceExerciseSchema);
 					const { exerciseId } = body;
-					if (!exerciseId) {
-						return Response.json(
-							{ error: "exerciseId is required" },
-							{ status: 400 },
-						);
-					}
 					// Get all sets in this set group
 					const sets = await db.query.workoutSets.findMany({
 						where: eq(schema.workoutSets.setGroupId, id),
@@ -61,7 +56,10 @@ export const Route = createFileRoute("/api/set-groups/$id/replace-exercise")({
 							.where(eq(schema.workoutSets.id, set.id));
 					}
 					return Response.json({ success: true });
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to replace exercise" },
 						{ status: 500 },

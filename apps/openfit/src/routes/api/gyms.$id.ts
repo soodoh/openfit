@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { updateGymSchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/gyms/$id")({
 	server: {
 		handlers: {
@@ -75,23 +76,13 @@ export const Route = createFileRoute("/api/gyms/$id")({
 					if (gym.userId !== session.user.id) {
 						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
-					const body = await parseJsonBody<{
-						name?: string;
-						equipmentIds?: string[];
-					}>(request);
+					const body = await parseJsonBody(request, updateGymSchema);
 					const { name, equipmentIds } = body;
-					const trimmedName = name?.trim();
-					if (name !== undefined && !trimmedName) {
-						return Response.json(
-							{ error: "Name cannot be empty" },
-							{ status: 400 },
-						);
-					}
 					// Update gym
 					await db
 						.update(schema.gyms)
 						.set({
-							...(trimmedName !== undefined && { name: trimmedName }),
+							...(name !== undefined && { name }),
 							updatedAt: new Date(),
 						})
 						.where(eq(schema.gyms.id, id));
@@ -124,7 +115,10 @@ export const Route = createFileRoute("/api/gyms/$id")({
 						...updated,
 						equipmentIds: updated?.equipment.map((ge) => ge.equipmentId) ?? [],
 					});
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to update gym" },
 						{ status: 500 },

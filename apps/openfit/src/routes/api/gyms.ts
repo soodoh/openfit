@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { createGymSchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/gyms")({
 	server: {
 		handlers: {
@@ -50,24 +51,14 @@ export const Route = createFileRoute("/api/gyms")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				try {
-					const body = await parseJsonBody<{
-						name: string;
-						equipmentIds?: string[];
-					}>(request);
+					const body = await parseJsonBody(request, createGymSchema);
 					const { name, equipmentIds = [] } = body;
-					const trimmedName = name?.trim();
-					if (!trimmedName) {
-						return Response.json(
-							{ error: "Name is required" },
-							{ status: 400 },
-						);
-					}
 					// Create gym
 					const gymId = nanoid();
 					await db.insert(schema.gyms).values({
 						id: gymId,
 						userId: session.user.id,
-						name: trimmedName,
+						name,
 					});
 					// Add equipment
 					for (const equipmentId of equipmentIds) {
@@ -94,7 +85,10 @@ export const Route = createFileRoute("/api/gyms")({
 						},
 						{ status: 201 },
 					);
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to create gym" },
 						{ status: 500 },

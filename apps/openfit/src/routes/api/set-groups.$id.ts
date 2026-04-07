@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { updateSetGroupSchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/set-groups/$id")({
 	server: {
 		handlers: {
@@ -38,10 +39,7 @@ export const Route = createFileRoute("/api/set-groups/$id")({
 					if (setGroup.userId !== session.user.id) {
 						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
-					const body = await parseJsonBody<{
-						type?: string;
-						comment?: string | undefined;
-					}>(request);
+					const body = await parseJsonBody(request, updateSetGroupSchema);
 					const { type, comment } = body;
 					await db
 						.update(schema.workoutSetGroups)
@@ -55,7 +53,10 @@ export const Route = createFileRoute("/api/set-groups/$id")({
 						where: eq(schema.workoutSetGroups.id, id),
 					});
 					return Response.json(updated);
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to update set group" },
 						{ status: 500 },

@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { updateSetSchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/sets/$id")({
 	server: {
 		handlers: {
@@ -35,15 +36,7 @@ export const Route = createFileRoute("/api/sets/$id")({
 					if (set.userId !== session.user.id) {
 						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
-					const body = await parseJsonBody<{
-						type?: string;
-						reps?: number;
-						repetitionUnitId?: string;
-						weight?: number;
-						weightUnitId?: string;
-						restTime?: number;
-						completed?: boolean;
-					}>(request);
+					const body = await parseJsonBody(request, updateSetSchema);
 					const {
 						type,
 						reps,
@@ -75,7 +68,10 @@ export const Route = createFileRoute("/api/sets/$id")({
 						},
 					});
 					return Response.json(updated);
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to update set" },
 						{ status: 500 },

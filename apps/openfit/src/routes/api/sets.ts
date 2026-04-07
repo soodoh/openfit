@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { createSetSchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/sets")({
 	server: {
 		handlers: {
@@ -20,16 +21,7 @@ export const Route = createFileRoute("/api/sets")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				try {
-					const body = await parseJsonBody<{
-						setGroupId: string;
-						exerciseId: string;
-						type?: string;
-						reps?: number;
-						repetitionUnitId?: string;
-						weight?: number;
-						weightUnitId?: string;
-						restTime?: number;
-					}>(request);
+					const body = await parseJsonBody(request, createSetSchema);
 					const {
 						setGroupId,
 						exerciseId,
@@ -40,12 +32,6 @@ export const Route = createFileRoute("/api/sets")({
 						weightUnitId,
 						restTime,
 					} = body;
-					if (!setGroupId || !exerciseId) {
-						return Response.json(
-							{ error: "setGroupId and exerciseId are required" },
-							{ status: 400 },
-						);
-					}
 					// Verify set group ownership
 					const setGroup = await db.query.workoutSetGroups.findFirst({
 						where: eq(schema.workoutSetGroups.id, setGroupId),
@@ -100,7 +86,10 @@ export const Route = createFileRoute("/api/sets")({
 						},
 					});
 					return Response.json(created, { status: 201 });
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to create set" },
 						{ status: 500 },

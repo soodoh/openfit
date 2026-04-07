@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { adminLookupMutationSchema } from "@/lib/request-schemas";
 
 type LookupType =
 	| "equipment"
@@ -31,9 +32,7 @@ export const Route = createFileRoute("/api/admin/lookups/$id")({
 				try {
 					await requireAdmin(request);
 					const { id } = params;
-					const body = await parseJsonBody<{ type: string; name: string }>(
-						request,
-					);
+					const body = await parseJsonBody(request, adminLookupMutationSchema);
 					const type = body.type as LookupType;
 					if (!type || !tableMap[type]) {
 						return Response.json({ error: "Invalid type" }, { status: 400 });
@@ -45,11 +44,8 @@ export const Route = createFileRoute("/api/admin/lookups/$id")({
 						.where(eq(table.id, id));
 					return Response.json({ success: true });
 				} catch (error) {
-					if (error instanceof Error && error.message === "Unauthorized") {
-						return Response.json({ error: "Unauthorized" }, { status: 401 });
-					}
-					if (error instanceof Error && error.message === "Forbidden") {
-						return Response.json({ error: "Forbidden" }, { status: 403 });
+					if (error instanceof Response) {
+						return error;
 					}
 					return Response.json(
 						{ error: "Failed to update lookup" },
@@ -76,11 +72,8 @@ export const Route = createFileRoute("/api/admin/lookups/$id")({
 					await db.delete(table).where(eq(table.id, id));
 					return Response.json({ success: true });
 				} catch (error) {
-					if (error instanceof Error && error.message === "Unauthorized") {
-						return Response.json({ error: "Unauthorized" }, { status: 401 });
-					}
-					if (error instanceof Error && error.message === "Forbidden") {
-						return Response.json({ error: "Forbidden" }, { status: 403 });
+					if (error instanceof Response) {
+						return error;
 					}
 					return Response.json(
 						{ error: "Failed to delete lookup" },

@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { reorderSetsSchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/sets/reorder")({
 	server: {
 		handlers: {
@@ -19,17 +20,8 @@ export const Route = createFileRoute("/api/sets/reorder")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				try {
-					const body = await parseJsonBody<{
-						setGroupId: string;
-						setIds: string[];
-					}>(request);
+					const body = await parseJsonBody(request, reorderSetsSchema);
 					const { setGroupId, setIds } = body;
-					if (!setGroupId || !Array.isArray(setIds)) {
-						return Response.json(
-							{ error: "setGroupId and setIds array are required" },
-							{ status: 400 },
-						);
-					}
 					// Verify set group ownership
 					const setGroup = await db.query.workoutSetGroups.findFirst({
 						where: eq(schema.workoutSetGroups.id, setGroupId),
@@ -57,7 +49,10 @@ export const Route = createFileRoute("/api/sets/reorder")({
 							.where(eq(schema.workoutSets.id, setId));
 					}
 					return Response.json({ success: true });
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to reorder sets" },
 						{ status: 500 },

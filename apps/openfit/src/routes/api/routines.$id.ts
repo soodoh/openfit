@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { updateRoutineSchema } from "@/lib/request-schemas";
 
 // Helper to get routine days with weekdays
 async function getRoutineDaysWithWeekdays(routineId: string) {
@@ -86,22 +87,12 @@ export const Route = createFileRoute("/api/routines/$id")({
 					if (routine.userId !== session.user.id) {
 						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
-					const body = await parseJsonBody<{
-						name?: string;
-						description?: string;
-					}>(request);
+					const body = await parseJsonBody(request, updateRoutineSchema);
 					const { name, description } = body;
-					const trimmedName = name?.trim();
-					if (name !== undefined && !trimmedName) {
-						return Response.json(
-							{ error: "Name cannot be empty" },
-							{ status: 400 },
-						);
-					}
 					await db
 						.update(schema.routines)
 						.set({
-							...(trimmedName !== undefined && { name: trimmedName }),
+							...(name !== undefined && { name }),
 							...(description !== undefined && {
 								description: description?.trim() || null,
 							}),
@@ -116,7 +107,10 @@ export const Route = createFileRoute("/api/routines/$id")({
 						...updated,
 						routineDays,
 					});
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to update routine" },
 						{ status: 500 },

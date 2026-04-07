@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { createRoutineSchema } from "@/lib/request-schemas";
 
 // Helper to get routine days with weekdays
 async function getRoutineDaysWithWeekdays(routineId: string) {
@@ -85,23 +86,13 @@ export const Route = createFileRoute("/api/routines")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				try {
-					const body = await parseJsonBody<{
-						name: string;
-						description?: string;
-					}>(request);
+					const body = await parseJsonBody(request, createRoutineSchema);
 					const { name, description } = body;
-					const trimmedName = name?.trim();
-					if (!trimmedName) {
-						return Response.json(
-							{ error: "Name cannot be empty" },
-							{ status: 400 },
-						);
-					}
 					const routineId = nanoid();
 					await db.insert(schema.routines).values({
 						id: routineId,
 						userId: session.user.id,
-						name: trimmedName,
+						name,
 						description: description?.trim() ?? null,
 					});
 					// Fetch created routine
@@ -112,7 +103,10 @@ export const Route = createFileRoute("/api/routines")({
 						{ ...routine, routineDays: [] },
 						{ status: 201 },
 					);
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to create routine" },
 						{ status: 500 },
