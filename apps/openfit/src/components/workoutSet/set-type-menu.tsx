@@ -53,6 +53,11 @@ const setTypeIcons: Partial<Record<SetType, ReactNode>> = {
 		</Avatar>
 	),
 };
+
+function isSetType(value: string): value is SetType {
+	return value in setTypes;
+}
+
 export const SetTypeMenu = ({
 	set,
 	setNum,
@@ -67,7 +72,7 @@ export const SetTypeMenu = ({
 			<DropdownMenu open={open} onOpenChange={setOpen}>
 				<DropdownMenuTrigger asChild>
 					<Button variant="ghost" className="p-0 h-auto">
-						{setTypeIcons[set.type as SetType] ?? (
+						{(isSetType(set.type) ? setTypeIcons[set.type] : undefined) ?? (
 							<Avatar className="w-8 h-8">
 								<AvatarFallback>{setNum}</AvatarFallback>
 							</Avatar>

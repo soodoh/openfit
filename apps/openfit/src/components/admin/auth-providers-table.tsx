@@ -2,6 +2,7 @@ import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { parseResponseJson } from "@/lib/request-helpers";
 
 // Provider type info for display
 const PROVIDER_INFO: Record<
@@ -51,7 +52,7 @@ export function AuthProvidersTable() {
 		const loadProviderStatus = async () => {
 			try {
 				const response = await fetch("/api/auth/providers");
-				const data = (await response.json()) as ProviderStatus;
+				const data = await parseResponseJson<ProviderStatus>(response);
 				if (isMounted) {
 					setProviderStatus(data);
 				}
