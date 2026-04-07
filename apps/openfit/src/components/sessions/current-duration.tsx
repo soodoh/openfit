@@ -1,12 +1,12 @@
 import dayjs from "dayjs";
 import { type ReactNode, useEffect, useState } from "react";
 
-const getTimestamp = (startTime: Date | number) =>
+const getTimestamp = (startTime: Date | number | string) =>
 	dayjs.duration(dayjs().diff(dayjs(startTime))).format("H:mm:ss");
 export const CurrentDuration = ({
 	startTime,
 }: {
-	startTime: Date | number;
+	startTime: Date | number | string;
 }): ReactNode => {
 	const [durationString, setDuration] = useState<string>(
 		getTimestamp(startTime),

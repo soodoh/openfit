@@ -71,7 +71,7 @@ export const auth = betterAuth({
 	databaseHooks: {
 		user: {
 			create: {
-				after: (user) => {
+				after: async (user) => {
 					const repUnits = db
 						.select()
 						.from(schema.repetitionUnits)

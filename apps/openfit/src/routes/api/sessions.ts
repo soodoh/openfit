@@ -136,7 +136,7 @@ export const Route = createFileRoute("/api/sessions")({
 					}
 					// Clone sets from routine day template
 					const setGroups = await db.query.workoutSetGroups.findMany({
-						where: eq(schema.workoutSetGroups.routineDayId, templateId),
+						where: eq(schema.workoutSetGroups.routineDayId, routineDay.id),
 						orderBy: asc(schema.workoutSetGroups.order),
 					});
 					// Clone each set group

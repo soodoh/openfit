@@ -63,7 +63,7 @@ export const RoutineDayTab = ({
 			const result = await createSessionMutation.mutateAsync({
 				templateId: dayId,
 			});
-			if (result?.id) {
+			if (typeof result === "object" && result && "id" in result) {
 				void navigate({ to: "/workout" });
 			}
 		} finally {

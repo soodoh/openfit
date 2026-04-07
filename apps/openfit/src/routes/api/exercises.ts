@@ -19,7 +19,7 @@ export const Route = createFileRoute("/api/exercises")({
 					const { searchParams } = new URL(request.url);
 					const {
 						cursor,
-						limit,
+						limit: rawLimit,
 						search: searchTerm,
 						equipmentId,
 						equipmentIds = [],
@@ -27,6 +27,7 @@ export const Route = createFileRoute("/api/exercises")({
 						categoryId,
 						primaryMuscleId,
 					} = parseSearchParams(searchParams, exercisesListQuerySchema);
+					const limit = rawLimit ?? 20;
 					// Build query conditions
 					const conditions: Array<ReturnType<typeof eq>> = [];
 					if (equipmentId) {

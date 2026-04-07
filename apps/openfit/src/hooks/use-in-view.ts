@@ -9,10 +9,10 @@ export function useInView(options?: IntersectionObserverInit): {
 	const rootMargin = options?.rootMargin ?? "200px";
 	const threshold = options?.threshold;
 	const ref = useCallback(
-		(node: HTMLElement | undefined) => {
+		(node: HTMLElement | null) => {
 			if (observerRef.current) {
 				observerRef.current.disconnect();
-				observerRef.current = null;
+				observerRef.current = undefined;
 			}
 			if (node) {
 				const observer = new IntersectionObserver(

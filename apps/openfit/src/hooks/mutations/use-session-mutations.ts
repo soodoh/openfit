@@ -11,6 +11,9 @@ type CreateSessionInput = {
 	impression?: number;
 	templateId?: string;
 };
+type CreateSessionResponse = {
+	id: string;
+};
 type UpdateSessionInput = {
 	id: string;
 	name?: string;
@@ -20,13 +23,15 @@ type UpdateSessionInput = {
 	endTime?: number | undefined;
 };
 // Create session
-async function createSession(input: CreateSessionInput): Promise<unknown> {
+async function createSession(
+	input: CreateSessionInput,
+): Promise<CreateSessionResponse> {
 	const response = await fetch("/api/sessions", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(input),
 	});
-	return fetchJson<unknown>(response, "Failed to create session");
+	return fetchJson<CreateSessionResponse>(response, "Failed to create session");
 }
 // Update session
 async function updateSession({
@@ -48,7 +53,7 @@ async function deleteSession(id: string): Promise<unknown> {
 	return fetchJson<unknown>(response, "Failed to delete session");
 }
 export function useCreateSession(): UseMutationResult<
-	unknown,
+	CreateSessionResponse,
 	Error,
 	CreateSessionInput
 > {

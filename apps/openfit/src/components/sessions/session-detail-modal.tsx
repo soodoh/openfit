@@ -58,7 +58,7 @@ export const SessionDetailModal = ({
 			: null;
 	const formatDuration = () => {
 		if (!durationDate) {
-			return null;
+			return undefined;
 		}
 		const hours = durationDate.hours();
 		const mins = durationDate.minutes();

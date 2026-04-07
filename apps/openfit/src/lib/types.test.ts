@@ -42,31 +42,21 @@ describe("shared API types", () => {
 				}>;
 			}>;
 		}>();
-		expectTypeOf<UserProfileWithDefaults>().toMatchObjectType<{
-			role: "USER" | "ADMIN";
-			theme: "light" | "dark" | "system";
-			defaultRepetitionUnit:
-				| {
-						id: string;
-						name: string;
-				  }
-				| null
-				| undefined;
-			defaultWeightUnit:
-				| {
-						id: string;
-						name: string;
-				  }
-				| null
-				| undefined;
-			defaultGym:
-				| {
-						id: string;
-						name: string;
-				  }
-				| null
-				| undefined;
-		}>();
+		expectTypeOf<UserProfileWithDefaults["role"]>().toEqualTypeOf<
+			"USER" | "ADMIN"
+		>();
+		expectTypeOf<UserProfileWithDefaults["theme"]>().toEqualTypeOf<
+			"light" | "dark" | "system"
+		>();
+		expectTypeOf<
+			UserProfileWithDefaults["defaultRepetitionUnit"]
+		>().toEqualTypeOf<LookupItem | null | undefined>();
+		expectTypeOf<UserProfileWithDefaults["defaultWeightUnit"]>().toEqualTypeOf<
+			LookupItem | null | undefined
+		>();
+		expectTypeOf<UserProfileWithDefaults["defaultGym"]>().toEqualTypeOf<
+			LookupItem | null | undefined
+		>();
 	});
 
 	it("exposes shared admin list and pagination models", () => {

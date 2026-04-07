@@ -1,9 +1,6 @@
-import type * as TanstackReactRouterModule from "@tanstack/react-router";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type * as AuthProviderModule from "@/components/providers/auth-provider";
-import type * as AuthClientModule from "@/lib/auth-client";
 import { LoginForm } from "./login-form";
 
 const mockNavigate = vi.fn();
@@ -12,7 +9,7 @@ const mockSignUpEmail = vi.fn();
 const mockUseAuth = vi.fn();
 const mockGetSession = vi.fn();
 
-vi.mock<typeof TanstackReactRouterModule>("@tanstack/react-router", () => ({
+vi.mock("@tanstack/react-router", () => ({
 	Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => (
 		<a href={to} {...props} rel="noreferrer">
 			{children}
@@ -21,22 +18,19 @@ vi.mock<typeof TanstackReactRouterModule>("@tanstack/react-router", () => ({
 	useNavigate: () => mockNavigate,
 }));
 
-vi.mock<typeof AuthProviderModule>(
-	"@/components/providers/auth-provider",
-	() => ({
-		signIn: {
-			email: (...args: unknown[]) => mockSignInEmail(...args),
-			social: vi.fn(),
-			oauth2: vi.fn(),
-		},
-		signUp: {
-			email: (...args: unknown[]) => mockSignUpEmail(...args),
-		},
-		useAuth: () => mockUseAuth(),
-	}),
-);
+vi.mock("@/components/providers/auth-provider", () => ({
+	signIn: {
+		email: (...args: unknown[]) => mockSignInEmail(...args),
+		social: vi.fn(),
+		oauth2: vi.fn(),
+	},
+	signUp: {
+		email: (...args: unknown[]) => mockSignUpEmail(...args),
+	},
+	useAuth: () => mockUseAuth(),
+}));
 
-vi.mock<typeof AuthClientModule>("@/lib/auth-client", () => ({
+vi.mock("@/lib/auth-client", () => ({
 	getSession: (...args: unknown[]) => mockGetSession(...args),
 }));
 

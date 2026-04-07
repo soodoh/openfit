@@ -80,7 +80,7 @@ export const WorkoutSetGroup = ({
 		| {
 				id: string;
 				name: string;
-				imageUrl: string | undefined;
+				imageUrl: string | null | undefined;
 		  }
 		| undefined
 	>(undefined);

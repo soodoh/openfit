@@ -1,17 +1,12 @@
-import type * as TanstackReactRouterModule from "@tanstack/react-router";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type * as WorkoutListModule from "@/components/workoutSet/workout-list";
-import type * as HooksModule from "@/hooks";
 import type { Units, WorkoutSessionWithData } from "@/lib/types";
-import type * as CurrentDurationModule from "./current-duration";
 import { CurrentSessionPage } from "./current-session-page";
-import type * as EditSessionMenuModule from "./edit-session-menu";
 
 const mockNavigate = vi.fn();
 const mockMutateAsync = vi.fn();
-vi.mock<typeof TanstackReactRouterModule>("@tanstack/react-router", () => ({
+vi.mock("@tanstack/react-router", () => ({
 	Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => (
 		<a href={to} {...props} rel="noreferrer">
 			{children}
@@ -19,22 +14,19 @@ vi.mock<typeof TanstackReactRouterModule>("@tanstack/react-router", () => ({
 	),
 	useNavigate: () => mockNavigate,
 }));
-vi.mock<typeof HooksModule>("@/hooks", () => ({
+vi.mock("@/hooks", () => ({
 	useUpdateSession: () => ({
 		mutateAsync: mockMutateAsync,
 		isPending: false,
 	}),
 }));
-vi.mock<typeof WorkoutListModule>(
-	"@/components/workoutSet/workout-list",
-	() => ({
-		WorkoutList: () => <div data-testid="workout-list" />,
-	}),
-);
-vi.mock<typeof CurrentDurationModule>("./current-duration", () => ({
+vi.mock("@/components/workoutSet/workout-list", () => ({
+	WorkoutList: () => <div data-testid="workout-list" />,
+}));
+vi.mock("./current-duration", () => ({
 	CurrentDuration: () => <div data-testid="current-duration" />,
 }));
-vi.mock<typeof EditSessionMenuModule>("./edit-session-menu", () => ({
+vi.mock("./edit-session-menu", () => ({
 	EditSessionMenu: () => <div data-testid="edit-session-menu" />,
 }));
 const mockSession = {
@@ -49,7 +41,7 @@ const mockSession = {
 	createdAt: new Date("2026-02-19T10:00:00.000Z"),
 	updatedAt: new Date("2026-02-19T10:00:00.000Z"),
 	setGroups: [],
-} as unknown as WorkoutSessionWithData;
+} satisfies WorkoutSessionWithData;
 const mockUnits: Units = {
 	repetitionUnits: [],
 	weightUnits: [],
@@ -78,7 +70,7 @@ describe("CurrentSessionPage end session confirmation", () => {
 		});
 		const [payload] = mockMutateAsync.mock.calls[0];
 		expect(payload.id).toBe(mockSession.id);
-		expectTypeOf(payload.endTime).toBeNumber();
+		expect(typeof payload.endTime).toBe("number");
 		expect(mockNavigate).toHaveBeenCalledWith({ to: "/logs" });
 	});
 });

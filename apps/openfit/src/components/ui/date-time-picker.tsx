@@ -32,7 +32,7 @@ export function DateTimePicker({
 	const handleDateSelect = (selectedDate: Date | undefined) => {
 		if (!selectedDate) {
 			setDate(undefined);
-			onChange?.(null);
+			onChange?.(undefined);
 			return;
 		}
 		const [hours, minutes] = timeValue.split(":").map(Number);

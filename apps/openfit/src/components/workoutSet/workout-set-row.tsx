@@ -107,7 +107,7 @@ export const WorkoutSetRow = ({
 					(set.repetitionUnit?.name === "Seconds" && !set.completed ? (
 						<WorkoutTimer
 							set={set}
-							onComplete={() => {
+							onComplete={async () => {
 								updateSetMutation.mutate({
 									id: set.id,
 									completed: true,

@@ -41,13 +41,20 @@ async function getNextSetGroupOrder(
 	sessionId: string | undefined,
 	routineDayId: string | undefined,
 ): Promise<number> {
-	const existingSetGroups = sessionId
-		? await db.query.workoutSetGroups.findMany({
-				where: eq(schema.workoutSetGroups.sessionId, sessionId),
-			})
-		: await db.query.workoutSetGroups.findMany({
-				where: eq(schema.workoutSetGroups.routineDayId, routineDayId),
-			});
+	let existingSetGroups: Awaited<
+		ReturnType<typeof db.query.workoutSetGroups.findMany>
+	>;
+	if (sessionId) {
+		existingSetGroups = await db.query.workoutSetGroups.findMany({
+			where: eq(schema.workoutSetGroups.sessionId, sessionId),
+		});
+	} else if (routineDayId) {
+		existingSetGroups = await db.query.workoutSetGroups.findMany({
+			where: eq(schema.workoutSetGroups.routineDayId, routineDayId),
+		});
+	} else {
+		return 0;
+	}
 	if (existingSetGroups.length === 0) {
 		return 0;
 	}

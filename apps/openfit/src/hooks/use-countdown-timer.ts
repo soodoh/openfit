@@ -56,7 +56,7 @@ export const useCountdownTimer = ({
 			const nextSeconds = getRemainingSecondsFromEndTime(endTimeMs);
 			setRemainingSeconds(nextSeconds);
 			if (nextSeconds <= 0) {
-				endTimeMsRef.current = null;
+				endTimeMsRef.current = undefined;
 				setIsRunning(false);
 				onExpireRef.current?.();
 			}
@@ -70,7 +70,7 @@ export const useCountdownTimer = ({
 	const start = useCallback(() => {
 		const nextSeconds = remainingSecondsRef.current;
 		if (nextSeconds <= 0) {
-			endTimeMsRef.current = null;
+			endTimeMsRef.current = undefined;
 			setIsRunning(false);
 			return;
 		}
@@ -82,7 +82,7 @@ export const useCountdownTimer = ({
 		if (endTimeMs !== undefined) {
 			setRemainingSeconds(getRemainingSecondsFromEndTime(endTimeMs));
 		}
-		endTimeMsRef.current = null;
+		endTimeMsRef.current = undefined;
 		setIsRunning(false);
 	}, [setRemainingSeconds]);
 	const restart = useCallback(
@@ -94,7 +94,7 @@ export const useCountdownTimer = ({
 				setIsRunning(true);
 				return;
 			}
-			endTimeMsRef.current = null;
+			endTimeMsRef.current = undefined;
 			setIsRunning(false);
 		},
 		[setRemainingSeconds],

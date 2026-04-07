@@ -26,7 +26,7 @@ import { useExerciseLookups } from "@/lib/use-exercise-lookups";
 type MinimalExercise = {
 	id: string;
 	name: string;
-	imageUrl?: string | undefined;
+	imageUrl?: string | null | undefined;
 };
 
 function formatDisplayName(value: string): string {
@@ -38,15 +38,15 @@ function formatDisplayName(value: string): string {
 
 function getFirstImageUrl(
 	imageUrls: string[],
-	exerciseImageUrl: string | undefined,
-	fallbackImageUrl: string | undefined,
+	exerciseImageUrl: string | null | undefined,
+	fallbackImageUrl: string | null | undefined,
 ): string | undefined {
 	return imageUrls[0] ?? exerciseImageUrl ?? fallbackImageUrl;
 }
 
 function getFallbackImageUrl(
 	exercise: Exercise | ExerciseWithImageUrl | MinimalExercise,
-): string | undefined {
+): string | null | undefined {
 	if ("imageUrl" in exercise) {
 		return exercise.imageUrl;
 	}
@@ -58,7 +58,7 @@ function ExerciseHeader({
 	displayName,
 	categoryName,
 }: {
-	firstImageUrl: string | undefined;
+	firstImageUrl: string | null | undefined;
 	displayName: string;
 	categoryName: string;
 }): React.JSX.Element {
@@ -284,7 +284,7 @@ export const ExerciseDetailModal = ({
 	const { getEquipmentName, getMuscleGroupNames, getCategoryName } =
 		useExerciseLookups();
 	const categoryName = getCategoryName(exercise?.categoryId ?? "");
-	const equipmentName = getEquipmentName(exercise?.equipmentId);
+	const equipmentName = getEquipmentName(exercise?.equipmentId ?? undefined);
 	const primaryMuscleNames = getMuscleGroupNames(exercise?.primaryMuscleIds);
 	const secondaryMuscleNames = getMuscleGroupNames(
 		exercise?.secondaryMuscleIds,

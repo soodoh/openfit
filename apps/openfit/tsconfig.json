@@ -23,10 +23,12 @@
 		"src/**/*.ts",
 		"src/**/*.tsx",
 		"db/**/*.ts",
+		"db/**/*.d.ts",
 		"scripts/**/*.ts",
 		"drizzle.config.ts",
 		"vite.config.ts",
 		"vitest.config.ts",
+		"vitest.setup.ts",
 		"playwright.config.ts"
 	],
 	"exclude": ["node_modules", ".output"]

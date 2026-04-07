@@ -22,7 +22,7 @@ export const ExerciseCard = ({
 	const { getEquipmentName, getMuscleGroupNames, getCategoryName } =
 		useExerciseLookups();
 	const categoryName = getCategoryName(exercise.categoryId);
-	const equipmentName = getEquipmentName(exercise.equipmentId);
+	const equipmentName = getEquipmentName(exercise.equipmentId ?? undefined);
 	const primaryMuscleNames = getMuscleGroupNames(exercise.primaryMuscleIds);
 	return (
 		<>

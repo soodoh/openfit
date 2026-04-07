@@ -55,7 +55,7 @@ function handleAutocompleteKeyDown(args: {
 	const { event, value, options, onChange, onSelect, setSearchTerm, setOpen } =
 		args;
 	if (value) {
-		onChange(null);
+		onChange(undefined);
 		if (event.key === "Backspace" || event.key === "Delete") {
 			event.preventDefault();
 			setSearchTerm("");

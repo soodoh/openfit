@@ -36,7 +36,7 @@ import { useExerciseLookups } from "@/lib/use-exercise-lookups";
 type Exercise = {
 	id: string;
 	name: string;
-	imageUrl?: string | undefined;
+	imageUrl?: string | null | undefined;
 	primaryMuscleIds?: string[];
 };
 export const ReplaceExerciseModal = ({

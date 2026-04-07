@@ -86,6 +86,12 @@ export const Route = createFileRoute("/api/upload")({
 						searchParams,
 						uploadDeleteQuerySchema,
 					);
+					if (!filename) {
+						return Response.json(
+							{ error: "Filename is required" },
+							{ status: 400 },
+						);
+					}
 					const filepath = resolveUploadPath(UPLOAD_DIR, filename);
 					if (!filepath) {
 						return Response.json(

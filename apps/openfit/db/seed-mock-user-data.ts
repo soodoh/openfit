@@ -56,7 +56,7 @@ async function main() {
 		console.log(`Found ${exerciseIds.length} exercises to use.`);
 		// oxlint-disable-next-line no-console
 		console.log("Creating 50 routines...");
-		let firstRoutineDayId: string | undefined = null;
+		let firstRoutineDayId: string | undefined;
 		const firstRoutineDaySetGroups: Array<{
 			order: number;
 			sets: Array<{

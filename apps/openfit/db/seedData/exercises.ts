@@ -18,9 +18,9 @@ type Muscle =
 	| "triceps";
 export type RawExercise = {
 	name: string;
-	force: "pull" | "push" | "static" | undefined;
+	force: "pull" | "push" | "static" | null | undefined;
 	level: "beginner" | "intermediate" | "expert";
-	mechanic: "compound" | "isolation" | undefined;
+	mechanic: "compound" | "isolation" | null | undefined;
 	equipment:
 		| "body only"
 		| "barbell"
@@ -34,6 +34,7 @@ export type RawExercise = {
 		| "bands"
 		| "medicine ball"
 		| "exercise ball"
+		| null
 		| undefined;
 	primaryMuscles: Muscle[];
 	secondaryMuscles: Muscle[];

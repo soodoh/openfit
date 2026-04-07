@@ -27,7 +27,7 @@ type CarouselContextProps = {
 	scrollTo: (index: number) => void;
 } & CarouselProps;
 const CarouselContext = React.createContext<CarouselContextProps | undefined>(
-	null,
+	undefined,
 );
 function useCarousel(): CarouselContextProps {
 	const context = React.useContext(CarouselContext);
