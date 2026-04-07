@@ -14,6 +14,7 @@ export default defineConfig({
 			"src/lib/**/*.test.ts",
 			"src/components/**/*.test.{ts,tsx}",
 			"src/hooks/mutations/**/*.test.ts",
+			"src/routes/**/*.test.{ts,tsx}",
 		],
 		exclude: ["node_modules", ".output"],
 		coverage: {

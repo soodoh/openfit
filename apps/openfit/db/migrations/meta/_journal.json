@@ -8,6 +8,13 @@
 			"when": 1770950605146,
 			"tag": "0000_unique_mastermind",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "6",
+			"when": 1775605300000,
+			"tag": "0001_add_default_gym_fk",
+			"breakpoints": true
 		}
 	]
 }
