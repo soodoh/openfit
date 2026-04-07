@@ -91,13 +91,13 @@ describe("PATCH /api/user-profile", () => {
 			if (
 				where.type === "and" &&
 				where.conditions.some(
-					(condition: { type: string; left: unknown; right: unknown }) =>
+					(condition) =>
 						condition.type === "eq" &&
 						condition.left === mocks.schema.gyms.id &&
 						condition.right === "gym_other_user",
 				) &&
 				where.conditions.some(
-					(condition: { type: string; left: unknown; right: unknown }) =>
+					(condition) =>
 						condition.type === "eq" &&
 						condition.left === mocks.schema.gyms.userId &&
 						condition.right === "user_123",
