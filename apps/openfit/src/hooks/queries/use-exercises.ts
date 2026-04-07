@@ -12,7 +12,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
 import type { ExerciseWithImageUrl } from "@/lib/types";
 
-type ExerciseFilters = {
+type ExerciseFilters = Record<string, unknown> & {
 	search?: string;
 	equipmentId?: string;
 	equipmentIds?: string[];
@@ -142,7 +142,7 @@ export function useExercises(
 	InfiniteData<PaginatedResponse<Exercise>, string | undefined>
 > {
 	return useInfiniteQuery({
-		queryKey: queryKeys.exercises.list(filters as Record<string, unknown>),
+		queryKey: queryKeys.exercises.list(filters),
 		queryFn: async ({ pageParam, signal }) =>
 			fetchExercises(filters, pageParam, 20, signal),
 		getNextPageParam: (lastPage) =>

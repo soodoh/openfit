@@ -30,6 +30,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { type Theme, ThemeEnum } from "@/db/schema/user-data";
 import {
 	useCreateGym,
 	useGyms,
@@ -40,17 +41,30 @@ import {
 } from "@/hooks";
 import type { Gym } from "@/lib/types";
 
-type Theme = "light" | "dark" | "system";
 type Tab = "settings" | "equipment";
 const TAB_ICONS = {
 	settings: Settings,
 	equipment: Dumbbell,
 } as const;
+const TAB_VALUES = Object.keys(TAB_ICONS) as Tab[];
 const THEME_OPTIONS = [
 	{ value: "light", label: "Light" },
 	{ value: "dark", label: "Dark" },
 	{ value: "system", label: "System" },
 ];
+
+function isTab(value: string): value is Tab {
+	return TAB_VALUES.includes(value as Tab);
+}
+
+function isTheme(value: string | undefined): value is Theme {
+	return (
+		value === ThemeEnum.light ||
+		value === ThemeEnum.dark ||
+		value === ThemeEnum.system
+	);
+}
+
 function getSettingsLoading(
 	profileLoading: boolean,
 	unitsLoading: boolean,
@@ -109,7 +123,7 @@ export const ProfileModal = ({
 				units.weightUnits.find((u) => u.name === "lb")?.id ??
 				units.weightUnits[0]?.id ??
 				"";
-			const theme = (profile.theme as Theme) ?? "system";
+			const theme = isTheme(profile.theme) ? profile.theme : ThemeEnum.system;
 			setDefaultRepUnitId(repUnitId);
 			setDefaultWeightUnitId(weightUnitId);
 			setSelectedTheme(theme);
@@ -208,7 +222,10 @@ export const ProfileModal = ({
 				<Tabs
 					value={activeTab}
 					onValueChange={(value) => {
-						setActiveTab(value as Tab);
+						if (!isTab(value)) {
+							return;
+						}
+						setActiveTab(value);
 						resetGymForm();
 					}}
 					className="flex-1 flex flex-col min-h-0"
@@ -306,9 +323,11 @@ export const ProfileModal = ({
 											</p>
 											<Select
 												value={selectedTheme}
-												onValueChange={(value) =>
-													setSelectedTheme(value as Theme)
-												}
+												onValueChange={(value) => {
+													if (isTheme(value)) {
+														setSelectedTheme(value);
+													}
+												}}
 											>
 												<SelectTrigger id="theme" className="h-11">
 													<SelectValue placeholder="Select theme" />
@@ -451,10 +470,8 @@ export const ProfileModal = ({
 														key={gym.id}
 														gym={gym}
 														isDefault={profile?.defaultGymId === gym.id}
-														onEdit={() => handleEditGym(gym as unknown as Gym)}
-														onDelete={() =>
-															setGymToDelete(gym as unknown as Gym)
-														}
+														onEdit={() => handleEditGym(gym)}
+														onDelete={() => setGymToDelete(gym)}
 													/>
 												))}
 												<Button

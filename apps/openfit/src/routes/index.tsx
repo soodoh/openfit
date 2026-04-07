@@ -23,7 +23,6 @@ import {
 	useRecentSessions,
 	useUnits,
 } from "@/hooks";
-import type { WorkoutSessionWithData } from "@/lib/types";
 
 function StatCard({
 	icon,
@@ -155,7 +154,7 @@ function DashboardContent() {
 				{recentSessions.map((session) => (
 					<SessionSummaryCard
 						key={session.id}
-						session={session as unknown as WorkoutSessionWithData}
+						session={session}
 						onClick={() => setSelectedSessionId(session.id)}
 						showEditMenu={false}
 					/>

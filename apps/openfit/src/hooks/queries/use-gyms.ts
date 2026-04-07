@@ -2,15 +2,8 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchJson } from "@/lib/request-helpers";
+import type { Gym } from "@/lib/types";
 
-type Gym = {
-	id: string;
-	userId: string;
-	name: string;
-	equipmentIds: string[];
-	createdAt: Date;
-	updatedAt: Date;
-};
 // Fetch gyms
 async function fetchGyms(): Promise<Gym[]> {
 	const response = await fetch("/api/gyms");

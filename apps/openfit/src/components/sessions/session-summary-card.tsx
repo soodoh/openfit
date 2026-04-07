@@ -11,17 +11,37 @@ import {
 import type { ReactNode } from "react";
 import type { WorkoutSessionWithData } from "@/lib/types";
 import { EditSessionMenu } from "./edit-session-menu";
-export const SessionSummaryCard = ({
-	session,
-	isActive = false,
-	onClick,
-	showEditMenu = true,
-}: {
-	session: WorkoutSessionWithData;
-	isActive?: boolean;
-	onClick?: () => void;
-	showEditMenu?: boolean;
-}): ReactNode => {
+
+type SessionSummaryCardSession = {
+	id: string;
+	name: string;
+	startTime: Date | string;
+	endTime: Date | string | null | undefined;
+	impression: number | null | undefined;
+	notes?: string | null | undefined;
+	setGroups: Array<{
+		sets: unknown[];
+	}>;
+};
+
+type SessionSummaryCardProps =
+	| {
+			session: WorkoutSessionWithData;
+			isActive?: boolean;
+			onClick?: () => void;
+			showEditMenu?: true;
+	  }
+	| {
+			session: SessionSummaryCardSession;
+			isActive?: boolean;
+			onClick?: () => void;
+			showEditMenu: false;
+	  };
+
+export const SessionSummaryCard = (
+	props: SessionSummaryCardProps,
+): ReactNode => {
+	const { session, isActive = false, onClick } = props;
 	const durationDate =
 		session.startTime && session.endTime
 			? dayjs.duration(dayjs(session.endTime).diff(dayjs(session.startTime)))
@@ -67,9 +87,9 @@ export const SessionSummaryCard = ({
 					</div>
 				</div>
 				{/* stopPropagation to prevent card link/button click */}
-				{showEditMenu && (
+				{props.showEditMenu !== false && (
 					<div onPointerDown={(e) => e.stopPropagation()}>
-						<EditSessionMenu session={session} />
+						<EditSessionMenu session={props.session} />
 					</div>
 				)}
 			</div>
