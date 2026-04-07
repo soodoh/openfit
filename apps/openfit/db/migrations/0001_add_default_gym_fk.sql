@@ -40,6 +40,7 @@ SELECT
 			SELECT 1
 			FROM `gyms`
 			WHERE `gyms`.`id` = `user_profiles`.`default_gym_id`
+				AND `gyms`.`user_id` = `user_profiles`.`user_id`
 		) THEN `default_gym_id`
 		ELSE NULL
 	END,
