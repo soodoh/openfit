@@ -4,19 +4,9 @@ import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
+import { getFirstExerciseImageUrl } from "@/lib/data-loaders";
 import { parseJsonBody } from "@/lib/request-helpers";
 import { updateRoutineDaySchema } from "@/lib/request-schemas";
-
-// Helper to get first image URL for an exercise
-async function getFirstImageUrl(
-	exerciseId: string,
-): Promise<string | undefined> {
-	const image = await db.query.exerciseImages.findFirst({
-		where: eq(schema.exerciseImages.exerciseId, exerciseId),
-		orderBy: asc(schema.exerciseImages.order),
-	});
-	return image?.path ?? undefined;
-}
 export const Route = createFileRoute("/api/routine-days/$id")({
 	server: {
 		handlers: {
@@ -75,7 +65,7 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 						const setsWithImages = await Promise.all(
 							sets.map(async (set) => {
 								const imageUrl = set.exercise
-									? await getFirstImageUrl(set.exercise.id)
+									? await getFirstExerciseImageUrl(set.exercise.id)
 									: null;
 								return Object.assign(set, {
 									exercise: set.exercise ? { ...set.exercise, imageUrl } : null,

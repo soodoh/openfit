@@ -3,23 +3,9 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
+import { getRoutineDaysWithWeekdays } from "@/lib/data-loaders";
 import { parseJsonBody } from "@/lib/request-helpers";
 import { updateRoutineSchema } from "@/lib/request-schemas";
-
-// Helper to get routine days with weekdays
-async function getRoutineDaysWithWeekdays(routineId: string) {
-	const days = await db.query.routineDays.findMany({
-		where: eq(schema.routineDays.routineId, routineId),
-		with: {
-			weekdays: true,
-		},
-	});
-	return days.map((day) =>
-		Object.assign(day, {
-			weekdays: day.weekdays.map((w) => w.weekday),
-		}),
-	);
-}
 export const Route = createFileRoute("/api/routines/$id")({
 	server: {
 		handlers: {

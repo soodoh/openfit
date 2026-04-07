@@ -4,43 +4,12 @@ import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
+import { withFirstExerciseImageUrls } from "@/lib/data-loaders";
 import { parseJsonBody, parseSearchParams } from "@/lib/request-helpers";
 import {
 	createUserExerciseSchema,
 	exercisesListQuerySchema,
 } from "@/lib/request-schemas";
-
-// Helper to get first image URL for an exercise
-async function getFirstImageUrl(
-	exerciseId: string,
-): Promise<string | undefined> {
-	const image = await db.query.exerciseImages.findFirst({
-		where: eq(schema.exerciseImages.exerciseId, exerciseId),
-		orderBy: asc(schema.exerciseImages.order),
-	});
-	return image?.path ?? undefined;
-}
-// Helper to add first image URL to exercises list
-async function withFirstImageUrls<
-	T extends {
-		id: string;
-	},
->(
-	exercises: T[],
-): Promise<
-	Array<
-		T & {
-			imageUrl: string | undefined;
-		}
-	>
-> {
-	const results = [];
-	for (const exercise of exercises) {
-		const imageUrl = await getFirstImageUrl(exercise.id);
-		results.push({ ...exercise, imageUrl });
-	}
-	return results;
-}
 export const Route = createFileRoute("/api/exercises")({
 	server: {
 		handlers: {
@@ -111,7 +80,8 @@ export const Route = createFileRoute("/api/exercises")({
 						exercises = exercises.slice(0, limit);
 					}
 					// Add image URLs
-					const exercisesWithImages = await withFirstImageUrls(exercises);
+					const exercisesWithImages =
+						await withFirstExerciseImageUrls(exercises);
 					// Transform to match expected format
 					const page = exercisesWithImages.map((e) =>
 						Object.assign(e, {

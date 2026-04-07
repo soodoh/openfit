@@ -2,19 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { asc, like } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
+import { getFirstExerciseImageUrl } from "@/lib/data-loaders";
 import { parseSearchParams } from "@/lib/request-helpers";
 import { similarExercisesQuerySchema } from "@/lib/request-schemas";
-
-// Helper to get first image URL for an exercise
-async function getFirstImageUrl(
-	exerciseId: string,
-): Promise<string | undefined> {
-	const image = await db.query.exerciseImages.findFirst({
-		where: (images, { eq }) => eq(images.exerciseId, exerciseId),
-		orderBy: asc(schema.exerciseImages.order),
-	});
-	return image?.path ?? undefined;
-}
 export const Route = createFileRoute("/api/exercises/similar")({
 	server: {
 		handlers: {
@@ -69,7 +59,7 @@ export const Route = createFileRoute("/api/exercises/similar")({
 					// Add image URLs
 					const results = [];
 					for (const exercise of exercises) {
-						const imageUrl = await getFirstImageUrl(exercise.id);
+						const imageUrl = await getFirstExerciseImageUrl(exercise.id);
 						results.push({
 							...exercise,
 							imageUrl,

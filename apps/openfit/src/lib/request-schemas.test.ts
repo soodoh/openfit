@@ -32,6 +32,7 @@ import {
 	updateSetSchema,
 	updateUserExerciseSchema,
 	updateUserProfileSchema,
+	uploadDeleteQuerySchema,
 } from "./request-schemas";
 
 describe("adminUserRoleUpdateSchema", () => {
@@ -189,6 +190,17 @@ describe("query schemas", () => {
 				pageSize: "101",
 			}).success,
 		).toBe(false);
+	});
+
+	it("requires a filename for upload deletion", () => {
+		expect(uploadDeleteQuerySchema.safeParse({}).success).toBe(false);
+		expect(
+			uploadDeleteQuerySchema.parse({
+				filename: "exercise.webp",
+			}),
+		).toEqual({
+			filename: "exercise.webp",
+		});
 	});
 });
 

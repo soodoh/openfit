@@ -4,65 +4,12 @@ import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
+import { getSessionWithData } from "@/lib/data-loaders";
 import { parseJsonBody, parseSearchParams } from "@/lib/request-helpers";
 import {
 	createSessionSchema,
 	sessionListQuerySchema,
 } from "@/lib/request-schemas";
-
-// Helper to get first image URL for an exercise
-async function getFirstImageUrl(
-	exerciseId: string,
-): Promise<string | undefined> {
-	const image = await db.query.exerciseImages.findFirst({
-		where: eq(schema.exerciseImages.exerciseId, exerciseId),
-		orderBy: asc(schema.exerciseImages.order),
-	});
-	return image?.path ?? undefined;
-}
-// Helper to get session with full data
-async function getSessionWithData(sessionId: string) {
-	const session = await db.query.workoutSessions.findFirst({
-		where: eq(schema.workoutSessions.id, sessionId),
-	});
-	if (!session) {
-		return null;
-	}
-	const setGroups = await db.query.workoutSetGroups.findMany({
-		where: eq(schema.workoutSetGroups.sessionId, sessionId),
-		orderBy: asc(schema.workoutSetGroups.order),
-	});
-	const setGroupsWithSets = await Promise.all(
-		setGroups.map(async (group) => {
-			const sets = await db.query.workoutSets.findMany({
-				where: eq(schema.workoutSets.setGroupId, group.id),
-				orderBy: asc(schema.workoutSets.order),
-				with: {
-					exercise: true,
-					repetitionUnit: true,
-					weightUnit: true,
-				},
-			});
-			const setsWithImages = await Promise.all(
-				sets.map(async (set) => {
-					const imageUrl = set.exercise
-						? await getFirstImageUrl(set.exercise.id)
-						: null;
-					return Object.assign(set, {
-						exercise: set.exercise ? { ...set.exercise, imageUrl } : null,
-					});
-				}),
-			);
-			return Object.assign(group, {
-				sets: setsWithImages,
-			});
-		}),
-	);
-	return {
-		...session,
-		setGroups: setGroupsWithSets,
-	};
-}
 export const Route = createFileRoute("/api/sessions")({
 	server: {
 		handlers: {

@@ -3,6 +3,8 @@ import path from "node:path";
 import { createFileRoute } from "@tanstack/react-router";
 import { nanoid } from "nanoid";
 import { requireAdmin } from "@/lib/auth-middleware";
+import { parseSearchParams } from "@/lib/request-helpers";
+import { uploadDeleteQuerySchema } from "@/lib/request-schemas";
 import {
 	buildUploadFilename,
 	resolveUploadPath,
@@ -80,13 +82,10 @@ export const Route = createFileRoute("/api/upload")({
 				}
 				try {
 					const { searchParams } = new URL(request.url);
-					const filename = searchParams.get("filename");
-					if (!filename) {
-						return Response.json(
-							{ error: "No filename provided" },
-							{ status: 400 },
-						);
-					}
+					const { filename } = parseSearchParams(
+						searchParams,
+						uploadDeleteQuerySchema,
+					);
 					const filepath = resolveUploadPath(UPLOAD_DIR, filename);
 					if (!filepath) {
 						return Response.json(

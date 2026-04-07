@@ -361,6 +361,13 @@ export const sessionListQuerySchema = object({
 	},
 );
 
+export const uploadDeleteQuerySchema = object({
+	filename: optionalNonEmptyStringQueryParam,
+}).refine((value) => value.filename !== undefined, {
+	message: "Filename is required",
+	path: ["filename"],
+});
+
 export const createSetGroupSchema = object({
 	sessionId: nonEmptyString.optional(),
 	routineDayId: nonEmptyString.optional(),
