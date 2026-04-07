@@ -1,6 +1,6 @@
 import { Plus, Sparkles } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { EditRoutineModal as CreateRoutineModal } from "@/components/routines/edit-routine-modal";
+import { EditRoutineModal } from "@/components/routines/edit-routine-modal";
 import { Button } from "@/components/ui/button";
 
 type CreateRoutineProps = {
@@ -22,7 +22,7 @@ export const CreateRoutine = ({
 					Create Your First Routine
 				</Button>
 
-				<CreateRoutineModal
+				<EditRoutineModal
 					open={showEditModal}
 					onClose={() => setEditModal(false)}
 				/>
@@ -39,7 +39,7 @@ export const CreateRoutine = ({
 				New Routine
 			</Button>
 
-			<CreateRoutineModal
+			<EditRoutineModal
 				open={showEditModal}
 				onClose={() => setEditModal(false)}
 			/>

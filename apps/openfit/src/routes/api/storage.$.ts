@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { parseResponseJson } from "@/lib/request-helpers";
 
 // Development-only: Proxy Convex storage requests to the backend
 const CONVEX_URL =
@@ -58,7 +59,8 @@ export const Route = createFileRoute("/api/storage/$")({
 					const errorText = await response.text();
 					return new Response(errorText, { status: response.status });
 				}
-				const responseData = (await response.json()) as Record<string, unknown>;
+				const responseData =
+					await parseResponseJson<Record<string, unknown>>(response);
 				return Response.json(responseData);
 			},
 		},

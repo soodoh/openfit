@@ -96,8 +96,11 @@ export const Route = createFileRoute("/api/upload")({
 					await fs.unlink(filepath);
 					return Response.json({ success: true });
 				} catch (error) {
-					const fileError = error as NodeJS.ErrnoException;
-					if (fileError.code === "ENOENT") {
+					if (
+						error instanceof Error &&
+						"code" in error &&
+						error.code === "ENOENT"
+					) {
 						return Response.json({ error: "File not found" }, { status: 404 });
 					}
 					return Response.json(

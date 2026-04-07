@@ -1,12 +1,12 @@
 import { Plus } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { EditSessionModal as NewSessionModal } from "@/components/sessions/edit-session-modal";
+import { EditSessionModal } from "@/components/sessions/edit-session-modal";
 import { Button } from "@/components/ui/button";
 export const CreateSessionButton = (): ReactNode => {
 	const [open, setOpen] = useState(false);
 	return (
 		<>
-			<NewSessionModal open={open} onClose={() => setOpen(false)} />
+			<EditSessionModal open={open} onClose={() => setOpen(false)} />
 
 			<Button
 				onClick={() => setOpen(true)}

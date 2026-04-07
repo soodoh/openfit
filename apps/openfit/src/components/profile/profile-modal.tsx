@@ -46,7 +46,7 @@ const TAB_ICONS = {
 	settings: Settings,
 	equipment: Dumbbell,
 } as const;
-const TAB_VALUES = Object.keys(TAB_ICONS) as Tab[];
+const TAB_VALUES: readonly Tab[] = ["settings", "equipment"];
 const THEME_OPTIONS = [
 	{ value: "light", label: "Light" },
 	{ value: "dark", label: "Dark" },
@@ -54,7 +54,7 @@ const THEME_OPTIONS = [
 ];
 
 function isTab(value: string): value is Tab {
-	return TAB_VALUES.includes(value as Tab);
+	return TAB_VALUES.some((tab) => tab === value);
 }
 
 function isTheme(value: string | undefined): value is Theme {

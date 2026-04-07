@@ -1,4 +1,12 @@
-import { boolean, number, object, preprocess, string } from "zod";
+import {
+	boolean,
+	literal,
+	number,
+	object,
+	preprocess,
+	string,
+	union,
+} from "zod";
 import {
 	ExerciseForceEnum,
 	ExerciseLevelEnum,
@@ -60,13 +68,14 @@ function requireAtLeastOneField<T extends Record<string, unknown>>(value: T) {
 
 const lookupTypeSchema = string()
 	.trim()
-	.refine(
-		(value) =>
-			value === "equipment" ||
-			value === "categories" ||
-			value === "muscleGroups" ||
-			value === "repetitionUnits" ||
-			value === "weightUnits",
+	.pipe(
+		union([
+			literal("equipment"),
+			literal("categories"),
+			literal("muscleGroups"),
+			literal("repetitionUnits"),
+			literal("weightUnits"),
+		]),
 	);
 const exerciseLevelSchema = string()
 	.trim()

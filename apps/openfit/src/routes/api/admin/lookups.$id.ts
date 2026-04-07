@@ -9,12 +9,6 @@ import {
 	adminLookupMutationSchema,
 } from "@/lib/request-schemas";
 
-type LookupType =
-	| "equipment"
-	| "categories"
-	| "muscleGroups"
-	| "repetitionUnits"
-	| "weightUnits";
 const tableMap = {
 	equipment: schema.equipment,
 	categories: schema.categories,
@@ -36,7 +30,7 @@ export const Route = createFileRoute("/api/admin/lookups/$id")({
 					await requireAdmin(request);
 					const { id } = params;
 					const body = await parseJsonBody(request, adminLookupMutationSchema);
-					const type = body.type as LookupType;
+					const { type } = body;
 					if (!type || !tableMap[type]) {
 						return Response.json({ error: "Invalid type" }, { status: 400 });
 					}
