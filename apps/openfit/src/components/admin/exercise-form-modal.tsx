@@ -9,7 +9,7 @@ import {
 	Plus,
 	X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,12 +52,9 @@ import {
 	useAdminUpdateExercise,
 	useUploadFile,
 } from "@/hooks";
+import { useExerciseFormState } from "./use-exercise-form-state";
+import { useExerciseImageQueue } from "./use-exercise-image-queue";
 
-type ImageItem = {
-	type: "existing" | "new";
-	url?: string; // URL for existing images or blob URL for new
-	file?: File; // File object for new uploads
-};
 type ExerciseFormModalProps = {
 	open: boolean;
 	onClose: () => void;
@@ -100,63 +97,42 @@ export function ExerciseFormModal({
 	const { data: categories } = useAdminCategories();
 	const { data: muscleGroups } = useAdminMuscleGroups();
 	const fileInputRef = useRef<HTMLInputElement>(null);
-	const [name, setName] = useState("");
-	const [equipmentId, setEquipmentId] = useState<string>("");
-	const [categoryId, setCategoryId] = useState<string>("");
-	const [level, setLevel] = useState<"beginner" | "intermediate" | "expert">(
-		"beginner",
-	);
-	const [force, setForce] = useState<"push" | "pull" | "static" | "">("");
-	const [mechanic, setMechanic] = useState<"compound" | "isolation" | "">("");
-	const [primaryMuscleIds, setPrimaryMuscleIds] = useState<string[]>([]);
-	const [secondaryMuscleIds, setSecondaryMuscleIds] = useState<string[]>([]);
-	const [instructions, setInstructions] = useState<string[]>([""]);
-	const [images, setImages] = useState<ImageItem[]>([]);
-	const [error, setError] = useState<string | undefined>(undefined);
-	const [isPending, setIsPending] = useState(false);
-	const [uploadProgress, setUploadProgress] = useState<string | undefined>(
-		undefined,
-	);
+	const {
+		name,
+		setName,
+		equipmentId,
+		setEquipmentId,
+		categoryId,
+		setCategoryId,
+		level,
+		setLevel,
+		force,
+		setForce,
+		mechanic,
+		setMechanic,
+		primaryMuscleIds,
+		secondaryMuscleIds,
+		instructions,
+		error,
+		setError,
+		isPending,
+		setIsPending,
+		uploadProgress,
+		setUploadProgress,
+		handleInstructionChange,
+		addInstruction,
+		removeInstruction,
+		toggleMuscle,
+	} = useExerciseFormState({
+		open,
+		exercise,
+	});
+	const { images, addFiles, removeImage } = useExerciseImageQueue({
+		open,
+		imageUrls: exercise?.imageUrls,
+	});
 	const isEditMode = Boolean(exercise);
 	const { title, description, submitLabel } = getExerciseFormText(isEditMode);
-	// Reset form when modal opens
-	useEffect(() => {
-		if (open) {
-			if (exercise) {
-				setName(exercise.name);
-				setEquipmentId(exercise.equipmentId ?? "");
-				setCategoryId(exercise.categoryId);
-				setLevel(exercise.level);
-				setForce(exercise.force ?? "");
-				setMechanic(exercise.mechanic ?? "");
-				setPrimaryMuscleIds(exercise.primaryMuscleIds);
-				setSecondaryMuscleIds(exercise.secondaryMuscleIds);
-				setInstructions(
-					exercise.instructions.length > 0 ? exercise.instructions : [""],
-				);
-				// Convert existing images to ImageItem format
-				setImages(
-					exercise.imageUrls.filter(Boolean).map((url) => ({
-						type: "existing" as const,
-						url: url ?? undefined,
-					})),
-				);
-			} else {
-				setName("");
-				setEquipmentId("");
-				setCategoryId("");
-				setLevel("beginner");
-				setForce("");
-				setMechanic("");
-				setPrimaryMuscleIds([]);
-				setSecondaryMuscleIds([]);
-				setInstructions([""]);
-				setImages([]);
-			}
-			setError(undefined);
-			setUploadProgress(undefined);
-		}
-	}, [open, exercise]);
 	const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setError(undefined);
@@ -226,64 +202,15 @@ export function ExerciseFormModal({
 			setUploadProgress(undefined);
 		}
 	};
-	const handleInstructionChange = (index: number, value: string) => {
-		const newInstructions = [...instructions];
-		newInstructions[index] = value;
-		setInstructions(newInstructions);
-	};
-	const addInstruction = () => {
-		setInstructions([...instructions, ""]);
-	};
-	const removeInstruction = (index: number) => {
-		if (instructions.length > 1) {
-			setInstructions(instructions.filter((_, i) => i !== index));
-		}
-	};
 	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const files = e.target.files;
 		if (!files) {
 			return;
 		}
-		const newImageItems: ImageItem[] = [...files].map((file) => ({
-			type: "new" as const,
-			file,
-			url: URL.createObjectURL(file),
-		}));
-		setImages([...images, ...newImageItems]);
+		addFiles(files);
 		// Reset file input
 		if (fileInputRef.current) {
 			fileInputRef.current.value = "";
-		}
-	};
-	const removeImage = (index: number) => {
-		const img = images[index];
-		// Revoke blob URL if it's a new image
-		if (img.type === "new" && img.url) {
-			URL.revokeObjectURL(img.url);
-		}
-		setImages(images.filter((_, i) => i !== index));
-	};
-	const toggleMuscle = (
-		muscleId: string,
-		isPrimary: boolean,
-		checked: boolean,
-	) => {
-		if (isPrimary) {
-			if (checked) {
-				setPrimaryMuscleIds([...primaryMuscleIds, muscleId]);
-				// Remove from secondary if present
-				setSecondaryMuscleIds(
-					secondaryMuscleIds.filter((id) => id !== muscleId),
-				);
-			} else {
-				setPrimaryMuscleIds(primaryMuscleIds.filter((id) => id !== muscleId));
-			}
-		} else if (checked) {
-			setSecondaryMuscleIds([...secondaryMuscleIds, muscleId]);
-			// Remove from primary if present
-			setPrimaryMuscleIds(primaryMuscleIds.filter((id) => id !== muscleId));
-		} else {
-			setSecondaryMuscleIds(secondaryMuscleIds.filter((id) => id !== muscleId));
 		}
 	};
 	const isLoading = isExerciseFormLoading(equipment, categories, muscleGroups);

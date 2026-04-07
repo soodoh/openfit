@@ -29,7 +29,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { type Tab, useProfileSettingsForm } from "./use-profile-settings-form";
+import { useProfileSettingsForm } from "./use-profile-settings-form";
 
 const TAB_ICONS = {
 	settings: Settings,
