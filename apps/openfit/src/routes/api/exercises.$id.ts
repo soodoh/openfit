@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { updateUserExerciseSchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/exercises/$id")({
 	server: {
 		handlers: {
@@ -66,17 +67,7 @@ export const Route = createFileRoute("/api/exercises/$id")({
 				}
 				const { id } = params;
 				try {
-					const body = await parseJsonBody<{
-						name?: string;
-						equipmentId?: string | undefined;
-						force?: string | undefined;
-						level?: string;
-						mechanic?: string | undefined;
-						categoryId?: string;
-						primaryMuscleIds?: string[];
-						secondaryMuscleIds?: string[];
-						instructions?: string[];
-					}>(request);
+					const body = await parseJsonBody(request, updateUserExerciseSchema);
 					const {
 						name,
 						equipmentId,
@@ -165,7 +156,10 @@ export const Route = createFileRoute("/api/exercises/$id")({
 						},
 					});
 					return Response.json(updated);
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to update exercise" },
 						{ status: 500 },

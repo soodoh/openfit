@@ -2,19 +2,25 @@ import { describe, expect, it } from "vitest";
 import {
 	adminLookupMutationSchema,
 	adminUserRoleUpdateSchema,
+	createAdminExerciseSchema,
 	createGymSchema,
 	createRoutineDaySchema,
 	createRoutineSchema,
+	createSessionSchema,
 	createSetGroupSchema,
 	createSetSchema,
+	createUserExerciseSchema,
 	reorderSetGroupsSchema,
 	reorderSetsSchema,
 	replaceExerciseSchema,
+	updateAdminExerciseSchema,
 	updateGymSchema,
 	updateRoutineDaySchema,
 	updateRoutineSchema,
+	updateSessionSchema,
 	updateSetGroupSchema,
 	updateSetSchema,
+	updateUserExerciseSchema,
 	updateUserProfileSchema,
 } from "./request-schemas";
 
@@ -122,6 +128,95 @@ describe("routine day schemas", () => {
 
 	it("rejects empty routine day updates", () => {
 		expect(updateRoutineDaySchema.safeParse({}).success).toBe(false);
+	});
+});
+
+describe("exercise schemas", () => {
+	it("accepts valid admin exercise payloads", () => {
+		expect(
+			createAdminExerciseSchema.safeParse({
+				name: "Bench Press",
+				level: "beginner",
+				force: "push",
+				mechanic: "compound",
+				categoryId: "category_123",
+				primaryMuscleIds: ["chest"],
+				secondaryMuscleIds: ["triceps"],
+				instructions: ["Lie on the bench", "Press the barbell upward"],
+				imageUrls: ["/api/uploads/bench.webp"],
+			}).success,
+		).toBe(true);
+	});
+
+	it("rejects invalid admin exercise levels", () => {
+		expect(
+			createAdminExerciseSchema.safeParse({
+				name: "Bench Press",
+				level: "elite",
+				categoryId: "category_123",
+			}).success,
+		).toBe(false);
+	});
+
+	it("accepts valid user exercise updates", () => {
+		expect(
+			updateUserExerciseSchema.safeParse({
+				name: "Incline Bench Press",
+				primaryMuscleIds: ["chest"],
+			}).success,
+		).toBe(true);
+	});
+
+	it("rejects empty exercise updates", () => {
+		expect(updateAdminExerciseSchema.safeParse({}).success).toBe(false);
+		expect(updateUserExerciseSchema.safeParse({}).success).toBe(false);
+	});
+
+	it("accepts valid user exercise creation payloads", () => {
+		expect(
+			createUserExerciseSchema.safeParse({
+				name: "Push Up",
+				categoryId: "category_123",
+				instructions: ["Get into plank position"],
+			}).success,
+		).toBe(true);
+	});
+});
+
+describe("session schemas", () => {
+	it("accepts valid session creation payloads", () => {
+		expect(
+			createSessionSchema.safeParse({
+				name: "Morning Workout",
+				notes: "Felt good",
+				startTime: Date.now(),
+				endTime: Date.now() + 1_000,
+				impression: 4,
+				templateId: "routine_day_123",
+			}).success,
+		).toBe(true);
+	});
+
+	it("rejects out-of-range session ratings", () => {
+		expect(
+			createSessionSchema.safeParse({
+				name: "Morning Workout",
+				impression: 6,
+			}).success,
+		).toBe(false);
+	});
+
+	it("accepts valid session updates", () => {
+		expect(
+			updateSessionSchema.safeParse({
+				notes: "Updated note",
+				impression: 3,
+			}).success,
+		).toBe(true);
+	});
+
+	it("rejects empty session updates", () => {
+		expect(updateSessionSchema.safeParse({}).success).toBe(false);
 	});
 });
 

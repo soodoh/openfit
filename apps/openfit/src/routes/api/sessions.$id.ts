@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { updateSessionSchema } from "@/lib/request-schemas";
 
 // Helper to get first image URL for an exercise
 async function getFirstImageUrl(
@@ -122,13 +123,7 @@ export const Route = createFileRoute("/api/sessions/$id")({
 					if (session.userId !== authSession.user.id) {
 						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
-					const body = await parseJsonBody<{
-						name?: string;
-						notes?: string;
-						impression?: string | undefined;
-						startTime?: string | number;
-						endTime?: string | number | undefined;
-					}>(request);
+					const body = await parseJsonBody(request, updateSessionSchema);
 					const { name, notes, impression, startTime, endTime } = body;
 					await db
 						.update(schema.workoutSessions)
@@ -147,7 +142,10 @@ export const Route = createFileRoute("/api/sessions/$id")({
 						.where(eq(schema.workoutSessions.id, id));
 					const updated = await getSessionWithData(id);
 					return Response.json(updated);
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to update session" },
 						{ status: 500 },

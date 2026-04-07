@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { createSessionSchema } from "@/lib/request-schemas";
 
 // Helper to get first image URL for an exercise
 async function getFirstImageUrl(
@@ -127,14 +128,7 @@ export const Route = createFileRoute("/api/sessions")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				try {
-					const body = await parseJsonBody<{
-						name?: string;
-						notes?: string;
-						startTime?: string | number;
-						endTime?: string | number;
-						impression?: string | undefined;
-						templateId?: string;
-					}>(request);
+					const body = await parseJsonBody(request, createSessionSchema);
 					const { name, notes, startTime, endTime, impression, templateId } =
 						body;
 					// If templateId provided, fetch the template
@@ -159,6 +153,12 @@ export const Route = createFileRoute("/api/sessions")({
 						routineDay?.description ??
 						""
 					).trim();
+					if (!sessionName) {
+						return Response.json(
+							{ error: "Name is required when no template is provided" },
+							{ status: 400 },
+						);
+					}
 					// Create the session
 					const sessionId = nanoid();
 					await db.insert(schema.workoutSessions).values({
@@ -217,7 +217,10 @@ export const Route = createFileRoute("/api/sessions")({
 					}
 					const created = await getSessionWithData(sessionId);
 					return Response.json(created, { status: 201 });
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to create session" },
 						{ status: 500 },

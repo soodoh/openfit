@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { createAdminExerciseSchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/admin/exercises")({
 	server: {
 		handlers: {
@@ -88,11 +89,8 @@ export const Route = createFileRoute("/api/admin/exercises")({
 						pageSize,
 					});
 				} catch (error) {
-					if (error instanceof Error && error.message === "Unauthorized") {
-						return Response.json({ error: "Unauthorized" }, { status: 401 });
-					}
-					if (error instanceof Error && error.message === "Forbidden") {
-						return Response.json({ error: "Forbidden" }, { status: 403 });
+					if (error instanceof Response) {
+						return error;
 					}
 					return Response.json(
 						{ error: "Failed to fetch exercises" },
@@ -103,18 +101,7 @@ export const Route = createFileRoute("/api/admin/exercises")({
 			POST: async ({ request }: { request: Request }) => {
 				try {
 					await requireAdmin(request);
-					const body = await parseJsonBody<{
-						name: string;
-						level?: string;
-						force?: string | undefined;
-						mechanic?: string | undefined;
-						equipmentId?: string | undefined;
-						categoryId: string;
-						primaryMuscleIds?: string[];
-						secondaryMuscleIds?: string[];
-						instructions?: string[];
-						imageUrls?: string[];
-					}>(request);
+					const body = await parseJsonBody(request, createAdminExerciseSchema);
 					const exerciseId = createId();
 					// Create exercise
 					await db.insert(schema.exercises).values({
@@ -170,11 +157,8 @@ export const Route = createFileRoute("/api/admin/exercises")({
 					}
 					return Response.json({ id: exerciseId });
 				} catch (error) {
-					if (error instanceof Error && error.message === "Unauthorized") {
-						return Response.json({ error: "Unauthorized" }, { status: 401 });
-					}
-					if (error instanceof Error && error.message === "Forbidden") {
-						return Response.json({ error: "Forbidden" }, { status: 403 });
+					if (error instanceof Response) {
+						return error;
 					}
 					return Response.json(
 						{ error: "Failed to create exercise" },

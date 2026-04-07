@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { updateAdminExerciseSchema } from "@/lib/request-schemas";
 export const Route = createFileRoute("/api/admin/exercises/$id")({
 	server: {
 		handlers: {
@@ -18,18 +19,16 @@ export const Route = createFileRoute("/api/admin/exercises/$id")({
 				try {
 					await requireAdmin(request);
 					const { id } = params;
-					const body = await parseJsonBody<{
-						name?: string;
-						level?: string;
-						force?: string | undefined;
-						mechanic?: string | undefined;
-						equipmentId?: string | undefined;
-						categoryId?: string;
-						primaryMuscleIds?: string[];
-						secondaryMuscleIds?: string[];
-						instructions?: string[];
-						imageUrls?: string[];
-					}>(request);
+					const body = await parseJsonBody(request, updateAdminExerciseSchema);
+					const existing = await db.query.exercises.findFirst({
+						where: eq(schema.exercises.id, id),
+					});
+					if (!existing) {
+						return Response.json(
+							{ error: "Exercise not found" },
+							{ status: 404 },
+						);
+					}
 					// Update exercise
 					await db
 						.update(schema.exercises)
@@ -98,7 +97,7 @@ export const Route = createFileRoute("/api/admin/exercises/$id")({
 								body.imageUrls.map((imagePath: string, index: number) => ({
 									id: createId(),
 									exerciseId: id,
-									imagePath,
+									path: imagePath,
 									order: index,
 								})),
 							);
@@ -106,11 +105,8 @@ export const Route = createFileRoute("/api/admin/exercises/$id")({
 					}
 					return Response.json({ success: true });
 				} catch (error) {
-					if (error instanceof Error && error.message === "Unauthorized") {
-						return Response.json({ error: "Unauthorized" }, { status: 401 });
-					}
-					if (error instanceof Error && error.message === "Forbidden") {
-						return Response.json({ error: "Forbidden" }, { status: 403 });
+					if (error instanceof Response) {
+						return error;
 					}
 					return Response.json(
 						{ error: "Failed to update exercise" },
@@ -128,6 +124,15 @@ export const Route = createFileRoute("/api/admin/exercises/$id")({
 				try {
 					await requireAdmin(request);
 					const { id } = params;
+					const existing = await db.query.exercises.findFirst({
+						where: eq(schema.exercises.id, id),
+					});
+					if (!existing) {
+						return Response.json(
+							{ error: "Exercise not found" },
+							{ status: 404 },
+						);
+					}
 					// Delete related records first (cascading)
 					await db
 						.delete(schema.exercisePrimaryMuscles)
@@ -145,11 +150,8 @@ export const Route = createFileRoute("/api/admin/exercises/$id")({
 					await db.delete(schema.exercises).where(eq(schema.exercises.id, id));
 					return Response.json({ success: true });
 				} catch (error) {
-					if (error instanceof Error && error.message === "Unauthorized") {
-						return Response.json({ error: "Unauthorized" }, { status: 401 });
-					}
-					if (error instanceof Error && error.message === "Forbidden") {
-						return Response.json({ error: "Forbidden" }, { status: 403 });
+					if (error instanceof Response) {
+						return error;
 					}
 					return Response.json(
 						{ error: "Failed to delete exercise" },

@@ -1,4 +1,9 @@
 import { boolean, number, object, string } from "zod";
+import {
+	ExerciseForceEnum,
+	ExerciseLevelEnum,
+	ExerciseMechanicEnum,
+} from "@/db/schema/exercises";
 import { RoleEnum, ThemeEnum } from "@/db/schema/user-data";
 import { SetGroupTypeEnum, SetTypeEnum } from "@/db/schema/workouts";
 
@@ -21,6 +26,32 @@ const lookupTypeSchema = string()
 			value === "repetitionUnits" ||
 			value === "weightUnits",
 	);
+const exerciseLevelSchema = string()
+	.trim()
+	.refine(
+		(value) =>
+			value === ExerciseLevelEnum.beginner ||
+			value === ExerciseLevelEnum.intermediate ||
+			value === ExerciseLevelEnum.expert,
+	);
+const exerciseForceSchema = string()
+	.trim()
+	.refine(
+		(value) =>
+			value === ExerciseForceEnum.push ||
+			value === ExerciseForceEnum.pull ||
+			value === ExerciseForceEnum.static,
+	);
+const exerciseMechanicSchema = string()
+	.trim()
+	.refine(
+		(value) =>
+			value === ExerciseMechanicEnum.compound ||
+			value === ExerciseMechanicEnum.isolation,
+	);
+const trimmedStringArraySchema = nonEmptyString.array();
+const sessionTimestampSchema = number().finite().or(nonEmptyString);
+const sessionImpressionSchema = number().int().min(1).max(5);
 
 export const adminUserRoleUpdateSchema = object({
 	role: string()
@@ -87,6 +118,63 @@ export const createRoutineDaySchema = object({
 export const updateRoutineDaySchema = object({
 	description: nonEmptyString.optional(),
 	weekdays: weekdayArraySchema.optional(),
+}).refine(requireAtLeastOneField, {
+	message: "At least one field must be provided",
+});
+
+export const createUserExerciseSchema = object({
+	name: nonEmptyString,
+	equipmentId: nonEmptyString.optional(),
+	force: exerciseForceSchema.optional(),
+	level: exerciseLevelSchema.optional(),
+	mechanic: exerciseMechanicSchema.optional(),
+	categoryId: nonEmptyString,
+	primaryMuscleIds: trimmedStringArraySchema.optional(),
+	secondaryMuscleIds: trimmedStringArraySchema.optional(),
+	instructions: trimmedStringArraySchema.optional(),
+});
+
+export const updateUserExerciseSchema = object({
+	name: nonEmptyString.optional(),
+	equipmentId: nonEmptyString.optional(),
+	force: exerciseForceSchema.optional(),
+	level: exerciseLevelSchema.optional(),
+	mechanic: exerciseMechanicSchema.optional(),
+	categoryId: nonEmptyString.optional(),
+	primaryMuscleIds: trimmedStringArraySchema.optional(),
+	secondaryMuscleIds: trimmedStringArraySchema.optional(),
+	instructions: trimmedStringArraySchema.optional(),
+}).refine(requireAtLeastOneField, {
+	message: "At least one field must be provided",
+});
+
+export const createAdminExerciseSchema = createUserExerciseSchema.extend({
+	imageUrls: trimmedStringArraySchema.optional(),
+});
+
+export const updateAdminExerciseSchema = updateUserExerciseSchema
+	.extend({
+		imageUrls: trimmedStringArraySchema.optional(),
+	})
+	.refine(requireAtLeastOneField, {
+		message: "At least one field must be provided",
+	});
+
+export const createSessionSchema = object({
+	name: nonEmptyString.optional(),
+	notes: string().max(5_000).optional(),
+	startTime: sessionTimestampSchema.optional(),
+	endTime: sessionTimestampSchema.optional(),
+	impression: sessionImpressionSchema.optional(),
+	templateId: nonEmptyString.optional(),
+});
+
+export const updateSessionSchema = object({
+	name: nonEmptyString.optional(),
+	notes: string().max(5_000).optional(),
+	impression: sessionImpressionSchema.optional(),
+	startTime: sessionTimestampSchema.optional(),
+	endTime: sessionTimestampSchema.optional(),
 }).refine(requireAtLeastOneField, {
 	message: "At least one field must be provided",
 });

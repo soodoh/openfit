@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth-middleware";
 import { parseJsonBody } from "@/lib/request-helpers";
+import { createUserExerciseSchema } from "@/lib/request-schemas";
 
 // Helper to get first image URL for an exercise
 async function getFirstImageUrl(
@@ -138,17 +139,7 @@ export const Route = createFileRoute("/api/exercises")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				try {
-					const body = await parseJsonBody<{
-						name: string;
-						equipmentId?: string | undefined;
-						force?: string | undefined;
-						level?: string;
-						mechanic?: string | undefined;
-						categoryId: string;
-						primaryMuscleIds?: string[];
-						secondaryMuscleIds?: string[];
-						instructions?: string[];
-					}>(request);
+					const body = await parseJsonBody(request, createUserExerciseSchema);
 					const {
 						name,
 						equipmentId,
@@ -160,12 +151,6 @@ export const Route = createFileRoute("/api/exercises")({
 						secondaryMuscleIds = [],
 						instructions = [],
 					} = body;
-					if (!name || !categoryId) {
-						return Response.json(
-							{ error: "Name and category are required" },
-							{ status: 400 },
-						);
-					}
 					// Create exercise
 					const exerciseId = nanoid();
 					await db.insert(schema.exercises).values({
@@ -214,7 +199,10 @@ export const Route = createFileRoute("/api/exercises")({
 						},
 					});
 					return Response.json(exercise, { status: 201 });
-				} catch {
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
 						{ error: "Failed to create exercise" },
 						{ status: 500 },
