@@ -21,9 +21,9 @@ export function createJsonErrorResponse(
 }
 
 export function mockJsonSuccess<T>(body: T, init?: ResponseInit) {
-	return vi.fn().mockResolvedValue(createJsonSuccessResponse(body, init));
+	return vi.fn(() => Promise.resolve(createJsonSuccessResponse(body, init)));
 }
 
 export function mockJsonError(error: string, init?: ResponseInit) {
-	return vi.fn().mockResolvedValue(createJsonErrorResponse(error, init));
+	return vi.fn(() => Promise.resolve(createJsonErrorResponse(error, init)));
 }
