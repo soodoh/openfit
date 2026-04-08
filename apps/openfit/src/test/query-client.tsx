@@ -17,6 +17,7 @@ function mergeDefaultOptions(
 			},
 			mutations: {
 				retry: false,
+				gcTime: 0,
 				...config.defaultOptions?.mutations,
 			},
 		},
