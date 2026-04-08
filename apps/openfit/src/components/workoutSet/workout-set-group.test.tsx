@@ -31,7 +31,28 @@ vi.mock("@/hooks", () => ({
 }));
 
 vi.mock("@dnd-kit/core", () => ({
-	DndContext: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	DndContext: ({
+		children,
+		onDragEnd,
+	}: {
+		children: ReactNode;
+		onDragEnd?: (event: {
+			active: { id: string };
+			over: { id: string } | null;
+		}) => void;
+	}) => (
+		<div>
+			{children}
+			<button
+				type="button"
+				onClick={() =>
+					onDragEnd?.({ active: { id: "set-1" }, over: { id: "set-2" } })
+				}
+			>
+				Trigger drag end
+			</button>
+		</div>
+	),
 	KeyboardSensor: class KeyboardSensor {},
 	MouseSensor: class MouseSensor {},
 	TouchSensor: class TouchSensor {},
@@ -92,6 +113,7 @@ const buildSetGroup = ({
 	exercise,
 	completed,
 	comment,
+	setIds = ["set-1"],
 }: {
 	exercise: {
 		id: string;
@@ -100,6 +122,7 @@ const buildSetGroup = ({
 	} | null;
 	completed: boolean;
 	comment?: string;
+	setIds?: string[];
 }): SetGroupWithRelations => ({
 	id: "group-1",
 	userId: "user-1",
@@ -108,25 +131,23 @@ const buildSetGroup = ({
 	type: "NORMAL",
 	order: 0,
 	comment: comment ?? null,
-	sets: [
-		{
-			id: "set-1",
-			userId: "user-1",
-			setGroupId: "group-1",
-			exerciseId: exercise?.id ?? "unknown-exercise-id",
-			type: SetType.NORMAL,
-			order: 0,
-			reps: 8,
-			repetitionUnitId: "rep",
-			weight: 135,
-			weightUnitId: "weight",
-			restTime: 90,
-			completed,
-			exercise,
-			repetitionUnit: { id: "rep", name: "Reps" },
-			weightUnit: { id: "weight", name: "lb" },
-		},
-	],
+	sets: setIds.map((setId, index) => ({
+		id: setId,
+		userId: "user-1",
+		setGroupId: "group-1",
+		exerciseId: exercise?.id ?? "unknown-exercise-id",
+		type: SetType.NORMAL,
+		order: index,
+		reps: 8,
+		repetitionUnitId: "rep",
+		weight: 135,
+		weightUnitId: "weight",
+		restTime: 90,
+		completed,
+		exercise,
+		repetitionUnit: { id: "rep", name: "Reps" },
+		weightUnit: { id: "weight", name: "lb" },
+	})),
 });
 
 describe("WorkoutSetGroup", () => {
@@ -237,6 +258,33 @@ describe("WorkoutSetGroup", () => {
 			expect(
 				screen.queryByRole("button", { name: "Add Set" }),
 			).not.toBeInTheDocument();
+		});
+	});
+
+	it("wires drag-end sorting to reorder-set mutation with new set order", async () => {
+		const setGroup = buildSetGroup({
+			exercise: { id: "exercise-1", name: "Barbell Row", imageUrl: null },
+			completed: false,
+			setIds: ["set-1", "set-2"],
+		});
+
+		render(
+			<WorkoutSetGroup
+				view={ListView.CurrentSession}
+				setGroup={setGroup}
+				isReorderActive={false}
+				units={mockUnits}
+				startRestTimer={vi.fn()}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Trigger drag end" }));
+
+		await waitFor(() => {
+			expect(mockReorderSets).toHaveBeenCalledWith({
+				setGroupId: "group-1",
+				setIds: ["set-2", "set-1"],
+			});
 		});
 	});
 });

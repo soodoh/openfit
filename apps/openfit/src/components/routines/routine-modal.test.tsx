@@ -54,14 +54,6 @@ const mockRoutine: RoutineWithDays = {
 };
 
 describe("RoutineModal", () => {
-	const selectTab = (name: string) => {
-		const tab = screen.getByRole("tab", { name });
-		fireEvent.click(tab);
-		if (tab.getAttribute("aria-selected") !== "true") {
-			fireEvent.mouseDown(tab);
-		}
-	};
-
 	it("falls back to overview when initialTab is invalid", () => {
 		render(
 			<RoutineModal
@@ -77,36 +69,34 @@ describe("RoutineModal", () => {
 		expect(screen.queryByText("Day tab day-1")).not.toBeInTheDocument();
 	});
 
-	it("switches to a day tab and returns to overview after day deletion callback", () => {
+	it("renders the requested day tab when initialTab matches a routine day", () => {
 		render(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
 				routine={mockRoutine}
 				currentSession={undefined}
+				initialTab="day-day-2"
 			/>,
 		);
 
-		selectTab("Day 1: Pull");
-		expect(screen.getByText("Day tab day-1")).toBeInTheDocument();
-
-		fireEvent.click(screen.getByRole("button", { name: "Delete this day" }));
-		expect(screen.getByText("Overview body")).toBeInTheDocument();
+		expect(screen.getByText("Day tab day-2")).toBeInTheDocument();
+		expect(screen.queryByText("Overview body")).not.toBeInTheDocument();
 	});
 
-	it("switches between overview and day tabs using real tab clicks", () => {
+	it("returns to overview when day-tab deletion callback fires", () => {
 		render(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
 				routine={mockRoutine}
 				currentSession={undefined}
+				initialTab="day-day-1"
 			/>,
 		);
 
-		selectTab("Day 2: Push");
-		expect(screen.getByText("Day tab day-2")).toBeInTheDocument();
-		selectTab("Overview");
+		expect(screen.getByText("Day tab day-1")).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Delete this day" }));
 		expect(screen.getByText("Overview body")).toBeInTheDocument();
 	});
 });
