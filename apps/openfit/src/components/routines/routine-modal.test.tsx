@@ -4,23 +4,7 @@ import type { RoutineWithDays } from "@/lib/types";
 import { RoutineModal } from "./routine-modal";
 
 vi.mock("./routine-overview-tab", () => ({
-	RoutineOverviewTab: ({
-		onSelectDay,
-		onDayAdded,
-	}: {
-		onSelectDay: (dayId: string) => void;
-		onDayAdded?: (dayId: string) => void;
-	}) => (
-		<div>
-			<div>Overview body</div>
-			<button type="button" onClick={() => onSelectDay("day-1")}>
-				Overview select day-1
-			</button>
-			<button type="button" onClick={() => onDayAdded?.("day-2")}>
-				Overview add day-2
-			</button>
-		</div>
-	),
+	RoutineOverviewTab: () => <div>Overview body</div>,
 }));
 
 vi.mock("./routine-day-tab", () => ({
@@ -70,6 +54,14 @@ const mockRoutine: RoutineWithDays = {
 };
 
 describe("RoutineModal", () => {
+	const selectTab = (name: string) => {
+		const tab = screen.getByRole("tab", { name });
+		fireEvent.click(tab);
+		if (tab.getAttribute("aria-selected") !== "true") {
+			fireEvent.mouseDown(tab);
+		}
+	};
+
 	it("falls back to overview when initialTab is invalid", () => {
 		render(
 			<RoutineModal
@@ -95,14 +87,14 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		fireEvent.mouseDown(screen.getByRole("tab", { name: "Day 1: Pull" }));
+		selectTab("Day 1: Pull");
 		expect(screen.getByText("Day tab day-1")).toBeInTheDocument();
 
 		fireEvent.click(screen.getByRole("button", { name: "Delete this day" }));
 		expect(screen.getByText("Overview body")).toBeInTheDocument();
 	});
 
-	it("switches tabs when overview requests opening a specific day", () => {
+	it("switches between overview and day tabs using real tab clicks", () => {
 		render(
 			<RoutineModal
 				open
@@ -112,7 +104,9 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Overview add day-2" }));
+		selectTab("Day 2: Push");
 		expect(screen.getByText("Day tab day-2")).toBeInTheDocument();
+		selectTab("Overview");
+		expect(screen.getByText("Overview body")).toBeInTheDocument();
 	});
 });

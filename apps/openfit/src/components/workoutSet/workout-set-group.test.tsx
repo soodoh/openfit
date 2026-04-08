@@ -7,6 +7,9 @@ import { WorkoutSetGroup } from "./workout-set-group";
 
 const mockCreateSet = vi.fn();
 const mockReorderSets = vi.fn();
+const mockBulkEditSetGroup = vi.fn();
+const mockUpdateSetGroup = vi.fn();
+const mockDeleteSetGroup = vi.fn();
 const mockSetNodeRef = vi.fn();
 
 vi.mock("@/hooks", () => ({
@@ -15,6 +18,15 @@ vi.mock("@/hooks", () => ({
 	}),
 	useReorderSets: () => ({
 		mutateAsync: mockReorderSets,
+	}),
+	useBulkEditSetGroup: () => ({
+		mutateAsync: mockBulkEditSetGroup,
+	}),
+	useUpdateSetGroup: () => ({
+		mutateAsync: mockUpdateSetGroup,
+	}),
+	useDeleteSetGroup: () => ({
+		mutateAsync: mockDeleteSetGroup,
 	}),
 }));
 
@@ -63,21 +75,6 @@ vi.mock("@/components/exercises/exercise-detail-modal", () => ({
 vi.mock("@/components/exercises/replace-exercise-modal", () => ({
 	ReplaceExerciseModal: ({ open }: { open: boolean }) =>
 		open ? <div>replace-exercise-open</div> : null,
-}));
-
-vi.mock("@/components/routines/delete-set-group-modal", () => ({
-	DeleteSetGroupModal: ({ open }: { open: boolean }) =>
-		open ? <div>delete-set-group-open</div> : null,
-}));
-
-vi.mock("./bulk-edit-set-modal", () => ({
-	BulkEditSetModal: ({ open }: { open: boolean }) =>
-		open ? <div>bulk-edit-open</div> : null,
-}));
-
-vi.mock("./edit-set-comment-modal", () => ({
-	EditSetCommentModal: ({ open }: { open: boolean }) =>
-		open ? <div>edit-comment-open</div> : null,
 }));
 
 vi.mock("./workout-set-row", () => ({
@@ -137,6 +134,9 @@ describe("WorkoutSetGroup", () => {
 		vi.clearAllMocks();
 		mockCreateSet.mockResolvedValue({});
 		mockReorderSets.mockResolvedValue({});
+		mockBulkEditSetGroup.mockResolvedValue({});
+		mockUpdateSetGroup.mockResolvedValue({});
+		mockDeleteSetGroup.mockResolvedValue({});
 	});
 
 	it("shows unknown exercise branch and does not add a set without an exercise", () => {
@@ -187,13 +187,21 @@ describe("WorkoutSetGroup", () => {
 		});
 
 		fireEvent.click(screen.getByRole("button", { name: "Bulk edit sets" }));
-		expect(screen.getByText("bulk-edit-open")).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: "Bulk Update Sets" }),
+		).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
 		fireEvent.click(screen.getByRole("button", { name: "Add comment" }));
-		expect(screen.getByText("edit-comment-open")).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: "Update Set Comment" }),
+		).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
 		fireEvent.click(screen.getByRole("button", { name: "Delete exercise" }));
-		expect(screen.getByText("delete-set-group-open")).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: "Delete Exercise" }),
+		).toBeInTheDocument();
 	});
 
 	it("auto-collapses when all sets become completed in current-session view", async () => {

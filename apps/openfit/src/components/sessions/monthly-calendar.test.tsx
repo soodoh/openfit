@@ -1,37 +1,78 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import dayjs from "dayjs";
-import { describe, expect, it, vi } from "vitest";
-import type { Units, WorkoutSessionSummary } from "@/lib/types";
+import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type {
+	Units,
+	WorkoutSessionSummary,
+	WorkoutSessionWithData,
+} from "@/lib/types";
 import { MonthlyCalendar } from "./monthly-calendar";
 
-vi.mock("./session-detail-modal", () => ({
-	SessionDetailModal: ({
-		sessionId,
-		open,
-		isActive,
-	}: {
-		sessionId: string | undefined;
-		open: boolean;
-		isActive: boolean;
-	}) => (
-		<div data-testid="session-detail-modal">
-			{open ? `open:${sessionId}:${String(isActive)}` : "closed"}
-		</div>
+const mockCreateSession = vi.fn();
+const mockUpdateSession = vi.fn();
+const mockDeleteSession = vi.fn();
+const mockSessionData: Record<string, WorkoutSessionWithData> = {};
+
+vi.mock("@tanstack/react-router", () => ({
+	Link: ({ to, children }: { to: string; children: ReactNode }) => (
+		<a href={to}>{children}</a>
 	),
 }));
 
-vi.mock("./edit-session-modal", () => ({
-	EditSessionModal: ({
-		open,
-		defaultStartDate,
+vi.mock("@/hooks", () => ({
+	useSession: (sessionId: string | undefined) => ({
+		data: sessionId ? (mockSessionData[sessionId] ?? undefined) : undefined,
+	}),
+	useCreateSession: () => ({
+		mutateAsync: mockCreateSession,
+	}),
+	useUpdateSession: () => ({
+		mutateAsync: mockUpdateSession,
+	}),
+	useDeleteSession: () => ({
+		mutateAsync: mockDeleteSession,
+	}),
+}));
+
+vi.mock("@/components/workoutSet/workout-list", () => ({
+	WorkoutList: () => <div data-testid="session-workout-list" />,
+}));
+
+vi.mock("./edit-name-popover", () => ({
+	EditNamePopover: () => <div data-testid="edit-name-popover" />,
+}));
+
+vi.mock("./edit-duration-popover", () => ({
+	EditDurationPopover: () => <div data-testid="edit-duration-popover" />,
+}));
+
+vi.mock("./edit-rating-popover", () => ({
+	EditRatingPopover: () => <div data-testid="edit-rating-popover" />,
+}));
+
+vi.mock("./edit-notes-popover", () => ({
+	EditNotesPopover: () => <div data-testid="edit-notes-popover" />,
+}));
+
+vi.mock("./delete-session-modal", () => ({
+	DeleteSessionModal: () => null,
+}));
+
+vi.mock("./select-template", () => ({
+	SelectTemplate: () => <div data-testid="select-template" />,
+}));
+
+vi.mock("@/components/ui/date-time-picker", () => ({
+	DateTimePicker: ({
+		label,
+		value,
 	}: {
-		open: boolean;
-		defaultStartDate: Date | undefined;
+		label: string;
+		value: Date | undefined;
 	}) => (
-		<div data-testid="edit-session-modal">
-			{open
-				? `open:${defaultStartDate?.getDate()}:${defaultStartDate?.getHours()}`
-				: "closed"}
+		<div>
+			{`${label} value: ${value ? `${value.getFullYear()}-${value.getMonth() + 1}-${value.getDate()} ${value.getHours()}` : "none"}`}
 		</div>
 	),
 }));
@@ -55,13 +96,33 @@ const buildSession = (
 });
 
 describe("MonthlyCalendar", () => {
-	it("renders sessions, highlights the current session, and opens the +N more session", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		Object.keys(mockSessionData).forEach((key) => {
+			delete mockSessionData[key];
+		});
+	});
+
+	it("renders sessions, highlights the current session, and opens real session details via +N more", () => {
 		const sessions: WorkoutSessionSummary[] = [
 			buildSession("session-1", "Push A", "2026-04-10T08:00:00.000Z"),
 			buildSession("session-2", "Active Session", "2026-04-10T09:00:00.000Z"),
 			buildSession("session-3", "Upper B", "2026-04-10T10:00:00.000Z"),
 			buildSession("session-4", "Hidden Session", "2026-04-10T11:00:00.000Z"),
 		];
+		mockSessionData["session-4"] = {
+			id: "session-4",
+			userId: "user-1",
+			name: "Hidden Session",
+			notes: "",
+			impression: null,
+			startTime: new Date("2026-04-10T11:00:00.000Z"),
+			endTime: null,
+			templateId: null,
+			createdAt: new Date("2026-04-10T11:00:00.000Z"),
+			updatedAt: new Date("2026-04-10T11:00:00.000Z"),
+			setGroups: [],
+		};
 
 		render(
 			<MonthlyCalendar
@@ -80,9 +141,12 @@ describe("MonthlyCalendar", () => {
 
 		fireEvent.click(screen.getByRole("button", { name: "+1 more" }));
 
-		expect(screen.getByTestId("session-detail-modal")).toHaveTextContent(
-			"open:session-4:false",
-		);
+		expect(
+			screen.getByRole("heading", { name: "Hidden Session" }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Delete Session" }),
+		).toBeVisible();
 	});
 
 	it("calls month navigation callbacks for previous, next, and today", () => {
@@ -107,7 +171,7 @@ describe("MonthlyCalendar", () => {
 		expect(onMonthChange.mock.calls[2][0].isSame(dayjs(), "day")).toBe(true);
 	});
 
-	it("opens create session modal with the clicked date at 9 AM", () => {
+	it("opens real create-session modal with the clicked date at 9 AM", () => {
 		render(
 			<MonthlyCalendar
 				currentMonth={dayjs("2026-04-01")}
@@ -123,8 +187,9 @@ describe("MonthlyCalendar", () => {
 			}),
 		);
 
-		expect(screen.getByTestId("edit-session-modal")).toHaveTextContent(
-			"open:15:9",
-		);
+		expect(screen.getByRole("heading", { name: "New Session" })).toBeVisible();
+		expect(
+			screen.getByText("Start Time value: 2026-4-15 9"),
+		).toBeInTheDocument();
 	});
 });
