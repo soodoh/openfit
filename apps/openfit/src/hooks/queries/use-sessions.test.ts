@@ -12,6 +12,14 @@ import {
 	useSessionsByDateRange,
 } from "./use-sessions";
 
+function getFetchRequest(fetchMock: ReturnType<typeof mockJsonSuccess>) {
+	const [input] = fetchMock.mock.calls[0] ?? [];
+
+	expect(typeof input).toBe("string");
+
+	return new URL(input, "http://localhost");
+}
+
 const session = {
 	id: "session-1",
 	userId: "user-1",
@@ -55,9 +63,10 @@ describe("use-sessions queries", () => {
 		});
 
 		expect(result.current.data).toEqual(summaries);
-		expect(fetchMock).toHaveBeenCalledWith(
-			"/api/sessions?startDate=100&endDate=200",
-		);
+		const requestUrl = getFetchRequest(fetchMock);
+		expect(requestUrl.pathname).toBe("/api/sessions");
+		expect(requestUrl.searchParams.get("startDate")).toBe("100");
+		expect(requestUrl.searchParams.get("endDate")).toBe("200");
 	});
 
 	it("does not fetch a single session when the id is undefined", async () => {
@@ -88,6 +97,6 @@ describe("use-sessions queries", () => {
 		});
 
 		expect(result.current.data).toEqual(sessions);
-		expect(fetchMock).toHaveBeenCalledWith("/api/sessions");
+		expect(getFetchRequest(fetchMock).pathname).toBe("/api/sessions");
 	});
 });

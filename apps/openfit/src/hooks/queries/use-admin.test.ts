@@ -14,6 +14,17 @@ import {
 	useAdminLookupPaginated,
 } from "./use-admin";
 
+function getFetchRequest(fetchMock: ReturnType<typeof mockJsonSuccess>) {
+	const [input, init] = fetchMock.mock.calls[0] ?? [];
+
+	expect(typeof input).toBe("string");
+
+	return {
+		url: new URL(input, "http://localhost"),
+		init,
+	};
+}
+
 describe("use-admin queries", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
@@ -58,8 +69,12 @@ describe("use-admin queries", () => {
 		});
 
 		expect(result.current.data).toEqual(response);
-		expect(fetchMock).toHaveBeenCalledWith(
-			"/api/admin/exercises?page=2&pageSize=25&search=bench",
+		const request = getFetchRequest(fetchMock);
+		expect(request.url.pathname).toBe("/api/admin/exercises");
+		expect(request.url.searchParams.get("page")).toBe("2");
+		expect(request.url.searchParams.get("pageSize")).toBe("25");
+		expect(request.url.searchParams.get("search")).toBe("bench");
+		expect(request.init).toEqual(
 			expect.objectContaining({ signal: expect.any(AbortSignal) }),
 		);
 		expect(
@@ -89,8 +104,13 @@ describe("use-admin queries", () => {
 		});
 
 		expect(result.current.data).toEqual(response);
-		expect(fetchMock).toHaveBeenCalledWith(
-			"/api/admin/lookups?type=equipment&page=3&pageSize=10&search=bar",
+		const request = getFetchRequest(fetchMock);
+		expect(request.url.pathname).toBe("/api/admin/lookups");
+		expect(request.url.searchParams.get("type")).toBe("equipment");
+		expect(request.url.searchParams.get("page")).toBe("3");
+		expect(request.url.searchParams.get("pageSize")).toBe("10");
+		expect(request.url.searchParams.get("search")).toBe("bar");
+		expect(request.init).toEqual(
 			expect.objectContaining({ signal: expect.any(AbortSignal) }),
 		);
 	});
@@ -115,8 +135,9 @@ describe("use-admin queries", () => {
 		});
 
 		expect(result.current.data).toEqual(response);
-		expect(fetchMock).toHaveBeenCalledWith(
-			"/api/admin/lookups?type=equipment&pageSize=1000",
-		);
+		const request = getFetchRequest(fetchMock);
+		expect(request.url.pathname).toBe("/api/admin/lookups");
+		expect(request.url.searchParams.get("type")).toBe("equipment");
+		expect(request.url.searchParams.get("pageSize")).toBe("1000");
 	});
 });

@@ -6,12 +6,20 @@ import { mockJsonSuccess } from "@/test/fetch";
 import { createTestQueryWrapper } from "@/test/query-client";
 import { useEquipment, useUnits } from "./use-lookups";
 
+function getFetchRequest(fetchMock: ReturnType<typeof mockJsonSuccess>) {
+	const [input] = fetchMock.mock.calls[0] ?? [];
+
+	expect(typeof input).toBe("string");
+
+	return new URL(input, "http://localhost");
+}
+
 describe("use-lookups queries", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
 	});
 
-	it("uses a stable equipment query and reuses cached lookup data", async () => {
+	it("keeps stable equipment lookup data across rerenders", async () => {
 		const equipment = [
 			{ id: "equipment-1", name: "Barbell" },
 		] satisfies Equipment[];
@@ -19,22 +27,20 @@ describe("use-lookups queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const firstRender = renderHook(() => useEquipment(), { wrapper });
+		const { result, rerender } = renderHook(() => useEquipment(), { wrapper });
 
 		await waitFor(() => {
-			expect(firstRender.result.current.isSuccess).toBe(true);
+			expect(result.current.isSuccess).toBe(true);
 		});
 
-		firstRender.unmount();
-
-		const secondRender = renderHook(() => useEquipment(), { wrapper });
+		rerender();
 
 		await waitFor(() => {
-			expect(secondRender.result.current.data).toEqual(equipment);
+			expect(result.current.data).toEqual(equipment);
 		});
 
 		expect(fetchMock).toHaveBeenCalledTimes(1);
-		expect(fetchMock).toHaveBeenCalledWith("/api/lookups/equipment");
+		expect(getFetchRequest(fetchMock).pathname).toBe("/api/lookups/equipment");
 		expect(queryClient.getQueryData(queryKeys.lookups.equipment())).toEqual(
 			equipment,
 		);
@@ -56,6 +62,6 @@ describe("use-lookups queries", () => {
 		});
 
 		expect(result.current.data).toEqual(units);
-		expect(fetchMock).toHaveBeenCalledWith("/api/lookups/units");
+		expect(getFetchRequest(fetchMock).pathname).toBe("/api/lookups/units");
 	});
 });

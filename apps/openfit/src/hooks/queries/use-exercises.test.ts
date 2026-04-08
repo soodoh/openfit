@@ -10,6 +10,17 @@ import {
 	useSimilarExercises,
 } from "./use-exercises";
 
+function getFetchRequest(fetchMock: ReturnType<typeof mockJsonSuccess>) {
+	const [input, init] = fetchMock.mock.calls[0] ?? [];
+
+	expect(typeof input).toBe("string");
+
+	return {
+		url: new URL(input, "http://localhost"),
+		init,
+	};
+}
+
 const exercise = {
 	id: "exercise-1",
 	name: "Bench Press",
@@ -47,7 +58,7 @@ describe("use-exercises queries", () => {
 		expect(fetchMock).not.toHaveBeenCalled();
 	});
 
-	it("requests a filtered exercise page with the expected query string", async () => {
+	it("requests a filtered exercise page with the expected query semantics", async () => {
 		const page = {
 			page: [exercise],
 			isDone: true,
@@ -71,8 +82,18 @@ describe("use-exercises queries", () => {
 		});
 
 		expect(result.current.data?.pages[0]).toEqual(page);
-		expect(fetchMock).toHaveBeenCalledWith(
-			"/api/exercises?search=bench&equipmentIds=equipment-1&equipmentIds=equipment-2&level=beginner&categoryId=category-1&primaryMuscleId=muscle-1&limit=20",
+		const request = getFetchRequest(fetchMock);
+		expect(request.url.pathname).toBe("/api/exercises");
+		expect(request.url.searchParams.get("search")).toBe("bench");
+		expect(request.url.searchParams.getAll("equipmentIds")).toEqual([
+			"equipment-1",
+			"equipment-2",
+		]);
+		expect(request.url.searchParams.get("level")).toBe("beginner");
+		expect(request.url.searchParams.get("categoryId")).toBe("category-1");
+		expect(request.url.searchParams.get("primaryMuscleId")).toBe("muscle-1");
+		expect(request.url.searchParams.get("limit")).toBe("20");
+		expect(request.init).toEqual(
 			expect.objectContaining({ signal: expect.any(AbortSignal) }),
 		);
 		expect(
@@ -102,8 +123,17 @@ describe("use-exercises queries", () => {
 		});
 
 		expect(result.current.data).toEqual(similarExercises);
-		expect(fetchMock).toHaveBeenCalledWith(
-			"/api/exercises/similar?q=press&equipmentIds=equipment-1&primaryMuscleIds=muscle-1&primaryMuscleIds=muscle-2&exclude=exercise-9&limit=5",
-		);
+		const request = getFetchRequest(fetchMock);
+		expect(request.url.pathname).toBe("/api/exercises/similar");
+		expect(request.url.searchParams.get("q")).toBe("press");
+		expect(request.url.searchParams.getAll("equipmentIds")).toEqual([
+			"equipment-1",
+		]);
+		expect(request.url.searchParams.getAll("primaryMuscleIds")).toEqual([
+			"muscle-1",
+			"muscle-2",
+		]);
+		expect(request.url.searchParams.get("exclude")).toBe("exercise-9");
+		expect(request.url.searchParams.get("limit")).toBe("5");
 	});
 });
