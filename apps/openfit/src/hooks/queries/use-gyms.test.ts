@@ -5,6 +5,8 @@ import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
 import { createTestQueryWrapper } from "@/test/query-client";
 import { useGym, useGyms } from "./use-gyms";
 
+const originalFetch = globalThis.fetch;
+
 type FetchMock = {
 	mock: {
 		calls: unknown[][];
@@ -22,6 +24,8 @@ function getFetchRequest(fetchMock: FetchMock, callIndex = 0) {
 describe("use-gyms queries", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
 	it("fetches all gyms and stores them under the gyms list query key", async () => {
@@ -98,7 +102,7 @@ describe("use-gyms queries", () => {
 		);
 	});
 
-	it("treats a missing gym (404) as an error because the query resolves to undefined", async () => {
+	it("surfaces a coherent not-found error for missing gyms", async () => {
 		const fetchMock = vi.fn(() =>
 			Promise.resolve(Response.json({ error: "Not found" }, { status: 404 })),
 		);
@@ -111,9 +115,7 @@ describe("use-gyms queries", () => {
 			expect(result.current.isError).toBe(true);
 		});
 
-		expect((result.current.error as Error).message).toContain(
-			"data is undefined",
-		);
+		expect((result.current.error as Error).message).toBe("Gym not found");
 		expect(getFetchRequest(fetchMock).pathname).toBe("/api/gyms/missing-gym");
 	});
 

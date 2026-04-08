@@ -6,6 +6,8 @@ import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
 import { createTestQueryWrapper } from "@/test/query-client";
 import { useRoutineDay, useRoutineDaySearch } from "./use-routine-days";
 
+const originalFetch = globalThis.fetch;
+
 type FetchMock = {
 	mock: {
 		calls: unknown[][];
@@ -20,9 +22,15 @@ function getFetchRequest(fetchMock: FetchMock, callIndex = 0) {
 	return new URL(input, "http://localhost");
 }
 
+function routineDaySearchKey(term: string, limit: number) {
+	return [...queryKeys.routineDays.search(term), { limit }] as const;
+}
+
 describe("use-routine-days queries", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
 	it("does not fetch a routine day when the id is undefined", async () => {
@@ -138,7 +146,7 @@ describe("use-routine-days queries", () => {
 		).toBe(result.current.data);
 	});
 
-	it("treats missing routine day detail responses (404) as query errors from undefined data", async () => {
+	it("surfaces a coherent not-found error for missing routine day details", async () => {
 		const fetchMock = vi.fn(() =>
 			Promise.resolve(Response.json({ error: "Not found" }, { status: 404 })),
 		);
@@ -153,8 +161,8 @@ describe("use-routine-days queries", () => {
 			expect(result.current.isError).toBe(true);
 		});
 
-		expect((result.current.error as Error).message).toContain(
-			"data is undefined",
+		expect((result.current.error as Error).message).toBe(
+			"Routine day not found",
 		);
 		expect(getFetchRequest(fetchMock).pathname).toBe(
 			"/api/routine-days/missing-day",
@@ -230,9 +238,76 @@ describe("use-routine-days queries", () => {
 		expect(result.current.data?.[0]?.createdAt).toBeInstanceOf(Date);
 		expect(result.current.data?.[0]?.routine?.createdAt).toBeInstanceOf(Date);
 		expect(result.current.data?.[1]?.routine).toBeNull();
+		expect(queryClient.getQueryData(routineDaySearchKey("push", 5))).toEqual(
+			result.current.data,
+		);
+	});
+
+	it("uses distinct cache keys for the same term when limits differ", async () => {
+		const limitedResults = [
+			{
+				id: "day-1",
+				routineId: "routine-1",
+				userId: "user-1",
+				description: "Limited push day",
+				createdAt: "2026-01-10T00:00:00.000Z",
+				updatedAt: "2026-01-11T00:00:00.000Z",
+				weekdays: [1, 3],
+				routine: null,
+			},
+		] satisfies RoutineDaySearchDto[];
+		const expandedResults = [
+			...limitedResults,
+			{
+				id: "day-2",
+				routineId: "routine-1",
+				userId: "user-1",
+				description: "Expanded push day",
+				createdAt: "2026-01-12T00:00:00.000Z",
+				updatedAt: "2026-01-13T00:00:00.000Z",
+				weekdays: [2, 4],
+				routine: null,
+			},
+		] satisfies RoutineDaySearchDto[];
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValueOnce(Response.json(limitedResults))
+			.mockResolvedValueOnce(Response.json(expandedResults));
+		vi.stubGlobal("fetch", fetchMock);
+		const { queryClient, wrapper } = createTestQueryWrapper();
+
+		const { result: limited } = renderHook(
+			() => useRoutineDaySearch("push", 1),
+			{
+				wrapper,
+			},
+		);
+
+		await waitFor(() => {
+			expect(limited.current.isSuccess).toBe(true);
+		});
+
+		const { result: expanded } = renderHook(
+			() => useRoutineDaySearch("push", 2),
+			{ wrapper },
+		);
+
+		await waitFor(() => {
+			expect(expanded.current.isSuccess).toBe(true);
+		});
+
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+		expect(getFetchRequest(fetchMock, 0).searchParams.get("limit")).toBe("1");
+		expect(getFetchRequest(fetchMock, 1).searchParams.get("limit")).toBe("2");
+		expect(queryClient.getQueryData(routineDaySearchKey("push", 1))).toEqual(
+			limited.current.data,
+		);
+		expect(queryClient.getQueryData(routineDaySearchKey("push", 2))).toEqual(
+			expanded.current.data,
+		);
 		expect(
-			queryClient.getQueryData(queryKeys.routineDays.search("push")),
-		).toEqual(result.current.data);
+			queryClient.getQueryData(routineDaySearchKey("push", 1)),
+		).not.toEqual(queryClient.getQueryData(routineDaySearchKey("push", 2)));
 	});
 
 	it("omits the search param when searching routine days with an empty term", async () => {

@@ -10,10 +10,10 @@ async function fetchGyms(): Promise<Gym[]> {
 	return fetchJson<Gym[]>(response, "Failed to fetch gyms");
 }
 // Fetch single gym
-async function fetchGym(id: string): Promise<Gym | undefined> {
+async function fetchGym(id: string): Promise<Gym> {
 	const response = await fetch(`/api/gyms/${id}`);
 	if (response.status === 404) {
-		return undefined;
+		throw new Error("Gym not found");
 	}
 	return fetchJson<Gym>(response, "Failed to fetch gym");
 }
@@ -25,9 +25,7 @@ export function useGyms(): UseQueryResult<Gym[]> {
 	});
 }
 // Hook for single gym
-export function useGym(
-	id: string | undefined,
-): UseQueryResult<Gym | undefined> {
+export function useGym(id: string | undefined): UseQueryResult<Gym> {
 	return useQuery({
 		queryKey: queryKeys.gyms.detail(id ?? ""),
 		queryFn: async () => fetchGym(id ?? ""),

@@ -8,6 +8,8 @@ import useUserProfile, {
 	useUserProfile as useUserProfileNamed,
 } from "./use-user-profile";
 
+const originalFetch = globalThis.fetch;
+
 type FetchMock = {
 	mock: {
 		calls: unknown[][];
@@ -25,6 +27,8 @@ function getFetchRequest(fetchMock: FetchMock, callIndex = 0) {
 describe("use-user-profile query", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
 	it("fetches user profile data and caches it by current user profile key", async () => {

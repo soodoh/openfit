@@ -84,12 +84,10 @@ async function fetchRoutines(
 	};
 }
 // Fetch single routine
-async function fetchRoutine(
-	id: string,
-): Promise<RoutineQueryResult | undefined> {
+async function fetchRoutine(id: string): Promise<RoutineQueryResult> {
 	const response = await fetch(`/api/routines/${id}`);
 	if (response.status === 404) {
-		return undefined;
+		throw new Error("Routine not found");
 	}
 	const payload = await fetchJson<RoutineQueryDto>(
 		response,
@@ -115,7 +113,7 @@ export function useRoutines(
 // Hook for single routine
 export function useRoutine(
 	id: string | undefined,
-): UseQueryResult<RoutineQueryResult | undefined> {
+): UseQueryResult<RoutineQueryResult> {
 	return useQuery({
 		queryKey: queryKeys.routines.detail(id ?? ""),
 		queryFn: async () => fetchRoutine(id ?? ""),

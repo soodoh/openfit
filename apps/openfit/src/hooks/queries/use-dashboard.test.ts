@@ -6,6 +6,8 @@ import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
 import { createTestQueryWrapper } from "@/test/query-client";
 import { useDashboardStats, useRecentSessions } from "./use-dashboard";
 
+const originalFetch = globalThis.fetch;
+
 type FetchMock = {
 	mock: {
 		calls: unknown[][];
@@ -23,6 +25,8 @@ function getFetchRequest(fetchMock: FetchMock, callIndex = 0) {
 describe("use-dashboard queries", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
 	it("fetches dashboard stats and caches by dashboard stats query key", async () => {

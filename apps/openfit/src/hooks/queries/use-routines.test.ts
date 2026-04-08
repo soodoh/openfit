@@ -6,6 +6,8 @@ import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
 import { createTestQueryWrapper } from "@/test/query-client";
 import { useRoutine, useRoutineSearch, useRoutines } from "./use-routines";
 
+const originalFetch = globalThis.fetch;
+
 type FetchMock = {
 	mock: {
 		calls: unknown[][];
@@ -123,6 +125,8 @@ function createRoutineDto(id: string, searchLabel: string): RoutineQueryDto {
 describe("use-routines queries", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
 	it("does not fetch a single routine when the id is undefined", async () => {
@@ -175,7 +179,7 @@ describe("use-routines queries", () => {
 		).toBe(result.current.data);
 	});
 
-	it("treats missing routines (404) as query errors from undefined data", async () => {
+	it("surfaces a coherent not-found error for missing routines", async () => {
 		const fetchMock = vi.fn(() =>
 			Promise.resolve(Response.json({ error: "Not found" }, { status: 404 })),
 		);
@@ -190,9 +194,7 @@ describe("use-routines queries", () => {
 			expect(result.current.isError).toBe(true);
 		});
 
-		expect((result.current.error as Error).message).toContain(
-			"data is undefined",
-		);
+		expect((result.current.error as Error).message).toBe("Routine not found");
 		expect(getFetchRequest(fetchMock).url.pathname).toBe(
 			"/api/routines/missing-routine",
 		);
