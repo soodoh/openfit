@@ -1,4 +1,6 @@
 import { readFileSync } from "node:fs";
+import { isAbsolute, relative, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 
 type CoverageMetric = {
 	pct: number;
@@ -20,6 +22,7 @@ const summaryPath = new URL(
 	"../coverage/coverage-summary.json",
 	import.meta.url,
 );
+const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 
 let summary: CoverageSummary;
 try {
@@ -38,11 +41,17 @@ const thresholds = {
 const metricNames = ["statements", "branches", "functions", "lines"] as const;
 
 const normalizePath = (value: string) => value.replaceAll("\\", "/");
+const toProjectRelativePath = (value: string) => {
+	const absolutePath = isAbsolute(value)
+		? value
+		: `${projectRoot}${sep}${value}`;
+	return normalizePath(relative(projectRoot, absolutePath));
+};
 const isTestFile = (filePath: string) => /\.test\.(ts|tsx)$/.test(filePath);
 const isSourceFile = (filePath: string) =>
-	normalizePath(filePath).startsWith("src/");
+	toProjectRelativePath(filePath).startsWith("src/");
 const isHighRiskFile = (filePath: string) => {
-	const normalized = normalizePath(filePath);
+	const normalized = toProjectRelativePath(filePath);
 	return (
 		normalized.startsWith("src/routes/api/") ||
 		normalized.startsWith("src/hooks/") ||
@@ -61,23 +70,24 @@ for (const metric of metricNames) {
 }
 
 for (const [filePath, metrics] of Object.entries(summary)) {
-	if (
-		filePath === "total" ||
-		!metrics ||
-		!isSourceFile(filePath) ||
-		isTestFile(filePath)
-	) {
+	if (filePath === "total" || !metrics) {
 		continue;
 	}
 
-	const minimum = isHighRiskFile(filePath)
+	const normalizedPath = toProjectRelativePath(filePath);
+
+	if (!isSourceFile(normalizedPath) || isTestFile(normalizedPath)) {
+		continue;
+	}
+
+	const minimum = isHighRiskFile(normalizedPath)
 		? thresholds.highRisk
 		: thresholds.source;
 
 	for (const metric of metricNames) {
 		if ((metrics[metric]?.pct ?? 0) < minimum) {
 			failures.push(
-				`${filePath} ${metric} coverage ${metrics[metric]?.pct ?? 0}% < ${minimum}%`,
+				`${normalizedPath} ${metric} coverage ${metrics[metric]?.pct ?? 0}% < ${minimum}%`,
 			);
 		}
 	}
