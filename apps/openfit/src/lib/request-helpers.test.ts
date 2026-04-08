@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { object, string } from "zod";
 import {
 	fetchJson,
@@ -139,12 +139,17 @@ describe("response JSON helpers", () => {
 		).resolves.toEqual({ ok: true });
 	});
 
-	it("throws the fallback error message for non-OK responses without an error body", async () => {
-		const response = Response.json({}, { status: 500 });
+	it("throws the fallback error message for empty/non-JSON error payloads", async () => {
+		const response = new Response("", {
+			status: 500,
+			headers: { "Content-Type": "text/plain" },
+		});
+		const jsonSpy = vi.spyOn(response, "json").mockResolvedValue({});
 
 		await expect(
 			fetchJson<Record<string, never>>(response, "Fallback failure message"),
 		).rejects.toThrow("Fallback failure message");
+		expect(jsonSpy).toHaveBeenCalledTimes(1);
 	});
 
 	it("throws the server-provided error message for non-OK responses", async () => {

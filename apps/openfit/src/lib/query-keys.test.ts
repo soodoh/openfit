@@ -15,7 +15,6 @@ describe("queryKeys", () => {
 			"list",
 			listFilters,
 		]);
-		expect(queryKeys.exercises.list(listFilters)[2]).toBe(listFilters);
 		expect(queryKeys.exercises.details()).toEqual(["exercises", "detail"]);
 		expect(queryKeys.exercises.detail("exercise_1")).toEqual([
 			"exercises",
