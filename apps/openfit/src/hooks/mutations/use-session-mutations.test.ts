@@ -34,10 +34,13 @@ const sessionResponse = {
 	updatedAt: "2026-02-01T10:00:00.000Z",
 	setGroups: [],
 } satisfies SessionResult;
+const originalFetch = globalThis.fetch;
 
 describe("use-session-mutations", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
 	it("creates a session with the expected payload and invalidates sessions.all", async () => {

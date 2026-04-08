@@ -19,10 +19,13 @@ function getRequest(fetchMock: { mock: { calls: Array<unknown[]> } }) {
 		init: init as RequestInit | undefined,
 	};
 }
+const originalFetch = globalThis.fetch;
 
 describe("use-admin-mutations", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
 	it("creates an admin exercise and invalidates admin and public exercise keys", async () => {

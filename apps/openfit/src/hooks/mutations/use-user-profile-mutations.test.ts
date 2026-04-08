@@ -34,10 +34,13 @@ const userProfileResponse = {
 	defaultWeightUnit: null,
 	defaultGym: null,
 } satisfies UserProfileResult;
+const originalFetch = globalThis.fetch;
 
 describe("use-user-profile-mutations", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
 	it("updates the user profile payload and invalidates userProfile.all", async () => {

@@ -35,10 +35,13 @@ const setGroupResponse = {
 	updatedAt: "2026-02-01T10:00:00.000Z",
 	sets: [],
 } satisfies WorkoutSetGroupWithMutationSetsResult;
+const originalFetch = globalThis.fetch;
 
 describe("use-set-group-mutations", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
 	it("creates a set group and invalidates sessions and routineDays keys", async () => {
