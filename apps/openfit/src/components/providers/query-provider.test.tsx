@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
+import { useEffect } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { QueryProvider } from "./query-provider";
 
@@ -19,7 +20,11 @@ function QueryClientConsumer({
 	onClient: (client: QueryClient) => void;
 }) {
 	const queryClient = useQueryClient();
-	onClient(queryClient);
+
+	useEffect(() => {
+		onClient(queryClient);
+	}, [onClient, queryClient]);
+
 	return <div>query client consumer</div>;
 }
 
@@ -56,9 +61,9 @@ describe("QueryProvider", () => {
 	});
 
 	it("keeps the same query client instance across rerenders", () => {
-		const seenClients: QueryClient[] = [];
+		const seenClients = new Set<QueryClient>();
 		const onClient = (queryClient: QueryClient) => {
-			seenClients.push(queryClient);
+			seenClients.add(queryClient);
 		};
 
 		const { rerender } = render(
@@ -73,7 +78,6 @@ describe("QueryProvider", () => {
 			</QueryProvider>,
 		);
 
-		expect(seenClients).toHaveLength(2);
-		expect(seenClients[0]).toBe(seenClients[1]);
+		expect(seenClients.size).toBe(1);
 	});
 });

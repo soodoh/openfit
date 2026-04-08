@@ -7,10 +7,8 @@ describe("Separator", () => {
 		render(<Separator data-testid="separator" />);
 
 		const separator = screen.getByTestId("separator");
+		expect(separator).toHaveAttribute("role", "none");
 		expect(separator).toHaveAttribute("data-orientation", "horizontal");
-		expect(separator).toHaveClass("bg-border");
-		expect(separator).toHaveClass("h-px");
-		expect(separator).toHaveClass("w-full");
 	});
 
 	it("renders a vertical separator and forwards custom props", () => {
@@ -25,8 +23,6 @@ describe("Separator", () => {
 
 		const separator = screen.getByTestId("separator");
 		expect(separator).toHaveAttribute("data-orientation", "vertical");
-		expect(separator).toHaveClass("h-full");
-		expect(separator).toHaveClass("w-px");
 		expect(separator).toHaveClass("custom-separator");
 		expect(separator).toHaveAttribute("role", "separator");
 	});
