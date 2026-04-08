@@ -99,4 +99,26 @@ describe("LoginForm redirects", () => {
 		});
 		expect(mockNavigate).not.toHaveBeenCalled();
 	});
+
+	it("shows sign-in API errors and does not refresh session", async () => {
+		mockSignInEmail.mockResolvedValue({
+			error: { message: "Invalid email or password" },
+		});
+
+		render(<LoginForm />);
+
+		fireEvent.change(screen.getByLabelText("Email"), {
+			target: { value: "person@example.com" },
+		});
+		fireEvent.change(screen.getByLabelText("Password"), {
+			target: { value: "Password1!" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Login" }));
+
+		await waitFor(() => {
+			expect(screen.getByText("Invalid email or password")).toBeInTheDocument();
+		});
+		expect(mockGetSession).not.toHaveBeenCalled();
+		expect(mockNavigate).not.toHaveBeenCalled();
+	});
 });

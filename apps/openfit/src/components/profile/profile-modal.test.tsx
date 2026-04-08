@@ -25,7 +25,7 @@ const mockUnits: Units = {
 	weightUnits: [{ id: "weight-lb", name: "lb" }],
 };
 
-const mockGyms: Gym[] = [
+const baseGyms: Gym[] = [
 	{
 		id: "gym-1",
 		userId: "user-1",
@@ -35,6 +35,7 @@ const mockGyms: Gym[] = [
 		updatedAt: new Date("2026-04-01T00:00:00.000Z"),
 	},
 ];
+let mockGyms: Gym[] = [...baseGyms];
 
 vi.mock("next-themes", () => ({
 	useTheme: () => ({
@@ -101,6 +102,7 @@ vi.mock("@/components/gyms/equipment-selector", () => ({
 describe("ProfileModal", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockGyms = [...baseGyms];
 		mockUpdateProfile.mockResolvedValue({});
 		mockCreateGym.mockResolvedValue({});
 		mockUpdateGym.mockResolvedValue({});
@@ -134,5 +136,27 @@ describe("ProfileModal", () => {
 		).toBeInTheDocument();
 		expect(screen.getByLabelText("Gym Name")).toHaveValue("");
 		expect(screen.getByText("Selected equipment: none")).toBeInTheDocument();
+	});
+
+	it("shows empty gym state and opens add form from first gym CTA", () => {
+		mockGyms = [];
+
+		render(<ProfileModal open onClose={vi.fn()} />);
+
+		fireEvent.mouseDown(screen.getByRole("tab", { name: "Equipment" }));
+
+		expect(screen.getByText("No gyms created yet")).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				/create a gym to filter exercises by available equipment/i,
+			),
+		).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Add Your First Gym" }));
+
+		expect(
+			screen.getByRole("heading", { name: "Add New Gym" }),
+		).toBeInTheDocument();
+		expect(screen.getByLabelText("Gym Name")).toHaveValue("");
 	});
 });
