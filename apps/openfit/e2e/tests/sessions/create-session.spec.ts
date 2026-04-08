@@ -39,6 +39,7 @@ e2eTest.describe("Create Session", () => {
 		// Open new session modal
 		await dashboardPage.clickNewSession();
 		await e2eExpect(page.getByRole("dialog")).toBeVisible({ timeout: 5000 });
+		await page.getByLabel(/session name/i).fill("E2E Empty Session");
 		// Find and click create/start button in modal
 		const startButton = page.getByRole("button", {
 			name: /create|start|begin/i,
@@ -54,7 +55,7 @@ e2eTest.describe("Create Session", () => {
 				.getByRole("dialog")
 				.isVisible({ timeout: 1000 })
 				.catch(() => false));
-			e2eExpect(onWorkoutPage ?? modalClosed).toBe(true);
+			e2eExpect(onWorkoutPage || modalClosed).toBe(true);
 		}
 	});
 	e2eTest(

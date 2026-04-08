@@ -19,7 +19,7 @@ e2eTest.describe("Workout Logs Calendar", () => {
 		const hasEmpty = await logsPage.hasEmptyState();
 		const hasCalendar = await logsPage.isCalendarVisible();
 		// Should show either calendar or empty state
-		e2eExpect(hasEmpty ?? hasCalendar).toBe(true);
+		e2eExpect(hasEmpty || hasCalendar).toBe(true);
 	});
 	e2eTest("should display session count", async ({ logsPage }) => {
 		await logsPage.waitForConvexData();
@@ -101,11 +101,7 @@ e2eTest.describe("Workout Logs Calendar", () => {
 		async ({ logsPage }) => {
 			await logsPage.waitForConvexData();
 			const hasEmpty = await logsPage.hasEmptyState();
-			// New session button should be visible when there are sessions
-			const newSessionBtn = logsPage.page.getByRole("button", {
-				name: /new session/i,
-			});
-			const isVisible = await newSessionBtn
+			const isVisible = await logsPage.newSessionButton
 				.isVisible({ timeout: 2000 })
 				.catch(() => false);
 			if (!hasEmpty) {
@@ -117,13 +113,11 @@ e2eTest.describe("Workout Logs Calendar", () => {
 	e2eTest("should open new session modal", async ({ logsPage, page }) => {
 		await logsPage.waitForConvexData();
 		const hasEmpty = await logsPage.hasEmptyState();
-		// Find new session button (could be in header or empty state)
-		const newSessionBtn = page.getByRole("button", { name: /new session/i });
-		const isVisible = await newSessionBtn
+		const isVisible = await logsPage.newSessionButton
 			.isVisible({ timeout: 2000 })
 			.catch(() => false);
 		if (isVisible) {
-			await newSessionBtn.click();
+			await logsPage.clickNewSession();
 			await e2eExpect(page.getByRole("dialog")).toBeVisible({ timeout: 5000 });
 		} else if (hasEmpty) {
 			// Empty state should have a button to create session
@@ -155,7 +149,7 @@ e2eTest.describe("Workout Logs Calendar", () => {
 			const hasNext = await nextButton
 				.isVisible({ timeout: 2000 })
 				.catch(() => false);
-			e2eExpect(hasPrev ?? hasNext).toBe(true);
+			e2eExpect(hasPrev || hasNext).toBe(true);
 		}
 	});
 	e2eTest("should show empty state message", async ({ logsPage }) => {
@@ -166,26 +160,18 @@ e2eTest.describe("Workout Logs Calendar", () => {
 			const emptyMessage = logsPage.page.getByText(/no workout logs yet/i);
 			await e2eExpect(emptyMessage).toBeVisible();
 			// Should show CTA to create session
-			const createButton = logsPage.page.getByRole("button", {
-				name: /new session|start|create/i,
-			});
-			const isVisible = await createButton
-				.isVisible({ timeout: 2000 })
-				.catch(() => false);
-			e2eExpect(isVisible).toBe(true);
+			await e2eExpect(logsPage.newSessionButton).toBeVisible();
 		}
 	});
 	e2eTest(
 		"should close new session modal on escape",
 		async ({ logsPage, page }) => {
 			await logsPage.waitForConvexData();
-			// Find and click new session button
-			const newSessionBtn = page.getByRole("button", { name: /new session/i });
-			const isVisible = await newSessionBtn
+			const isVisible = await logsPage.newSessionButton
 				.isVisible({ timeout: 2000 })
 				.catch(() => false);
 			if (isVisible) {
-				await newSessionBtn.click();
+				await logsPage.clickNewSession();
 				await e2eExpect(page.getByRole("dialog")).toBeVisible({
 					timeout: 5000,
 				});

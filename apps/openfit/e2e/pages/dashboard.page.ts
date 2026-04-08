@@ -28,7 +28,9 @@ export class DashboardPage extends BasePage {
 		// Welcome section
 		this.welcomeHeading = page.getByRole("heading", { name: /welcome back/i });
 		this.welcomeSubtext = page.getByText(/ready to crush your next workout/i);
-		this.newSessionButton = page.getByRole("button", { name: /new session/i });
+		this.newSessionButton = page
+			.getByRole("button", { name: /new session/i })
+			.first();
 		this.resumeSessionButton = page.getByRole("link", {
 			name: /resume workout/i,
 		});

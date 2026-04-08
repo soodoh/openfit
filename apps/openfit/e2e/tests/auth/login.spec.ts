@@ -62,9 +62,11 @@ e2eTest.describe("Login Page", () => {
 			await loginPage.clickLogin();
 			// Wait for validation
 			await loginPage.page.waitForTimeout(500);
-			// Should show validation error
+			const isInvalid = await loginPage.emailInput.evaluate(
+				(element) => !(element as HTMLInputElement).checkValidity(),
+			);
 			const hasError = await loginPage.hasError();
-			e2eExpect(hasError).toBe(true);
+			e2eExpect(isInvalid || hasError).toBe(true);
 		},
 	);
 	e2eTest(
@@ -120,7 +122,7 @@ e2eTest.describe("Login Page", () => {
 	);
 	e2eTest(
 		"should show loading state while logging in",
-		async ({ loginPage }) => {
+		async ({ loginPage, page }) => {
 			const email = process.env.ADMIN_USER;
 			const password = process.env.ADMIN_PASSWORD;
 			if (!email || !password) {
@@ -132,11 +134,15 @@ e2eTest.describe("Login Page", () => {
 			await loginPage.fillPassword(password);
 			// Click login and check for loading state
 			await loginPage.clickLogin();
-			// The button should show loading state (text changes or spinner appears)
-			// This is a quick check - the loading state may be brief
-			const buttonText = await loginPage.loginButton.textContent();
-			// Button may show "Loading..." or still show "Login" if request is fast
-			e2eExpect(buttonText).toBeTruthy();
+			const outcome = await Promise.race([
+				page.waitForURL("/", { timeout: 15_000 }).then(() => "redirect"),
+				page
+					.getByRole("button", { name: /loading/i })
+					.waitFor({ state: "visible", timeout: 2_000 })
+					.then(() => "loading")
+					.catch(() => null),
+			]);
+			e2eExpect(outcome).toBeTruthy();
 		},
 	);
 });

@@ -40,8 +40,8 @@ export class ExercisesPage extends BasePage {
 		this.clearFiltersButton = page.getByRole("button", {
 			name: /clear filters/i,
 		});
-		this.exerciseCards = page.locator('[class*="rounded-xl"]').filter({
-			has: page.locator('[class*="font-"]'),
+		this.exerciseCards = page.locator("button[type='button']").filter({
+			has: page.locator("h3"),
 		});
 		this.emptyState = page.getByText(/no exercises available/i);
 		this.noResultsState = page.getByText(/no exercises found/i);
@@ -129,8 +129,7 @@ export class ExercisesPage extends BasePage {
 	 */
 	async getExerciseCardsCount(): Promise<number> {
 		await this.waitForConvexData();
-		const cards = this.page.locator(".grid > div[class*='rounded']");
-		return cards.count();
+		return this.exerciseCards.count();
 	}
 	/**
 	 * Check if the empty state is displayed
@@ -166,18 +165,16 @@ export class ExercisesPage extends BasePage {
 	 * Click on an exercise card by index
 	 */
 	async clickExerciseByIndex(index: number): Promise<void> {
-		const cards = this.page.locator(".grid > div[class*='rounded']");
-		await cards.nth(index).click();
+		await this.exerciseCards.nth(index).click();
 	}
 	/**
 	 * Get visible exercise names
 	 */
 	async getVisibleExerciseNames(): Promise<string[]> {
 		const names: string[] = [];
-		const cards = this.page.locator(".grid > div[class*='rounded']");
-		const count = await cards.count();
+		const count = await this.exerciseCards.count();
 		for (let i = 0; i < Math.min(count, 10); i += 1) {
-			const card = cards.nth(i);
+			const card = this.exerciseCards.nth(i);
 			const nameElement = card.locator("h3, [class*='font-semibold']").first();
 			const name = await nameElement.textContent();
 			if (name) {

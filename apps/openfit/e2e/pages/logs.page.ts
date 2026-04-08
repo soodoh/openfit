@@ -18,7 +18,9 @@ export class LogsPage extends BasePage {
 	readonly newSessionButton: Locator;
 	constructor(page: Page) {
 		super(page);
-		this.pageHeading = page.getByRole("heading", { name: /workout logs/i });
+		this.pageHeading = page.getByRole("heading", {
+			name: /^workout logs$/i,
+		});
 		this.pageSubtext = page.getByText(
 			/track your progress and review past sessions/i,
 		);
@@ -26,7 +28,10 @@ export class LogsPage extends BasePage {
 		this.calendar = page
 			.locator('[class*="calendar"], [class*="grid"]')
 			.first();
-		this.calendarHeader = page.locator(String.raw`text=/\w+ \d{4}/i`);
+		this.calendarHeader = page
+			.getByRole("heading")
+			.filter({ hasText: /^[A-Za-z]+ \d{4}$/ })
+			.first();
 		this.previousMonthButton = page.getByRole("button", {
 			name: /previous|prev|left|</i,
 		});
@@ -41,7 +46,9 @@ export class LogsPage extends BasePage {
 		this.sessionCount = page.locator(String.raw`text=/\d+ sessions? in/i`);
 		// Empty state
 		this.emptyState = page.getByText(/no workout logs yet/i);
-		this.newSessionButton = page.getByRole("button", { name: /new session/i });
+		this.newSessionButton = page
+			.getByRole("button", { name: /^new session$/i })
+			.first();
 	}
 	/**
 	 * Navigate to the logs page
@@ -136,7 +143,7 @@ export class LogsPage extends BasePage {
 	 * Check if calendar is visible
 	 */
 	async isCalendarVisible(): Promise<boolean> {
-		return this.isVisible(this.calendar);
+		return this.isVisible(this.calendarHeader);
 	}
 	/**
 	 * Click on a specific day in the calendar

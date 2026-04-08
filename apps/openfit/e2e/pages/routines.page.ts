@@ -21,10 +21,10 @@ export class RoutinesPage extends BasePage {
 		);
 		this.searchInput = page.getByPlaceholder(/search routines/i);
 		this.createRoutineButton = page.getByRole("button", {
-			name: /new routine|create routine/i,
+			name: /new routine|create .*routine/i,
 		});
-		this.routineCards = page.locator('[class*="rounded-xl"]').filter({
-			has: page.locator('[class*="font-semibold"]'),
+		this.routineCards = page.locator("div.cursor-pointer").filter({
+			has: page.locator(".font-semibold"),
 		});
 		this.emptyState = page.getByText(/no routines yet/i);
 		this.noResultsState = page.getByText(/no routines found/i);
@@ -122,9 +122,7 @@ export class RoutinesPage extends BasePage {
 	 * Click on a routine card by name
 	 */
 	async clickRoutineByName(name: string): Promise<void> {
-		const card = this.page.locator('[class*="rounded-xl"]').filter({
-			hasText: name,
-		});
+		const card = this.routineCards.filter({ hasText: name });
 		await card.click();
 	}
 	/**
@@ -192,9 +190,7 @@ export class RoutinesPage extends BasePage {
 	 * Check if a routine with the given name exists
 	 */
 	async routineExists(name: string): Promise<boolean> {
-		const card = this.page.locator('[class*="rounded-xl"]').filter({
-			hasText: name,
-		});
+		const card = this.routineCards.filter({ hasText: name });
 		return this.isVisible(card);
 	}
 }

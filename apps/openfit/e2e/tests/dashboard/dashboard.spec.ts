@@ -16,17 +16,17 @@ e2eTest.describe("Dashboard", () => {
 		await e2eExpect(dashboardPage.welcomeHeading).toBeVisible();
 		await e2eExpect(dashboardPage.welcomeSubtext).toBeVisible();
 	});
-	e2eTest("should display stats cards", async ({ dashboardPage, page }) => {
+	e2eTest("should display stats cards", async ({ dashboardPage }) => {
 		// Wait for data to load
 		await dashboardPage.waitForConvexData();
 		// Check that stats section exists
 		// Look for stat card labels
-		await e2eExpect(page.getByText(/total sessions/i)).toBeVisible({
+		await e2eExpect(dashboardPage.totalSessionsStat).toBeVisible({
 			timeout: 10_000,
 		});
-		await e2eExpect(page.getByText(/this week/i)).toBeVisible();
-		await e2eExpect(page.getByText(/day streak/i)).toBeVisible();
-		await e2eExpect(page.getByText(/^routines$/i).first()).toBeVisible();
+		await e2eExpect(dashboardPage.thisWeekStat).toBeVisible();
+		await e2eExpect(dashboardPage.dayStreakStat).toBeVisible();
+		await e2eExpect(dashboardPage.routinesStat).toBeVisible();
 	});
 	e2eTest("should display quick access cards", async ({ dashboardPage }) => {
 		// Wait for page to load

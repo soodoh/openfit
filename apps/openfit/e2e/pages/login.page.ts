@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { waitForAuthPageHydration } from "@/e2e/utils/auth.helper";
 import { BasePage } from "./base.page";
 /**
  * Page object for the Login/Register pages
@@ -8,6 +9,7 @@ export class LoginPage extends BasePage {
 	readonly emailInput: Locator;
 	readonly passwordInput: Locator;
 	readonly loginButton: Locator;
+	readonly registerButton: Locator;
 	readonly registerLink: Locator;
 	readonly backToSignInLink: Locator;
 	readonly emailError: Locator;
@@ -17,6 +19,7 @@ export class LoginPage extends BasePage {
 		this.emailInput = page.getByLabel(/email/i);
 		this.passwordInput = page.getByLabel(/password/i);
 		this.loginButton = page.getByRole("button", { name: /login/i });
+		this.registerButton = page.getByRole("button", { name: /register/i });
 		this.registerLink = page.getByRole("link", { name: /create an account/i });
 		this.backToSignInLink = page.getByRole("link", {
 			name: /back to sign in/i,
@@ -44,7 +47,13 @@ export class LoginPage extends BasePage {
 	async waitForFormReady(): Promise<void> {
 		await this.waitForLoadingComplete();
 		await expect(this.emailInput).toBeVisible({ timeout: 15_000 });
-		await expect(this.loginButton).toBeVisible({ timeout: 5000 });
+		const path = await this.getCurrentPath();
+		if (path === "/signin") {
+			await waitForAuthPageHydration(this.page);
+			await expect(this.loginButton).toBeVisible({ timeout: 15_000 });
+			return;
+		}
+		await expect(this.registerButton).toBeVisible({ timeout: 15_000 });
 	}
 	/**
 	 * Fill in the email field
@@ -130,7 +139,7 @@ export class LoginPage extends BasePage {
 	 * Check if the register button is visible (indicates register page)
 	 */
 	async isRegisterButtonVisible(): Promise<boolean> {
-		return this.isVisible(this.page.getByRole("button", { name: /register/i }));
+		return this.isVisible(this.registerButton);
 	}
 }
 

@@ -14,6 +14,8 @@
 		"jsx": "react-jsx",
 		"incremental": true,
 		"paths": {
+			"@/e2e": ["./e2e"],
+			"@/e2e/*": ["./e2e/*"],
 			"@/db": ["./db"],
 			"@/db/*": ["./db/*"],
 			"@/*": ["./src/*"]

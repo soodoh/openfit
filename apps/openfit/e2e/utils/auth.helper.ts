@@ -1,5 +1,58 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+
+async function hasAuthSessionRequest(page: Page): Promise<boolean> {
+	return page.evaluate(() =>
+		performance
+			.getEntriesByType("resource")
+			.some((entry) => entry.name.includes("/api/auth/get-session")),
+	);
+}
+
+async function isOnSigninPage(page: Page): Promise<boolean> {
+	try {
+		return new URL(page.url()).pathname === "/signin";
+	} catch {
+		return false;
+	}
+}
+
+async function loadSigninPage(page: Page): Promise<void> {
+	const loginButton = page.getByRole("button", { name: /login/i });
+
+	if (await isOnSigninPage(page)) {
+		await page.reload({ waitUntil: "domcontentloaded" });
+	} else {
+		await page.goto("/signin", { waitUntil: "domcontentloaded" });
+	}
+
+	await expect(loginButton).toBeVisible({ timeout: 15_000 });
+}
+
+export async function waitForAuthPageHydration(page: Page): Promise<void> {
+	const loginButton = page.getByRole("button", { name: /login/i });
+
+	const sessionRequest = page
+		.waitForResponse(
+			(response) =>
+				response.request().method() === "GET" &&
+				response.url().includes("/api/auth/get-session"),
+			{ timeout: 15_000 },
+		)
+		.catch(() => null);
+
+	if (!(await hasAuthSessionRequest(page))) {
+		const response = await sessionRequest;
+
+		if (!response) {
+			throw new Error("Timed out waiting for auth session hydration");
+		}
+	}
+
+	await expect(loginButton).toBeVisible({
+		timeout: 15_000,
+	});
+}
 /**
  * Get test user credentials from environment
  */
@@ -26,11 +79,8 @@ export function getTestCredentials(): {
  */
 export async function loginAsTestUser(page: Page): Promise<void> {
 	const { email, password } = getTestCredentials();
-	await page.goto("/signin");
-	// Wait for login form
-	await expect(page.getByRole("button", { name: /login/i })).toBeVisible({
-		timeout: 15_000,
-	});
+	await loadSigninPage(page);
+	await waitForAuthPageHydration(page);
 	// Fill credentials
 	await page.getByLabel(/email/i).fill(email);
 	await page.getByLabel(/password/i).fill(password);
@@ -46,19 +96,16 @@ export async function loginAsTestUser(page: Page): Promise<void> {
  * Logout the current user
  */
 export async function logout(page: Page): Promise<void> {
-	// Find and click the user menu/profile button
-	const userMenu = page.getByRole("button", { name: /profile|user|menu/i });
-	if (await userMenu.isVisible({ timeout: 2000 }).catch(() => false)) {
-		await userMenu.click();
-		// Click logout option
-		const logoutButton = page.getByRole("menuitem", {
-			name: /logout|sign out/i,
-		});
-		await logoutButton.click();
-	} else {
-		// Try direct navigation to logout
-		await page.goto("/api/auth/signout");
-	}
+	const userMenu = page.locator("header button:visible").last();
+	await expect(userMenu).toBeVisible({ timeout: 5_000 });
+	await userMenu.click();
+
+	const logoutButton = page.getByRole("menuitem", {
+		name: /logout|sign out/i,
+	});
+	await expect(logoutButton).toBeVisible({ timeout: 5_000 });
+	await logoutButton.click();
+
 	// Verify logged out
 	await expect(page).toHaveURL("/signin", { timeout: 10_000 });
 }
@@ -86,6 +133,7 @@ export async function isAuthenticated(page: Page): Promise<boolean> {
  */
 export async function clearAuth(page: Page): Promise<void> {
 	await page.context().clearCookies();
+	await loadSigninPage(page);
 	await page.evaluate(() => {
 		localStorage.clear();
 		sessionStorage.clear();

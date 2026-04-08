@@ -1,5 +1,6 @@
 import path from "node:path";
 import { expect, test as setup } from "@playwright/test";
+import { waitForAuthPageHydration } from "@/e2e/utils/auth.helper";
 
 const authFile = path.join(import.meta.dirname, ".auth/user.json");
 
@@ -27,11 +28,7 @@ setup("authenticate", async ({ page }) => {
 	}
 
 	await page.goto("/signin");
-
-	// Wait for the login form to load
-	await expect(page.getByRole("button", { name: /login/i })).toBeVisible({
-		timeout: 15_000,
-	});
+	await waitForAuthPageHydration(page);
 
 	// Fill in credentials
 	await page.getByLabel(/email/i).fill(adminUser);

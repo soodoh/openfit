@@ -16,16 +16,7 @@ e2eTest.describe("Routine CRUD", () => {
 	e2eTest("should create a new routine", async ({ routinesPage, page }) => {
 		await routinesPage.goto();
 		await routinesPage.waitForConvexData();
-		// Open create modal
-		const hasEmpty = await routinesPage.hasEmptyState();
-		if (hasEmpty) {
-			const emptyStateButton = page.getByRole("button", {
-				name: /create routine|new routine/i,
-			});
-			await emptyStateButton.click();
-		} else {
-			await routinesPage.clickCreateRoutine();
-		}
+		await routinesPage.clickCreateRoutine();
 		// Wait for modal
 		await e2eExpect(page.getByRole("dialog")).toBeVisible({ timeout: 5000 });
 		// Fill form
@@ -105,16 +96,7 @@ e2eTest.describe("Routine CRUD", () => {
 		async ({ routinesPage, page }) => {
 			await routinesPage.goto();
 			await routinesPage.waitForConvexData();
-			// Open create modal
-			const hasEmpty = await routinesPage.hasEmptyState();
-			if (hasEmpty) {
-				const emptyStateButton = page.getByRole("button", {
-					name: /create routine|new routine/i,
-				});
-				await emptyStateButton.click();
-			} else {
-				await routinesPage.clickCreateRoutine();
-			}
+			await routinesPage.clickCreateRoutine();
 			await e2eExpect(page.getByRole("dialog")).toBeVisible();
 			// Try to submit without filling required fields
 			const submitButton = page.getByRole("button", {
@@ -123,44 +105,33 @@ e2eTest.describe("Routine CRUD", () => {
 			await submitButton.click();
 			// Should still be on the modal (validation failed)
 			await e2eExpect(page.getByRole("dialog")).toBeVisible();
-			// Or should show validation error
+			// The required name field uses native form validation.
 			const nameInput = page.getByLabel(/name/i);
-			const isInvalid = await nameInput.getAttribute("aria-invalid");
+			const isInvalid = await nameInput.evaluate(
+				(element) => !(element as HTMLInputElement).checkValidity(),
+			);
 			const hasErrorText = await page
 				.locator(".text-destructive, [class*='error']")
 				.isVisible({ timeout: 1000 })
 				.catch(() => false);
-			// Either invalid state or error text visible
-			e2eExpect(isInvalid === "true" || (hasErrorText ?? true)).toBe(true);
+			e2eExpect(isInvalid || hasErrorText).toBe(true);
 		},
 	);
 	e2eTest("should cancel routine creation", async ({ routinesPage, page }) => {
 		await routinesPage.goto();
 		await routinesPage.waitForConvexData();
-		// Get initial count
-		const initialCount = await routinesPage.getRoutineCardsCount();
-		// Open create modal
-		const hasEmpty = await routinesPage.hasEmptyState();
-		if (hasEmpty) {
-			const emptyStateButton = page.getByRole("button", {
-				name: /create routine|new routine/i,
-			});
-			await emptyStateButton.click();
-		} else {
-			await routinesPage.clickCreateRoutine();
-		}
+		const cancelledRoutineName = `Should Not Be Created ${Date.now()}`;
+		await routinesPage.clickCreateRoutine();
 		await e2eExpect(page.getByRole("dialog")).toBeVisible();
 		// Fill some data
 		const nameInput = page.getByLabel(/name/i);
-		await nameInput.fill("Should Not Be Created");
+		await nameInput.fill(cancelledRoutineName);
 		// Cancel
 		await routinesPage.closeRoutineModal();
 		// Modal should be closed
 		await e2eExpect(page.getByRole("dialog")).toBeHidden({ timeout: 5000 });
-		// Count should be the same
-		if (!hasEmpty) {
-			const finalCount = await routinesPage.getRoutineCardsCount();
-			e2eExpect(finalCount).toBe(initialCount);
-		}
+		await routinesPage.waitForConvexData();
+		const exists = await routinesPage.routineExists(cancelledRoutineName);
+		e2eExpect(exists).toBe(false);
 	});
 });

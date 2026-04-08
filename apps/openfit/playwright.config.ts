@@ -5,6 +5,10 @@ import dotenv from "dotenv";
 // Load environment variables from .env.local
 dotenv.config({ path: path.resolve(import.meta.dirname, ".env.local") });
 
+const e2eBaseUrl = process.env.E2E_BASE_URL ?? "http://127.0.0.1:3100";
+process.env.VITE_APP_URL = e2eBaseUrl;
+process.env.BETTER_AUTH_BASE_URL = e2eBaseUrl;
+
 /**
  * Playwright E2E Test Configuration for OpenFit
  *
@@ -35,7 +39,7 @@ export default defineConfig({
 	// Shared settings for all projects
 	use: {
 		// Base URL for the app
-		baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
+		baseURL: e2eBaseUrl,
 
 		// Collect trace on first retry
 		trace: "on-first-retry",
@@ -74,6 +78,7 @@ export default defineConfig({
 				storageState: "e2e/.auth/user.json",
 			},
 			dependencies: ["setup"],
+			testIgnore: /auth\/login\.spec\.ts/,
 		},
 		{
 			name: "webkit",
@@ -82,6 +87,7 @@ export default defineConfig({
 				storageState: "e2e/.auth/user.json",
 			},
 			dependencies: ["setup"],
+			testIgnore: /auth\/login\.spec\.ts/,
 		},
 
 		// Mobile browsers
@@ -92,6 +98,7 @@ export default defineConfig({
 				storageState: "e2e/.auth/user.json",
 			},
 			dependencies: ["setup"],
+			testIgnore: /auth\/login\.spec\.ts/,
 		},
 		{
 			name: "mobile-safari",
@@ -100,6 +107,7 @@ export default defineConfig({
 				storageState: "e2e/.auth/user.json",
 			},
 			dependencies: ["setup"],
+			testIgnore: /auth\/login\.spec\.ts/,
 		},
 
 		// Tests that don't require authentication (login page tests)
@@ -128,9 +136,9 @@ export default defineConfig({
 	webServer: process.env.CI
 		? undefined
 		: {
-				command: "bun run dev",
-				url: "http://localhost:3000",
-				reuseExistingServer: true,
+				command: "bun run dev -- --host 127.0.0.1 --port 3100",
+				url: e2eBaseUrl,
+				reuseExistingServer: false,
 				timeout: 120_000,
 			},
 });

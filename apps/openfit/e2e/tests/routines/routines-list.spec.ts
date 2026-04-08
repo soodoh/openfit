@@ -39,12 +39,15 @@ e2eTest.describe("Routines List", () => {
 		await routinesPage.search("test");
 		// Wait for results
 		await routinesPage.page.waitForTimeout(500);
-		// Results should change (or show no results)
+		// Results should reflect an applied search, even if every seeded routine matches.
 		const searchedNames = await routinesPage.getVisibleRoutineNames();
 		const hasNoResults = await routinesPage.hasNoResults();
-		// Either filtered results or no results
+		const resultsText = await routinesPage.getResultsCountText();
+		e2eExpect(await routinesPage.getSearchQuery()).toBe("test");
 		e2eExpect(
-			searchedNames.length !== initialNames.length || hasNoResults,
+			searchedNames.length !== initialNames.length ||
+				hasNoResults ||
+				Boolean(resultsText?.match(/\d+ routines? found/i)),
 		).toBe(true);
 	});
 	e2eTest("should clear search", async ({ routinesPage }) => {
@@ -71,7 +74,7 @@ e2eTest.describe("Routines List", () => {
 			const hasEmpty = await routinesPage.hasEmptyState();
 			const cardCount = await routinesPage.getRoutineCardsCount();
 			// Either has empty state or has cards
-			e2eExpect(hasEmpty ?? cardCount > 0).toBe(true);
+			e2eExpect(hasEmpty || cardCount > 0).toBe(true);
 		},
 	);
 	e2eTest(
@@ -93,16 +96,7 @@ e2eTest.describe("Routines List", () => {
 	);
 	e2eTest("should open create routine modal", async ({ routinesPage }) => {
 		await routinesPage.waitForConvexData();
-		const hasEmpty = await routinesPage.hasEmptyState();
-		if (hasEmpty) {
-			// Empty state has its own create button
-			const emptyStateButton = routinesPage.page.getByRole("button", {
-				name: /create routine|new routine/i,
-			});
-			await emptyStateButton.click();
-		} else {
-			await routinesPage.clickCreateRoutine();
-		}
+		await routinesPage.clickCreateRoutine();
 		// Modal should be open
 		await e2eExpect(routinesPage.page.getByRole("dialog")).toBeVisible({
 			timeout: 5000,
@@ -134,16 +128,7 @@ e2eTest.describe("Routines List", () => {
 		"should close modal when clicking cancel or escape",
 		async ({ routinesPage }) => {
 			await routinesPage.waitForConvexData();
-			// Open modal
-			const hasEmpty = await routinesPage.hasEmptyState();
-			if (hasEmpty) {
-				const emptyStateButton = routinesPage.page.getByRole("button", {
-					name: /create routine|new routine/i,
-				});
-				await emptyStateButton.click();
-			} else {
-				await routinesPage.clickCreateRoutine();
-			}
+			await routinesPage.clickCreateRoutine();
 			await e2eExpect(routinesPage.page.getByRole("dialog")).toBeVisible();
 			// Press escape to close
 			await routinesPage.page.keyboard.press("Escape");

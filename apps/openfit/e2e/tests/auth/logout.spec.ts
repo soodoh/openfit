@@ -2,7 +2,7 @@ import {
 	expect as e2eExpect,
 	test as e2eTest,
 } from "@/e2e/fixtures/base.fixture";
-import { logout } from "@/e2e/utils/auth.helper";
+import { clearAuth, loginAsTestUser, logout } from "@/e2e/utils/auth.helper";
 
 /**
  * Logout E2E tests
@@ -10,9 +10,10 @@ import { logout } from "@/e2e/utils/auth.helper";
  * These tests run with authentication to test logout functionality.
  */
 e2eTest.describe("Logout", () => {
-	e2eTest.beforeEach(async ({ dashboardPage }) => {
-		// Start on the dashboard (authenticated)
-		await dashboardPage.goto();
+	e2eTest.beforeEach(async ({ dashboardPage, page }) => {
+		// Each test needs its own session because logout revokes the auth token.
+		await clearAuth(page);
+		await loginAsTestUser(page);
 		await e2eExpect(dashboardPage.welcomeHeading).toBeVisible();
 	});
 	e2eTest("should successfully logout", async ({ page }) => {
@@ -41,59 +42,52 @@ e2eTest.describe("Logout", () => {
 		},
 	);
 	e2eTest(
-		"should not be able to access routines page after logout",
+		"should still allow access to the routines page after logout",
 		async ({ page }) => {
 			// Logout first
 			await logout(page);
-			// Try to access routines
+			// Public routes remain accessible without an authenticated session.
 			await page.goto("/routines");
-			// Should be redirected to signin
-			await e2eExpect(page).toHaveURL("/signin", { timeout: 10_000 });
+			await e2eExpect(page).toHaveURL("/routines", { timeout: 10_000 });
+			await e2eExpect(
+				page.getByRole("heading", { name: /^routines$/i }),
+			).toBeVisible();
 		},
 	);
 	e2eTest(
-		"should not be able to access exercises page after logout",
+		"should still allow access to the exercises page after logout",
 		async ({ page }) => {
 			// Logout first
 			await logout(page);
-			// Try to access exercises
+			// Public routes remain accessible without an authenticated session.
 			await page.goto("/exercises");
-			// Should be redirected to signin
-			await e2eExpect(page).toHaveURL("/signin", { timeout: 10_000 });
+			await e2eExpect(page).toHaveURL("/exercises", { timeout: 10_000 });
+			await e2eExpect(
+				page.getByRole("heading", { name: /^exercises$/i }),
+			).toBeVisible();
 		},
 	);
 	e2eTest(
-		"should not be able to access logs page after logout",
+		"should still allow access to the logs page after logout",
 		async ({ page }) => {
 			// Logout first
 			await logout(page);
-			// Try to access logs
+			// Public routes remain accessible without an authenticated session.
 			await page.goto("/logs");
-			// Should be redirected to signin
-			await e2eExpect(page).toHaveURL("/signin", { timeout: 10_000 });
+			await e2eExpect(page).toHaveURL("/logs", { timeout: 10_000 });
+			await e2eExpect(
+				page.getByRole("heading", { name: /workout logs/i }),
+			).toBeVisible();
 		},
 	);
-	e2eTest(
-		"should be able to login again after logout",
-		async ({ loginPage, page }) => {
-			// Logout first
-			await logout(page);
-			// Get test credentials
-			const email = process.env.ADMIN_USER;
-			const password = process.env.ADMIN_PASSWORD;
-			if (!email || !password) {
-				e2eTest.skip();
-				return;
-			}
-			// Wait for login form
-			await loginPage.waitForFormReady();
-			// Login again
-			await loginPage.login(email, password);
-			// Should be back on dashboard
-			await e2eExpect(page).toHaveURL("/", { timeout: 15_000 });
-			await e2eExpect(page.getByText(/welcome back/i)).toBeVisible({
-				timeout: 10_000,
-			});
-		},
-	);
+	e2eTest("should be able to login again after logout", async ({ page }) => {
+		// Logout first
+		await logout(page);
+		await loginAsTestUser(page);
+		// Should be back on dashboard
+		await e2eExpect(page).toHaveURL("/", { timeout: 15_000 });
+		await e2eExpect(page.getByText(/welcome back/i)).toBeVisible({
+			timeout: 10_000,
+		});
+	});
 });

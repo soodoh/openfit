@@ -53,17 +53,14 @@ e2eTest.describe("Exercises Library", () => {
 			e2eTest.skip();
 			return;
 		}
-		// Get initial count
-		const initialCount = await exercisesPage.getResultsNumber();
 		// Select equipment filter
 		await exercisesPage.selectFilter("equipment", "Barbell");
 		// Wait for filter to apply
 		await exercisesPage.page.waitForTimeout(500);
-		// Should have filtered results
-		const filteredCount = await exercisesPage.getResultsNumber();
+		// Filtered views report matching results as "found".
+		const resultsText = await exercisesPage.getResultsCountText();
 		const hasNoResults = await exercisesPage.hasNoResults();
-		// Count should change or no results
-		e2eExpect(filteredCount !== initialCount || hasNoResults).toBe(true);
+		e2eExpect(resultsText?.includes("found") || hasNoResults).toBe(true);
 		// Clear filters button should be visible
 		const hasFilters = await exercisesPage.hasActiveFilters();
 		e2eExpect(hasFilters).toBe(true);
@@ -196,7 +193,7 @@ e2eTest.describe("Exercises Library", () => {
 			const hasEmpty = await exercisesPage.hasEmptyState();
 			const cardCount = await exercisesPage.getExerciseCardsCount();
 			// Either has empty state or has cards
-			e2eExpect(hasEmpty ?? cardCount > 0).toBe(true);
+			e2eExpect(hasEmpty || cardCount > 0).toBe(true);
 		},
 	);
 	e2eTest(
