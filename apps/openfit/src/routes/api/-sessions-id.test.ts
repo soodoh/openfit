@@ -66,6 +66,37 @@ describe("GET /api/sessions/:id", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mocks.requireAuth.mockResolvedValue({ user: { id: "user_123" } });
+		mocks.getSessionWithData.mockResolvedValue({
+			id: "session_123",
+			name: "Leg Day",
+		});
+	});
+
+	it("returns the auth response when authentication throws a Response", async () => {
+		const authResponse = Response.json({ error: "Forbidden" }, { status: 403 });
+		mocks.requireAuth.mockRejectedValueOnce(authResponse);
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/sessions/session_123"),
+			params: { id: "session_123" },
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+		expect(mocks.findFirstWorkoutSession).not.toHaveBeenCalled();
+	});
+
+	it("falls back to a generic 401 when authentication throws unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/sessions/session_123"),
+			params: { id: "session_123" },
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.findFirstWorkoutSession).not.toHaveBeenCalled();
 	});
 
 	it("returns 404 when the session does not exist", async () => {
@@ -81,6 +112,59 @@ describe("GET /api/sessions/:id", () => {
 			error: "Session not found",
 		});
 		expect(mocks.getSessionWithData).not.toHaveBeenCalled();
+	});
+
+	it("returns 403 when the session belongs to another user", async () => {
+		mocks.findFirstWorkoutSession.mockResolvedValue({
+			id: "session_456",
+			userId: "user_999",
+		});
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/sessions/session_456"),
+			params: { id: "session_456" },
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.getSessionWithData).not.toHaveBeenCalled();
+	});
+
+	it("returns the hydrated session when ownership succeeds", async () => {
+		mocks.findFirstWorkoutSession.mockResolvedValue({
+			id: "session_123",
+			userId: "user_123",
+		});
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/sessions/session_123"),
+			params: { id: "session_123" },
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			id: "session_123",
+			name: "Leg Day",
+		});
+		expect(mocks.getSessionWithData).toHaveBeenCalledWith("session_123");
+	});
+
+	it("returns 500 when loading the hydrated session throws an unexpected error", async () => {
+		mocks.findFirstWorkoutSession.mockResolvedValue({
+			id: "session_123",
+			userId: "user_123",
+		});
+		mocks.getSessionWithData.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/sessions/session_123"),
+			params: { id: "session_123" },
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to fetch session",
+		});
 	});
 });
 
@@ -158,12 +242,73 @@ describe("PATCH /api/sessions/:id", () => {
 		);
 		expect(mocks.update).not.toHaveBeenCalled();
 	});
+
+	it("returns 404 when the session does not exist", async () => {
+		mocks.findFirstWorkoutSession.mockResolvedValue(null);
+
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/sessions/session_missing", {
+				method: "PATCH",
+				body: JSON.stringify({ name: "Updated" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "session_missing" },
+		});
+
+		expect(response.status).toBe(404);
+		await expect(response.json()).resolves.toEqual({
+			error: "Session not found",
+		});
+		expect(mocks.update).not.toHaveBeenCalled();
+	});
+
+	it("returns 403 when the session belongs to another user", async () => {
+		mocks.findFirstWorkoutSession.mockResolvedValue({
+			id: "session_456",
+			userId: "user_999",
+		});
+
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/sessions/session_456", {
+				method: "PATCH",
+				body: JSON.stringify({ name: "Updated" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "session_456" },
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.update).not.toHaveBeenCalled();
+	});
+
+	it("returns 500 when updating a session throws an unexpected error", async () => {
+		mocks.updateWhere.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/sessions/session_123", {
+				method: "PATCH",
+				body: JSON.stringify({ name: "Updated" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "session_123" },
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to update session",
+		});
+	});
 });
 
 describe("DELETE /api/sessions/:id", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mocks.requireAuth.mockResolvedValue({ user: { id: "user_123" } });
+		mocks.findFirstWorkoutSession.mockResolvedValue({
+			id: "session_123",
+			userId: "user_123",
+		});
 		mocks.delete.mockReturnValue({
 			where: mocks.deleteWhere,
 		});
@@ -208,6 +353,39 @@ describe("DELETE /api/sessions/:id", () => {
 			type: "eq",
 			left: mocks.schema.workoutSessions.id,
 			right: "session_123",
+		});
+	});
+
+	it("returns 404 when the session does not exist", async () => {
+		mocks.findFirstWorkoutSession.mockResolvedValue(null);
+
+		const response = await handlers.DELETE({
+			request: new Request("http://localhost/api/sessions/session_missing", {
+				method: "DELETE",
+			}),
+			params: { id: "session_missing" },
+		});
+
+		expect(response.status).toBe(404);
+		await expect(response.json()).resolves.toEqual({
+			error: "Session not found",
+		});
+		expect(mocks.delete).not.toHaveBeenCalled();
+	});
+
+	it("returns 500 when deleting a session throws an unexpected error", async () => {
+		mocks.deleteWhere.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await handlers.DELETE({
+			request: new Request("http://localhost/api/sessions/session_123", {
+				method: "DELETE",
+			}),
+			params: { id: "session_123" },
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to delete session",
 		});
 	});
 });

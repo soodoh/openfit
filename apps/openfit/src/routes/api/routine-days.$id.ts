@@ -42,59 +42,73 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				const { id } = params;
-				const ownership = await requireOwnedRoutineDay(session.user.id, id);
-				if (ownership.status !== 200) {
+				try {
+					const ownership = await requireOwnedRoutineDay(session.user.id, id);
+					if (ownership.status !== 200) {
+						return Response.json(
+							{ error: ownership.error },
+							{ status: ownership.status },
+						);
+					}
+					// Fetch set groups ordered by order field
+					const setGroups = await db.query.workoutSetGroups.findMany({
+						where: eq(schema.workoutSetGroups.routineDayId, id),
+						orderBy: asc(schema.workoutSetGroups.order),
+					});
+					// Fetch sets for each set group
+					const setGroupsWithSets = await Promise.all(
+						setGroups.map(async (group) => {
+							const sets = await db.query.workoutSets.findMany({
+								where: eq(schema.workoutSets.setGroupId, group.id),
+								orderBy: asc(schema.workoutSets.order),
+								with: {
+									exercise: true,
+									repetitionUnit: true,
+									weightUnit: true,
+								},
+							});
+							// Add image URL to each exercise
+							const setsWithImages = await Promise.all(
+								sets.map(async (set) => {
+									const imageUrl = set.exercise
+										? await getFirstExerciseImageUrl(set.exercise.id)
+										: null;
+									return {
+										...set,
+										createdAt: serializeTimestamp(set.createdAt),
+										updatedAt: serializeTimestamp(set.updatedAt),
+										exercise: set.exercise
+											? { ...set.exercise, imageUrl }
+											: null,
+									};
+								}),
+							);
+							return {
+								...group,
+								createdAt: serializeTimestamp(group.createdAt),
+								updatedAt: serializeTimestamp(group.updatedAt),
+								sets: setsWithImages,
+							};
+						}),
+					);
+					const serializedRoutineDay = serializeRoutineDay(
+						ownership.routineDay,
+					);
+					const payload = {
+						...serializedRoutineDay,
+						routine: serializedRoutineDay.routine ?? null,
+						setGroups: setGroupsWithSets,
+					} satisfies RoutineDayDetailDto;
+					return Response.json(payload);
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					return Response.json(
-						{ error: ownership.error },
-						{ status: ownership.status },
+						{ error: "Failed to fetch routine day" },
+						{ status: 500 },
 					);
 				}
-				// Fetch set groups ordered by order field
-				const setGroups = await db.query.workoutSetGroups.findMany({
-					where: eq(schema.workoutSetGroups.routineDayId, id),
-					orderBy: asc(schema.workoutSetGroups.order),
-				});
-				// Fetch sets for each set group
-				const setGroupsWithSets = await Promise.all(
-					setGroups.map(async (group) => {
-						const sets = await db.query.workoutSets.findMany({
-							where: eq(schema.workoutSets.setGroupId, group.id),
-							orderBy: asc(schema.workoutSets.order),
-							with: {
-								exercise: true,
-								repetitionUnit: true,
-								weightUnit: true,
-							},
-						});
-						// Add image URL to each exercise
-						const setsWithImages = await Promise.all(
-							sets.map(async (set) => {
-								const imageUrl = set.exercise
-									? await getFirstExerciseImageUrl(set.exercise.id)
-									: null;
-								return {
-									...set,
-									createdAt: serializeTimestamp(set.createdAt),
-									updatedAt: serializeTimestamp(set.updatedAt),
-									exercise: set.exercise ? { ...set.exercise, imageUrl } : null,
-								};
-							}),
-						);
-						return {
-							...group,
-							createdAt: serializeTimestamp(group.createdAt),
-							updatedAt: serializeTimestamp(group.updatedAt),
-							sets: setsWithImages,
-						};
-					}),
-				);
-				const serializedRoutineDay = serializeRoutineDay(ownership.routineDay);
-				const payload = {
-					...serializedRoutineDay,
-					routine: serializedRoutineDay.routine ?? null,
-					setGroups: setGroupsWithSets,
-				} satisfies RoutineDayDetailDto;
-				return Response.json(payload);
 			},
 			// PATCH /api/routine-days/[id] - Update routine day
 			PATCH: async ({

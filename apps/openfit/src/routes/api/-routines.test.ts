@@ -102,6 +102,31 @@ describe("GET /api/routines", () => {
 		mocks.getRoutineDaysWithWeekdays.mockResolvedValue([]);
 	});
 
+	it("returns the auth response when authentication throws a Response", async () => {
+		const authResponse = Response.json({ error: "Forbidden" }, { status: 403 });
+		mocks.requireAuth.mockRejectedValueOnce(authResponse);
+
+		const response = await listHandlers.GET({
+			request: new Request("http://localhost/api/routines"),
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+		expect(mocks.findManyRoutines).not.toHaveBeenCalled();
+	});
+
+	it("falls back to a generic 401 when authentication throws unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await listHandlers.GET({
+			request: new Request("http://localhost/api/routines"),
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.findManyRoutines).not.toHaveBeenCalled();
+	});
+
 	it("returns a paginated routine page for the authenticated user", async () => {
 		const createdAt = new Date("2025-01-01T00:00:00.000Z");
 		const updatedAt = new Date("2025-01-02T00:00:00.000Z");
@@ -189,6 +214,33 @@ describe("GET /api/routines", () => {
 			offset: 0,
 		});
 	});
+
+	it("returns 400 for an invalid query string", async () => {
+		const response = await listHandlers.GET({
+			request: new Request("http://localhost/api/routines?limit=not-a-number"),
+		});
+
+		expect(response.status).toBe(400);
+		await expect(response.json()).resolves.toEqual(
+			expect.objectContaining({
+				error: "Invalid query parameters",
+			}),
+		);
+		expect(mocks.findManyRoutines).not.toHaveBeenCalled();
+	});
+
+	it("returns 500 when loading routines throws an unexpected error", async () => {
+		mocks.findManyRoutines.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await listHandlers.GET({
+			request: new Request("http://localhost/api/routines"),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to fetch routines",
+		});
+	});
 });
 
 describe("POST /api/routines", () => {
@@ -200,6 +252,14 @@ describe("POST /api/routines", () => {
 			values: mocks.insertValues,
 		});
 		mocks.insertValues.mockResolvedValue(undefined);
+		mocks.findFirstRoutine.mockResolvedValue({
+			id: "routine_new",
+			userId: "user_123",
+			name: "Created Routine",
+			description: null,
+			createdAt: new Date("2025-01-01T00:00:00.000Z"),
+			updatedAt: new Date("2025-01-02T00:00:00.000Z"),
+		});
 	});
 
 	it("returns 400 for an invalid create payload", async () => {
@@ -219,12 +279,93 @@ describe("POST /api/routines", () => {
 		);
 		expect(mocks.insert).not.toHaveBeenCalled();
 	});
+
+	it("creates a routine and returns the serialized routine", async () => {
+		const response = await listHandlers.POST({
+			request: new Request("http://localhost/api/routines", {
+				method: "POST",
+				body: JSON.stringify({
+					name: "  Pull Day  ",
+					description: "  Strength  ",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(201);
+		await expect(response.json()).resolves.toEqual({
+			id: "routine_new",
+			userId: "user_123",
+			name: "Created Routine",
+			description: null,
+			createdAt: "2025-01-01T00:00:00.000Z",
+			updatedAt: "2025-01-02T00:00:00.000Z",
+			routineDays: [],
+		});
+		expect(mocks.insert).toHaveBeenCalledWith(mocks.schema.routines);
+	});
+
+	it("returns 500 when the created routine cannot be reloaded", async () => {
+		mocks.findFirstRoutine.mockResolvedValueOnce(null);
+
+		const response = await listHandlers.POST({
+			request: new Request("http://localhost/api/routines", {
+				method: "POST",
+				body: JSON.stringify({ name: "Pull Day" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to create routine",
+		});
+	});
 });
 
 describe("GET /api/routines/:id", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mocks.requireAuth.mockResolvedValue({ user: { id: "user_123" } });
+		mocks.requireOwnedRoutine.mockResolvedValue({
+			status: 200,
+			routine: {
+				id: "routine_123",
+				userId: "user_123",
+				name: "Leg Day",
+				description: "Heavy",
+				createdAt: new Date("2025-01-01T00:00:00.000Z"),
+				updatedAt: new Date("2025-01-02T00:00:00.000Z"),
+			},
+		});
+		mocks.getRoutineDaysWithWeekdays.mockResolvedValue([]);
+	});
+
+	it("returns the auth response when authentication throws a Response", async () => {
+		const authResponse = Response.json({ error: "Forbidden" }, { status: 403 });
+		mocks.requireAuth.mockRejectedValueOnce(authResponse);
+
+		const response = await detailHandlers.GET({
+			request: new Request("http://localhost/api/routines/routine_123"),
+			params: { id: "routine_123" },
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+		expect(mocks.requireOwnedRoutine).not.toHaveBeenCalled();
+	});
+
+	it("falls back to a generic 401 when authentication throws unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await detailHandlers.GET({
+			request: new Request("http://localhost/api/routines/routine_123"),
+			params: { id: "routine_123" },
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.requireOwnedRoutine).not.toHaveBeenCalled();
 	});
 
 	it("returns 404 when the routine does not exist", async () => {
@@ -243,6 +384,60 @@ describe("GET /api/routines/:id", () => {
 			error: "Routine not found",
 		});
 		expect(mocks.getRoutineDaysWithWeekdays).not.toHaveBeenCalled();
+	});
+
+	it("returns the serialized routine when ownership succeeds", async () => {
+		mocks.getRoutineDaysWithWeekdays.mockResolvedValue([
+			{
+				id: "routine_day_1",
+				userId: "user_123",
+				routineId: "routine_123",
+				description: "Day 1",
+				createdAt: new Date("2025-01-01T00:00:00.000Z"),
+				updatedAt: new Date("2025-01-02T00:00:00.000Z"),
+				weekdays: [{ weekday: 1 }],
+			},
+		]);
+
+		const response = await detailHandlers.GET({
+			request: new Request("http://localhost/api/routines/routine_123"),
+			params: { id: "routine_123" },
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			id: "routine_123",
+			userId: "user_123",
+			name: "Leg Day",
+			description: "Heavy",
+			createdAt: "2025-01-01T00:00:00.000Z",
+			updatedAt: "2025-01-02T00:00:00.000Z",
+			routineDays: [
+				{
+					id: "routine_day_1",
+					userId: "user_123",
+					routineId: "routine_123",
+					description: "Day 1",
+					createdAt: "2025-01-01T00:00:00.000Z",
+					updatedAt: "2025-01-02T00:00:00.000Z",
+					weekdays: [1],
+				},
+			],
+		});
+	});
+
+	it("returns 500 when loading a routine throws an unexpected error", async () => {
+		mocks.requireOwnedRoutine.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await detailHandlers.GET({
+			request: new Request("http://localhost/api/routines/routine_123"),
+			params: { id: "routine_123" },
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to fetch routine",
+		});
 	});
 });
 
@@ -267,6 +462,25 @@ describe("PATCH /api/routines/:id", () => {
 		mocks.getRoutineDaysWithWeekdays.mockResolvedValue([]);
 	});
 
+	it("returns 400 for an invalid update payload", async () => {
+		const response = await detailHandlers.PATCH({
+			request: new Request("http://localhost/api/routines/routine_123", {
+				method: "PATCH",
+				body: JSON.stringify({}),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "routine_123" },
+		});
+
+		expect(response.status).toBe(400);
+		await expect(response.json()).resolves.toEqual(
+			expect.objectContaining({
+				error: "Invalid request body",
+			}),
+		);
+		expect(mocks.update).not.toHaveBeenCalled();
+	});
+
 	it("returns 403 when updating another user's routine", async () => {
 		mocks.requireOwnedRoutine.mockResolvedValue({
 			status: 403,
@@ -285,6 +499,41 @@ describe("PATCH /api/routines/:id", () => {
 		expect(response.status).toBe(403);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
 		expect(mocks.update).not.toHaveBeenCalled();
+	});
+
+	it("updates an owned routine and returns the serialized routine", async () => {
+		mocks.loadRoutineById.mockResolvedValue({
+			id: "routine_123",
+			userId: "user_123",
+			name: "Updated Routine",
+			description: "Updated",
+			createdAt: new Date("2025-01-01T00:00:00.000Z"),
+			updatedAt: new Date("2025-01-02T00:00:00.000Z"),
+		});
+
+		const response = await detailHandlers.PATCH({
+			request: new Request("http://localhost/api/routines/routine_123", {
+				method: "PATCH",
+				body: JSON.stringify({
+					name: "Updated Routine",
+					description: "  Updated  ",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "routine_123" },
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			id: "routine_123",
+			userId: "user_123",
+			name: "Updated Routine",
+			description: "Updated",
+			createdAt: "2025-01-01T00:00:00.000Z",
+			updatedAt: "2025-01-02T00:00:00.000Z",
+			routineDays: [],
+		});
+		expect(mocks.update).toHaveBeenCalledWith(mocks.schema.routines);
 	});
 
 	it("returns 404 when the routine disappears after update", async () => {
@@ -310,6 +559,24 @@ describe("PATCH /api/routines/:id", () => {
 			}),
 		);
 	});
+
+	it("returns 500 when updating a routine throws an unexpected error", async () => {
+		mocks.updateWhere.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await detailHandlers.PATCH({
+			request: new Request("http://localhost/api/routines/routine_123", {
+				method: "PATCH",
+				body: JSON.stringify({ name: "Updated" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "routine_123" },
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to update routine",
+		});
+	});
 });
 
 describe("DELETE /api/routines/:id", () => {
@@ -329,6 +596,24 @@ describe("DELETE /api/routines/:id", () => {
 		mocks.deleteWhere.mockResolvedValue(undefined);
 	});
 
+	it("returns 403 when deleting another user's routine", async () => {
+		mocks.requireOwnedRoutine.mockResolvedValue({
+			status: 403,
+			error: "Unauthorized",
+		});
+
+		const response = await detailHandlers.DELETE({
+			request: new Request("http://localhost/api/routines/routine_456", {
+				method: "DELETE",
+			}),
+			params: { id: "routine_456" },
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.delete).not.toHaveBeenCalled();
+	});
+
 	it("deletes an owned routine", async () => {
 		const response = await detailHandlers.DELETE({
 			request: new Request("http://localhost/api/routines/routine_123", {
@@ -344,6 +629,22 @@ describe("DELETE /api/routines/:id", () => {
 			type: "eq",
 			left: mocks.schema.routines.id,
 			right: "routine_123",
+		});
+	});
+
+	it("returns 500 when deleting a routine throws an unexpected error", async () => {
+		mocks.deleteWhere.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await detailHandlers.DELETE({
+			request: new Request("http://localhost/api/routines/routine_123", {
+				method: "DELETE",
+			}),
+			params: { id: "routine_123" },
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to delete routine",
 		});
 	});
 });

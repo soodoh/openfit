@@ -98,6 +98,31 @@ describe("GET /api/sessions", () => {
 		mocks.withSessionsData.mockResolvedValue([]);
 	});
 
+	it("returns the auth response when authentication throws a Response", async () => {
+		const authResponse = Response.json({ error: "Forbidden" }, { status: 403 });
+		mocks.requireAuth.mockRejectedValueOnce(authResponse);
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/sessions"),
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+		expect(mocks.findManyWorkoutSessions).not.toHaveBeenCalled();
+	});
+
+	it("falls back to a generic 401 when authentication throws unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/sessions"),
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.findManyWorkoutSessions).not.toHaveBeenCalled();
+	});
+
 	it("returns date-range summaries without loading full session data", async () => {
 		const createdAt = new Date("2025-01-01T10:00:00.000Z");
 		const startTime = new Date("2025-01-01T10:00:00.000Z");
@@ -158,6 +183,34 @@ describe("GET /api/sessions", () => {
 		});
 	});
 
+	it("returns the full session payload when no date range is provided", async () => {
+		const createdAt = new Date("2025-01-01T10:00:00.000Z");
+		const startTime = new Date("2025-01-01T10:00:00.000Z");
+		const session = {
+			id: "session_1",
+			createdAt,
+			name: "Leg Day",
+			startTime,
+			endTime: null,
+			impression: 4,
+			userId: "user_123",
+		};
+		mocks.findManyWorkoutSessions.mockResolvedValue([session]);
+		mocks.withSessionsData.mockResolvedValue([
+			{ id: "session_1", name: "Leg Day" },
+		]);
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/sessions"),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual([
+			{ id: "session_1", name: "Leg Day" },
+		]);
+		expect(mocks.withSessionsData).toHaveBeenCalledWith([session]);
+	});
+
 	it("returns 400 for an incomplete date range query", async () => {
 		const response = await handlers.GET({
 			request: new Request(
@@ -185,6 +238,19 @@ describe("GET /api/sessions", () => {
 		expect(response.status).toBe(401);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
 	});
+
+	it("returns 500 when loading sessions throws an unexpected error", async () => {
+		mocks.findManyWorkoutSessions.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/sessions"),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to fetch sessions",
+		});
+	});
 });
 
 describe("POST /api/sessions", () => {
@@ -203,6 +269,39 @@ describe("POST /api/sessions", () => {
 		mocks.findFirstRoutineDay.mockResolvedValue(null);
 		mocks.findManyWorkoutSetGroups.mockResolvedValue([]);
 		mocks.findManyWorkoutSets.mockResolvedValue([]);
+	});
+
+	it("returns the auth response when authentication throws a Response", async () => {
+		const authResponse = Response.json({ error: "Forbidden" }, { status: 403 });
+		mocks.requireAuth.mockRejectedValueOnce(authResponse);
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/sessions", {
+				method: "POST",
+				body: JSON.stringify({ name: "Workout" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+		expect(mocks.insert).not.toHaveBeenCalled();
+	});
+
+	it("falls back to a generic 401 when authentication throws unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/sessions", {
+				method: "POST",
+				body: JSON.stringify({ name: "Workout" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.insert).not.toHaveBeenCalled();
 	});
 
 	it("returns 404 when the provided template does not exist", async () => {
@@ -237,6 +336,26 @@ describe("POST /api/sessions", () => {
 		expect(mocks.insert).not.toHaveBeenCalled();
 	});
 
+	it("returns 403 when the provided template belongs to another user", async () => {
+		mocks.findFirstRoutineDay.mockResolvedValue({
+			id: "template_1",
+			userId: "user_other",
+			description: "Leg Day",
+		});
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/sessions", {
+				method: "POST",
+				body: JSON.stringify({ templateId: "template_1" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.insert).not.toHaveBeenCalled();
+	});
+
 	it("returns 400 for an invalid create payload", async () => {
 		const response = await handlers.POST({
 			request: new Request("http://localhost/api/sessions", {
@@ -253,5 +372,101 @@ describe("POST /api/sessions", () => {
 			}),
 		);
 		expect(mocks.insert).not.toHaveBeenCalled();
+	});
+
+	it("creates a session without a template and returns the hydrated session", async () => {
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/sessions", {
+				method: "POST",
+				body: JSON.stringify({
+					name: "  Push Day  ",
+					notes: "  keep notes  ",
+					impression: 5,
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(201);
+		await expect(response.json()).resolves.toEqual({
+			id: "session_new",
+			name: "Created Session",
+		});
+		expect(mocks.insert).toHaveBeenCalledWith(mocks.schema.workoutSessions);
+		expect(mocks.getSessionWithData).toHaveBeenCalledWith("session_new");
+	});
+
+	it("creates a session from a template and clones the template groups", async () => {
+		const createdAt = new Date("2025-01-01T00:00:00.000Z");
+		mocks.findFirstRoutineDay.mockResolvedValue({
+			id: "template_1",
+			userId: "user_123",
+			description: "Template Day",
+		});
+		mocks.findManyWorkoutSetGroups.mockResolvedValue([
+			{
+				id: "group_1",
+				type: "NORMAL",
+				order: 0,
+				comment: "first",
+			},
+		]);
+		mocks.findManyWorkoutSets.mockResolvedValue([
+			{
+				id: "set_1",
+				exerciseId: "exercise_1",
+				type: "NORMAL",
+				weight: 135,
+				weightUnitId: "weight_unit",
+				reps: 10,
+				repetitionUnitId: "rep_unit",
+				restTime: 60,
+			},
+		]);
+		mocks.getSessionWithData.mockResolvedValue({
+			id: "session_new",
+			createdAt,
+		});
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/sessions", {
+				method: "POST",
+				body: JSON.stringify({
+					templateId: "template_1",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(201);
+		await expect(response.json()).resolves.toEqual({
+			id: "session_new",
+			createdAt: createdAt.toISOString(),
+		});
+		expect(mocks.findManyWorkoutSetGroups).toHaveBeenCalledWith({
+			where: expect.objectContaining({
+				type: "eq",
+				left: mocks.schema.workoutSetGroups.routineDayId,
+				right: "template_1",
+			}),
+			orderBy: { type: "asc", value: mocks.schema.workoutSetGroups.order },
+		});
+	});
+
+	it("returns 500 when creating a session throws an unexpected error", async () => {
+		mocks.insertValues.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/sessions", {
+				method: "POST",
+				body: JSON.stringify({ name: "Workout" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to create session",
+		});
 	});
 });
