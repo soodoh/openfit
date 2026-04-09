@@ -41,6 +41,24 @@ describe("useExerciseLookups", () => {
 		expect(result.current.equipment).toBeUndefined();
 	});
 
+	it("reports loading while muscle groups are unresolved", () => {
+		mocks.useMuscleGroups.mockReturnValue({ data: undefined });
+
+		const { result } = renderHook(() => useExerciseLookups());
+
+		expect(result.current.isLoading).toBe(true);
+		expect(result.current.muscleGroups).toBeUndefined();
+	});
+
+	it("reports loading while categories are unresolved", () => {
+		mocks.useCategories.mockReturnValue({ data: undefined });
+
+		const { result } = renderHook(() => useExerciseLookups());
+
+		expect(result.current.isLoading).toBe(true);
+		expect(result.current.categories).toBeUndefined();
+	});
+
 	it("returns names for known ids and safe fallbacks for unknown ids", () => {
 		const { result } = renderHook(() => useExerciseLookups());
 

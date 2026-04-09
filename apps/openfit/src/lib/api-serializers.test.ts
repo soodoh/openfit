@@ -86,6 +86,29 @@ describe("api serializers", () => {
 		});
 	});
 
+	it("serializes string timestamps without nested routine data", () => {
+		const routineDay = serializeRoutineDay({
+			id: "day_3",
+			routineId: "routine_3",
+			userId: "user_123",
+			description: "Mixed input",
+			createdAt: "2026-03-01T00:00:00.000Z",
+			updatedAt: "2026-03-02T00:00:00.000Z",
+			weekdays: [{ weekday: 0 }, 4],
+		});
+
+		expect(routineDay).toEqual({
+			id: "day_3",
+			routineId: "routine_3",
+			userId: "user_123",
+			description: "Mixed input",
+			createdAt: "2026-03-01T00:00:00.000Z",
+			updatedAt: "2026-03-02T00:00:00.000Z",
+			weekdays: [0, 4],
+		});
+		expect(routineDay.routine).toBeUndefined();
+	});
+
 	it("serializeRoutine serializes routines with nested routine days", () => {
 		const routine = serializeRoutine({
 			id: "routine_123",

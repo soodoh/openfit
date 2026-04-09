@@ -105,6 +105,23 @@ describe("parseSearchParams", () => {
 		});
 	});
 
+	it("keeps single query param values as strings", () => {
+		const searchParams = new URLSearchParams({
+			q: "bench press",
+		});
+
+		expect(
+			parseSearchParams(
+				searchParams,
+				object({
+					q: string(),
+				}),
+			),
+		).toEqual({
+			q: "bench press",
+		});
+	});
+
 	it("throws a 400 Response when query validation fails", async () => {
 		const searchParams = new URLSearchParams({
 			limit: "abc",
@@ -159,6 +176,14 @@ describe("response JSON helpers", () => {
 		await expect(
 			fetchJson<Record<string, never>>(response, "Fallback failure message"),
 		).rejects.toThrow("Server says no");
+	});
+
+	it("falls back to the provided error message when the response has no error field", async () => {
+		const response = Response.json({ detail: "Nope" }, { status: 500 });
+
+		await expect(
+			fetchJson<Record<string, never>>(response, "Fallback failure message"),
+		).rejects.toThrow("Fallback failure message");
 	});
 
 	it("parses response JSON without checking response.ok", async () => {
