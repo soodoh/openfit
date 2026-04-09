@@ -141,6 +141,16 @@ describe("GET /api/admin/users", () => {
 			left: mocks.schema.users.email,
 			right: "%athlete%",
 		});
+		expect(itemsQuery.innerJoin).toHaveBeenCalledWith(mocks.schema.users, {
+			type: "eq",
+			left: mocks.schema.userProfiles.userId,
+			right: mocks.schema.users.id,
+		});
+		expect(itemsQuery.where).toHaveBeenCalledWith({
+			type: "like",
+			left: mocks.schema.users.email,
+			right: "%athlete%",
+		});
 		expect(itemsQuery.limit).toHaveBeenCalledWith(3);
 		expect(itemsQuery.offset).toHaveBeenCalledWith(3);
 	});

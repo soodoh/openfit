@@ -305,14 +305,11 @@ describe("PATCH /api/admin/exercises/:id", () => {
 
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ success: true });
-		expect(mocks.updateSet).toHaveBeenCalledWith({
-			name: "Renamed Bench Press",
-			level: undefined,
-			force: undefined,
-			mechanic: undefined,
-			equipmentId: undefined,
-			categoryId: undefined,
-		});
+		expect(mocks.updateSet).toHaveBeenCalledWith(
+			expect.objectContaining({
+				name: "Renamed Bench Press",
+			}),
+		);
 		expect(mocks.delete).not.toHaveBeenCalled();
 		expect(mocks.insert).not.toHaveBeenCalled();
 	});

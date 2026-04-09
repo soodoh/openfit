@@ -120,6 +120,10 @@ describe("GET /api/dashboard/stats", () => {
 			mocks.schema.workoutSessions.startTime,
 			expectedMonday,
 		);
+		expect(mocks.sql).toHaveBeenCalledWith(
+			["date(", ", 'unixepoch')"],
+			mocks.schema.workoutSessions.startTime,
+		);
 	});
 
 	it("counts a streak starting yesterday when today has no workout", async () => {

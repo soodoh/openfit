@@ -166,6 +166,15 @@ describe("GET /api/admin/lookups", () => {
 			left: mocks.schema.equipment.name,
 			right: "%cable%",
 		});
+		expect(itemsQuery.where).toHaveBeenCalledWith({
+			type: "like",
+			left: mocks.schema.equipment.name,
+			right: "%cable%",
+		});
+		expect(itemsQuery.orderBy).toHaveBeenCalledWith({
+			type: "asc",
+			value: mocks.schema.equipment.name,
+		});
 		expect(itemsQuery.limit).toHaveBeenCalledWith(3);
 		expect(itemsQuery.offset).toHaveBeenCalledWith(3);
 	});
