@@ -54,13 +54,33 @@ vi.mock("@/hooks", () => ({
 }));
 
 vi.mock("./delete-gym-modal", () => ({
-	DeleteGymModal: ({ gym }: { gym?: { name: string } }) =>
-		gym ? <div>Delete modal for {gym.name}</div> : null,
+	DeleteGymModal: ({
+		gym,
+		onClose,
+	}: {
+		gym?: { name: string };
+		onClose: () => void;
+	}) =>
+		gym ? (
+			<div>
+				Delete modal for {gym.name}
+				<button type="button" onClick={onClose}>
+					Close delete modal
+				</button>
+			</div>
+		) : null,
 }));
 
 vi.mock("./gym-form-modal", () => ({
-	GymFormModal: ({ open }: { open: boolean }) =>
-		open ? <div>Edit modal open</div> : null,
+	GymFormModal: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+		open ? (
+			<div>
+				Edit modal open
+				<button type="button" onClick={onClose}>
+					Close edit modal
+				</button>
+			</div>
+		) : null,
 }));
 
 describe("GymMenu", () => {
@@ -128,6 +148,30 @@ describe("GymMenu", () => {
 		expect(onEdit).toHaveBeenCalledTimes(1);
 		expect(onDelete).toHaveBeenCalledTimes(1);
 		expect(screen.queryByText("Edit modal open")).not.toBeInTheDocument();
+		expect(
+			screen.queryByText("Delete modal for Home Gym"),
+		).not.toBeInTheDocument();
+	});
+
+	it("closes the internal modals when they request to close", () => {
+		render(
+			<GymMenu
+				gym={{
+					id: "gym-1",
+					name: "Home Gym",
+					equipmentIds: [],
+				}}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+		expect(screen.getByText("Edit modal open")).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Close edit modal" }));
+		expect(screen.queryByText("Edit modal open")).not.toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+		expect(screen.getByText("Delete modal for Home Gym")).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Close delete modal" }));
 		expect(
 			screen.queryByText("Delete modal for Home Gym"),
 		).not.toBeInTheDocument();

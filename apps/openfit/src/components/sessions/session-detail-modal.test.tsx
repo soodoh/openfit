@@ -57,7 +57,13 @@ vi.mock("./edit-name-popover", () => ({
 	EditNamePopover: () => <div data-testid="edit-name-popover" />,
 }));
 vi.mock("./edit-duration-popover", () => ({
-	EditDurationPopover: () => <div data-testid="edit-duration-popover" />,
+	EditDurationPopover: ({
+		formattedDuration,
+	}: {
+		formattedDuration?: string;
+	}) => (
+		<div data-testid="edit-duration-popover">{formattedDuration ?? "—"}</div>
+	),
 }));
 vi.mock("./edit-rating-popover", () => ({
 	EditRatingPopover: () => <div data-testid="edit-rating-popover" />,
@@ -67,8 +73,23 @@ vi.mock("./edit-notes-popover", () => ({
 }));
 
 vi.mock("@/components/ui/dialog", () => ({
-	Dialog: ({ open, children }: { open: boolean; children: ReactNode }) =>
-		open ? <div>{children}</div> : null,
+	Dialog: ({
+		open,
+		onOpenChange,
+		children,
+	}: {
+		open: boolean;
+		onOpenChange?: (open: boolean) => void;
+		children: ReactNode;
+	}) =>
+		open ? (
+			<div>
+				{children}
+				<button type="button" onClick={() => onOpenChange?.(false)}>
+					Close dialog
+				</button>
+			</div>
+		) : null,
 	DialogContent: ({ children }: { children: ReactNode }) => (
 		<div>{children}</div>
 	),
@@ -251,6 +272,51 @@ describe("SessionDetailModal", () => {
 		expect(screen.getByTestId("workout-list")).toHaveTextContent(
 			"ViewSession:session-1:2",
 		);
+	});
+
+	it("closes the dialog when the dialog control requests it", () => {
+		const onClose = vi.fn();
+		mockUseSession.mockReturnValue({ data: session });
+
+		render(
+			<SessionDetailModal
+				sessionId="session-1"
+				units={mockUnits}
+				open
+				onClose={onClose}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it("formats short sessions and singular workout stats", () => {
+		mockUseSession.mockReturnValue({
+			data: {
+				...session,
+				startTime: new Date("2026-04-01T10:00:00.000Z"),
+				endTime: new Date("2026-04-01T10:45:00.000Z"),
+				setGroups: [
+					{
+						...session.setGroups[0],
+						sets: [session.setGroups[0].sets[0]],
+					},
+				],
+			},
+		});
+
+		render(
+			<SessionDetailModal
+				sessionId="session-1"
+				units={mockUnits}
+				open
+				onClose={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByText("45 min")).toBeInTheDocument();
+		expect(screen.getByText("1 exercise • 1 set")).toBeInTheDocument();
 	});
 
 	it("formats sessions without an end time as having no duration", () => {

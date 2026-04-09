@@ -138,4 +138,20 @@ describe("EditRatingPopover", () => {
 			screen.getByRole("button", { name: "Set rating 4" }),
 		).toBeInTheDocument();
 	});
+
+	it("closes the popover from cancel and restores the trigger state on reopen", () => {
+		render(<EditRatingPopover session={{ ...baseSession, impression: 3 }} />);
+
+		fireEvent.click(screen.getByRole("button"));
+		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+		expect(
+			screen.queryByRole("button", { name: "Save" }),
+		).not.toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button"));
+		expect(
+			screen.getByRole("button", { name: "Clear rating" }),
+		).toBeInTheDocument();
+	});
 });

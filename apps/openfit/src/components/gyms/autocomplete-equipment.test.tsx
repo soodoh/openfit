@@ -57,8 +57,30 @@ vi.mock("@/components/ui/popover", () => ({
 		</div>
 	),
 	PopoverAnchor: ({ children }: { children: ReactNode }) => <>{children}</>,
-	PopoverContent: ({ children }: { children: ReactNode }) => (
-		<div>{children}</div>
+	PopoverContent: ({
+		children,
+		onInteractOutside,
+	}: {
+		children: ReactNode;
+		onInteractOutside?: (event: {
+			target: HTMLElement;
+			preventDefault: () => void;
+		}) => void;
+	}) => (
+		<div>
+			<button
+				type="button"
+				onClick={() =>
+					onInteractOutside?.({
+						target: document.createElement("input"),
+						preventDefault: vi.fn(),
+					})
+				}
+			>
+				Simulate outside interaction
+			</button>
+			{children}
+		</div>
 	),
 }));
 
@@ -173,5 +195,23 @@ describe("AutocompleteEquipment", () => {
 		fireEvent.keyDown(input, { key: "Escape" });
 
 		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "false");
+	});
+
+	it("opens when typing from a closed state and ignores outside interactions on the input", () => {
+		render(<Harness />);
+
+		const input = screen.getByPlaceholderText("Search equipment...");
+		fireEvent.change(input, { target: { value: "ket" } });
+
+		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Simulate outside interaction" }),
+		);
+		const insidePopover = document.createElement("div");
+		insidePopover.setAttribute("data-radix-popper-content-wrapper", "true");
+		fireEvent.blur(input, { relatedTarget: insidePopover });
+
+		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
 	});
 });

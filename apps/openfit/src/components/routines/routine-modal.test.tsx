@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import type { RoutineWithDays } from "@/lib/types";
 import { RoutineModal } from "./routine-modal";
@@ -38,6 +39,33 @@ vi.mock("./routine-day-tab", () => ({
 			</button>
 		</div>
 	),
+}));
+
+vi.mock("@/components/ui/dialog", () => ({
+	Dialog: ({
+		children,
+		open,
+		onOpenChange,
+	}: {
+		children: ReactNode;
+		open: boolean;
+		onOpenChange?: (open: boolean) => void;
+	}) =>
+		open ? (
+			<div>
+				{children}
+				<button type="button" onClick={() => onOpenChange?.(true)}>
+					Open dialog
+				</button>
+				<button type="button" onClick={() => onOpenChange?.(false)}>
+					Close dialog
+				</button>
+			</div>
+		) : null,
+	DialogContent: ({ children }: { children: ReactNode }) => (
+		<div>{children}</div>
+	),
+	DialogTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
 }));
 
 const mockRoutine: RoutineWithDays = {
@@ -262,8 +290,27 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
 
 		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it("resets to the initial tab when the dialog reports reopening", () => {
+		render(
+			<RoutineModal
+				open
+				onClose={vi.fn()}
+				routine={mockRoutine}
+				currentSession={undefined}
+				initialTab="day-day-1"
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Delete this day" }));
+		expect(screen.getByText("Overview body")).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Open dialog" }));
+
+		expect(screen.getByText("Day tab day-1")).toBeInTheDocument();
 	});
 });

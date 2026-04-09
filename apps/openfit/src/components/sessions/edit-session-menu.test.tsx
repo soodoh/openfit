@@ -160,4 +160,38 @@ describe("EditSessionMenu", () => {
 
 		expect(screen.getByTestId("delete-session-modal")).toBeInTheDocument();
 	});
+
+	it("closes the edit modal when the modal requests to close", () => {
+		render(<EditSessionMenu session={session} />);
+
+		fireEvent.click(
+			screen.getByRole("button", {
+				name: "Edit actions for workout session session-1",
+			}),
+		);
+		fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+		expect(screen.getByTestId("edit-session-modal")).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Close edit modal" }));
+
+		expect(screen.queryByTestId("edit-session-modal")).not.toBeInTheDocument();
+	});
+
+	it("closes the delete modal when the modal requests to close", () => {
+		render(<EditSessionMenu session={session} />);
+
+		fireEvent.click(
+			screen.getByRole("button", {
+				name: "Edit actions for workout session session-1",
+			}),
+		);
+		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+		expect(screen.getByTestId("delete-session-modal")).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Confirm delete" }));
+
+		expect(
+			screen.queryByTestId("delete-session-modal"),
+		).not.toBeInTheDocument();
+	});
 });

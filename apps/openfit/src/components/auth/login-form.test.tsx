@@ -114,11 +114,17 @@ describe("LoginForm redirects", () => {
 		fireEvent.change(screen.getByLabelText("Password"), {
 			target: { value: "abc" },
 		});
-		fireEvent.click(screen.getByRole("button", { name: "Login" }));
+		fireEvent.submit(
+			screen.getByRole("button", { name: "Login" }).closest("form"),
+		);
 
 		await waitFor(() => {
 			expect(mockSignInEmail).not.toHaveBeenCalled();
 		});
+		expect(screen.getByText("Invalid email")).toBeInTheDocument();
+		expect(
+			screen.getByText("Be at least 8 characters long"),
+		).toBeInTheDocument();
 		expect(mockSignInEmail).not.toHaveBeenCalled();
 		expect(mockGetSession).not.toHaveBeenCalled();
 	});

@@ -227,4 +227,33 @@ describe("WorkoutSetRow", () => {
 			screen.getByRole("checkbox", { name: "Mark as Completed" }),
 		).toBeChecked();
 	});
+
+	it("treats non-numeric inputs as zero and skips the rest timer when there is no rest", () => {
+		const startRestTimer = vi.fn();
+
+		render(
+			<WorkoutSetRow
+				view={ListView.CurrentSession}
+				set={buildSet({
+					restTime: 0,
+					repetitionUnit: { id: "rep", name: "Reps" },
+					repetitionUnitId: "rep",
+				})}
+				setNum={1}
+				units={mockUnits}
+				startRestTimer={startRestTimer}
+			/>,
+		);
+
+		fireEvent.change(screen.getByDisplayValue("8"), {
+			target: { value: "abc" },
+		});
+		fireEvent.blur(screen.getByDisplayValue("abc"));
+		fireEvent.click(
+			screen.getByRole("checkbox", { name: "Mark as Completed" }),
+		);
+
+		expect(mockUpdateSet).toHaveBeenCalledWith({ id: "set-1", reps: 0 });
+		expect(startRestTimer).not.toHaveBeenCalled();
+	});
 });

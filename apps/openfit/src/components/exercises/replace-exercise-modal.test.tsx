@@ -55,8 +55,23 @@ vi.mock("@/components/ui/command", () => ({
 }));
 
 vi.mock("@/components/ui/dialog", () => ({
-	Dialog: ({ children, open }: { children: ReactNode; open: boolean }) =>
-		open ? <div>{children}</div> : null,
+	Dialog: ({
+		children,
+		open,
+		onOpenChange,
+	}: {
+		children: ReactNode;
+		open: boolean;
+		onOpenChange?: () => void;
+	}) =>
+		open ? (
+			<div>
+				<button type="button" onClick={onOpenChange}>
+					Close dialog
+				</button>
+				{children}
+			</div>
+		) : null,
 	DialogContent: ({ children }: { children: ReactNode }) => (
 		<div>{children}</div>
 	),
@@ -328,5 +343,37 @@ describe("ReplaceExerciseModal", () => {
 				screen.getByRole("button", { name: "Replace" }),
 			).not.toBeDisabled();
 		});
+	});
+
+	it("switches gym filters and closes through the dialog control", async () => {
+		const onClose = vi.fn();
+
+		render(
+			<ReplaceExerciseModal
+				open
+				onClose={onClose}
+				currentExercise={{
+					id: "exercise-1",
+					name: "Bench Press",
+					primaryMuscleIds: ["chest"],
+				}}
+				setGroupId="set-group-1"
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "All Equipment" }));
+		const homeGymButton = screen.getByRole("button", { name: "Home Gym" });
+		fireEvent.click(homeGymButton);
+
+		expect(mockUseSimilarExercises).toHaveBeenLastCalledWith(
+			["chest"],
+			expect.objectContaining({
+				equipmentIds: ["equipment-1"],
+			}),
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+
+		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 });

@@ -129,4 +129,35 @@ describe("SessionPage", () => {
 		expect(screen.getByText("Felt strong")).toBeInTheDocument();
 		expect(screen.getByText("Rating")).toBeInTheDocument();
 	});
+
+	it("shows a dash when the session has no end time", () => {
+		render(
+			<SessionPage
+				session={{
+					...session,
+					endTime: null,
+					notes: null,
+					impression: null,
+				}}
+				units={units}
+			/>,
+		);
+
+		expect(screen.getByText("Duration").parentElement).toHaveTextContent("—");
+		expect(screen.getByText("Notes").parentElement).toHaveTextContent("—");
+	});
+
+	it("formats shorter sessions in minutes", () => {
+		render(
+			<SessionPage
+				session={{
+					...session,
+					endTime: new Date("2026-04-08T09:15:00.000Z"),
+				}}
+				units={units}
+			/>,
+		);
+
+		expect(screen.getByText("15 min")).toBeInTheDocument();
+	});
 });

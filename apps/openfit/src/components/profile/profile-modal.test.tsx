@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Gym, Units, UserProfile } from "@/lib/types";
 import { ProfileModal } from "./profile-modal";
@@ -62,8 +63,54 @@ vi.mock("@/hooks", () => ({
 }));
 
 vi.mock("@/components/gyms/delete-gym-modal", () => ({
-	DeleteGymModal: ({ gym }: { gym?: { name: string } }) =>
-		gym ? <div>Delete modal for {gym.name}</div> : null,
+	DeleteGymModal: ({
+		gym,
+		onClose,
+	}: {
+		gym?: { name: string };
+		onClose: () => void;
+	}) =>
+		gym ? (
+			<div>
+				Delete modal for {gym.name}
+				<button type="button" onClick={onClose}>
+					Close delete modal
+				</button>
+			</div>
+		) : null,
+}));
+
+vi.mock("@/components/ui/dialog", () => ({
+	Dialog: ({
+		children,
+		open,
+		onOpenChange,
+	}: {
+		children: ReactNode;
+		open: boolean;
+		onOpenChange?: () => void;
+	}) =>
+		open ? (
+			<div>
+				<button type="button" onClick={onOpenChange}>
+					Close dialog
+				</button>
+				{children}
+			</div>
+		) : null,
+	DialogContent: ({ children }: { children: ReactNode }) => (
+		<div>{children}</div>
+	),
+	DialogDescription: ({ children }: { children: ReactNode }) => (
+		<p>{children}</p>
+	),
+	DialogFooter: ({ children }: { children: ReactNode }) => (
+		<div>{children}</div>
+	),
+	DialogHeader: ({ children }: { children: ReactNode }) => (
+		<div>{children}</div>
+	),
+	DialogTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
 }));
 
 vi.mock("@/components/gyms/gym-card", () => ({
@@ -217,5 +264,22 @@ describe("ProfileModal", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Delete Home Gym" }));
 
 		expect(screen.getByText("Delete modal for Home Gym")).toBeInTheDocument();
+	});
+
+	it("closes through the dialog and delete modal controls", () => {
+		const onClose = vi.fn();
+
+		render(<ProfileModal open onClose={onClose} />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+		expect(onClose).toHaveBeenCalledTimes(1);
+
+		fireEvent.mouseDown(screen.getByRole("tab", { name: "Equipment" }));
+		fireEvent.click(screen.getByRole("button", { name: "Delete Home Gym" }));
+		expect(screen.getByText("Delete modal for Home Gym")).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Close delete modal" }));
+		expect(
+			screen.queryByText("Delete modal for Home Gym"),
+		).not.toBeInTheDocument();
 	});
 });

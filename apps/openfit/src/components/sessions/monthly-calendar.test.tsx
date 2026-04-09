@@ -204,4 +204,27 @@ describe("MonthlyCalendar", () => {
 			screen.getByText("Start Time value: 2026-4-15 9"),
 		).toBeInTheDocument();
 	});
+
+	it("renders minute-only durations for shorter sessions", () => {
+		render(
+			<MonthlyCalendar
+				currentMonth={dayjs("2026-04-01")}
+				sessions={[
+					{
+						id: "session-5",
+						name: "Short Session",
+						startTime: new Date("2026-04-15T08:00:00.000Z"),
+						endTime: new Date("2026-04-15T08:45:00.000Z"),
+						impression: null,
+						createdAt: new Date("2026-04-15T08:00:00.000Z"),
+					},
+				]}
+				units={mockUnits}
+				onMonthChange={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByText("Short Session")).toBeInTheDocument();
+		expect(screen.getByText("45m")).toBeInTheDocument();
+	});
 });

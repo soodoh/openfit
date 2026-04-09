@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WorkoutSetGroup } from "@/lib/types";
 import { DeleteSetGroupModal } from "./delete-set-group-modal";
@@ -9,6 +10,39 @@ vi.mock("@/hooks", () => ({
 	useDeleteSetGroup: () => ({
 		mutateAsync: mockDeleteSetGroup,
 	}),
+}));
+
+vi.mock("@/components/ui/dialog", () => ({
+	Dialog: ({
+		children,
+		open,
+		onOpenChange,
+	}: {
+		children: ReactNode;
+		open: boolean;
+		onOpenChange?: (open: boolean) => void;
+	}) =>
+		open ? (
+			<div>
+				{children}
+				<button type="button" onClick={() => onOpenChange?.(false)}>
+					Close dialog
+				</button>
+			</div>
+		) : null,
+	DialogContent: ({ children }: { children: ReactNode }) => (
+		<div>{children}</div>
+	),
+	DialogDescription: ({ children }: { children: ReactNode }) => (
+		<p>{children}</p>
+	),
+	DialogFooter: ({ children }: { children: ReactNode }) => (
+		<div>{children}</div>
+	),
+	DialogHeader: ({ children }: { children: ReactNode }) => (
+		<div>{children}</div>
+	),
+	DialogTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
 }));
 
 describe("DeleteSetGroupModal", () => {
@@ -61,8 +95,23 @@ describe("DeleteSetGroupModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
 
 		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it("keeps the dialog open when no close event is dispatched", () => {
+		const onClose = vi.fn();
+
+		render(
+			<DeleteSetGroupModal
+				open
+				onClose={onClose}
+				setGroup={{ id: "set-group-1" } as WorkoutSetGroup}
+			/>,
+		);
+
+		expect(screen.getByRole("button", { name: "Yes" })).toBeInTheDocument();
+		expect(onClose).not.toHaveBeenCalled();
 	});
 });

@@ -25,8 +25,23 @@ vi.mock("@/components/ui/button", () => ({
 }));
 
 vi.mock("@/components/ui/dialog", () => ({
-	Dialog: ({ children, open }: { children: ReactNode; open: boolean }) =>
-		open ? <div>{children}</div> : null,
+	Dialog: ({
+		children,
+		open,
+		onOpenChange,
+	}: {
+		children: ReactNode;
+		open: boolean;
+		onOpenChange?: () => void;
+	}) =>
+		open ? (
+			<div>
+				<button type="button" onClick={onOpenChange}>
+					Close dialog
+				</button>
+				{children}
+			</div>
+		) : null,
 	DialogContent: ({ children }: { children: ReactNode }) => (
 		<div>{children}</div>
 	),
@@ -213,5 +228,28 @@ describe("GymFormModal", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
 
 		expect(await screen.findByText("Failed to update gym")).toBeInTheDocument();
+	});
+
+	it("loads existing gym values and closes through the dialog control", () => {
+		const onClose = vi.fn();
+
+		render(
+			<GymFormModal
+				open
+				onClose={onClose}
+				gym={{
+					id: "gym-1",
+					name: "Garage Gym",
+					equipmentIds: ["equipment-2"],
+				}}
+			/>,
+		);
+
+		expect(screen.getByLabelText("Gym Name")).toHaveValue("Garage Gym");
+		expect(screen.getByText("equipment-2")).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+
+		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 });

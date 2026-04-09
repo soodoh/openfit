@@ -203,4 +203,19 @@ describe("EditDurationPopover", () => {
 			await screen.findByText("Failed to save. Please try again."),
 		).toBeInTheDocument();
 	});
+
+	it("closes the popover from cancel and can reopen it", () => {
+		render(<EditDurationPopover session={session} formattedDuration="1h 0m" />);
+
+		fireEvent.click(screen.getByRole("button"));
+		expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		expect(
+			screen.queryByRole("button", { name: "Save" }),
+		).not.toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button"));
+		expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+	});
 });

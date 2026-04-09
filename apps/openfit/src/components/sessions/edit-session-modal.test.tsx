@@ -44,6 +44,12 @@ vi.mock("@/components/ui/date-time-picker", () => ({
 			<span>{label}</span>
 			<button
 				type="button"
+				onClick={() => onChange?.(new Date("invalid-date"))}
+			>
+				Set {label} invalid date
+			</button>
+			<button
+				type="button"
 				onClick={() =>
 					onChange?.(
 						new Date(
@@ -167,6 +173,22 @@ describe("EditSessionModal", () => {
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
+	it("shows a validation error when a date picker returns an invalid date", async () => {
+		render(<EditSessionModal open onClose={vi.fn()} />);
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Set Start Time invalid date" }),
+		);
+		fireEvent.click(
+			screen.getByRole("button", { name: "Set End Time invalid date" }),
+		);
+		fireEvent.click(screen.getByRole("button", { name: "Create Session" }));
+
+		expect(
+			await screen.findByText("Please enter valid dates"),
+		).toBeInTheDocument();
+	});
+
 	it("submits update flow when editing an existing session", async () => {
 		const onClose = vi.fn();
 		const session: WorkoutSessionWithData = {
@@ -201,5 +223,32 @@ describe("EditSessionModal", () => {
 		);
 		expect(mockCreateSession).not.toHaveBeenCalled();
 		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it("uses the update failure fallback when saving an existing session fails", async () => {
+		mockUpdateSession.mockRejectedValueOnce("boom");
+		const onClose = vi.fn();
+		const session: WorkoutSessionWithData = {
+			id: "session-2",
+			userId: "user-1",
+			name: "Original Name",
+			notes: "keep moving",
+			impression: 4,
+			startTime: new Date("2026-03-10T09:00:00.000Z"),
+			endTime: new Date("2026-03-10T10:00:00.000Z"),
+			templateId: null,
+			createdAt: new Date("2026-03-10T09:00:00.000Z"),
+			updatedAt: new Date("2026-03-10T09:00:00.000Z"),
+			setGroups: [],
+		};
+
+		render(<EditSessionModal open onClose={onClose} session={session} />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+		expect(
+			await screen.findByText("Failed to save session. Please try again."),
+		).toBeInTheDocument();
+		expect(onClose).not.toHaveBeenCalled();
 	});
 });

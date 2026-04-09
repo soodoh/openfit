@@ -28,7 +28,19 @@ vi.mock("@/components/ui/command", () => ({
 			{children}
 		</button>
 	),
-	CommandList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	CommandList: ({
+		children,
+		onTouchMove,
+		onWheel,
+	}: {
+		children: ReactNode;
+		onTouchMove?: React.TouchEventHandler<HTMLDivElement>;
+		onWheel?: React.WheelEventHandler<HTMLDivElement>;
+	}) => (
+		<div onTouchMove={onTouchMove} onWheel={onWheel}>
+			{children}
+		</div>
+	),
 }));
 
 vi.mock("@/components/ui/dropdown-menu", () => ({
@@ -62,8 +74,38 @@ vi.mock("@/components/ui/popover", () => ({
 		</div>
 	),
 	PopoverAnchor: ({ children }: { children: ReactNode }) => <>{children}</>,
-	PopoverContent: ({ children }: { children: ReactNode }) => (
-		<div>{children}</div>
+	PopoverContent: ({
+		children,
+		onInteractOutside,
+		onPointerDownOutside,
+	}: {
+		children: ReactNode;
+		onInteractOutside?: (event: {
+			target: HTMLElement;
+			preventDefault: () => void;
+		}) => void;
+		onPointerDownOutside?: (event: { preventDefault: () => void }) => void;
+	}) => (
+		<div>
+			<button
+				type="button"
+				onClick={() =>
+					onInteractOutside?.({
+						target: document.createElement("input"),
+						preventDefault: vi.fn(),
+					})
+				}
+			>
+				Simulate interact outside
+			</button>
+			<button
+				type="button"
+				onClick={() => onPointerDownOutside?.({ preventDefault: vi.fn() })}
+			>
+				Simulate pointer down outside
+			</button>
+			{children}
+		</div>
 	),
 }));
 
@@ -206,6 +248,69 @@ describe("AutocompleteExercise", () => {
 
 		expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
 		expect(mockUseExerciseSearch).toHaveBeenCalledWith("", undefined);
+	});
+
+	it("opens when typing from a closed state and keeps the list from hijacking scroll", () => {
+		render(<ExerciseHarness />);
+
+		const input = screen.getByPlaceholderText("Search exercises...");
+		fireEvent.change(input, { target: { value: "b" } });
+
+		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+
+		const list = screen.getByText("No exercises found").parentElement;
+		if (!list) {
+			throw new Error("expected command list");
+		}
+		fireEvent.wheel(list);
+		fireEvent.touchMove(list);
+	});
+
+	it("selects an exercise by clicking the result and keeps scrolling isolated", () => {
+		render(<ExerciseHarness />);
+
+		const input = screen.getByPlaceholderText("Search exercises...");
+		fireEvent.focus(input);
+		fireEvent.change(input, { target: { value: "b" } });
+
+		fireEvent.click(
+			screen.getByRole("button", { name: /Bench Press thumbnail/i }),
+		);
+		fireEvent.wheel(screen.getByText("No exercises found"));
+		fireEvent.touchMove(screen.getByText("No exercises found"));
+
+		expect(screen.getByDisplayValue("Bench Press")).toBeInTheDocument();
+	});
+
+	it("keeps the popover open when interacting inside it and closes on input blur", () => {
+		render(<ExerciseHarness />);
+
+		const input = screen.getByPlaceholderText("Search exercises...");
+		fireEvent.focus(input);
+		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Simulate interact outside" }),
+		);
+		fireEvent.click(
+			screen.getByRole("button", { name: "Simulate pointer down outside" }),
+		);
+
+		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+
+		fireEvent.blur(input);
+		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "false");
+	});
+
+	it("falls back to All when the profile has not loaded yet", () => {
+		mockUseUserProfile.mockReturnValue({ data: undefined });
+		mockUseGyms.mockReturnValue({ data: [] });
+		mockUseGym.mockReturnValue({ data: undefined });
+
+		render(<ExerciseHarness />);
+
+		expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+		expect(mockUseGym).toHaveBeenCalledWith(undefined);
 	});
 
 	it("clears the selected exercise when typing a new character", () => {

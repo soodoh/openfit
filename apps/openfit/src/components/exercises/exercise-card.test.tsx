@@ -12,8 +12,21 @@ vi.mock("@unpic/react", () => ({
 }));
 
 vi.mock("./exercise-detail-modal", () => ({
-	ExerciseDetailModal: ({ open }: { open: boolean }) =>
-		open ? <div>exercise detail open</div> : null,
+	ExerciseDetailModal: ({
+		open,
+		onClose,
+	}: {
+		open: boolean;
+		onClose: () => void;
+	}) =>
+		open ? (
+			<div>
+				exercise detail open
+				<button type="button" onClick={onClose}>
+					Close detail
+				</button>
+			</div>
+		) : null,
 }));
 
 vi.mock("@/components/ui/badge", () => ({
@@ -87,5 +100,23 @@ describe("ExerciseCard", () => {
 		expect(screen.getByText("Body Weight")).toBeInTheDocument();
 		expect(screen.queryByText("Barbell")).not.toBeInTheDocument();
 		expect(screen.queryByText("Intermediate")).not.toBeInTheDocument();
+	});
+
+	it("closes the detail modal when the modal requests to close", () => {
+		render(
+			<ExerciseCard
+				exercise={{
+					id: "exercise-3",
+					name: "Incline Press",
+					categoryId: "category-1",
+					primaryMuscleIds: ["muscle-1"],
+				}}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: /Incline Press/i }));
+		fireEvent.click(screen.getByRole("button", { name: "Close detail" }));
+
+		expect(screen.queryByText("exercise detail open")).not.toBeInTheDocument();
 	});
 });

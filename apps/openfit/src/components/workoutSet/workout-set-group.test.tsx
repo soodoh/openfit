@@ -89,13 +89,39 @@ vi.mock("@dnd-kit/utilities", () => ({
 }));
 
 vi.mock("@/components/exercises/exercise-detail-modal", () => ({
-	ExerciseDetailModal: ({ open }: { open: boolean }) =>
-		open ? <div>exercise-detail-open</div> : null,
+	ExerciseDetailModal: ({
+		open,
+		onClose,
+	}: {
+		open: boolean;
+		onClose: () => void;
+	}) =>
+		open ? (
+			<div>
+				exercise-detail-open
+				<button type="button" onClick={onClose}>
+					Close detail
+				</button>
+			</div>
+		) : null,
 }));
 
 vi.mock("@/components/exercises/replace-exercise-modal", () => ({
-	ReplaceExerciseModal: ({ open }: { open: boolean }) =>
-		open ? <div>replace-exercise-open</div> : null,
+	ReplaceExerciseModal: ({
+		open,
+		onClose,
+	}: {
+		open: boolean;
+		onClose: () => void;
+	}) =>
+		open ? (
+			<div>
+				replace-exercise-open
+				<button type="button" onClick={onClose}>
+					Close replace
+				</button>
+			</div>
+		) : null,
 }));
 
 vi.mock("./workout-set-row", () => ({
@@ -312,5 +338,59 @@ describe("WorkoutSetGroup", () => {
 		expect(
 			screen.queryByRole("button", { name: "View exercise details" }),
 		).not.toBeInTheDocument();
+	});
+
+	it("opens and closes the exercise detail and replace modals", () => {
+		const setGroup = buildSetGroup({
+			exercise: { id: "exercise-1", name: "Barbell Row", imageUrl: null },
+			completed: false,
+		});
+
+		render(
+			<WorkoutSetGroup
+				view={ListView.CurrentSession}
+				setGroup={setGroup}
+				isReorderActive={false}
+				units={mockUnits}
+				startRestTimer={vi.fn()}
+			/>,
+		);
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "View exercise details" }),
+		);
+		expect(screen.getByText("exercise-detail-open")).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Close detail" }));
+		expect(screen.queryByText("exercise-detail-open")).not.toBeInTheDocument();
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Replace with similar exercise" }),
+		);
+		expect(screen.getByText("replace-exercise-open")).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Close replace" }));
+		expect(screen.queryByText("replace-exercise-open")).not.toBeInTheDocument();
+	});
+
+	it("ignores drag end events that do not change order", async () => {
+		const setGroup = buildSetGroup({
+			exercise: { id: "exercise-1", name: "Barbell Row", imageUrl: null },
+			completed: false,
+			setIds: ["set-1", "set-2"],
+		});
+
+		render(
+			<WorkoutSetGroup
+				view={ListView.CurrentSession}
+				setGroup={setGroup}
+				isReorderActive={false}
+				units={mockUnits}
+				startRestTimer={vi.fn()}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Trigger drag end" }));
+		await waitFor(() => {
+			expect(mockReorderSets).toHaveBeenCalledTimes(1);
+		});
 	});
 });
