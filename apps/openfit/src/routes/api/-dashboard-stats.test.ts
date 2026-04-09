@@ -156,6 +156,30 @@ describe("GET /api/dashboard/stats", () => {
 		});
 	});
 
+	it("falls back to zero counts and uses Sunday as the week boundary start", async () => {
+		vi.setSystemTime(new Date(2026, 3, 12, 12, 0, 0, 0));
+		mocks.where1.mockResolvedValueOnce([]);
+		mocks.where2.mockResolvedValueOnce([]);
+		mocks.where3.mockResolvedValueOnce([]);
+		mocks.orderBy.mockResolvedValueOnce([]);
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/dashboard/stats"),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			totalSessions: 0,
+			totalRoutines: 0,
+			thisWeekSessions: 0,
+			currentStreak: 0,
+		});
+		expect(mocks.gte).toHaveBeenCalledWith(
+			mocks.schema.workoutSessions.startTime,
+			new Date(2026, 3, 6, 0, 0, 0, 0),
+		);
+	});
+
 	it("returns 401 when authentication throws a non-response error", async () => {
 		mocks.requireAuth.mockRejectedValue(new Error("boom"));
 

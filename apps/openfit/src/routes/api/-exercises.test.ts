@@ -183,6 +183,65 @@ describe("GET /api/exercises", () => {
 			expect.objectContaining({ id: "exercise_2" }),
 		]);
 	});
+
+	it("uses the default limit and unfiltered query when no filters are provided", async () => {
+		mocks.findManyExercises.mockResolvedValue([
+			{
+				id: "exercise_10",
+				name: "Air Squat",
+				equipmentId: null,
+				primaryMuscles: [],
+			},
+		]);
+		mocks.withFirstExerciseImageUrls.mockResolvedValue([
+			{
+				id: "exercise_10",
+				name: "Air Squat",
+				equipmentId: null,
+				primaryMuscles: [],
+				imageUrl: null,
+			},
+		]);
+
+		const response = await listHandlers.GET({
+			request: new Request("http://localhost/api/exercises"),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			page: [
+				{
+					id: "exercise_10",
+					name: "Air Squat",
+					equipmentId: null,
+					primaryMuscles: [],
+					imageUrl: null,
+					primaryMuscleIds: [],
+					secondaryMuscleIds: [],
+				},
+			],
+			isDone: true,
+			continueCursor: null,
+		});
+		expect(mocks.findManyExercises).toHaveBeenCalledWith({
+			where: undefined,
+			orderBy: {
+				type: "asc",
+				value: mocks.schema.exercises.name,
+			},
+			limit: 21,
+			offset: 0,
+			with: {
+				equipment: true,
+				category: true,
+				primaryMuscles: {
+					with: {
+						muscleGroup: true,
+					},
+				},
+			},
+		});
+	});
 });
 
 describe("GET /api/exercises/:id", () => {

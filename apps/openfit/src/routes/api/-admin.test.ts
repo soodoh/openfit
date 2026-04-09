@@ -189,4 +189,43 @@ describe("GET /api/admin/users", () => {
 			error: "Failed to fetch users",
 		});
 	});
+
+	it("uses default pagination and leaves the query unfiltered when search is blank", async () => {
+		const totalQuery = createTotalQuery([{ count: 1 }]);
+		const itemsQuery = createItemsQuery([
+			{
+				id: "profile_2",
+				userId: "user_2",
+				email: "default@example.com",
+				role: "USER",
+			},
+		]);
+		mocks.select
+			.mockReturnValueOnce(totalQuery)
+			.mockReturnValueOnce(itemsQuery);
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/admin/users"),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			items: [
+				{
+					id: "profile_2",
+					userId: "user_2",
+					email: "default@example.com",
+					role: "USER",
+				},
+			],
+			total: 1,
+			page: 1,
+			pageSize: 10,
+		});
+		expect(mocks.like).not.toHaveBeenCalled();
+		expect(totalQuery.where).toHaveBeenCalledWith(undefined);
+		expect(itemsQuery.where).toHaveBeenCalledWith(undefined);
+		expect(itemsQuery.limit).toHaveBeenCalledWith(10);
+		expect(itemsQuery.offset).toHaveBeenCalledWith(0);
+	});
 });

@@ -198,6 +198,43 @@ describe("GET /api/admin/lookups", () => {
 			error: "Failed to fetch lookups",
 		});
 	});
+
+	it("uses default pagination without search filtering", async () => {
+		const totalQuery = createCountQuery([{ count: 1 }]);
+		const itemsQuery = createItemsQuery([
+			{
+				id: "category_1",
+				name: "Strength",
+			},
+		]);
+		mocks.select
+			.mockReturnValueOnce(totalQuery)
+			.mockReturnValueOnce(itemsQuery);
+
+		const response = await handlers.GET({
+			request: new Request(
+				"http://localhost/api/admin/lookups?type=categories",
+			),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			items: [
+				{
+					id: "category_1",
+					name: "Strength",
+				},
+			],
+			total: 1,
+			page: 1,
+			pageSize: 10,
+		});
+		expect(mocks.like).not.toHaveBeenCalled();
+		expect(totalQuery.where).toHaveBeenCalledWith(undefined);
+		expect(itemsQuery.where).toHaveBeenCalledWith(undefined);
+		expect(itemsQuery.limit).toHaveBeenCalledWith(10);
+		expect(itemsQuery.offset).toHaveBeenCalledWith(0);
+	});
 });
 
 describe("POST /api/admin/lookups", () => {

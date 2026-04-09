@@ -209,4 +209,52 @@ describe("GET /api/dashboard/recent-sessions", () => {
 			},
 		});
 	});
+
+	it("keeps null exercises null in the compatibility payload", async () => {
+		const startTime = new Date("2025-01-01T00:00:00.000Z");
+		const endTime = new Date("2025-01-01T01:00:00.000Z");
+		mocks.findManyWorkoutSessions.mockResolvedValue([
+			{
+				id: "session_2",
+				name: "Accessory Day",
+				startTime,
+				endTime,
+				impression: null,
+				setGroups: [
+					{
+						id: "group_2",
+						type: "DROP_SET",
+						order: 1,
+						sets: [
+							{
+								id: "set_2",
+								exerciseId: "exercise_missing",
+								exercise: null,
+							},
+						],
+					},
+				],
+			},
+		]);
+
+		const response = await recentHandlers.GET({
+			request: new Request("http://localhost/api/dashboard/recent-sessions"),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual([
+			expect.objectContaining({
+				id: "session_2",
+				setGroups: [
+					expect.objectContaining({
+						sets: [
+							expect.objectContaining({
+								exercise: null,
+							}),
+						],
+					}),
+				],
+			}),
+		]);
+	});
 });

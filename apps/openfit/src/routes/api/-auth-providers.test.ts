@@ -58,4 +58,19 @@ describe("GET /api/auth/providers", () => {
 			oidc: true,
 		});
 	});
+
+	it("reports discord as available only when both discord credentials are configured", async () => {
+		process.env.AUTH_DISCORD_ID = "discord_id";
+		process.env.AUTH_DISCORD_SECRET = "discord_secret";
+
+		const response = await handlers.GET();
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			google: false,
+			github: false,
+			discord: true,
+			oidc: false,
+		});
+	});
 });

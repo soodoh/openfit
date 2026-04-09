@@ -241,6 +241,60 @@ describe("GET /api/routines", () => {
 			error: "Failed to fetch routines",
 		});
 	});
+
+	it("uses the default page size and omits the continuation cursor when there are no extra rows", async () => {
+		const createdAt = new Date("2025-01-01T00:00:00.000Z");
+		const updatedAt = new Date("2025-01-02T00:00:00.000Z");
+		mocks.findManyRoutines.mockResolvedValue([
+			{
+				id: "routine_3",
+				userId: "user_123",
+				name: "Recovery",
+				description: null,
+				createdAt,
+				updatedAt,
+			},
+		]);
+
+		const response = await listHandlers.GET({
+			request: new Request("http://localhost/api/routines"),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			page: [
+				{
+					id: "routine_3",
+					userId: "user_123",
+					name: "Recovery",
+					description: null,
+					createdAt: createdAt.toISOString(),
+					updatedAt: updatedAt.toISOString(),
+					routineDays: [],
+				},
+			],
+			isDone: true,
+			continueCursor: null,
+		});
+		expect(mocks.findManyRoutines).toHaveBeenCalledWith({
+			where: {
+				type: "and",
+				conditions: [
+					{
+						type: "eq",
+						left: mocks.schema.routines.userId,
+						right: "user_123",
+					},
+				],
+			},
+			orderBy: {
+				type: "desc",
+				value: mocks.schema.routines.updatedAt,
+			},
+			limit: 21,
+			offset: 0,
+		});
+	});
 });
 
 describe("POST /api/routines", () => {
