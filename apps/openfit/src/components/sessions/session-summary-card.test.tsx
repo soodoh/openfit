@@ -112,4 +112,43 @@ describe("SessionSummaryCard", () => {
 		);
 		expect(onClick).not.toHaveBeenCalled();
 	});
+
+	it("omits duration text when the session is still in progress and uses the singular set label", () => {
+		render(
+			<SessionSummaryCard
+				session={{
+					id: "session-5",
+					name: "Singles Day",
+					startTime: new Date("2026-04-01T08:00:00.000Z"),
+					endTime: null,
+					impression: null,
+					notes: null,
+					setGroups: [{ sets: [1] }],
+				}}
+			/>,
+		);
+
+		expect(screen.getByText("1 set")).toBeInTheDocument();
+		expect(screen.queryByText(/ min$/)).not.toBeInTheDocument();
+		expect(screen.queryByText(/ h /)).not.toBeInTheDocument();
+	});
+
+	it("renders both filled and unfilled stars for partial impressions", () => {
+		const { container } = render(
+			<SessionSummaryCard
+				session={{
+					id: "session-6",
+					name: "Mixed Rating Day",
+					startTime: new Date("2026-04-01T08:00:00.000Z"),
+					endTime: new Date("2026-04-01T08:30:00.000Z"),
+					impression: 3,
+					notes: null,
+					setGroups: [],
+				}}
+			/>,
+		);
+
+		expect(container.querySelectorAll(".fill-amber-400")).toHaveLength(3);
+		expect(container.querySelectorAll(".text-muted\\/40")).toHaveLength(2);
+	});
 });

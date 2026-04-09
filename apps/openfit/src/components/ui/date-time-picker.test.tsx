@@ -79,4 +79,18 @@ describe("DateTimePicker", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Clear date" }));
 		expect(onChange).toHaveBeenCalledWith(undefined);
 	});
+
+	it("does not emit a time-only change before a date is selected", () => {
+		const onChange = vi.fn();
+		render(<DateTimePicker disabled onChange={onChange} />);
+
+		expect(screen.queryByText("Workout date")).not.toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Pick a date" })).toBeDisabled();
+
+		fireEvent.change(screen.getByDisplayValue("00:00"), {
+			target: { value: "07:15" },
+		});
+
+		expect(onChange).not.toHaveBeenCalled();
+	});
 });

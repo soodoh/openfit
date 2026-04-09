@@ -66,4 +66,10 @@ describe("WeekdaySelector", () => {
 
 		expect(screen.queryByText(/Selected:/)).not.toBeInTheDocument();
 	});
+
+	it("does not render a summary before any weekday is selected", () => {
+		render(<WeekdaySelector selectedWeekdays={[]} onChange={vi.fn()} />);
+
+		expect(screen.queryByText(/Selected:/)).not.toBeInTheDocument();
+	});
 });

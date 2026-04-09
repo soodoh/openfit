@@ -26,6 +26,9 @@ export default defineConfig({
 			exclude: [
 				"src/**/*.test.{ts,tsx}",
 				"src/routeTree.gen.ts",
+				// These modules do not contain executable runtime logic under V8 coverage.
+				"src/hooks.ts",
+				"src/lib/api-types.ts",
 				"db/schema/**",
 			],
 		},

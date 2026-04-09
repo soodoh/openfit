@@ -185,6 +185,60 @@ describe("use-exercises queries", () => {
 		expect(params.get("limit")).toBe("20");
 	});
 
+	it("omits the limit parameter when none is provided", () => {
+		const queryString = buildExerciseQueryString(
+			{ equipmentId: "equipment-1" },
+			undefined,
+			0,
+		);
+		const params = new URLSearchParams(queryString);
+
+		expect(params.get("equipmentId")).toBe("equipment-1");
+		expect(params.get("cursor")).toBeNull();
+		expect(params.get("limit")).toBeNull();
+	});
+
+	it("uses the continue cursor to fetch the next exercise page", async () => {
+		const firstPage = {
+			page: [exercise],
+			isDone: false,
+			continueCursor: "cursor-2",
+		};
+		const secondPage = {
+			page: [{ ...exercise, id: "exercise-2", name: "Incline Press" }],
+			isDone: true,
+		};
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValueOnce(Response.json(firstPage))
+			.mockResolvedValueOnce(Response.json(secondPage));
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useExercises(), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(result.current.hasNextPage).toBe(true);
+
+		await result.current.fetchNextPage();
+
+		await waitFor(() => {
+			expect(result.current.data?.pages).toHaveLength(2);
+		});
+
+		const secondRequest = fetchMock.mock.calls[1]?.[0];
+		expect(typeof secondRequest).toBe("string");
+
+		const nextUrl = new URL(secondRequest as string, "http://localhost");
+		expect(nextUrl.pathname).toBe("/api/exercises");
+		expect(nextUrl.searchParams.get("cursor")).toBe("cursor-2");
+		expect(nextUrl.searchParams.get("limit")).toBe("20");
+		expect(result.current.data?.pages[1]).toEqual(secondPage);
+	});
+
 	it("requests exercise searches with the limit in the cache key", async () => {
 		const results = [exercise];
 		const fetchMock = mockJsonSuccess(results);

@@ -82,6 +82,14 @@ vi.mock("@dnd-kit/core", () => ({
 			>
 				Trigger reorder
 			</button>
+			<button
+				type="button"
+				onClick={() =>
+					onDragEnd?.({ active: { id: "group-1" }, over: { id: "group-1" } })
+				}
+			>
+				Trigger noop reorder
+			</button>
 		</div>
 	),
 	KeyboardSensor: class KeyboardSensor {},
@@ -193,6 +201,25 @@ describe("WorkoutList", () => {
 			expect(mockReorderSetGroups).toHaveBeenCalledWith({
 				setGroupIds: ["group-2", "group-1"],
 			});
+		});
+	});
+
+	it("ignores drag events that do not move a set group", async () => {
+		render(
+			<WorkoutList
+				view={ListView.EditTemplate}
+				setGroups={[buildSetGroup("group-1"), buildSetGroup("group-2")]}
+				units={mockUnits}
+				sessionOrDayId="day-1"
+			/>,
+		);
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Trigger noop reorder" }),
+		);
+
+		await waitFor(() => {
+			expect(mockReorderSetGroups).not.toHaveBeenCalled();
 		});
 	});
 });

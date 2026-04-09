@@ -51,6 +51,14 @@ vi.mock("@dnd-kit/core", () => ({
 			>
 				Trigger drag end
 			</button>
+			<button
+				type="button"
+				onClick={() =>
+					onDragEnd?.({ active: { id: "set-1" }, over: { id: "set-1" } })
+				}
+			>
+				Trigger noop drag end
+			</button>
 		</div>
 	),
 	KeyboardSensor: class KeyboardSensor {},
@@ -371,11 +379,10 @@ describe("WorkoutSetGroup", () => {
 		expect(screen.queryByText("replace-exercise-open")).not.toBeInTheDocument();
 	});
 
-	it("ignores drag end events that do not change order", async () => {
+	it("toggles the group open state and closes the delete modal", () => {
 		const setGroup = buildSetGroup({
 			exercise: { id: "exercise-1", name: "Barbell Row", imageUrl: null },
 			completed: false,
-			setIds: ["set-1", "set-2"],
 		});
 
 		render(
@@ -388,9 +395,50 @@ describe("WorkoutSetGroup", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Trigger drag end" }));
+		expect(screen.getByRole("button", { name: "Add Set" })).toBeInTheDocument();
+
+		fireEvent.click(screen.getByText("Barbell Row"));
+		expect(
+			screen.queryByRole("button", { name: "Add Set" }),
+		).not.toBeInTheDocument();
+
+		fireEvent.click(screen.getByText("Barbell Row"));
+		expect(screen.getByRole("button", { name: "Add Set" })).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Delete exercise" }));
+		expect(
+			screen.getByRole("heading", { name: "Delete Exercise" }),
+		).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "No" }));
+		expect(
+			screen.queryByRole("heading", { name: "Delete Exercise" }),
+		).not.toBeInTheDocument();
+	});
+
+	it("ignores drag end events that do not change order and shows the singular set label", async () => {
+		const setGroup = buildSetGroup({
+			exercise: { id: "exercise-1", name: "Barbell Row", imageUrl: null },
+			completed: false,
+			setIds: ["set-1"],
+		});
+
+		render(
+			<WorkoutSetGroup
+				view={ListView.CurrentSession}
+				setGroup={setGroup}
+				isReorderActive={false}
+				units={mockUnits}
+				startRestTimer={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByText("1 set")).toBeInTheDocument();
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Trigger noop drag end" }),
+		);
 		await waitFor(() => {
-			expect(mockReorderSets).toHaveBeenCalledTimes(1);
+			expect(mockReorderSets).not.toHaveBeenCalled();
 		});
 	});
 });
