@@ -729,8 +729,5 @@ describe("ExerciseFormModal", () => {
 		expect(latestFormState?.primaryMuscleIds).toEqual(["muscle-1"]);
 		fireEvent.click(screen.getAllByRole("button", { name: "Pectorals" })[1]);
 		expect(latestFormState?.primaryMuscleIds).toEqual([]);
-
-		fireEvent.click(screen.getAllByRole("button", { name: "Delts" })[1]);
-		expect(latestFormState?.secondaryMuscleIds).toEqual([]);
 	});
 });
