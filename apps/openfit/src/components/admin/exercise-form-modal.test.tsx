@@ -5,7 +5,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react";
-import { type ReactNode, useState } from "react";
+import { createContext, type ReactNode, useContext, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ExerciseFormModal } from "./exercise-form-modal";
 
@@ -156,12 +156,33 @@ vi.mock("@/components/ui/dialog", () => ({
 	DialogTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
 }));
 
+const selectChangeContext = createContext<
+	((value: string) => void) | undefined
+>(undefined);
+
 vi.mock("@/components/ui/select", () => ({
-	Select: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	Select: ({
+		children,
+		onValueChange,
+	}: {
+		children: ReactNode;
+		onValueChange?: (value: string) => void;
+	}) => (
+		<selectChangeContext.Provider value={onValueChange}>
+			<div>{children}</div>
+		</selectChangeContext.Provider>
+	),
 	SelectContent: ({ children }: { children: ReactNode }) => (
 		<div>{children}</div>
 	),
-	SelectItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	SelectItem: ({ children, value }: { children: ReactNode; value: string }) => {
+		const onValueChange = useContext(selectChangeContext);
+		return (
+			<button type="button" onClick={() => onValueChange?.(value)}>
+				{children}
+			</button>
+		);
+	},
 	SelectTrigger: ({ children }: { children: ReactNode }) => (
 		<div>{children}</div>
 	),
@@ -187,8 +208,32 @@ vi.mock("@/components/ui/command", () => ({
 		<div>{children}</div>
 	),
 	CommandInput: () => <input aria-label="Search muscles" />,
-	CommandItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	CommandItem: ({
+		children,
+		onSelect,
+	}: {
+		children: ReactNode;
+		onSelect?: () => void;
+	}) => (
+		<button type="button" onClick={() => onSelect?.()}>
+			{children}
+		</button>
+	),
 	CommandList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock("@/components/ui/badge", () => ({
+	Badge: ({
+		children,
+		onClick,
+	}: {
+		children: ReactNode;
+		onClick?: () => void;
+	}) => (
+		<button type="button" onClick={onClick}>
+			{children}
+		</button>
+	),
 }));
 
 vi.mock("./use-exercise-form-state", () => ({
@@ -641,5 +686,51 @@ describe("ExerciseFormModal", () => {
 		expect(
 			screen.getAllByPlaceholderText("Enter instruction step"),
 		).toHaveLength(1);
+	});
+
+	it("fires the select and muscle chip callbacks through the rendered controls", () => {
+		adminDataSeed = {
+			equipment: [
+				{ id: "equipment-1", name: "Barbell" },
+				{ id: "equipment-2", name: "Dumbbell" },
+			],
+			categories: [{ id: "category-1", name: "Chest" }],
+			muscleGroups: [
+				{ id: "muscle-1", name: "Pectorals" },
+				{ id: "muscle-2", name: "Delts" },
+			],
+		};
+		formSeed = {
+			...formSeed,
+			equipmentId: "equipment-1",
+			categoryId: "category-1",
+			level: "intermediate",
+			force: "push",
+			mechanic: "compound",
+			primaryMuscleIds: [],
+			secondaryMuscleIds: [],
+		};
+
+		render(<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Chest" }));
+		fireEvent.click(screen.getByRole("button", { name: "Beginner" }));
+		fireEvent.click(screen.getByRole("button", { name: "Barbell" }));
+		fireEvent.click(screen.getByRole("button", { name: "Push" }));
+		fireEvent.click(screen.getByRole("button", { name: "Compound" }));
+
+		expect(latestFormState?.categoryId).toBe("category-1");
+		expect(latestFormState?.level).toBe("beginner");
+		expect(latestFormState?.equipmentId).toBe("equipment-1");
+		expect(latestFormState?.force).toBe("push");
+		expect(latestFormState?.mechanic).toBe("compound");
+
+		fireEvent.click(screen.getAllByRole("button", { name: "Pectorals" })[0]);
+		expect(latestFormState?.primaryMuscleIds).toEqual(["muscle-1"]);
+		fireEvent.click(screen.getAllByRole("button", { name: "Pectorals" })[1]);
+		expect(latestFormState?.primaryMuscleIds).toEqual([]);
+
+		fireEvent.click(screen.getAllByRole("button", { name: "Delts" })[1]);
+		expect(latestFormState?.secondaryMuscleIds).toEqual([]);
 	});
 });

@@ -10,8 +10,25 @@ const mockUpdateUserRole = vi.fn();
 let selectOnValueChange: ((value: string) => void) | undefined;
 
 vi.mock("@/components/ui/dialog", () => ({
-	Dialog: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
-		open ? <div>{children}</div> : null,
+	Dialog: ({
+		open,
+		children,
+		onOpenChange,
+	}: {
+		open: boolean;
+		children: React.ReactNode;
+		onOpenChange?: (open: boolean) => void;
+	}) =>
+		open ? (
+			<div>
+				{children}
+				{onOpenChange ? (
+					<button type="button" onClick={() => onOpenChange(false)}>
+						Close via open change
+					</button>
+				) : null}
+			</div>
+		) : null,
 	DialogContent: ({ children }: { children: React.ReactNode }) => (
 		<div>{children}</div>
 	),
@@ -181,6 +198,28 @@ describe("admin modals and form state", () => {
 
 		expect(await screen.findByText("lookup failed")).toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it("closes the lookup modal through the dialog open-change callback", () => {
+		const onSubmit = vi.fn().mockResolvedValue(undefined);
+		const onClose = vi.fn();
+
+		render(
+			<LookupFormModal
+				open
+				onClose={onClose}
+				title="Equipment"
+				item={undefined}
+				onSubmit={onSubmit}
+				isPending={false}
+			/>,
+		);
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Close via open change" }),
+		);
+
+		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
 	it("leaves a closed lookup modal untouched until it opens", () => {
