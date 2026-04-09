@@ -29,7 +29,8 @@ export const RestTimer = ({
 		pause,
 		restart,
 	} = timer;
-	const percentage = (remainingSeconds / totalSeconds) * 100;
+	const percentage =
+		totalSeconds > 0 ? (remainingSeconds / totalSeconds) * 100 : 0;
 	const circumference = 2 * Math.PI * 45;
 	return (
 		<>
