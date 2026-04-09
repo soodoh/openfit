@@ -66,6 +66,8 @@ const handlers = DashboardStatsRoute.options.server?.handlers as {
 };
 
 describe("GET /api/dashboard/stats", () => {
+	const expectedMonday = new Date(2026, 3, 6, 0, 0, 0, 0);
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mocks.select.mockReset();
@@ -116,7 +118,7 @@ describe("GET /api/dashboard/stats", () => {
 		expect(mocks.select).toHaveBeenCalledTimes(4);
 		expect(mocks.gte).toHaveBeenCalledWith(
 			mocks.schema.workoutSessions.startTime,
-			expect.any(Date),
+			expectedMonday,
 		);
 	});
 

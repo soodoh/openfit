@@ -122,6 +122,7 @@ describe("POST /api/set-groups/reorder", () => {
 
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ success: true });
+		expect(mocks.update).toHaveBeenCalledWith(mocks.schema.workoutSetGroups);
 		expect(mocks.updateSet).toHaveBeenNthCalledWith(
 			1,
 			expect.objectContaining({
@@ -136,6 +137,16 @@ describe("POST /api/set-groups/reorder", () => {
 				updatedAt: expect.any(Date),
 			}),
 		);
+		expect(mocks.updateWhere).toHaveBeenNthCalledWith(1, {
+			type: "eq",
+			left: mocks.schema.workoutSetGroups.id,
+			right: "group_1",
+		});
+		expect(mocks.updateWhere).toHaveBeenNthCalledWith(2, {
+			type: "eq",
+			left: mocks.schema.workoutSetGroups.id,
+			right: "group_2",
+		});
 	});
 
 	it("returns 403 when a reordered set group is owned by another user", async () => {
@@ -223,11 +234,13 @@ describe("POST /api/sets/reorder", () => {
 			.mockResolvedValueOnce({
 				id: "set_1",
 				userId: "user_123",
+				setGroupId: "group_1",
 			})
 			.mockResolvedValueOnce(null)
 			.mockResolvedValueOnce({
 				id: "set_2",
 				userId: "user_123",
+				setGroupId: "group_1",
 			});
 
 		const response = await setHandlers.POST({
@@ -243,6 +256,7 @@ describe("POST /api/sets/reorder", () => {
 
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ success: true });
+		expect(mocks.update).toHaveBeenCalledWith(mocks.schema.workoutSets);
 		expect(mocks.updateSet).toHaveBeenNthCalledWith(
 			1,
 			expect.objectContaining({
@@ -257,6 +271,16 @@ describe("POST /api/sets/reorder", () => {
 				updatedAt: expect.any(Date),
 			}),
 		);
+		expect(mocks.updateWhere).toHaveBeenNthCalledWith(1, {
+			type: "eq",
+			left: mocks.schema.workoutSets.id,
+			right: "set_1",
+		});
+		expect(mocks.updateWhere).toHaveBeenNthCalledWith(2, {
+			type: "eq",
+			left: mocks.schema.workoutSets.id,
+			right: "set_2",
+		});
 	});
 
 	it("returns 403 when the set group is not owned by the user", async () => {
