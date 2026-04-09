@@ -1,0 +1,293 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({
+	requireAdmin: vi.fn(),
+	findFirstExercise: vi.fn(),
+	update: vi.fn(),
+	updateSet: vi.fn(),
+	updateWhere: vi.fn(),
+	delete: vi.fn(),
+	deleteWhere: vi.fn(),
+	insert: vi.fn(),
+	insertValues: vi.fn(),
+	eq: vi.fn((left, right) => ({ type: "eq", left, right })),
+	createId: vi.fn(),
+	schema: {
+		exercises: {
+			id: "exercises.id",
+			name: "exercises.name",
+		},
+		exercisePrimaryMuscles: {
+			exerciseId: "exercise_primary_muscles.exercise_id",
+		},
+		exerciseSecondaryMuscles: {
+			exerciseId: "exercise_secondary_muscles.exercise_id",
+		},
+		exerciseInstructions: {
+			exerciseId: "exercise_instructions.exercise_id",
+		},
+		exerciseImages: {
+			exerciseId: "exercise_images.exercise_id",
+		},
+	},
+}));
+
+vi.mock("drizzle-orm", () => ({
+	eq: mocks.eq,
+}));
+
+vi.mock("@paralleldrive/cuid2", () => ({
+	createId: mocks.createId,
+}));
+
+vi.mock("@/db", () => ({
+	db: {
+		query: {
+			exercises: {
+				findFirst: mocks.findFirstExercise,
+			},
+		},
+		update: mocks.update,
+		delete: mocks.delete,
+		insert: mocks.insert,
+	},
+}));
+
+vi.mock("@/db/schema", () => ({
+	schema: mocks.schema,
+}));
+
+vi.mock("@/lib/auth-middleware", () => ({
+	requireAdmin: mocks.requireAdmin,
+}));
+
+import AdminExerciseDetailRoute from "@/routes/api/admin/exercises.$id";
+
+const handlers = AdminExerciseDetailRoute.options.server?.handlers as {
+	PATCH: (args: {
+		request: Request;
+		params: Record<string, string>;
+	}) => Promise<Response>;
+	DELETE: (args: {
+		request: Request;
+		params: Record<string, string>;
+	}) => Promise<Response>;
+};
+
+describe("PATCH /api/admin/exercises/:id", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mocks.requireAdmin.mockResolvedValue({ user: { id: "admin_123" } });
+		mocks.findFirstExercise.mockResolvedValue({
+			id: "exercise_1",
+		});
+		mocks.update.mockReturnValue({
+			set: mocks.updateSet,
+		});
+		mocks.updateSet.mockReturnValue({
+			where: mocks.updateWhere,
+		});
+		mocks.updateWhere.mockResolvedValue(undefined);
+		mocks.delete.mockReturnValue({
+			where: mocks.deleteWhere,
+		});
+		mocks.deleteWhere.mockResolvedValue(undefined);
+		mocks.insert.mockReturnValue({
+			values: mocks.insertValues,
+		});
+		mocks.insertValues.mockResolvedValue(undefined);
+		mocks.createId.mockReturnValue("generated_id");
+	});
+
+	it("returns the auth response when admin access fails", async () => {
+		mocks.requireAdmin.mockRejectedValue(
+			Response.json({ error: "Forbidden" }, { status: 403 }),
+		);
+
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/admin/exercises/exercise_1", {
+				method: "PATCH",
+				body: JSON.stringify({ name: "Updated" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "exercise_1" },
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+		expect(mocks.findFirstExercise).not.toHaveBeenCalled();
+	});
+
+	it("returns 400 for an invalid update payload", async () => {
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/admin/exercises/exercise_1", {
+				method: "PATCH",
+				body: JSON.stringify({}),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "exercise_1" },
+		});
+
+		expect(response.status).toBe(400);
+		await expect(response.json()).resolves.toEqual(
+			expect.objectContaining({
+				error: "Invalid request body",
+			}),
+		);
+		expect(mocks.update).not.toHaveBeenCalled();
+	});
+
+	it("returns 404 when the exercise does not exist", async () => {
+		mocks.findFirstExercise.mockResolvedValue(null);
+
+		const response = await handlers.PATCH({
+			request: new Request(
+				"http://localhost/api/admin/exercises/exercise_missing",
+				{
+					method: "PATCH",
+					body: JSON.stringify({ name: "Updated" }),
+					headers: { "Content-Type": "application/json" },
+				},
+			),
+			params: { id: "exercise_missing" },
+		});
+
+		expect(response.status).toBe(404);
+		await expect(response.json()).resolves.toEqual({
+			error: "Exercise not found",
+		});
+		expect(mocks.update).not.toHaveBeenCalled();
+	});
+
+	it("updates the exercise and its related records", async () => {
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/admin/exercises/exercise_1", {
+				method: "PATCH",
+				body: JSON.stringify({
+					name: "Updated Bench Press",
+					level: "intermediate",
+					force: "push",
+					mechanic: "compound",
+					equipmentId: "barbell",
+					categoryId: "chest",
+					primaryMuscleIds: ["chest"],
+					secondaryMuscleIds: ["triceps"],
+					instructions: ["Lie back"],
+					imageUrls: ["/bench.jpg"],
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "exercise_1" },
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({ success: true });
+		expect(mocks.update).toHaveBeenCalledWith(mocks.schema.exercises);
+		expect(mocks.findFirstExercise).toHaveBeenCalledWith({
+			where: {
+				type: "eq",
+				left: mocks.schema.exercises.id,
+				right: "exercise_1",
+			},
+		});
+		expect(mocks.delete).toHaveBeenNthCalledWith(
+			1,
+			mocks.schema.exercisePrimaryMuscles,
+		);
+		expect(mocks.delete).toHaveBeenNthCalledWith(
+			2,
+			mocks.schema.exerciseSecondaryMuscles,
+		);
+		expect(mocks.delete).toHaveBeenNthCalledWith(
+			3,
+			mocks.schema.exerciseInstructions,
+		);
+		expect(mocks.delete).toHaveBeenNthCalledWith(
+			4,
+			mocks.schema.exerciseImages,
+		);
+		expect(mocks.insert).toHaveBeenNthCalledWith(
+			1,
+			mocks.schema.exercisePrimaryMuscles,
+		);
+		expect(mocks.insert).toHaveBeenNthCalledWith(
+			2,
+			mocks.schema.exerciseSecondaryMuscles,
+		);
+		expect(mocks.insert).toHaveBeenNthCalledWith(
+			3,
+			mocks.schema.exerciseInstructions,
+		);
+		expect(mocks.insert).toHaveBeenNthCalledWith(
+			4,
+			mocks.schema.exerciseImages,
+		);
+	});
+});
+
+describe("DELETE /api/admin/exercises/:id", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mocks.requireAdmin.mockResolvedValue({ user: { id: "admin_123" } });
+		mocks.findFirstExercise.mockResolvedValue({
+			id: "exercise_1",
+		});
+		mocks.delete.mockReturnValue({
+			where: mocks.deleteWhere,
+		});
+		mocks.deleteWhere.mockResolvedValue(undefined);
+	});
+
+	it("returns 404 when the exercise does not exist", async () => {
+		mocks.findFirstExercise.mockResolvedValue(null);
+
+		const response = await handlers.DELETE({
+			request: new Request(
+				"http://localhost/api/admin/exercises/exercise_missing",
+				{
+					method: "DELETE",
+				},
+			),
+			params: { id: "exercise_missing" },
+		});
+
+		expect(response.status).toBe(404);
+		await expect(response.json()).resolves.toEqual({
+			error: "Exercise not found",
+		});
+		expect(mocks.delete).not.toHaveBeenCalled();
+	});
+
+	it("deletes the exercise and related records", async () => {
+		const response = await handlers.DELETE({
+			request: new Request("http://localhost/api/admin/exercises/exercise_1", {
+				method: "DELETE",
+			}),
+			params: { id: "exercise_1" },
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({ success: true });
+		expect(mocks.delete).toHaveBeenNthCalledWith(
+			1,
+			mocks.schema.exercisePrimaryMuscles,
+		);
+		expect(mocks.delete).toHaveBeenNthCalledWith(
+			2,
+			mocks.schema.exerciseSecondaryMuscles,
+		);
+		expect(mocks.delete).toHaveBeenNthCalledWith(
+			3,
+			mocks.schema.exerciseInstructions,
+		);
+		expect(mocks.delete).toHaveBeenNthCalledWith(
+			4,
+			mocks.schema.exerciseImages,
+		);
+		expect(mocks.delete).toHaveBeenNthCalledWith(5, mocks.schema.exercises);
+		expect(mocks.eq).toHaveBeenCalledWith(
+			mocks.schema.exercises.id,
+			"exercise_1",
+		);
+	});
+});

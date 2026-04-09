@@ -134,4 +134,18 @@ describe("GET /api/admin/users", () => {
 		expect(itemsQuery.limit).toHaveBeenCalledWith(3);
 		expect(itemsQuery.offset).toHaveBeenCalledWith(3);
 	});
+
+	it("returns 400 for invalid pagination query parameters", async () => {
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/admin/users?page=0"),
+		});
+
+		expect(response.status).toBe(400);
+		await expect(response.json()).resolves.toEqual(
+			expect.objectContaining({
+				error: "Invalid query parameters",
+			}),
+		);
+		expect(mocks.select).not.toHaveBeenCalled();
+	});
 });
