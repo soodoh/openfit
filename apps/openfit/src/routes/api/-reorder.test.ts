@@ -163,6 +163,27 @@ describe("POST /api/set-groups/reorder", () => {
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
 		expect(mocks.updateSet).toHaveBeenCalledTimes(1);
 	});
+
+	it("returns the auth response when authentication throws a Response", async () => {
+		mocks.requireAuth.mockRejectedValue(
+			Response.json({ error: "Unauthorized" }, { status: 401 }),
+		);
+
+		const response = await setGroupHandlers.POST({
+			request: new Request("http://localhost/api/set-groups/reorder", {
+				method: "POST",
+				body: JSON.stringify({
+					setGroupIds: ["group_1"],
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.findFirstWorkoutSetGroup).not.toHaveBeenCalled();
+		expect(mocks.updateSet).not.toHaveBeenCalled();
+	});
 });
 
 describe("POST /api/sets/reorder", () => {
@@ -289,5 +310,28 @@ describe("POST /api/sets/reorder", () => {
 		expect(response.status).toBe(403);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
 		expect(mocks.updateSet).toHaveBeenCalledTimes(1);
+	});
+
+	it("returns the auth response when authentication throws a Response", async () => {
+		mocks.requireAuth.mockRejectedValue(
+			Response.json({ error: "Unauthorized" }, { status: 401 }),
+		);
+
+		const response = await setHandlers.POST({
+			request: new Request("http://localhost/api/sets/reorder", {
+				method: "POST",
+				body: JSON.stringify({
+					setGroupId: "group_1",
+					setIds: ["set_1"],
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.findFirstWorkoutSetGroup).not.toHaveBeenCalled();
+		expect(mocks.findFirstWorkoutSet).not.toHaveBeenCalled();
+		expect(mocks.updateSet).not.toHaveBeenCalled();
 	});
 });

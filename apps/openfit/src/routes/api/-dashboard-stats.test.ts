@@ -131,4 +131,18 @@ describe("GET /api/dashboard/stats", () => {
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
 		expect(mocks.select).not.toHaveBeenCalled();
 	});
+
+	it("returns the auth response when authentication throws a Response", async () => {
+		mocks.requireAuth.mockRejectedValue(
+			Response.json({ error: "Unauthorized" }, { status: 401 }),
+		);
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/dashboard/stats"),
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.select).not.toHaveBeenCalled();
+	});
 });
