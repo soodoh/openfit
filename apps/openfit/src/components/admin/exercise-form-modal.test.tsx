@@ -267,6 +267,31 @@ describe("ExerciseFormModal", () => {
 		expect(screen.getByText("Add Exercise")).toBeInTheDocument();
 	});
 
+	it("shows a no-preview placeholder for blank image entries and ignores empty file selections", () => {
+		imageSeed = [
+			{
+				type: "new",
+				file: undefined as never,
+				url: undefined as never,
+			},
+		];
+
+		const { container } = render(
+			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
+		);
+
+		expect(screen.getByText("No preview")).toBeInTheDocument();
+
+		const input = container.querySelector('input[type="file"]');
+		expect(input).toBeTruthy();
+
+		fireEvent.change(input as HTMLInputElement, {
+			target: { files: null },
+		});
+
+		expect(mockAddFiles).not.toHaveBeenCalled();
+	});
+
 	it("shows edit mode copy and a pending submit state", () => {
 		formSeed = {
 			...formSeed,
@@ -322,6 +347,66 @@ describe("ExerciseFormModal", () => {
 		expect(mockUpdateExercise).not.toHaveBeenCalled();
 		expect(mockUploadFile).not.toHaveBeenCalled();
 		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it("removes extra instruction rows and keeps a single row", async () => {
+		formSeed = {
+			...formSeed,
+			instructions: ["Set up", "Drive up"],
+		};
+
+		const { container } = render(
+			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
+		);
+
+		expect(
+			screen.getAllByPlaceholderText("Enter instruction step"),
+		).toHaveLength(2);
+
+		const removeButtons = container.querySelectorAll("button.shrink-0");
+		expect(removeButtons).toHaveLength(2);
+
+		fireEvent.click(removeButtons[0] as HTMLButtonElement);
+
+		expect(
+			await screen.findAllByPlaceholderText("Enter instruction step"),
+		).toHaveLength(1);
+	});
+
+	it("updates instruction text and opens the file picker", () => {
+		const clickSpy = vi
+			.spyOn(HTMLInputElement.prototype, "click")
+			.mockImplementation(() => {});
+		formSeed = {
+			...formSeed,
+			instructions: [""],
+			secondaryMuscleIds: ["muscle-2"],
+		};
+		adminDataSeed = {
+			equipment: [{ id: "equipment-1", name: "Barbell" }],
+			categories: [{ id: "category-1", name: "Chest" }],
+			muscleGroups: [
+				{ id: "muscle-1", name: "Pectorals" },
+				{ id: "muscle-2", name: "Delts" },
+			],
+		};
+
+		render(<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />);
+
+		fireEvent.change(screen.getByPlaceholderText("Enter instruction step"), {
+			target: { value: "Brace the core" },
+		});
+		expect(screen.getByDisplayValue("Brace the core")).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Add Step" }));
+		expect(
+			screen.getAllByPlaceholderText("Enter instruction step"),
+		).toHaveLength(2);
+
+		fireEvent.click(screen.getByRole("button", { name: "Add Images" }));
+		expect(clickSpy).toHaveBeenCalledTimes(1);
+
+		clickSpy.mockRestore();
 	});
 
 	it("validates category and primary muscle requirements in order", async () => {

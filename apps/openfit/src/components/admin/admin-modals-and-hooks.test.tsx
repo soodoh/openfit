@@ -159,6 +159,36 @@ describe("admin modals and form state", () => {
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
+	it("leaves a closed lookup modal untouched until it opens", () => {
+		const onSubmit = vi.fn().mockResolvedValue(undefined);
+		const onClose = vi.fn();
+		const { rerender } = render(
+			<LookupFormModal
+				open={false}
+				onClose={onClose}
+				title="Equipment"
+				item={undefined}
+				onSubmit={onSubmit}
+				isPending={false}
+			/>,
+		);
+
+		expect(screen.queryByLabelText("Name")).not.toBeInTheDocument();
+
+		rerender(
+			<LookupFormModal
+				open
+				onClose={onClose}
+				title="Equipment"
+				item={{ id: "equipment-1", name: "Barbell" }}
+				onSubmit={onSubmit}
+				isPending={false}
+			/>,
+		);
+
+		expect(screen.getByLabelText("Name")).toHaveValue("Barbell");
+	});
+
 	it("validates lookup names before submitting", () => {
 		const onSubmit = vi.fn().mockResolvedValue(undefined);
 		const onClose = vi.fn();

@@ -569,6 +569,40 @@ describe("admin tables", () => {
 		});
 	});
 
+	it("uses a custom OIDC provider label when the environment provides one", async () => {
+		vi.stubEnv("VITE_AUTH_OIDC_PROVIDER_NAME", "Acme SSO");
+		vi.resetModules();
+
+		const { AuthProvidersTable: FreshAuthProvidersTable } = await import(
+			"./auth-providers-table"
+		);
+		const fetchMock = vi.fn().mockResolvedValue(
+			Response.json({
+				google: false,
+				github: false,
+				discord: false,
+				oidc: true,
+			}),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+
+		render(<FreshAuthProvidersTable />);
+
+		await waitFor(() => {
+			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
+			expect(screen.getByText("Acme SSO")).toBeInTheDocument();
+			expect(
+				screen.getByText(
+					"Requires: AUTH_OIDC_CLIENT_ID, AUTH_OIDC_CLIENT_SECRET, AUTH_OIDC_ISSUER",
+				),
+			).toBeInTheDocument();
+			expect(screen.getByText("Configured")).toBeInTheDocument();
+		});
+
+		vi.unstubAllEnvs();
+		vi.resetModules();
+	});
+
 	it("keeps auth providers visible when the status request fails", async () => {
 		const fetchMock = vi.fn().mockRejectedValueOnce(new Error("network down"));
 		vi.stubGlobal("fetch", fetchMock);
@@ -581,6 +615,33 @@ describe("admin tables", () => {
 
 		expect(screen.getByText("Google")).toBeInTheDocument();
 		expect(screen.getAllByText("Not configured")).toHaveLength(4);
+	});
+
+	it("ignores provider status updates after the component unmounts", async () => {
+		let resolveResponse: (response: Response) => void = () => undefined;
+		const fetchMock = vi.fn(
+			() =>
+				new Promise<Response>((resolve) => {
+					resolveResponse = resolve;
+				}),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+
+		const { unmount } = render(<AuthProvidersTable />);
+		unmount();
+
+		resolveResponse(
+			Response.json({
+				google: true,
+				github: true,
+				discord: true,
+				oidc: true,
+			}),
+		);
+
+		await waitFor(() => {
+			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
+		});
 	});
 
 	it("shows empty lookup results when the search returns no items", () => {
@@ -610,5 +671,79 @@ describe("admin tables", () => {
 		expect(
 			screen.getByText('No equipment found matching "rope"'),
 		).toBeInTheDocument();
+	});
+
+	it("shows empty exercise search results when no exercises match", () => {
+		exercisesSeed = {
+			data: {
+				items: [],
+				total: 0,
+				page: 1,
+				pageSize: 10,
+			},
+			isLoading: false,
+		};
+		mockUseAdminExercisesPaginated.mockReturnValue(exercisesSeed);
+
+		render(<ExerciseTable />);
+
+		fireEvent.change(screen.getByPlaceholderText("Search exercises..."), {
+			target: { value: "rope" },
+		});
+
+		expect(
+			screen.getByText('No exercises found matching "rope"'),
+		).toBeInTheDocument();
+	});
+
+	it("updates exercise search and pagination controls", () => {
+		exercisesSeed = {
+			data: {
+				items: [
+					{
+						id: "exercise-1",
+						name: "Bench Press",
+						level: "beginner",
+						equipment: { id: "equipment-1", name: "Barbell" },
+						category: { id: "category-1", name: "Chest" },
+						primaryMuscles: [{ id: "muscle-1", name: "Pectorals" }],
+						secondaryMuscles: [],
+					},
+				],
+				total: 25,
+				page: 1,
+				pageSize: 10,
+			},
+			isLoading: false,
+		};
+		mockUseAdminExercisesPaginated.mockReturnValue(exercisesSeed);
+
+		render(<ExerciseTable />);
+
+		fireEvent.change(screen.getByPlaceholderText("Search exercises..."), {
+			target: { value: "press" },
+		});
+
+		expect(mockUseAdminExercisesPaginated).toHaveBeenLastCalledWith({
+			page: 1,
+			pageSize: 10,
+			search: "press",
+		});
+
+		fireEvent.click(screen.getAllByRole("button", { name: "Next page" })[0]);
+
+		expect(mockUseAdminExercisesPaginated).toHaveBeenLastCalledWith({
+			page: 2,
+			pageSize: 10,
+			search: "press",
+		});
+
+		fireEvent.click(screen.getAllByRole("button", { name: "Page size 20" })[0]);
+
+		expect(mockUseAdminExercisesPaginated).toHaveBeenLastCalledWith({
+			page: 1,
+			pageSize: 20,
+			search: "press",
+		});
 	});
 });
