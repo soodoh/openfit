@@ -24,8 +24,21 @@ vi.mock("@/components/sessions/current-session-page", () => ({
 }));
 
 vi.mock("@/components/sessions/edit-session-modal", () => ({
-	EditSessionModal: ({ open }: { open: boolean }) =>
-		open ? <div data-testid="edit-session-modal">modal open</div> : null,
+	EditSessionModal: ({
+		open,
+		onClose,
+	}: {
+		open: boolean;
+		onClose: () => void;
+	}) =>
+		open ? (
+			<div data-testid="edit-session-modal">
+				modal open
+				<button type="button" onClick={onClose}>
+					Close modal
+				</button>
+			</div>
+		) : null,
 }));
 
 vi.mock("@/components/ui/button", () => ({
@@ -70,6 +83,14 @@ describe("workout route", () => {
 		expect(screen.getByText("Loading...")).toBeInTheDocument();
 	});
 
+	it("shows a loading message while units are pending", () => {
+		mockUseUnits.mockReturnValue({ data: undefined, isLoading: true });
+
+		render(<WorkoutRoute.options.component />);
+
+		expect(screen.getByText("Loading...")).toBeInTheDocument();
+	});
+
 	it("shows the empty workout state and opens the new-session modal", async () => {
 		render(<WorkoutRoute.options.component />);
 
@@ -85,6 +106,17 @@ describe("workout route", () => {
 		await waitFor(() => {
 			expect(mockNavigate).toHaveBeenCalledWith({ to: "/" });
 		});
+	});
+
+	it("closes the new-session modal when it requests to close", () => {
+		render(<WorkoutRoute.options.component />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Start New Workout" }));
+		expect(screen.getByTestId("edit-session-modal")).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
+
+		expect(screen.queryByTestId("edit-session-modal")).not.toBeInTheDocument();
 	});
 
 	it("renders the current session page when a workout is active", () => {

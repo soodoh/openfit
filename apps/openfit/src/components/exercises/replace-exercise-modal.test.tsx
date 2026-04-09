@@ -139,6 +139,7 @@ describe("ReplaceExerciseModal", () => {
 					id: "exercise-2",
 					name: "Incline Press",
 					primaryMuscleIds: ["chest"],
+					imageUrl: "/incline.jpg",
 				},
 				{
 					id: "exercise-3",
@@ -287,5 +288,45 @@ describe("ReplaceExerciseModal", () => {
 			screen.getByRole("button", { name: "Home Gym" }),
 		).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Replace" })).toBeDisabled();
+	});
+
+	it("shows the selected exercise thumbnail and disables the action while replacing", async () => {
+		let resolveReplace: (() => void) | undefined;
+		mockReplaceExercise.mockImplementation(
+			() =>
+				new Promise<void>((resolve) => {
+					resolveReplace = resolve;
+				}),
+		);
+
+		render(
+			<ReplaceExerciseModal
+				open
+				onClose={vi.fn()}
+				currentExercise={{
+					id: "exercise-1",
+					name: "Bench Press",
+					primaryMuscleIds: ["chest"],
+				}}
+				setGroupId="set-group-1"
+			/>,
+		);
+
+		expect(
+			screen.getByRole("img", { name: "Incline Press thumbnail" }),
+		).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: /Incline Press/i }));
+		fireEvent.click(screen.getByRole("button", { name: "Replace" }));
+
+		expect(screen.getByRole("button", { name: "Replace" })).toBeDisabled();
+
+		resolveReplace?.();
+
+		await waitFor(() => {
+			expect(
+				screen.getByRole("button", { name: "Replace" }),
+			).not.toBeDisabled();
+		});
 	});
 });

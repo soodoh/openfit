@@ -216,6 +216,39 @@ describe("useProfileSettingsForm", () => {
 		expect(result.current.gymError).toBe("Failed to update gym");
 	});
 
+	it("falls back to the first available units when preferred unit names are missing", async () => {
+		mockUseUnits.mockReturnValue({
+			data: {
+				repetitionUnits: [
+					{ id: "rep-first", name: "Seconds" },
+					{ id: "rep-second", name: "Rounds" },
+				],
+				weightUnits: [
+					{ id: "weight-first", name: "stone" },
+					{ id: "weight-second", name: "oz" },
+				],
+			},
+			isLoading: false,
+		});
+		mockUseUserProfile.mockReturnValue({
+			data: {
+				...mockProfile,
+				defaultRepetitionUnitId: undefined,
+				defaultWeightUnitId: undefined,
+			},
+			isLoading: false,
+		});
+
+		const { result } = renderHook(() =>
+			useProfileSettingsForm({ open: true, onClose: vi.fn() }),
+		);
+
+		await waitFor(() => {
+			expect(result.current.defaultRepUnitId).toBe("rep-first");
+			expect(result.current.defaultWeightUnitId).toBe("weight-first");
+		});
+	});
+
 	it("rejects invalid theme and tab values", () => {
 		const onClose = vi.fn();
 		const { result } = renderHook(() =>
@@ -298,5 +331,30 @@ describe("useProfileSettingsForm", () => {
 
 		expect(result.current.gymError).toBe("Gym name is required");
 		expect(mockCreateGym).not.toHaveBeenCalled();
+	});
+
+	it("uses the fallback create error message for non-Error failures", async () => {
+		mockCreateGym.mockRejectedValueOnce("boom");
+		const { result } = renderHook(() =>
+			useProfileSettingsForm({ open: true, onClose: vi.fn() }),
+		);
+
+		await waitFor(() => {
+			expect(result.current.defaultRepUnitId).toBe("rep-default");
+		});
+
+		act(() => {
+			result.current.handleOpenAddGym();
+			result.current.setGymName("Garage Gym");
+			result.current.setSelectedEquipmentIds(["rack"]);
+		});
+
+		await act(async () => {
+			await result.current.handleSubmitGym({
+				preventDefault: vi.fn(),
+			} as never);
+		});
+
+		expect(result.current.gymError).toBe("Failed to create gym");
 	});
 });

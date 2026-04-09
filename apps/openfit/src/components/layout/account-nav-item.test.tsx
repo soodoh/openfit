@@ -22,8 +22,15 @@ vi.mock("@/hooks", () => ({
 }));
 
 vi.mock("@/components/profile/profile-modal", () => ({
-	ProfileModal: ({ open }: { open: boolean }) =>
-		open ? <div data-testid="profile-modal">profile modal</div> : null,
+	ProfileModal: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+		open ? (
+			<div data-testid="profile-modal">
+				profile modal
+				<button type="button" onClick={onClose}>
+					Close profile modal
+				</button>
+			</div>
+		) : null,
 }));
 
 vi.mock("@/components/ui/dropdown-menu", () => ({
@@ -98,5 +105,23 @@ describe("AccountNavItem", () => {
 		).not.toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Profile" })).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Logout" })).toBeInTheDocument();
+	});
+
+	it("closes the profile modal when it requests to close", () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: true });
+		mockUseUserProfile.mockReturnValue({
+			data: { role: "USER" },
+		});
+
+		render(<AccountNavItem />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Profile" }));
+		expect(screen.getByTestId("profile-modal")).toBeInTheDocument();
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Close profile modal" }),
+		);
+
+		expect(screen.queryByTestId("profile-modal")).not.toBeInTheDocument();
 	});
 });

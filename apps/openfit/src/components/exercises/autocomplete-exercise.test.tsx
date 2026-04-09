@@ -128,6 +128,7 @@ describe("AutocompleteExercise", () => {
 					id: "exercise-1",
 					name: "Bench Press",
 					primaryMuscleIds: ["chest"],
+					imageUrl: "/bench.jpg",
 				},
 				{
 					id: "exercise-2",
@@ -268,5 +269,34 @@ describe("AutocompleteExercise", () => {
 		fireEvent.keyDown(input, { key: "Enter" });
 
 		expect(screen.getByDisplayValue("Bench Press")).toBeInTheDocument();
+	});
+
+	it("renders exercise thumbnails and switches to all equipment from the menu", () => {
+		render(<ExerciseHarness />);
+
+		expect(
+			screen.getByRole("img", { name: "Bench Press thumbnail" }),
+		).toBeInTheDocument();
+
+		fireEvent.focus(screen.getByPlaceholderText("Search exercises..."));
+		fireEvent.click(screen.getByRole("button", { name: "All Equipment" }));
+
+		expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+		expect(mockUseExerciseSearch).toHaveBeenLastCalledWith("", undefined);
+	});
+
+	it("shows the empty state when no exercises match the search term", () => {
+		mockUseExerciseSearch.mockReturnValue({
+			data: [],
+			isLoading: false,
+		});
+
+		render(<ExerciseHarness />);
+
+		const input = screen.getByPlaceholderText("Search exercises...");
+		fireEvent.focus(input);
+		fireEvent.change(input, { target: { value: "zzz" } });
+
+		expect(screen.getByText("No exercises found")).toBeInTheDocument();
 	});
 });

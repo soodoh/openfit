@@ -180,4 +180,38 @@ describe("GymFormModal", () => {
 
 		expect(await screen.findByText("Failed to create gym")).toBeInTheDocument();
 	});
+
+	it("rejects whitespace-only gym names before create", async () => {
+		render(<GymFormModal open onClose={vi.fn()} />);
+
+		fireEvent.change(screen.getByLabelText("Gym Name"), {
+			target: { value: "   " },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Select equipment" }));
+		fireEvent.click(screen.getByRole("button", { name: "Save Gym" }));
+
+		expect(await screen.findByText("Gym name is required")).toBeInTheDocument();
+		expect(mockCreateGym).not.toHaveBeenCalled();
+	});
+
+	it("uses the fallback update error message for non-Error failures", async () => {
+		mockUpdateGym.mockRejectedValueOnce("boom");
+
+		render(
+			<GymFormModal
+				open
+				onClose={vi.fn()}
+				gym={{
+					id: "gym-1",
+					name: "Garage Gym",
+					equipmentIds: ["equipment-2"],
+				}}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Select equipment" }));
+		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+		expect(await screen.findByText("Failed to update gym")).toBeInTheDocument();
+	});
 });
