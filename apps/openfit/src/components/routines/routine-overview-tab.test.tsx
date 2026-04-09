@@ -167,6 +167,37 @@ describe("RoutineOverviewTab", () => {
 		expect(screen.getByRole("dialog")).toHaveTextContent("Delete Day Modal");
 	});
 
+	it("does not navigate when starting a workout does not return a session id", async () => {
+		mockCreateSession.mockResolvedValueOnce(null);
+
+		const routine = buildRoutine([
+			{
+				id: "day-1",
+				routineId: "routine-1",
+				userId: "user-1",
+				description: "Pull Day",
+				createdAt: new Date("2026-03-01T00:00:00.000Z"),
+				updatedAt: new Date("2026-03-01T00:00:00.000Z"),
+				weekdays: [],
+			},
+		]);
+
+		render(
+			<RoutineOverviewTab
+				routine={routine}
+				currentSession={undefined}
+				onSelectDay={vi.fn()}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Start" }));
+
+		await waitFor(() => {
+			expect(mockCreateSession).toHaveBeenCalledWith({ templateId: "day-1" });
+		});
+		expect(mockNavigate).not.toHaveBeenCalled();
+	});
+
 	it("opens the add-day modal from the empty state", () => {
 		render(
 			<RoutineOverviewTab

@@ -13,8 +13,15 @@ vi.mock("dayjs", () => {
 });
 
 vi.mock("./routine-modal", () => ({
-	RoutineModal: ({ open }: { open: boolean }) =>
-		open ? <div role="dialog">Routine modal body</div> : null,
+	RoutineModal: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+		open ? (
+			<div role="dialog">
+				Routine modal body
+				<button type="button" onClick={onClose}>
+					Close routine modal
+				</button>
+			</div>
+		) : null,
 }));
 
 const routine = {
@@ -48,5 +55,29 @@ describe("RoutineCard", () => {
 		fireEvent.click(screen.getByText("Strength Plan"));
 
 		expect(screen.getByRole("dialog")).toHaveTextContent("Routine modal body");
+		fireEvent.click(
+			screen.getByRole("button", { name: "Close routine modal" }),
+		);
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+	});
+
+	it("renders the routine description and plural day label", () => {
+		const pluralRoutine = {
+			...routine,
+			description: "Upper and lower body split",
+			routineDays: [
+				...routine.routineDays,
+				{
+					...routine.routineDays[0],
+					id: "day-2",
+					description: "Push Day",
+				},
+			],
+		} as RoutineWithDays;
+
+		render(<RoutineCard routine={pluralRoutine} currentSession={undefined} />);
+
+		expect(screen.getByText("Upper and lower body split")).toBeInTheDocument();
+		expect(screen.getByText("2 days")).toBeInTheDocument();
 	});
 });

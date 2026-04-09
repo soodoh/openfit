@@ -135,4 +135,34 @@ describe("use-countdown-timer", () => {
 		);
 		expect(clearIntervalSpy).toHaveBeenLastCalledWith(createdIntervalId);
 	});
+
+	it("stays stopped when initialized or restarted with an already expired timestamp", () => {
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date("2026-02-01T10:00:00.000Z"));
+		const onExpire = vi.fn();
+
+		const { result } = renderHook(() =>
+			useCountdownTimer({
+				expiryTimestamp: new Date(Date.now() - 1000),
+				autoStart: true,
+				onExpire,
+			}),
+		);
+
+		expect(result.current.totalSeconds).toBe(0);
+		expect(result.current.isRunning).toBe(false);
+
+		act(() => {
+			result.current.start();
+		});
+		expect(result.current.isRunning).toBe(false);
+
+		act(() => {
+			result.current.restart(new Date(Date.now() - 2000));
+		});
+
+		expect(result.current.totalSeconds).toBe(0);
+		expect(result.current.isRunning).toBe(false);
+		expect(onExpire).not.toHaveBeenCalled();
+	});
 });

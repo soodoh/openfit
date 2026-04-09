@@ -4,7 +4,23 @@ import type { RoutineWithDays } from "@/lib/types";
 import { RoutineModal } from "./routine-modal";
 
 vi.mock("./routine-overview-tab", () => ({
-	RoutineOverviewTab: () => <div>Overview body</div>,
+	RoutineOverviewTab: ({
+		onSelectDay,
+		onDayAdded,
+	}: {
+		onSelectDay: (dayId: string) => void;
+		onDayAdded?: (dayId: string) => void;
+	}) => (
+		<div>
+			<div>Overview body</div>
+			<button type="button" onClick={() => onSelectDay("day-2")}>
+				Select day 2
+			</button>
+			<button type="button" onClick={() => onDayAdded?.("day-3")}>
+				Add day 3
+			</button>
+		</div>
+	),
 }));
 
 vi.mock("./routine-day-tab", () => ({
@@ -98,6 +114,79 @@ describe("RoutineModal", () => {
 		expect(screen.getByText("Day tab day-1")).toBeInTheDocument();
 		fireEvent.click(screen.getByRole("button", { name: "Delete this day" }));
 		expect(screen.getByText("Overview body")).toBeInTheDocument();
+	});
+
+	it("switches to a selected day from the overview tab", () => {
+		render(
+			<RoutineModal
+				open
+				onClose={vi.fn()}
+				routine={mockRoutine}
+				currentSession={undefined}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Select day 2" }));
+		expect(screen.getByText("Day tab day-2")).toBeInTheDocument();
+		expect(screen.queryByText("Overview body")).not.toBeInTheDocument();
+	});
+
+	it("switches to a newly added day from the overview tab", () => {
+		const updatedRoutine = {
+			...mockRoutine,
+			routineDays: [
+				...mockRoutine.routineDays,
+				{
+					id: "day-3",
+					routineId: "routine-1",
+					userId: "user-1",
+					description: "Legs",
+					createdAt: new Date("2026-03-01T00:00:00.000Z"),
+					updatedAt: new Date("2026-03-01T00:00:00.000Z"),
+					weekdays: [],
+				},
+			],
+		};
+
+		const { rerender } = render(
+			<RoutineModal
+				open
+				onClose={vi.fn()}
+				routine={mockRoutine}
+				currentSession={undefined}
+			/>,
+		);
+
+		rerender(
+			<RoutineModal
+				open={false}
+				onClose={vi.fn()}
+				routine={mockRoutine}
+				currentSession={undefined}
+			/>,
+		);
+		rerender(
+			<RoutineModal
+				open
+				onClose={vi.fn()}
+				routine={mockRoutine}
+				currentSession={undefined}
+				initialTab="overview"
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Add day 3" }));
+		rerender(
+			<RoutineModal
+				open
+				onClose={vi.fn()}
+				routine={updatedRoutine}
+				currentSession={undefined}
+				initialTab="overview"
+			/>,
+		);
+		expect(screen.getByText("Day tab day-3")).toBeInTheDocument();
+		expect(screen.queryByText("Overview body")).not.toBeInTheDocument();
 	});
 
 	it("resets to the initial tab when the modal is reopened", () => {

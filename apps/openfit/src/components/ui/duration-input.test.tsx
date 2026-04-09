@@ -93,4 +93,60 @@ describe("DurationInput", () => {
 		});
 		expect(onChange).toHaveBeenCalledWith("");
 	});
+
+	it("rejects malformed duration input", () => {
+		const onChange = vi.fn();
+
+		function Harness() {
+			const [value, setValue] = React.useState("");
+			return React.createElement(DurationInput, {
+				value,
+				onChange: (next) => {
+					onChange(next);
+					setValue(next);
+				},
+				"aria-label": "Duration",
+			});
+		}
+
+		render(React.createElement(Harness));
+
+		for (const nextValue of ["1a:30", "12::30", "1234", "1:60", "1:70"]) {
+			fireEvent.change(screen.getByLabelText("Duration"), {
+				target: { value: nextValue },
+			});
+		}
+
+		expect(onChange).not.toHaveBeenCalled();
+	});
+
+	it("rejects overlong minute and second values", () => {
+		const onChange = vi.fn();
+
+		function Harness() {
+			const [value, setValue] = React.useState("");
+			return React.createElement(DurationInput, {
+				value,
+				onChange: (next) => {
+					onChange(next);
+					setValue(next);
+				},
+				"aria-label": "Duration",
+			});
+		}
+
+		render(React.createElement(Harness));
+
+		fireEvent.change(screen.getByLabelText("Duration"), {
+			target: { value: "1234:5" },
+		});
+		fireEvent.change(screen.getByLabelText("Duration"), {
+			target: { value: "12:345" },
+		});
+		fireEvent.change(screen.getByLabelText("Duration"), {
+			target: { value: "1:6" },
+		});
+
+		expect(onChange).not.toHaveBeenCalled();
+	});
 });

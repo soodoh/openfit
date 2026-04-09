@@ -11,9 +11,14 @@ import {
 	CardTitle,
 } from "./card";
 import {
+	Command,
 	CommandDialog,
+	CommandEmpty,
+	CommandGroup,
 	CommandInput,
 	CommandItem,
+	CommandList,
+	CommandSeparator,
 	CommandShortcut,
 } from "./command";
 import {
@@ -313,6 +318,53 @@ describe("shared ui wrappers", () => {
 			target: { value: "50" },
 		});
 		expect(onPageSizeChange).toHaveBeenCalledWith(50);
+
+		fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+		fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+		expect(onPrevPage).toHaveBeenCalledTimes(1);
+		expect(onNextPage).toHaveBeenCalledTimes(1);
+	});
+
+	it("renders compact pagination without ellipses for small page counts", () => {
+		render(
+			<Pagination
+				currentPage={3}
+				totalPages={4}
+				startIndex={21}
+				endIndex={30}
+				totalItems={40}
+				pageSize={10}
+				onPageChange={vi.fn()}
+				onPrevPage={vi.fn()}
+				onNextPage={vi.fn()}
+				onPageSizeChange={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByRole("button", { name: "1" })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "4" })).toBeInTheDocument();
+		expect(screen.queryByText("...")).not.toBeInTheDocument();
+	});
+
+	it("renders ellipses when the current page is near the end", () => {
+		render(
+			<Pagination
+				currentPage={4}
+				totalPages={8}
+				startIndex={51}
+				endIndex={60}
+				totalItems={80}
+				pageSize={10}
+				onPageChange={vi.fn()}
+				onPrevPage={vi.fn()}
+				onNextPage={vi.fn()}
+				onPageSizeChange={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getAllByText("...")).toHaveLength(2);
+		expect(screen.getByRole("button", { name: "1" })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "8" })).toBeInTheDocument();
 	});
 
 	it("renders the no-results pagination state", () => {
@@ -429,5 +481,30 @@ describe("shared ui wrappers", () => {
 		expect(
 			container.querySelector("[data-cmdk-input-wrapper]"),
 		).toBeInTheDocument();
+	});
+
+	it("renders the command list wrappers and separators", () => {
+		const { container } = render(
+			<Command className="custom-command">
+				<CommandInput placeholder="Search commands" />
+				<CommandList className="custom-list">
+					<CommandEmpty className="custom-empty">Nothing found</CommandEmpty>
+					<CommandGroup className="custom-group" heading="Actions">
+						<CommandItem className="custom-item">Open</CommandItem>
+					</CommandGroup>
+					<CommandSeparator className="custom-separator" />
+				</CommandList>
+				<CommandShortcut className="custom-shortcut">⌘K</CommandShortcut>
+			</Command>,
+		);
+
+		expect(container.firstElementChild).toHaveClass("custom-command");
+		expect(screen.getByPlaceholderText("Search commands")).toBeInTheDocument();
+		expect(screen.getByText("Nothing found")).toHaveClass("custom-empty");
+		expect(container.querySelector(".custom-group")).toBeInTheDocument();
+		expect(screen.getByText("Open")).toHaveClass("custom-item");
+		expect(screen.getByText("⌘K")).toHaveClass("custom-shortcut");
+		expect(container.querySelector(".custom-list")).toBeInTheDocument();
+		expect(container.querySelector(".custom-separator")).toBeInTheDocument();
 	});
 });

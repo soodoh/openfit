@@ -122,6 +122,7 @@ export function Pagination({
 					onClick={onPrevPage}
 					disabled={singlePage || currentPage === 1}
 					className="h-8 w-8 p-0"
+					aria-label="Previous page"
 				>
 					<ChevronLeft className="h-4 w-4" />
 				</Button>
@@ -132,6 +133,7 @@ export function Pagination({
 					onClick={onNextPage}
 					disabled={singlePage || currentPage === totalPages}
 					className="h-8 w-8 p-0"
+					aria-label="Next page"
 				>
 					<ChevronRight className="h-4 w-4" />
 				</Button>
