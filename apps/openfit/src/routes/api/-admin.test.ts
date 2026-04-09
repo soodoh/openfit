@@ -131,6 +131,11 @@ describe("GET /api/admin/users", () => {
 			mocks.schema.users.email,
 			"%athlete%",
 		);
+		expect(totalQuery.where).toHaveBeenCalledWith({
+			type: "like",
+			left: mocks.schema.users.email,
+			right: "%athlete%",
+		});
 		expect(itemsQuery.limit).toHaveBeenCalledWith(3);
 		expect(itemsQuery.offset).toHaveBeenCalledWith(3);
 	});

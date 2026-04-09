@@ -200,6 +200,11 @@ describe("GET /api/admin/exercises", () => {
 			mocks.schema.exercises.name,
 			"%press%",
 		);
+		expect(totalQuery.where).toHaveBeenCalledWith({
+			type: "like",
+			left: mocks.schema.exercises.name,
+			right: "%press%",
+		});
 		expect(mocks.findManyExercises).toHaveBeenCalledWith({
 			with: {
 				equipment: true,
@@ -316,6 +321,13 @@ describe("POST /api/admin/exercises", () => {
 	});
 
 	it("creates an exercise and related records", async () => {
+		mocks.createId
+			.mockReturnValueOnce("exercise_1")
+			.mockReturnValueOnce("primary_1")
+			.mockReturnValueOnce("secondary_1")
+			.mockReturnValueOnce("instruction_1")
+			.mockReturnValueOnce("image_1");
+
 		const response = await handlers.POST({
 			request: new Request("http://localhost/api/admin/exercises", {
 				method: "POST",
@@ -363,6 +375,36 @@ describe("POST /api/admin/exercises", () => {
 			equipmentId: "barbell",
 			categoryId: "chest",
 		});
+		expect(mocks.insertValues).toHaveBeenNthCalledWith(2, [
+			{
+				id: "primary_1",
+				exerciseId: "exercise_1",
+				muscleGroupId: "chest",
+			},
+		]);
+		expect(mocks.insertValues).toHaveBeenNthCalledWith(3, [
+			{
+				id: "secondary_1",
+				exerciseId: "exercise_1",
+				muscleGroupId: "triceps",
+			},
+		]);
+		expect(mocks.insertValues).toHaveBeenNthCalledWith(4, [
+			{
+				id: "instruction_1",
+				exerciseId: "exercise_1",
+				instruction: "Lie back",
+				order: 0,
+			},
+		]);
+		expect(mocks.insertValues).toHaveBeenNthCalledWith(5, [
+			{
+				id: "image_1",
+				exerciseId: "exercise_1",
+				path: "/bench.jpg",
+				order: 0,
+			},
+		]);
 	});
 
 	it("returns 500 when creating an exercise throws an unexpected error", async () => {

@@ -160,6 +160,12 @@ describe("PATCH /api/admin/exercises/:id", () => {
 	});
 
 	it("updates the exercise and its related records", async () => {
+		mocks.createId
+			.mockReturnValueOnce("primary_1")
+			.mockReturnValueOnce("secondary_1")
+			.mockReturnValueOnce("instruction_1")
+			.mockReturnValueOnce("image_1");
+
 		const response = await handlers.PATCH({
 			request: new Request("http://localhost/api/admin/exercises/exercise_1", {
 				method: "PATCH",
@@ -183,6 +189,19 @@ describe("PATCH /api/admin/exercises/:id", () => {
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ success: true });
 		expect(mocks.update).toHaveBeenCalledWith(mocks.schema.exercises);
+		expect(mocks.updateSet).toHaveBeenCalledWith({
+			name: "Updated Bench Press",
+			level: "intermediate",
+			force: "push",
+			mechanic: "compound",
+			equipmentId: "barbell",
+			categoryId: "chest",
+		});
+		expect(mocks.updateWhere).toHaveBeenCalledWith({
+			type: "eq",
+			left: mocks.schema.exercises.id,
+			right: "exercise_1",
+		});
 		expect(mocks.findFirstExercise).toHaveBeenCalledWith({
 			where: {
 				type: "eq",
@@ -206,6 +225,26 @@ describe("PATCH /api/admin/exercises/:id", () => {
 			4,
 			mocks.schema.exerciseImages,
 		);
+		expect(mocks.deleteWhere).toHaveBeenNthCalledWith(1, {
+			type: "eq",
+			left: mocks.schema.exercisePrimaryMuscles.exerciseId,
+			right: "exercise_1",
+		});
+		expect(mocks.deleteWhere).toHaveBeenNthCalledWith(2, {
+			type: "eq",
+			left: mocks.schema.exerciseSecondaryMuscles.exerciseId,
+			right: "exercise_1",
+		});
+		expect(mocks.deleteWhere).toHaveBeenNthCalledWith(3, {
+			type: "eq",
+			left: mocks.schema.exerciseInstructions.exerciseId,
+			right: "exercise_1",
+		});
+		expect(mocks.deleteWhere).toHaveBeenNthCalledWith(4, {
+			type: "eq",
+			left: mocks.schema.exerciseImages.exerciseId,
+			right: "exercise_1",
+		});
 		expect(mocks.insert).toHaveBeenNthCalledWith(
 			1,
 			mocks.schema.exercisePrimaryMuscles,
@@ -222,6 +261,60 @@ describe("PATCH /api/admin/exercises/:id", () => {
 			4,
 			mocks.schema.exerciseImages,
 		);
+		expect(mocks.insertValues).toHaveBeenNthCalledWith(1, [
+			{
+				id: "primary_1",
+				exerciseId: "exercise_1",
+				muscleGroupId: "chest",
+			},
+		]);
+		expect(mocks.insertValues).toHaveBeenNthCalledWith(2, [
+			{
+				id: "secondary_1",
+				exerciseId: "exercise_1",
+				muscleGroupId: "triceps",
+			},
+		]);
+		expect(mocks.insertValues).toHaveBeenNthCalledWith(3, [
+			{
+				id: "instruction_1",
+				exerciseId: "exercise_1",
+				instruction: "Lie back",
+				order: 0,
+			},
+		]);
+		expect(mocks.insertValues).toHaveBeenNthCalledWith(4, [
+			{
+				id: "image_1",
+				exerciseId: "exercise_1",
+				path: "/bench.jpg",
+				order: 0,
+			},
+		]);
+	});
+
+	it("leaves related records untouched when arrays are omitted from the patch", async () => {
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/admin/exercises/exercise_1", {
+				method: "PATCH",
+				body: JSON.stringify({ name: "Renamed Bench Press" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "exercise_1" },
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({ success: true });
+		expect(mocks.updateSet).toHaveBeenCalledWith({
+			name: "Renamed Bench Press",
+			level: undefined,
+			force: undefined,
+			mechanic: undefined,
+			equipmentId: undefined,
+			categoryId: undefined,
+		});
+		expect(mocks.delete).not.toHaveBeenCalled();
+		expect(mocks.insert).not.toHaveBeenCalled();
 	});
 
 	it("returns 500 when updating an exercise throws an unexpected error", async () => {
