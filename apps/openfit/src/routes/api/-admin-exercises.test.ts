@@ -246,6 +246,23 @@ describe("GET /api/admin/exercises", () => {
 			offset: 1,
 		});
 	});
+
+	it("returns 500 when fetching exercises throws an unexpected error", async () => {
+		const totalQuery = createCountQuery([{ count: 2 }]);
+		mocks.select.mockReturnValueOnce(totalQuery);
+		mocks.findManyExercises.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await handlers.GET({
+			request: new Request(
+				"http://localhost/api/admin/exercises?page=2&pageSize=1&search=press",
+			),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to fetch exercises",
+		});
+	});
 });
 
 describe("POST /api/admin/exercises", () => {

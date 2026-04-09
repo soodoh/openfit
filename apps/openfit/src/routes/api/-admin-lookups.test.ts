@@ -164,6 +164,26 @@ describe("GET /api/admin/lookups", () => {
 		expect(itemsQuery.limit).toHaveBeenCalledWith(3);
 		expect(itemsQuery.offset).toHaveBeenCalledWith(3);
 	});
+
+	it("returns 500 when fetching lookups throws an unexpected error", async () => {
+		const totalQuery = createCountQuery([{ count: 7 }]);
+		const itemsQuery = createItemsQuery([]);
+		itemsQuery.offset.mockRejectedValueOnce(new Error("boom"));
+		mocks.select
+			.mockReturnValueOnce(totalQuery)
+			.mockReturnValueOnce(itemsQuery);
+
+		const response = await handlers.GET({
+			request: new Request(
+				"http://localhost/api/admin/lookups?type=equipment&page=2&pageSize=3&search=cable",
+			),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to fetch lookups",
+		});
+	});
 });
 
 describe("POST /api/admin/lookups", () => {
