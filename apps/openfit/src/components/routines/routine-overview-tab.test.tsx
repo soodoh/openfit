@@ -1,7 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { RoutineWithDays } from "@/lib/types";
+import type { RoutineWithDays, WorkoutSessionWithData } from "@/lib/types";
 import { RoutineOverviewTab } from "./routine-overview-tab";
 
 const mockNavigate = vi.fn();
@@ -62,8 +61,21 @@ vi.mock("./edit-routine-modal", () => ({
 }));
 
 vi.mock("./edit-day-modal", () => ({
-	EditDayModal: ({ open }: { open: boolean }) =>
-		open ? <div role="dialog">Add Day Modal</div> : null,
+	EditDayModal: ({
+		open,
+		onSuccess,
+	}: {
+		open: boolean;
+		onSuccess?: (dayId: string) => void;
+	}) =>
+		open ? (
+			<div role="dialog">
+				<div>Add Day Modal</div>
+				<button type="button" onClick={() => onSuccess?.("day-3")}>
+					Confirm Add Day
+				</button>
+			</div>
+		) : null,
 }));
 
 vi.mock("./delete-routine-modal", () => ({
@@ -166,5 +178,47 @@ describe("RoutineOverviewTab", () => {
 
 		fireEvent.click(screen.getByRole("button", { name: "Add Workout Day" }));
 		expect(screen.getByRole("dialog")).toHaveTextContent("Add Day Modal");
+	});
+
+	it("propagates the added day id from the modal", () => {
+		const onDayAdded = vi.fn();
+
+		render(
+			<RoutineOverviewTab
+				routine={buildRoutine([])}
+				currentSession={undefined}
+				onSelectDay={vi.fn()}
+				onDayAdded={onDayAdded}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Add Workout Day" }));
+		fireEvent.click(screen.getByRole("button", { name: "Confirm Add Day" }));
+
+		expect(onDayAdded).toHaveBeenCalledWith("day-3");
+	});
+
+	it("disables the day start action while a session is already active", () => {
+		const routine = buildRoutine([
+			{
+				id: "day-1",
+				routineId: "routine-1",
+				userId: "user-1",
+				description: "Pull Day",
+				createdAt: new Date("2026-03-01T00:00:00.000Z"),
+				updatedAt: new Date("2026-03-01T00:00:00.000Z"),
+				weekdays: [],
+			},
+		]);
+
+		render(
+			<RoutineOverviewTab
+				routine={routine}
+				currentSession={{ id: "session-1" } as WorkoutSessionWithData}
+				onSelectDay={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByRole("button", { name: "Start" })).toBeDisabled();
 	});
 });

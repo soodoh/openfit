@@ -1,6 +1,22 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { WeekdaySelector } from "./weekday-selector";
+
+function WeekdaySelectorHarness({
+	initialWeekdays,
+}: {
+	initialWeekdays: number[];
+}) {
+	const [selectedWeekdays, setSelectedWeekdays] = useState(initialWeekdays);
+
+	return (
+		<WeekdaySelector
+			selectedWeekdays={selectedWeekdays}
+			onChange={setSelectedWeekdays}
+		/>
+	);
+}
 
 describe("WeekdaySelector", () => {
 	it("toggles weekdays in sorted order", () => {
@@ -40,5 +56,14 @@ describe("WeekdaySelector", () => {
 
 		expect(onChange).not.toHaveBeenCalled();
 		expect(screen.getByRole("button", { name: "Sunday" })).toBeDisabled();
+	});
+
+	it("removes a selected weekday and hides the summary when none remain", () => {
+		render(<WeekdaySelectorHarness initialWeekdays={[1]} />);
+
+		expect(screen.getByText(/Selected:/)).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Monday" }));
+
+		expect(screen.queryByText(/Selected:/)).not.toBeInTheDocument();
 	});
 });

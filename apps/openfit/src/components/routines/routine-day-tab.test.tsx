@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { RoutineDay, Units } from "@/lib/types";
+import type { RoutineDay, Units, WorkoutSessionWithData } from "@/lib/types";
 import { RoutineDayTab } from "./routine-day-tab";
 
 const mockUnits: Units = {
@@ -25,14 +25,16 @@ const mockNavigate = vi.fn();
 const mockUpdateRoutineDay = vi.fn();
 const mockCreateSession = vi.fn();
 const mockDeleteRoutineDay = vi.fn();
+let mockRoutineDayValue: typeof mockRoutineDay | undefined = mockRoutineDay;
+let mockUnitsValue: Units | undefined = mockUnits;
 
 vi.mock("@tanstack/react-router", () => ({
 	useNavigate: () => mockNavigate,
 }));
 
 vi.mock("@/hooks", () => ({
-	useRoutineDay: () => ({ data: mockRoutineDay }),
-	useUnits: () => ({ data: mockUnits }),
+	useRoutineDay: () => ({ data: mockRoutineDayValue }),
+	useUnits: () => ({ data: mockUnitsValue }),
 	useUpdateRoutineDay: () => ({
 		mutateAsync: mockUpdateRoutineDay,
 	}),
@@ -51,6 +53,8 @@ vi.mock("@/components/workoutSet/workout-list", () => ({
 describe("RoutineDayTab", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockRoutineDayValue = mockRoutineDay;
+		mockUnitsValue = mockUnits;
 		mockUpdateRoutineDay.mockResolvedValue({});
 		mockCreateSession.mockResolvedValue({ id: "session-1" });
 		mockDeleteRoutineDay.mockResolvedValue({});
@@ -106,5 +110,35 @@ describe("RoutineDayTab", () => {
 
 		fireEvent.click(screen.getByRole("button", { name: "Delete Day" }));
 		expect(screen.getByRole("dialog")).toHaveTextContent("Delete Workout Day");
+	});
+
+	it("shows a loading spinner while the day or units are unavailable", () => {
+		mockRoutineDayValue = undefined;
+		mockUnitsValue = undefined;
+
+		const { container } = render(
+			<RoutineDayTab
+				dayId="day-1"
+				currentSession={undefined}
+				onDeleted={vi.fn()}
+			/>,
+		);
+
+		expect(container.querySelector("svg.animate-spin")).toBeInTheDocument();
+		expect(screen.queryByLabelText("Day Name")).not.toBeInTheDocument();
+	});
+
+	it("disables starting a workout when a current session exists", () => {
+		render(
+			<RoutineDayTab
+				dayId="day-1"
+				currentSession={{ id: "session-1" } as WorkoutSessionWithData}
+				onDeleted={vi.fn()}
+			/>,
+		);
+
+		expect(
+			screen.getByRole("button", { name: "Start Workout" }),
+		).toBeDisabled();
 	});
 });

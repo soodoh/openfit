@@ -99,4 +99,40 @@ describe("RoutineModal", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Delete this day" }));
 		expect(screen.getByText("Overview body")).toBeInTheDocument();
 	});
+
+	it("resets to the initial tab when the modal is reopened", () => {
+		const { rerender } = render(
+			<RoutineModal
+				open
+				onClose={vi.fn()}
+				routine={mockRoutine}
+				currentSession={undefined}
+				initialTab="day-day-1"
+			/>,
+		);
+
+		expect(screen.getByText("Day tab day-1")).toBeInTheDocument();
+
+		rerender(
+			<RoutineModal
+				open={false}
+				onClose={vi.fn()}
+				routine={mockRoutine}
+				currentSession={undefined}
+				initialTab="overview"
+			/>,
+		);
+		rerender(
+			<RoutineModal
+				open
+				onClose={vi.fn()}
+				routine={mockRoutine}
+				currentSession={undefined}
+				initialTab="overview"
+			/>,
+		);
+
+		expect(screen.getByText("Overview body")).toBeInTheDocument();
+		expect(screen.queryByText("Day tab day-1")).not.toBeInTheDocument();
+	});
 });
