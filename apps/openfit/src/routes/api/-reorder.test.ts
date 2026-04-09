@@ -8,6 +8,9 @@ const mocks = vi.hoisted(() => ({
 	update: vi.fn(),
 	updateSet: vi.fn(),
 	updateWhere: vi.fn(),
+	txUpdate: vi.fn(),
+	txUpdateSet: vi.fn(),
+	txUpdateWhere: vi.fn(),
 	eq: vi.fn((left, right) => ({ type: "eq", left, right })),
 	schema: {
 		workoutSetGroups: {
@@ -52,11 +55,11 @@ vi.mock("@/lib/auth-middleware", () => ({
 }));
 
 const setGroupUpdateShape = {
-	set: mocks.updateSet,
+	set: mocks.txUpdateSet,
 };
 
 const setUpdateShape = {
-	set: mocks.updateSet,
+	set: mocks.txUpdateSet,
 };
 
 import SetGroupsReorderRoute from "@/routes/api/set-groups/reorder";
@@ -77,13 +80,13 @@ describe("POST /api/set-groups/reorder", () => {
 		mocks.findFirstWorkoutSet.mockReset();
 		mocks.requireAuth.mockResolvedValue({ user: { id: "user_123" } });
 		mocks.transaction.mockImplementation(async (callback) =>
-			callback({ update: mocks.update }),
+			callback({ update: mocks.txUpdate }),
 		);
-		mocks.update.mockReturnValue(setGroupUpdateShape);
-		mocks.updateSet.mockReturnValue({
-			where: mocks.updateWhere,
+		mocks.txUpdate.mockReturnValue(setGroupUpdateShape);
+		mocks.txUpdateSet.mockReturnValue({
+			where: mocks.txUpdateWhere,
 		});
-		mocks.updateWhere.mockResolvedValue(undefined);
+		mocks.txUpdateWhere.mockResolvedValue(undefined);
 	});
 
 	it("returns 400 for an invalid reorder payload", async () => {
@@ -128,27 +131,28 @@ describe("POST /api/set-groups/reorder", () => {
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ success: true });
 		expect(mocks.transaction).toHaveBeenCalledTimes(1);
-		expect(mocks.update).toHaveBeenCalledWith(mocks.schema.workoutSetGroups);
-		expect(mocks.updateSet).toHaveBeenNthCalledWith(
+		expect(mocks.update).not.toHaveBeenCalled();
+		expect(mocks.txUpdate).toHaveBeenCalledWith(mocks.schema.workoutSetGroups);
+		expect(mocks.txUpdateSet).toHaveBeenNthCalledWith(
 			1,
 			expect.objectContaining({
 				order: 0,
 				updatedAt: expect.any(Date),
 			}),
 		);
-		expect(mocks.updateSet).toHaveBeenNthCalledWith(
+		expect(mocks.txUpdateSet).toHaveBeenNthCalledWith(
 			2,
 			expect.objectContaining({
 				order: 2,
 				updatedAt: expect.any(Date),
 			}),
 		);
-		expect(mocks.updateWhere).toHaveBeenNthCalledWith(1, {
+		expect(mocks.txUpdateWhere).toHaveBeenNthCalledWith(1, {
 			type: "eq",
 			left: mocks.schema.workoutSetGroups.id,
 			right: "group_1",
 		});
-		expect(mocks.updateWhere).toHaveBeenNthCalledWith(2, {
+		expect(mocks.txUpdateWhere).toHaveBeenNthCalledWith(2, {
 			type: "eq",
 			left: mocks.schema.workoutSetGroups.id,
 			right: "group_2",
@@ -178,8 +182,10 @@ describe("POST /api/set-groups/reorder", () => {
 
 		expect(response.status).toBe(403);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.transaction).not.toHaveBeenCalled();
 		expect(mocks.update).not.toHaveBeenCalled();
-		expect(mocks.updateSet).not.toHaveBeenCalled();
+		expect(mocks.txUpdate).not.toHaveBeenCalled();
+		expect(mocks.txUpdateSet).not.toHaveBeenCalled();
 	});
 
 	it("returns the auth response when authentication throws a Response", async () => {
@@ -199,8 +205,9 @@ describe("POST /api/set-groups/reorder", () => {
 
 		expect(response.status).toBe(401);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.transaction).not.toHaveBeenCalled();
 		expect(mocks.findFirstWorkoutSetGroup).not.toHaveBeenCalled();
-		expect(mocks.updateSet).not.toHaveBeenCalled();
+		expect(mocks.txUpdateSet).not.toHaveBeenCalled();
 	});
 });
 
@@ -209,13 +216,13 @@ describe("POST /api/sets/reorder", () => {
 		vi.clearAllMocks();
 		mocks.requireAuth.mockResolvedValue({ user: { id: "user_123" } });
 		mocks.transaction.mockImplementation(async (callback) =>
-			callback({ update: mocks.update }),
+			callback({ update: mocks.txUpdate }),
 		);
-		mocks.update.mockReturnValue(setUpdateShape);
-		mocks.updateSet.mockReturnValue({
-			where: mocks.updateWhere,
+		mocks.txUpdate.mockReturnValue(setUpdateShape);
+		mocks.txUpdateSet.mockReturnValue({
+			where: mocks.txUpdateWhere,
 		});
-		mocks.updateWhere.mockResolvedValue(undefined);
+		mocks.txUpdateWhere.mockResolvedValue(undefined);
 	});
 
 	it("returns 400 for an invalid reorder payload", async () => {
@@ -267,27 +274,28 @@ describe("POST /api/sets/reorder", () => {
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ success: true });
 		expect(mocks.transaction).toHaveBeenCalledTimes(1);
-		expect(mocks.update).toHaveBeenCalledWith(mocks.schema.workoutSets);
-		expect(mocks.updateSet).toHaveBeenNthCalledWith(
+		expect(mocks.update).not.toHaveBeenCalled();
+		expect(mocks.txUpdate).toHaveBeenCalledWith(mocks.schema.workoutSets);
+		expect(mocks.txUpdateSet).toHaveBeenNthCalledWith(
 			1,
 			expect.objectContaining({
 				order: 0,
 				updatedAt: expect.any(Date),
 			}),
 		);
-		expect(mocks.updateSet).toHaveBeenNthCalledWith(
+		expect(mocks.txUpdateSet).toHaveBeenNthCalledWith(
 			2,
 			expect.objectContaining({
 				order: 2,
 				updatedAt: expect.any(Date),
 			}),
 		);
-		expect(mocks.updateWhere).toHaveBeenNthCalledWith(1, {
+		expect(mocks.txUpdateWhere).toHaveBeenNthCalledWith(1, {
 			type: "eq",
 			left: mocks.schema.workoutSets.id,
 			right: "set_1",
 		});
-		expect(mocks.updateWhere).toHaveBeenNthCalledWith(2, {
+		expect(mocks.txUpdateWhere).toHaveBeenNthCalledWith(2, {
 			type: "eq",
 			left: mocks.schema.workoutSets.id,
 			right: "set_2",
@@ -313,6 +321,7 @@ describe("POST /api/sets/reorder", () => {
 
 		expect(response.status).toBe(403);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.transaction).not.toHaveBeenCalled();
 		expect(mocks.findFirstWorkoutSet).not.toHaveBeenCalled();
 	});
 
@@ -346,8 +355,10 @@ describe("POST /api/sets/reorder", () => {
 
 		expect(response.status).toBe(403);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.transaction).not.toHaveBeenCalled();
 		expect(mocks.update).not.toHaveBeenCalled();
-		expect(mocks.updateSet).not.toHaveBeenCalled();
+		expect(mocks.txUpdate).not.toHaveBeenCalled();
+		expect(mocks.txUpdateSet).not.toHaveBeenCalled();
 	});
 
 	it("returns 403 when a reordered set belongs to a different set group", async () => {
@@ -374,8 +385,10 @@ describe("POST /api/sets/reorder", () => {
 
 		expect(response.status).toBe(403);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.transaction).not.toHaveBeenCalled();
 		expect(mocks.update).not.toHaveBeenCalled();
-		expect(mocks.updateSet).not.toHaveBeenCalled();
+		expect(mocks.txUpdate).not.toHaveBeenCalled();
+		expect(mocks.txUpdateSet).not.toHaveBeenCalled();
 	});
 
 	it("returns the auth response when authentication throws a Response", async () => {
@@ -396,8 +409,9 @@ describe("POST /api/sets/reorder", () => {
 
 		expect(response.status).toBe(401);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.transaction).not.toHaveBeenCalled();
 		expect(mocks.findFirstWorkoutSetGroup).not.toHaveBeenCalled();
 		expect(mocks.findFirstWorkoutSet).not.toHaveBeenCalled();
-		expect(mocks.updateSet).not.toHaveBeenCalled();
+		expect(mocks.txUpdateSet).not.toHaveBeenCalled();
 	});
 });

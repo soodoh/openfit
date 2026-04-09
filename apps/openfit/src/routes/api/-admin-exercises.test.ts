@@ -326,7 +326,9 @@ describe("POST /api/admin/exercises", () => {
 			.mockReturnValueOnce("primary_1")
 			.mockReturnValueOnce("secondary_1")
 			.mockReturnValueOnce("instruction_1")
-			.mockReturnValueOnce("image_1");
+			.mockReturnValueOnce("instruction_2")
+			.mockReturnValueOnce("image_1")
+			.mockReturnValueOnce("image_2");
 
 		const response = await handlers.POST({
 			request: new Request("http://localhost/api/admin/exercises", {
@@ -340,8 +342,8 @@ describe("POST /api/admin/exercises", () => {
 					equipmentId: "barbell",
 					primaryMuscleIds: ["chest"],
 					secondaryMuscleIds: ["triceps"],
-					instructions: ["Lie back"],
-					imageUrls: ["/bench.jpg"],
+					instructions: ["Lie back", "Press up"],
+					imageUrls: ["/bench-1.jpg", "/bench-2.jpg"],
 				}),
 				headers: { "Content-Type": "application/json" },
 			}),
@@ -396,15 +398,55 @@ describe("POST /api/admin/exercises", () => {
 				instruction: "Lie back",
 				order: 0,
 			},
+			{
+				id: "instruction_2",
+				exerciseId: "exercise_1",
+				instruction: "Press up",
+				order: 1,
+			},
 		]);
 		expect(mocks.insertValues).toHaveBeenNthCalledWith(5, [
 			{
 				id: "image_1",
 				exerciseId: "exercise_1",
-				path: "/bench.jpg",
+				path: "/bench-1.jpg",
 				order: 0,
 			},
+			{
+				id: "image_2",
+				exerciseId: "exercise_1",
+				path: "/bench-2.jpg",
+				order: 1,
+			},
 		]);
+	});
+
+	it("creates an exercise without optional relation arrays", async () => {
+		mocks.createId.mockReturnValueOnce("exercise_minimal");
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/admin/exercises", {
+				method: "POST",
+				body: JSON.stringify({
+					name: "Air Squat",
+					categoryId: "legs",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({ id: "exercise_minimal" });
+		expect(mocks.insert).toHaveBeenCalledTimes(1);
+		expect(mocks.insertValues).toHaveBeenCalledWith({
+			id: "exercise_minimal",
+			name: "Air Squat",
+			level: undefined,
+			force: undefined,
+			mechanic: undefined,
+			equipmentId: undefined,
+			categoryId: "legs",
+		});
 	});
 
 	it("returns 500 when creating an exercise throws an unexpected error", async () => {

@@ -164,7 +164,9 @@ describe("PATCH /api/admin/exercises/:id", () => {
 			.mockReturnValueOnce("primary_1")
 			.mockReturnValueOnce("secondary_1")
 			.mockReturnValueOnce("instruction_1")
-			.mockReturnValueOnce("image_1");
+			.mockReturnValueOnce("instruction_2")
+			.mockReturnValueOnce("image_1")
+			.mockReturnValueOnce("image_2");
 
 		const response = await handlers.PATCH({
 			request: new Request("http://localhost/api/admin/exercises/exercise_1", {
@@ -178,8 +180,8 @@ describe("PATCH /api/admin/exercises/:id", () => {
 					categoryId: "chest",
 					primaryMuscleIds: ["chest"],
 					secondaryMuscleIds: ["triceps"],
-					instructions: ["Lie back"],
-					imageUrls: ["/bench.jpg"],
+					instructions: ["Lie back", "Press up"],
+					imageUrls: ["/bench-1.jpg", "/bench-2.jpg"],
 				}),
 				headers: { "Content-Type": "application/json" },
 			}),
@@ -282,13 +284,25 @@ describe("PATCH /api/admin/exercises/:id", () => {
 				instruction: "Lie back",
 				order: 0,
 			},
+			{
+				id: "instruction_2",
+				exerciseId: "exercise_1",
+				instruction: "Press up",
+				order: 1,
+			},
 		]);
 		expect(mocks.insertValues).toHaveBeenNthCalledWith(4, [
 			{
 				id: "image_1",
 				exerciseId: "exercise_1",
-				path: "/bench.jpg",
+				path: "/bench-1.jpg",
 				order: 0,
+			},
+			{
+				id: "image_2",
+				exerciseId: "exercise_1",
+				path: "/bench-2.jpg",
+				order: 1,
 			},
 		]);
 	});
@@ -305,11 +319,9 @@ describe("PATCH /api/admin/exercises/:id", () => {
 
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ success: true });
-		expect(mocks.updateSet).toHaveBeenCalledWith(
-			expect.objectContaining({
-				name: "Renamed Bench Press",
-			}),
-		);
+		expect(mocks.updateSet).toHaveBeenCalledWith({
+			name: "Renamed Bench Press",
+		});
 		expect(mocks.delete).not.toHaveBeenCalled();
 		expect(mocks.insert).not.toHaveBeenCalled();
 	});
