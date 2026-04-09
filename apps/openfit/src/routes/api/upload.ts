@@ -102,6 +102,9 @@ export const Route = createFileRoute("/api/upload")({
 					await fs.unlink(filepath);
 					return Response.json({ success: true });
 				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
 					if (
 						error instanceof Error &&
 						"code" in error &&
