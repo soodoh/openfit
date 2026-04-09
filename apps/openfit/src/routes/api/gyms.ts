@@ -23,18 +23,25 @@ export const Route = createFileRoute("/api/gyms")({
 					}
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
-				const gyms = await db.query.gyms.findMany({
-					where: eq(schema.gyms.userId, session.user.id),
-					orderBy: asc(schema.gyms.name),
-					with: {
-						equipment: {
-							with: {
-								equipment: true,
+				try {
+					const gyms = await db.query.gyms.findMany({
+						where: eq(schema.gyms.userId, session.user.id),
+						orderBy: asc(schema.gyms.name),
+						with: {
+							equipment: {
+								with: {
+									equipment: true,
+								},
 							},
 						},
-					},
-				});
-				return Response.json(gyms.map(serializeGym));
+					});
+					return Response.json(gyms.map(serializeGym));
+				} catch {
+					return Response.json(
+						{ error: "Failed to fetch gyms" },
+						{ status: 500 },
+					);
+				}
 			},
 			// POST /api/gyms - Create a new gym
 			POST: async ({ request }: { request: Request }) => {
