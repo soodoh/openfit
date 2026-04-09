@@ -177,6 +177,25 @@ describe("AutocompleteExercise", () => {
 		expect(screen.getByDisplayValue("Bench Press")).toBeInTheDocument();
 	});
 
+	it("clears the selected exercise when Delete is pressed", () => {
+		render(
+			<ExerciseHarness
+				initialValue={
+					{
+						id: "exercise-1",
+						name: "Bench Press",
+					} as Exercise
+				}
+			/>,
+		);
+
+		fireEvent.keyDown(screen.getByDisplayValue("Bench Press"), {
+			key: "Delete",
+		});
+
+		expect(screen.getByDisplayValue("")).toBeInTheDocument();
+	});
+
 	it("falls back to All when no default gym is configured", () => {
 		mockUseUserProfile.mockReturnValue({ data: { defaultGymId: undefined } });
 		mockUseGyms.mockReturnValue({ data: [] });
@@ -238,5 +257,16 @@ describe("AutocompleteExercise", () => {
 		fireEvent.keyDown(input, { key: "Escape" });
 
 		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "false");
+	});
+
+	it("lets the first result be selected with Enter only when no exercise is selected", () => {
+		render(<ExerciseHarness />);
+
+		const input = screen.getByPlaceholderText("Search exercises...");
+		fireEvent.focus(input);
+		fireEvent.change(input, { target: { value: "d" } });
+		fireEvent.keyDown(input, { key: "Enter" });
+
+		expect(screen.getByDisplayValue("Bench Press")).toBeInTheDocument();
 	});
 });

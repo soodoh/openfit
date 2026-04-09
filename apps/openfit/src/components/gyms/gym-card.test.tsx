@@ -29,4 +29,20 @@ describe("GymCard", () => {
 		expect(screen.getByText("1 equipment item")).toBeInTheDocument();
 		expect(screen.getByText("Gym menu")).toBeInTheDocument();
 	});
+
+	it("uses the plural equipment label for non-default gyms", () => {
+		render(
+			<GymCard
+				gym={{
+					id: "gym-2",
+					name: "Garage Gym",
+					equipmentIds: ["equipment-1", "equipment-2"],
+				}}
+			/>,
+		);
+
+		expect(screen.getByText("Garage Gym")).toBeInTheDocument();
+		expect(screen.getByText("2 equipment items")).toBeInTheDocument();
+		expect(screen.queryByText("Default")).not.toBeInTheDocument();
+	});
 });

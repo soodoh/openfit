@@ -191,6 +191,31 @@ describe("useProfileSettingsForm", () => {
 		});
 	});
 
+	it("uses the fallback update error message for non-Error failures", async () => {
+		mockUpdateGym.mockRejectedValueOnce("boom");
+		const { result } = renderHook(() =>
+			useProfileSettingsForm({ open: true, onClose: vi.fn() }),
+		);
+
+		await waitFor(() => {
+			expect(result.current.defaultRepUnitId).toBe("rep-default");
+		});
+
+		act(() => {
+			result.current.handleEditGym(mockGyms[0]);
+			result.current.setGymName("Updated Gym");
+			result.current.setSelectedEquipmentIds(["rack"]);
+		});
+
+		await act(async () => {
+			await result.current.handleSubmitGym({
+				preventDefault: vi.fn(),
+			} as never);
+		});
+
+		expect(result.current.gymError).toBe("Failed to update gym");
+	});
+
 	it("rejects invalid theme and tab values", () => {
 		const onClose = vi.fn();
 		const { result } = renderHook(() =>

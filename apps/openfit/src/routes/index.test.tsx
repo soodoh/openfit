@@ -145,6 +145,32 @@ describe("home route", () => {
 		).not.toBeInTheDocument();
 	});
 
+	it("renders the recent activity skeleton while session data is loading", () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
+		mockUseDashboardStats.mockReturnValue({
+			data: undefined,
+			isLoading: true,
+		});
+		mockUseRecentSessions.mockReturnValue({
+			data: undefined,
+			isLoading: true,
+		});
+		mockUseCurrentSession.mockReturnValue({
+			data: undefined,
+			isLoading: false,
+		});
+		mockUseUnits.mockReturnValue({
+			data: { repetitionUnits: [], weightUnits: [] },
+			isLoading: false,
+		});
+
+		render(<HomeRoute.options.component />);
+
+		expect(document.querySelectorAll(".animate-pulse").length).toBeGreaterThan(
+			0,
+		);
+	});
+
 	it("renders dashboard cards and opens session details for a recent session", () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
 		mockUseCurrentSession.mockReturnValue({

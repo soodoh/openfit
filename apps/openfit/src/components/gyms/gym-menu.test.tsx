@@ -105,4 +105,31 @@ describe("GymMenu", () => {
 			screen.queryByRole("button", { name: "Set as Default" }),
 		).not.toBeInTheDocument();
 	});
+
+	it("delegates edit and delete actions to external callbacks when provided", () => {
+		const onEdit = vi.fn();
+		const onDelete = vi.fn();
+
+		render(
+			<GymMenu
+				gym={{
+					id: "gym-1",
+					name: "Home Gym",
+					equipmentIds: [],
+				}}
+				onEdit={onEdit}
+				onDelete={onDelete}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+		expect(onEdit).toHaveBeenCalledTimes(1);
+		expect(onDelete).toHaveBeenCalledTimes(1);
+		expect(screen.queryByText("Edit modal open")).not.toBeInTheDocument();
+		expect(
+			screen.queryByText("Delete modal for Home Gym"),
+		).not.toBeInTheDocument();
+	});
 });

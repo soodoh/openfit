@@ -162,4 +162,16 @@ describe("AutocompleteEquipment", () => {
 		expect(screen.getByDisplayValue("")).toBeInTheDocument();
 		expect(input).toHaveFocus();
 	});
+
+	it("closes the popover when Escape is pressed without selecting equipment", () => {
+		render(<Harness />);
+
+		const input = screen.getByPlaceholderText("Search equipment...");
+		fireEvent.focus(input);
+		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+
+		fireEvent.keyDown(input, { key: "Escape" });
+
+		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "false");
+	});
 });

@@ -62,15 +62,27 @@ vi.mock("@/hooks", () => ({
 }));
 
 vi.mock("@/components/gyms/delete-gym-modal", () => ({
-	DeleteGymModal: () => null,
+	DeleteGymModal: ({ gym }: { gym?: { name: string } }) =>
+		gym ? <div>Delete modal for {gym.name}</div> : null,
 }));
 
 vi.mock("@/components/gyms/gym-card", () => ({
-	GymCard: ({ gym, onEdit }: { gym: Gym; onEdit: () => void }) => (
+	GymCard: ({
+		gym,
+		onEdit,
+		onDelete,
+	}: {
+		gym: Gym;
+		onEdit: () => void;
+		onDelete: () => void;
+	}) => (
 		<div>
 			<span>{gym.name}</span>
 			<button type="button" onClick={onEdit}>
 				Edit {gym.name}
+			</button>
+			<button type="button" onClick={onDelete}>
+				Delete {gym.name}
 			</button>
 		</div>
 	),
@@ -183,5 +195,27 @@ describe("ProfileModal", () => {
 		render(<ProfileModal open onClose={vi.fn()} />);
 
 		expect(document.querySelector(".animate-spin")).toBeInTheDocument();
+	});
+
+	it("shows a loading indicator for gym data on the equipment tab", () => {
+		mockUseGyms.mockReturnValue({
+			data: undefined,
+			isLoading: true,
+		});
+
+		render(<ProfileModal open onClose={vi.fn()} />);
+
+		fireEvent.mouseDown(screen.getByRole("tab", { name: "Equipment" }));
+
+		expect(document.querySelector(".animate-spin")).toBeInTheDocument();
+	});
+
+	it("opens the delete gym modal from the gym list", () => {
+		render(<ProfileModal open onClose={vi.fn()} />);
+
+		fireEvent.mouseDown(screen.getByRole("tab", { name: "Equipment" }));
+		fireEvent.click(screen.getByRole("button", { name: "Delete Home Gym" }));
+
+		expect(screen.getByText("Delete modal for Home Gym")).toBeInTheDocument();
 	});
 });

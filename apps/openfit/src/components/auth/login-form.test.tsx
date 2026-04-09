@@ -224,6 +224,22 @@ describe("LoginForm redirects", () => {
 		});
 	});
 
+	it("shows a social OAuth error when the provider flow throws", async () => {
+		vi.stubEnv("VITE_AUTH_GOOGLE_ENABLED", "true");
+		mockSignInSocial.mockRejectedValueOnce(new Error("oauth failed"));
+		vi.resetModules();
+
+		const { LoginForm: OAuthLoginForm } = await import("./login-form");
+
+		render(<OAuthLoginForm />);
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Continue with Google" }),
+		);
+
+		expect(await screen.findByText("oauth failed")).toBeInTheDocument();
+	});
+
 	it("starts OIDC OAuth sign-in when the provider is enabled", async () => {
 		vi.stubEnv("VITE_AUTH_OIDC_ENABLED", "true");
 		vi.stubEnv("VITE_AUTH_OIDC_PROVIDER_NAME", "Acme SSO");

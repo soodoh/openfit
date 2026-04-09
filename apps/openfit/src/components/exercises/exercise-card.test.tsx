@@ -3,6 +3,10 @@ import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ExerciseCard } from "./exercise-card";
 
+const mockGetCategoryName = vi.fn();
+const mockGetEquipmentName = vi.fn();
+const mockGetMuscleGroupNames = vi.fn();
+
 vi.mock("@unpic/react", () => ({
 	Image: ({ alt }: { alt: string }) => <img alt={alt} />,
 }));
@@ -18,13 +22,24 @@ vi.mock("@/components/ui/badge", () => ({
 
 vi.mock("@/lib/use-exercise-lookups", () => ({
 	useExerciseLookups: () => ({
-		getCategoryName: () => "body weight",
-		getEquipmentName: () => "barbell",
-		getMuscleGroupNames: () => ["chest", "triceps", "shoulders", "back"],
+		getCategoryName: mockGetCategoryName,
+		getEquipmentName: mockGetEquipmentName,
+		getMuscleGroupNames: mockGetMuscleGroupNames,
 	}),
 }));
 
 describe("ExerciseCard", () => {
+	beforeEach(() => {
+		mockGetCategoryName.mockReturnValue("body weight");
+		mockGetEquipmentName.mockReturnValue("barbell");
+		mockGetMuscleGroupNames.mockReturnValue([
+			"chest",
+			"triceps",
+			"shoulders",
+			"back",
+		]);
+	});
+
 	it("renders summary details and opens the detail modal when clicked", () => {
 		render(
 			<ExerciseCard
@@ -51,5 +66,26 @@ describe("ExerciseCard", () => {
 		fireEvent.click(screen.getByRole("button", { name: /Bench Press/i }));
 
 		expect(screen.getByText("exercise detail open")).toBeInTheDocument();
+	});
+
+	it("renders the fallback icon and omits secondary metadata when the exercise is minimal", () => {
+		mockGetEquipmentName.mockReturnValue(undefined);
+		mockGetMuscleGroupNames.mockReturnValue([]);
+
+		render(
+			<ExerciseCard
+				exercise={{
+					id: "exercise-2",
+					name: "Push Up",
+					categoryId: "category-1",
+					primaryMuscleIds: [],
+				}}
+			/>,
+		);
+
+		expect(screen.getByText("Push Up")).toBeInTheDocument();
+		expect(screen.getByText("Body Weight")).toBeInTheDocument();
+		expect(screen.queryByText("Barbell")).not.toBeInTheDocument();
+		expect(screen.queryByText("Intermediate")).not.toBeInTheDocument();
 	});
 });

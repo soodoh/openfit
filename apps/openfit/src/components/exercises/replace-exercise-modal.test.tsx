@@ -283,6 +283,9 @@ describe("ReplaceExerciseModal", () => {
 		);
 
 		expect(screen.getByPlaceholderText("Search exercises...")).toHaveValue("");
+		expect(
+			screen.getByRole("button", { name: "Home Gym" }),
+		).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Replace" })).toBeDisabled();
 	});
 });
