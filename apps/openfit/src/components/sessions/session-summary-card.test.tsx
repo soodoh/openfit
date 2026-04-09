@@ -87,4 +87,29 @@ describe("SessionSummaryCard", () => {
 		fireEvent.click(screen.getByText("Push Day"));
 		expect(onClick).toHaveBeenCalledTimes(1);
 	});
+
+	it("stops pointer down from reaching the card when the edit menu is interacted with", () => {
+		const onClick = vi.fn();
+
+		render(
+			<SessionSummaryCard
+				session={{
+					id: "session-4",
+					name: "Accessory Day",
+					startTime: new Date("2026-04-01T08:00:00.000Z"),
+					endTime: new Date("2026-04-01T08:30:00.000Z"),
+					impression: null,
+					notes: null,
+					setGroups: [],
+				}}
+				onClick={onClick}
+				showEditMenu
+			/>,
+		);
+
+		fireEvent.pointerDown(
+			screen.getByRole("button", { name: "Edit session menu" }),
+		);
+		expect(onClick).not.toHaveBeenCalled();
+	});
 });
