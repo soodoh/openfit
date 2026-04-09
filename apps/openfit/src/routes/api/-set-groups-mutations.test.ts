@@ -104,6 +104,23 @@ describe("POST /api/set-groups/:id/bulk-edit", () => {
 		expect(mocks.update).not.toHaveBeenCalled();
 	});
 
+	it("returns the auth response when authentication throws a Response", async () => {
+		mocks.requireAuth.mockRejectedValueOnce(
+			Response.json({ error: "Unauthorized" }, { status: 401 }),
+		);
+
+		const response = await bulkEditHandlers.POST({
+			request: createPostRequest({ reps: 8 }),
+			params: { id: "group_123" },
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.findFirstWorkoutSetGroup).not.toHaveBeenCalled();
+		expect(mocks.findManyWorkoutSets).not.toHaveBeenCalled();
+		expect(mocks.update).not.toHaveBeenCalled();
+	});
+
 	it("returns 404 when the set group does not exist", async () => {
 		mocks.findFirstWorkoutSetGroup.mockResolvedValueOnce(null);
 
@@ -241,6 +258,23 @@ describe("POST /api/set-groups/:id/replace-exercise", () => {
 
 	it("returns 401 when authentication fails unexpectedly", async () => {
 		mocks.requireAuth.mockRejectedValue(new Error("boom"));
+
+		const response = await replaceExerciseHandlers.POST({
+			request: createPostRequest({ exerciseId: "exercise_new" }),
+			params: { id: "group_123" },
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.findFirstWorkoutSetGroup).not.toHaveBeenCalled();
+		expect(mocks.findManyWorkoutSets).not.toHaveBeenCalled();
+		expect(mocks.update).not.toHaveBeenCalled();
+	});
+
+	it("returns the auth response when authentication throws a Response", async () => {
+		mocks.requireAuth.mockRejectedValueOnce(
+			Response.json({ error: "Unauthorized" }, { status: 401 }),
+		);
 
 		const response = await replaceExerciseHandlers.POST({
 			request: createPostRequest({ exerciseId: "exercise_new" }),

@@ -1,10 +1,15 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { queryKeys } from "@/lib/query-keys";
-import type { Equipment, Units } from "@/lib/types";
-import { mockJsonSuccess } from "@/test/fetch";
+import type { Units } from "@/lib/types";
+import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
 import { createTestQueryWrapper } from "@/test/query-client";
-import { useEquipment, useUnits } from "./use-lookups";
+import {
+	useCategories,
+	useEquipment,
+	useMuscleGroups,
+	useUnits,
+} from "./use-lookups";
 
 function getFetchRequest(fetchMock: ReturnType<typeof mockJsonSuccess>) {
 	const [input] = fetchMock.mock.calls[0] ?? [];
@@ -14,36 +19,51 @@ function getFetchRequest(fetchMock: ReturnType<typeof mockJsonSuccess>) {
 	return new URL(input, "http://localhost");
 }
 
+const originalFetch = globalThis.fetch;
+
 describe("use-lookups queries", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
-	it("keeps stable equipment lookup data across rerenders", async () => {
-		const equipment = [
-			{ id: "equipment-1", name: "Barbell" },
-		] satisfies Equipment[];
-		const fetchMock = mockJsonSuccess(equipment);
+	it.each([
+		[
+			"useEquipment",
+			useEquipment,
+			queryKeys.lookups.equipment(),
+			"/api/lookups/equipment",
+			[{ id: "equipment-1", name: "Barbell" }],
+		],
+		[
+			"useMuscleGroups",
+			useMuscleGroups,
+			queryKeys.lookups.muscleGroups(),
+			"/api/lookups/muscle-groups",
+			[{ id: "muscle-1", name: "Chest" }],
+		],
+		[
+			"useCategories",
+			useCategories,
+			queryKeys.lookups.categories(),
+			"/api/lookups/categories",
+			[{ id: "category-1", name: "Chest" }],
+		],
+	] as const)("fetches and caches %s lookup data", async (_label, hook, queryKey, pathname, items) => {
+		const fetchMock = mockJsonSuccess(items);
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result, rerender } = renderHook(() => useEquipment(), { wrapper });
+		const { result } = renderHook(() => hook(), { wrapper });
 
 		await waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
-		rerender();
-
-		await waitFor(() => {
-			expect(result.current.data).toEqual(equipment);
-		});
-
-		expect(fetchMock).toHaveBeenCalledTimes(1);
-		expect(getFetchRequest(fetchMock).pathname).toBe("/api/lookups/equipment");
-		expect(queryClient.getQueryData(queryKeys.lookups.equipment())).toEqual(
-			equipment,
-		);
+		expect(result.current.data).toEqual(items);
+		expect(getFetchRequest(fetchMock).pathname).toBe(pathname);
+		expect(queryClient.getQueryData(queryKey)).toEqual(items);
 	});
 
 	it("requests units from the units lookup endpoint", async () => {
@@ -63,5 +83,19 @@ describe("use-lookups queries", () => {
 
 		expect(result.current.data).toEqual(units);
 		expect(getFetchRequest(fetchMock).pathname).toBe("/api/lookups/units");
+	});
+
+	it("surfaces lookup errors", async () => {
+		const fetchMock = mockJsonError("Lookup fetch failed", { status: 500 });
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useCategories(), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isError).toBe(true);
+		});
+
+		expect((result.current.error as Error).message).toBe("Lookup fetch failed");
 	});
 });

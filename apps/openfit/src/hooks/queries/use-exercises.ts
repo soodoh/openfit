@@ -77,10 +77,10 @@ async function fetchExercises(
 	);
 }
 // Fetch single exercise
-async function fetchExercise(id: string): Promise<Exercise | undefined> {
+async function fetchExercise(id: string): Promise<Exercise | null> {
 	const response = await fetch(`/api/exercises/${id}`);
 	if (response.status === 404) {
-		return undefined;
+		return null;
 	}
 	return fetchJson<Exercise>(response, "Failed to fetch exercise");
 }
@@ -157,6 +157,7 @@ export function useExercise(
 	return useQuery({
 		queryKey: queryKeys.exercises.detail(id ?? ""),
 		queryFn: async () => fetchExercise(id ?? ""),
+		select: (exercise) => exercise ?? undefined,
 		enabled: Boolean(id),
 	});
 }
@@ -167,7 +168,7 @@ export function useExerciseSearch(
 	limit = 20,
 ): UseQueryResult<Exercise[]> {
 	return useQuery({
-		queryKey: queryKeys.exercises.search(term, { equipmentIds }),
+		queryKey: queryKeys.exercises.search(term, { equipmentIds, limit }),
 		queryFn: async ({ signal }) =>
 			searchExercises(term, equipmentIds, limit, signal),
 		enabled: true,

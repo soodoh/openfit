@@ -30,11 +30,9 @@ async function fetchSessionsByDateRange(
 	);
 }
 // Fetch current active session
-async function fetchCurrentSession(): Promise<
-	WorkoutSessionWithData | undefined
-> {
+async function fetchCurrentSession(): Promise<WorkoutSessionWithData | null> {
 	const response = await fetch("/api/sessions/current");
-	return fetchJson<WorkoutSessionWithData | undefined>(
+	return fetchJson<WorkoutSessionWithData | null>(
 		response,
 		"Failed to fetch current session",
 	);
@@ -42,10 +40,10 @@ async function fetchCurrentSession(): Promise<
 // Fetch single session
 async function fetchSession(
 	id: string,
-): Promise<WorkoutSessionWithData | undefined> {
+): Promise<WorkoutSessionWithData | null> {
 	const response = await fetch(`/api/sessions/${id}`);
 	if (response.status === 404) {
-		return undefined;
+		return null;
 	}
 	return fetchJson<WorkoutSessionWithData>(response, "Failed to fetch session");
 }
@@ -74,6 +72,7 @@ export function useCurrentSession(): UseQueryResult<
 	return useQuery({
 		queryKey: queryKeys.sessions.current(),
 		queryFn: fetchCurrentSession,
+		select: (session) => session ?? undefined,
 		refetchInterval: 30_000, // Refetch every 30 seconds to keep session fresh
 	});
 }
@@ -84,6 +83,7 @@ export function useSession(
 	return useQuery({
 		queryKey: queryKeys.sessions.detail(id ?? ""),
 		queryFn: async () => fetchSession(id ?? ""),
+		select: (session) => session ?? undefined,
 		enabled: Boolean(id),
 	});
 }

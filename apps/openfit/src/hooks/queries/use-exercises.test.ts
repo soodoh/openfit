@@ -2,15 +2,22 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { queryKeys } from "@/lib/query-keys";
 import type { ExerciseWithImageUrl } from "@/lib/types";
-import { mockJsonSuccess } from "@/test/fetch";
+import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
 import { createTestQueryWrapper } from "@/test/query-client";
 import {
 	useExercise,
+	useExerciseSearch,
 	useExercises,
 	useSimilarExercises,
 } from "./use-exercises";
 
-function getFetchRequest(fetchMock: ReturnType<typeof mockJsonSuccess>) {
+type FetchMock = {
+	mock: {
+		calls: unknown[][];
+	};
+};
+
+function getFetchRequest(fetchMock: FetchMock) {
 	const [input, init] = fetchMock.mock.calls[0] ?? [];
 
 	expect(typeof input).toBe("string");
@@ -38,9 +45,13 @@ const exercise = {
 	imageUrls: ["/bench.jpg"],
 } satisfies ExerciseWithImageUrl;
 
+const originalFetch = globalThis.fetch;
+
 describe("use-exercises queries", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
 	it("does not fetch a single exercise when the id is undefined", async () => {
@@ -56,6 +67,26 @@ describe("use-exercises queries", () => {
 
 		expect(result.current.data).toBeUndefined();
 		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
+	it("returns undefined for a missing exercise", async () => {
+		const fetchMock = vi.fn(() =>
+			Promise.resolve(
+				Response.json({ error: "Exercise not found" }, { status: 404 }),
+			),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useExercise("missing-exercise"), {
+			wrapper,
+		});
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(result.current.data).toBeUndefined();
 	});
 
 	it("requests a filtered exercise page with the expected query semantics", async () => {
@@ -101,6 +132,56 @@ describe("use-exercises queries", () => {
 		).toBeDefined();
 	});
 
+	it("requests exercise searches with the limit in the cache key", async () => {
+		const results = [exercise];
+		const fetchMock = mockJsonSuccess(results);
+		vi.stubGlobal("fetch", fetchMock);
+		const { queryClient, wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(
+			() => useExerciseSearch("bench", ["equipment-1"], 5),
+			{ wrapper },
+		);
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(result.current.data).toEqual(results);
+		const request = getFetchRequest(fetchMock);
+		expect(request.url.pathname).toBe("/api/exercises/search");
+		expect(request.url.searchParams.get("q")).toBe("bench");
+		expect(request.url.searchParams.getAll("equipmentIds")).toEqual([
+			"equipment-1",
+		]);
+		expect(request.url.searchParams.get("limit")).toBe("5");
+		expect(
+			queryClient.getQueryData(
+				queryKeys.exercises.search("bench", {
+					equipmentIds: ["equipment-1"],
+					limit: 5,
+				}),
+			),
+		).toEqual(results);
+	});
+
+	it("does not fetch similar exercises without primary muscle ids", async () => {
+		const fetchMock = mockJsonSuccess([exercise]);
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useSimilarExercises(undefined), {
+			wrapper,
+		});
+
+		await waitFor(() => {
+			expect(result.current.fetchStatus).toBe("idle");
+		});
+
+		expect(result.current.data).toBeUndefined();
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
 	it("requests similar exercises when muscle ids are present", async () => {
 		const similarExercises = [exercise];
 		const fetchMock = mockJsonSuccess(similarExercises);
@@ -135,5 +216,21 @@ describe("use-exercises queries", () => {
 		]);
 		expect(request.url.searchParams.get("exclude")).toBe("exercise-9");
 		expect(request.url.searchParams.get("limit")).toBe("5");
+	});
+
+	it("surfaces search failures for single exercises", async () => {
+		const fetchMock = mockJsonError("Exercise request failed", { status: 500 });
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useExercise("exercise-1"), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isError).toBe(true);
+		});
+
+		expect((result.current.error as Error).message).toBe(
+			"Exercise request failed",
+		);
 	});
 });

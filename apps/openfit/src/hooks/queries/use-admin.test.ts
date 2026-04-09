@@ -6,15 +6,25 @@ import type {
 	LookupItem,
 	PaginatedResponse,
 } from "@/lib/types";
-import { mockJsonSuccess } from "@/test/fetch";
+import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
 import { createTestQueryWrapper } from "@/test/query-client";
 import {
+	useAdminCategories,
 	useAdminEquipment,
 	useAdminExercisesPaginated,
 	useAdminLookupPaginated,
+	useAdminMuscleGroups,
+	useAdminRepetitionUnits,
+	useAdminWeightUnits,
 } from "./use-admin";
 
-function getFetchRequest(fetchMock: ReturnType<typeof mockJsonSuccess>) {
+type FetchMock = {
+	mock: {
+		calls: unknown[][];
+	};
+};
+
+function getFetchRequest(fetchMock: FetchMock) {
 	const [input, init] = fetchMock.mock.calls[0] ?? [];
 
 	expect(typeof input).toBe("string");
@@ -25,9 +35,13 @@ function getFetchRequest(fetchMock: ReturnType<typeof mockJsonSuccess>) {
 	};
 }
 
+const originalFetch = globalThis.fetch;
+
 describe("use-admin queries", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
 	it("requests a paginated admin exercise list with search params", async () => {
@@ -82,6 +96,31 @@ describe("use-admin queries", () => {
 		).toEqual(response);
 	});
 
+	it("keeps paginated exercise data cached under the current page key", async () => {
+		const params = { page: 1, pageSize: 25 };
+		const response = {
+			items: [{ id: "exercise-1", name: "Bench Press" }],
+			total: 1,
+			page: 1,
+			pageSize: 25,
+		} satisfies PaginatedResponse<AdminExerciseWithRelations>;
+		const fetchMock = mockJsonSuccess(response);
+		vi.stubGlobal("fetch", fetchMock);
+		const { queryClient, wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useAdminExercisesPaginated(params), {
+			wrapper,
+		});
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(
+			queryClient.getQueryData(queryKeys.admin.exerciseList(params)),
+		).toEqual(response);
+	});
+
 	it("requests paginated admin lookup data for the provided type", async () => {
 		const params = { page: 3, pageSize: 10, search: "bar" };
 		const response = {
@@ -115,29 +154,110 @@ describe("use-admin queries", () => {
 		);
 	});
 
-	it("requests the non-paginated admin equipment lookup list", async () => {
-		const response = [
-			{ id: "equipment-1", name: "Barbell" },
-		] satisfies LookupItem[];
-		const fetchMock = mockJsonSuccess({
-			items: response,
+	it("uses the fallback query key path for an unknown lookup type", async () => {
+		const params = { page: 4, pageSize: 15, search: "alpha" };
+		const response = {
+			items: [{ id: "custom-1", name: "Alpha" }],
 			total: 1,
-			page: 1,
-			pageSize: 1000,
-		});
+			page: 4,
+			pageSize: 15,
+		} satisfies PaginatedResponse<LookupItem>;
+		const fetchMock = mockJsonSuccess(response);
 		vi.stubGlobal("fetch", fetchMock);
-		const { wrapper } = createTestQueryWrapper();
+		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useAdminEquipment(), { wrapper });
+		const { result } = renderHook(
+			() => useAdminLookupPaginated("customType", params),
+			{ wrapper },
+		);
 
 		await waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
 		expect(result.current.data).toEqual(response);
+		expect(getFetchRequest(fetchMock).url.searchParams.get("type")).toBe(
+			"customType",
+		);
+		expect(
+			queryClient.getQueryData([
+				...queryKeys.admin.all,
+				"customType",
+				"list",
+				params,
+			]),
+		).toEqual(response);
+	});
+
+	it.each([
+		[
+			"equipment",
+			useAdminEquipment,
+			queryKeys.admin.equipment(),
+			[{ id: "equipment-1", name: "Barbell" }],
+		],
+		[
+			"categories",
+			useAdminCategories,
+			queryKeys.admin.categories(),
+			[{ id: "category-1", name: "Chest" }],
+		],
+		[
+			"muscleGroups",
+			useAdminMuscleGroups,
+			queryKeys.admin.muscleGroups(),
+			[{ id: "muscle-1", name: "Chest" }],
+		],
+		[
+			"repetitionUnits",
+			useAdminRepetitionUnits,
+			queryKeys.admin.repetitionUnits(),
+			[{ id: "reps", name: "reps" }],
+		],
+		[
+			"weightUnits",
+			useAdminWeightUnits,
+			queryKeys.admin.weightUnits(),
+			[{ id: "kg", name: "kg" }],
+		],
+	] as const)("requests the non-paginated admin %s lookup list", async (_type, hook, queryKey, items) => {
+		const response = {
+			items,
+			total: items.length,
+			page: 1,
+			pageSize: 1000,
+		} satisfies PaginatedResponse<LookupItem>;
+		const fetchMock = mockJsonSuccess(response);
+		vi.stubGlobal("fetch", fetchMock);
+		const { queryClient, wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => hook(), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(result.current.data).toEqual(items);
 		const request = getFetchRequest(fetchMock);
 		expect(request.url.pathname).toBe("/api/admin/lookups");
-		expect(request.url.searchParams.get("type")).toBe("equipment");
+		expect(request.url.searchParams.get("type")).toBe(_type);
 		expect(request.url.searchParams.get("pageSize")).toBe("1000");
+		expect(queryClient.getQueryData(queryKey)).toEqual(items);
+	});
+
+	it("surfaces lookup fetch errors", async () => {
+		const fetchMock = mockJsonError("Lookup request failed", { status: 500 });
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useAdminEquipment(), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isError).toBe(true);
+		});
+
+		expect((result.current.error as Error).message).toBe(
+			"Lookup request failed",
+		);
 	});
 });
