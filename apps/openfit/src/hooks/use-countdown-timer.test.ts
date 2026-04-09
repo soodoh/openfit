@@ -105,6 +105,7 @@ describe("use-countdown-timer", () => {
 	it("cleans up its interval on unmount", async () => {
 		vi.useFakeTimers();
 		vi.setSystemTime(new Date("2026-02-01T10:00:00.000Z"));
+		const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
 		const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
 		const { result, unmount } = renderHook(() =>
 			useCountdownTimer({
@@ -122,8 +123,16 @@ describe("use-countdown-timer", () => {
 			await vi.advanceTimersByTimeAsync(100);
 		});
 
+		expect(setIntervalSpy).toHaveBeenCalledTimes(1);
+		const createdIntervalId = setIntervalSpy.mock.results[0]?.value;
+		expect(createdIntervalId).toBeDefined();
+		const clearCallsBeforeUnmount = clearIntervalSpy.mock.calls.length;
+
 		unmount();
 
-		expect(clearIntervalSpy).toHaveBeenCalled();
+		expect(clearIntervalSpy.mock.calls.length).toBe(
+			clearCallsBeforeUnmount + 1,
+		);
+		expect(clearIntervalSpy).toHaveBeenLastCalledWith(createdIntervalId);
 	});
 });
