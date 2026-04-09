@@ -7,6 +7,9 @@ const mockSetTheme = vi.fn();
 const mockUpdateProfile = vi.fn();
 const mockCreateGym = vi.fn();
 const mockUpdateGym = vi.fn();
+const mockUseUserProfile = vi.fn();
+const mockUseGyms = vi.fn();
+const mockUseUnits = vi.fn();
 
 const mockProfile: UserProfile = {
 	id: "profile-1",
@@ -44,18 +47,9 @@ vi.mock("next-themes", () => ({
 }));
 
 vi.mock("@/hooks", () => ({
-	useUserProfile: () => ({
-		data: mockProfile,
-		isLoading: false,
-	}),
-	useGyms: () => ({
-		data: mockGyms,
-		isLoading: false,
-	}),
-	useUnits: () => ({
-		data: mockUnits,
-		isLoading: false,
-	}),
+	useUserProfile: (...args: unknown[]) => mockUseUserProfile(...args),
+	useGyms: (...args: unknown[]) => mockUseGyms(...args),
+	useUnits: (...args: unknown[]) => mockUseUnits(...args),
 	useUpdateUserProfile: () => ({
 		mutateAsync: mockUpdateProfile,
 	}),
@@ -103,6 +97,18 @@ describe("ProfileModal", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockGyms = [...baseGyms];
+		mockUseUserProfile.mockReturnValue({
+			data: mockProfile,
+			isLoading: false,
+		});
+		mockUseGyms.mockReturnValue({
+			data: mockGyms,
+			isLoading: false,
+		});
+		mockUseUnits.mockReturnValue({
+			data: mockUnits,
+			isLoading: false,
+		});
 		mockUpdateProfile.mockResolvedValue({});
 		mockCreateGym.mockResolvedValue({});
 		mockUpdateGym.mockResolvedValue({});
@@ -140,6 +146,10 @@ describe("ProfileModal", () => {
 
 	it("shows empty gym state and opens add form from first gym CTA", () => {
 		mockGyms = [];
+		mockUseGyms.mockReturnValue({
+			data: mockGyms,
+			isLoading: false,
+		});
 
 		render(<ProfileModal open onClose={vi.fn()} />);
 
@@ -158,5 +168,20 @@ describe("ProfileModal", () => {
 			screen.getByRole("heading", { name: "Add New Gym" }),
 		).toBeInTheDocument();
 		expect(screen.getByLabelText("Gym Name")).toHaveValue("");
+	});
+
+	it("shows a loading indicator while the settings data is still loading", () => {
+		mockUseUserProfile.mockReturnValue({
+			data: undefined,
+			isLoading: true,
+		});
+		mockUseUnits.mockReturnValue({
+			data: undefined,
+			isLoading: true,
+		});
+
+		render(<ProfileModal open onClose={vi.fn()} />);
+
+		expect(document.querySelector(".animate-spin")).toBeInTheDocument();
 	});
 });

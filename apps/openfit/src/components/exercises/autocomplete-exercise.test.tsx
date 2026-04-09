@@ -5,6 +5,9 @@ import type { Exercise } from "@/lib/types";
 import { AutocompleteExercise } from "./autocomplete-exercise";
 
 const mockUseExerciseSearch = vi.fn();
+const mockUseGym = vi.fn();
+const mockUseGyms = vi.fn();
+const mockUseUserProfile = vi.fn();
 
 vi.mock("@/components/ui/command", () => ({
 	Command: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -84,15 +87,9 @@ vi.mock("@/components/ui/input", () => ({
 
 vi.mock("@/hooks", () => ({
 	useExerciseSearch: (...args: unknown[]) => mockUseExerciseSearch(...args),
-	useGym: () => ({
-		data: { equipmentIds: ["equipment-1"] },
-	}),
-	useGyms: () => ({
-		data: [{ id: "gym-1", name: "Home Gym" }],
-	}),
-	useUserProfile: () => ({
-		data: { defaultGymId: "gym-1" },
-	}),
+	useGym: (...args: unknown[]) => mockUseGym(...args),
+	useGyms: (...args: unknown[]) => mockUseGyms(...args),
+	useUserProfile: (...args: unknown[]) => mockUseUserProfile(...args),
 }));
 
 vi.mock("@/lib/use-exercise-lookups", () => ({
@@ -114,6 +111,15 @@ function ExerciseHarness({ initialValue }: { initialValue?: Exercise }) {
 describe("AutocompleteExercise", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockUseGym.mockReturnValue({
+			data: { equipmentIds: ["equipment-1"] },
+		});
+		mockUseGyms.mockReturnValue({
+			data: [{ id: "gym-1", name: "Home Gym" }],
+		});
+		mockUseUserProfile.mockReturnValue({
+			data: { defaultGymId: "gym-1" },
+		});
 		mockUseExerciseSearch.mockReturnValue({
 			data: [
 				{
@@ -167,5 +173,37 @@ describe("AutocompleteExercise", () => {
 		fireEvent.keyDown(input, { key: "Escape" });
 
 		expect(screen.getByDisplayValue("Bench Press")).toBeInTheDocument();
+	});
+
+	it("falls back to All when no default gym is configured", () => {
+		mockUseUserProfile.mockReturnValue({ data: { defaultGymId: undefined } });
+		mockUseGyms.mockReturnValue({ data: [] });
+		mockUseGym.mockReturnValue({ data: undefined });
+
+		render(<ExerciseHarness />);
+
+		expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+		expect(mockUseExerciseSearch).toHaveBeenCalledWith("", undefined);
+	});
+
+	it("clears the selected exercise when typing a new character", () => {
+		render(
+			<ExerciseHarness
+				initialValue={
+					{
+						id: "exercise-1",
+						name: "Bench Press",
+					} as Exercise
+				}
+			/>,
+		);
+
+		const input = screen.getByDisplayValue("Bench Press");
+		fireEvent.keyDown(input, { key: "b" });
+
+		expect(screen.getByDisplayValue("b")).toBeInTheDocument();
+		expect(mockUseExerciseSearch).toHaveBeenLastCalledWith("b", [
+			"equipment-1",
+		]);
 	});
 });

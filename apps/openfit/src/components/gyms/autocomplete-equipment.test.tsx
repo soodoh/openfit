@@ -117,4 +117,25 @@ describe("AutocompleteEquipment", () => {
 		expect(screen.getByPlaceholderText("All equipment added")).toBeDisabled();
 		expect(screen.getByText("All equipment added")).toBeInTheDocument();
 	});
+
+	it("shows the no-results message when the search term matches nothing", () => {
+		render(<Harness />);
+
+		const input = screen.getByPlaceholderText("Search equipment...");
+		fireEvent.focus(input);
+		fireEvent.change(input, { target: { value: "zzz" } });
+
+		expect(screen.getByText("No equipment found")).toBeInTheDocument();
+		expect(
+			screen.queryByRole("button", { name: "Barbell" }),
+		).not.toBeInTheDocument();
+	});
+
+	it("honors the disabled prop", () => {
+		render(
+			<AutocompleteEquipment selectedIds={[]} onSelect={vi.fn()} disabled />,
+		);
+
+		expect(screen.getByPlaceholderText("Search equipment...")).toBeDisabled();
+	});
 });

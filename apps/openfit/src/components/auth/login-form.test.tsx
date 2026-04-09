@@ -161,4 +161,23 @@ describe("LoginForm redirects", () => {
 			expect(mockNavigate).toHaveBeenCalledWith({ to: "/", replace: true });
 		});
 	});
+
+	it("shows the fallback error when sign-in throws a non-Error", async () => {
+		mockSignInEmail.mockRejectedValueOnce("boom");
+
+		render(<LoginForm />);
+
+		fireEvent.change(screen.getByLabelText("Email"), {
+			target: { value: "person@example.com" },
+		});
+		fireEvent.change(screen.getByLabelText("Password"), {
+			target: { value: "Password1!" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Login" }));
+
+		expect(
+			await screen.findByText("Authentication failed"),
+		).toBeInTheDocument();
+		expect(mockGetSession).not.toHaveBeenCalled();
+	});
 });

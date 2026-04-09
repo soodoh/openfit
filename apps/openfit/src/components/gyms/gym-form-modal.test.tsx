@@ -114,6 +114,26 @@ describe("GymFormModal", () => {
 		expect(mockCreateGym).not.toHaveBeenCalled();
 	});
 
+	it("submits the create flow and closes the modal", async () => {
+		const onClose = vi.fn();
+
+		render(<GymFormModal open onClose={onClose} />);
+
+		fireEvent.change(screen.getByLabelText("Gym Name"), {
+			target: { value: "Garage Gym" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Select equipment" }));
+		fireEvent.click(screen.getByRole("button", { name: "Save Gym" }));
+
+		await waitFor(() => {
+			expect(mockCreateGym).toHaveBeenCalledWith({
+				name: "Garage Gym",
+				equipmentIds: ["equipment-1"],
+			});
+		});
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
 	it("submits the update flow and shows mutation errors", async () => {
 		mockUpdateGym.mockRejectedValueOnce(new Error("network failed"));
 		const onClose = vi.fn();
@@ -145,5 +165,19 @@ describe("GymFormModal", () => {
 		});
 		expect(await screen.findByText("network failed")).toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it("uses the fallback create error message for non-Error failures", async () => {
+		mockCreateGym.mockRejectedValueOnce("boom");
+
+		render(<GymFormModal open onClose={vi.fn()} />);
+
+		fireEvent.change(screen.getByLabelText("Gym Name"), {
+			target: { value: "Garage Gym" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Select equipment" }));
+		fireEvent.click(screen.getByRole("button", { name: "Save Gym" }));
+
+		expect(await screen.findByText("Failed to create gym")).toBeInTheDocument();
 	});
 });

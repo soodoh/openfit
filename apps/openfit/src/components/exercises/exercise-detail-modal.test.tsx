@@ -130,4 +130,26 @@ describe("ExerciseDetailModal", () => {
 		screen.getByRole("button", { name: "Close" }).click();
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
+
+	it("falls back to the prop image when the fetched exercise has not loaded yet", () => {
+		mockUseExercise.mockReturnValue({ data: undefined });
+
+		render(
+			<ExerciseDetailModal
+				exercise={{
+					id: "exercise-1",
+					name: "Bench Press",
+					imageUrl: "/bench-cover.jpg",
+				}}
+				open
+				onClose={vi.fn()}
+			/>,
+		);
+
+		expect(mockUseExercise).toHaveBeenCalledWith("exercise-1");
+		expect(
+			screen.getByRole("img", { name: "Bench Press" }),
+		).toBeInTheDocument();
+		expect(screen.queryByText("Instructions")).not.toBeInTheDocument();
+	});
 });

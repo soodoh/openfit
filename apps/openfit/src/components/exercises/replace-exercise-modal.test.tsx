@@ -5,6 +5,9 @@ import { ReplaceExerciseModal } from "./replace-exercise-modal";
 
 const mockReplaceExercise = vi.fn();
 const mockUseSimilarExercises = vi.fn();
+const mockUseGym = vi.fn();
+const mockUseGyms = vi.fn();
+const mockUseUserProfile = vi.fn();
 
 vi.mock("@unpic/react", () => ({
 	Image: ({ alt }: { alt: string }) => <img alt={alt} />,
@@ -101,19 +104,13 @@ vi.mock("@/components/ui/input", () => ({
 }));
 
 vi.mock("@/hooks", () => ({
-	useGym: () => ({
-		data: { equipmentIds: ["equipment-1"] },
-	}),
-	useGyms: () => ({
-		data: [{ id: "gym-1", name: "Home Gym" }],
-	}),
+	useGym: (...args: unknown[]) => mockUseGym(...args),
+	useGyms: (...args: unknown[]) => mockUseGyms(...args),
 	useReplaceExercise: () => ({
 		mutateAsync: mockReplaceExercise,
 	}),
 	useSimilarExercises: (...args: unknown[]) => mockUseSimilarExercises(...args),
-	useUserProfile: () => ({
-		data: { defaultGymId: "gym-1" },
-	}),
+	useUserProfile: (...args: unknown[]) => mockUseUserProfile(...args),
 }));
 
 vi.mock("@/lib/use-exercise-lookups", () => ({
@@ -126,6 +123,15 @@ vi.mock("@/lib/use-exercise-lookups", () => ({
 describe("ReplaceExerciseModal", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockUseGym.mockReturnValue({
+			data: { equipmentIds: ["equipment-1"] },
+		});
+		mockUseGyms.mockReturnValue({
+			data: [{ id: "gym-1", name: "Home Gym" }],
+		});
+		mockUseUserProfile.mockReturnValue({
+			data: { defaultGymId: "gym-1" },
+		});
 		mockReplaceExercise.mockResolvedValue(undefined);
 		mockUseSimilarExercises.mockReturnValue({
 			data: [
@@ -192,5 +198,91 @@ describe("ReplaceExerciseModal", () => {
 			});
 		});
 		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it("falls back to All when the user has no default gym", () => {
+		mockUseUserProfile.mockReturnValue({ data: { defaultGymId: undefined } });
+		mockUseGyms.mockReturnValue({ data: [] });
+		mockUseGym.mockReturnValue({ data: undefined });
+
+		render(
+			<ReplaceExerciseModal
+				open
+				onClose={vi.fn()}
+				currentExercise={{
+					id: "exercise-1",
+					name: "Bench Press",
+					primaryMuscleIds: ["chest"],
+				}}
+				setGroupId="set-group-1"
+			/>,
+		);
+
+		expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+		expect(mockUseSimilarExercises).toHaveBeenCalledWith(
+			["chest"],
+			expect.objectContaining({
+				equipmentIds: undefined,
+				excludeExerciseId: "exercise-1",
+			}),
+		);
+	});
+
+	it("resets search state on reopen and keeps replace disabled until a selection is made", async () => {
+		const onClose = vi.fn();
+
+		const { rerender } = render(
+			<ReplaceExerciseModal
+				open
+				onClose={onClose}
+				currentExercise={{
+					id: "exercise-1",
+					name: "Bench Press",
+					primaryMuscleIds: ["chest"],
+				}}
+				setGroupId="set-group-1"
+			/>,
+		);
+
+		expect(screen.getByRole("button", { name: "Replace" })).toBeDisabled();
+
+		fireEvent.click(screen.getByRole("button", { name: /Incline Press/i }));
+		expect(screen.getByRole("button", { name: "Replace" })).not.toBeDisabled();
+
+		fireEvent.click(screen.getByRole("button", { name: "Replace" }));
+		await waitFor(() => {
+			expect(mockReplaceExercise).toHaveBeenCalledWith({
+				id: "set-group-1",
+				exerciseId: "exercise-2",
+			});
+		});
+
+		rerender(
+			<ReplaceExerciseModal
+				open={false}
+				onClose={onClose}
+				currentExercise={{
+					id: "exercise-1",
+					name: "Bench Press",
+					primaryMuscleIds: ["chest"],
+				}}
+				setGroupId="set-group-1"
+			/>,
+		);
+		rerender(
+			<ReplaceExerciseModal
+				open
+				onClose={onClose}
+				currentExercise={{
+					id: "exercise-1",
+					name: "Bench Press",
+					primaryMuscleIds: ["chest"],
+				}}
+				setGroupId="set-group-1"
+			/>,
+		);
+
+		expect(screen.getByPlaceholderText("Search exercises...")).toHaveValue("");
+		expect(screen.getByRole("button", { name: "Replace" })).toBeDisabled();
 	});
 });
