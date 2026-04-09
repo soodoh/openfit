@@ -5,10 +5,17 @@ import { useInView } from "./use-in-view";
 class MockIntersectionObserver {
 	static instances: MockIntersectionObserver[] = [];
 
-	readonly observe = vi.fn<(target: Element) => void>();
-	readonly disconnect = vi.fn<() => void>();
+	readonly observe = vi.fn<(target: Element) => void>((target) => {
+		this.observedTarget = target;
+		this.isConnected = true;
+	});
+	readonly disconnect = vi.fn<() => void>(() => {
+		this.isConnected = false;
+	});
 	readonly options: IntersectionObserverInit | undefined;
 	private readonly callback: IntersectionObserverCallback;
+	private isConnected = false;
+	private observedTarget: Element | undefined;
 
 	constructor(
 		callback: IntersectionObserverCallback,
@@ -23,6 +30,19 @@ class MockIntersectionObserver {
 		entry: Partial<IntersectionObserverEntry> &
 			Pick<IntersectionObserverEntry, "isIntersecting">,
 	) {
+		if (!this.isConnected) {
+			return;
+		}
+
+		const entryTarget = entry.target;
+		if (
+			entryTarget !== undefined &&
+			this.observedTarget !== undefined &&
+			entryTarget !== this.observedTarget
+		) {
+			return;
+		}
+
 		const nextEntry = {
 			boundingClientRect: {} as DOMRectReadOnly,
 			intersectionRatio: entry.isIntersecting ? 1 : 0,
@@ -118,6 +138,12 @@ describe("use-in-view", () => {
 		expect(MockIntersectionObserver.instances).toHaveLength(2);
 		const secondObserver = MockIntersectionObserver.instances[1];
 		expect(secondObserver.observe).toHaveBeenCalledWith(secondNode);
+		expect(result.current.inView).toBe(true);
+
+		act(() => {
+			firstObserver.trigger({ target: firstNode, isIntersecting: false });
+		});
+		expect(result.current.inView).toBe(true);
 
 		act(() => {
 			result.current.ref(null);
@@ -125,6 +151,11 @@ describe("use-in-view", () => {
 
 		expect(secondObserver.disconnect).toHaveBeenCalledTimes(1);
 		expect(MockIntersectionObserver.instances).toHaveLength(2);
+		expect(result.current.inView).toBe(false);
+
+		act(() => {
+			secondObserver.trigger({ target: secondNode, isIntersecting: true });
+		});
 		expect(result.current.inView).toBe(false);
 	});
 });

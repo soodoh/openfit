@@ -87,5 +87,43 @@ describe("use-countdown-timer", () => {
 		expect(result.current.totalSeconds).toBe(0);
 		expect(result.current.isRunning).toBe(false);
 		expect(onExpire).toHaveBeenCalledTimes(2);
+
+		act(() => {
+			result.current.restart(new Date(Date.now() + 3000));
+		});
+		expect(result.current.totalSeconds).toBe(3);
+		expect(result.current.isRunning).toBe(true);
+
+		await act(async () => {
+			await vi.advanceTimersByTimeAsync(3100);
+		});
+		expect(result.current.totalSeconds).toBe(0);
+		expect(result.current.isRunning).toBe(false);
+		expect(onExpire).toHaveBeenCalledTimes(3);
+	});
+
+	it("cleans up its interval on unmount", async () => {
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date("2026-02-01T10:00:00.000Z"));
+		const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+		const { result, unmount } = renderHook(() =>
+			useCountdownTimer({
+				expiryTimestamp: new Date(Date.now() + 5000),
+				autoStart: false,
+				interval: 100,
+			}),
+		);
+
+		act(() => {
+			result.current.start();
+		});
+
+		await act(async () => {
+			await vi.advanceTimersByTimeAsync(100);
+		});
+
+		unmount();
+
+		expect(clearIntervalSpy).toHaveBeenCalled();
 	});
 });
