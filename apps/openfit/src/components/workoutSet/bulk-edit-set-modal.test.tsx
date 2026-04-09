@@ -226,4 +226,34 @@ describe("BulkEditSetModal", () => {
 		});
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
+
+	it("handles an empty set group shape without preset units", async () => {
+		const onClose = vi.fn();
+
+		render(
+			<BulkEditSetModal
+				open
+				onClose={onClose}
+				setGroup={{
+					...setGroup,
+					sets: [],
+				}}
+				units={units}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Update" }));
+
+		await waitFor(() => {
+			expect(mockBulkEditSetGroup).toHaveBeenCalledWith({
+				id: "group-1",
+				reps: undefined,
+				weight: undefined,
+				repetitionUnitId: undefined,
+				weightUnitId: undefined,
+				restTime: 0,
+			});
+		});
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
 });

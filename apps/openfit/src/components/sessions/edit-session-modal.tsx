@@ -207,6 +207,7 @@ export const EditSessionModal = ({
 										<button
 											key={`rating-star-${starValue}`}
 											type="button"
+											aria-label={`Set rating ${starValue}`}
 											onClick={() => setImpression(starValue)}
 											onMouseEnter={() => setHoveredStar(starValue)}
 											onMouseLeave={() => setHoveredStar(undefined)}
@@ -225,6 +226,7 @@ export const EditSessionModal = ({
 								{impression && (
 									<button
 										type="button"
+										aria-label="Clear rating"
 										onClick={() => setImpression(undefined)}
 										className="ml-2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
 									>

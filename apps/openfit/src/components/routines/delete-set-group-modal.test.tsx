@@ -25,6 +25,9 @@ vi.mock("@/components/ui/dialog", () => ({
 		open ? (
 			<div>
 				{children}
+				<button type="button" onClick={() => onOpenChange?.(true)}>
+					Stay open
+				</button>
 				<button type="button" onClick={() => onOpenChange?.(false)}>
 					Close dialog
 				</button>
@@ -112,6 +115,21 @@ describe("DeleteSetGroupModal", () => {
 		);
 
 		expect(screen.getByRole("button", { name: "Yes" })).toBeInTheDocument();
+		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it("does not close when the dialog reports staying open", () => {
+		const onClose = vi.fn();
+
+		render(
+			<DeleteSetGroupModal
+				open
+				onClose={onClose}
+				setGroup={{ id: "set-group-1" } as WorkoutSetGroup}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Stay open" }));
 		expect(onClose).not.toHaveBeenCalled();
 	});
 });

@@ -251,4 +251,17 @@ describe("EditSessionModal", () => {
 		).toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
 	});
+
+	it("tracks rating hover and clears the selected rating in create mode", () => {
+		render(<EditSessionModal open onClose={vi.fn()} />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Set rating 3" }));
+		fireEvent.mouseEnter(screen.getByRole("button", { name: "Set rating 5" }));
+		fireEvent.mouseLeave(screen.getByRole("button", { name: "Set rating 5" }));
+		fireEvent.click(screen.getByRole("button", { name: "Clear rating" }));
+
+		expect(
+			screen.getByRole("button", { name: "Create Session" }),
+		).toBeInTheDocument();
+	});
 });

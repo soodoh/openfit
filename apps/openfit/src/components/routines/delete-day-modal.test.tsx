@@ -24,6 +24,9 @@ vi.mock("@/components/ui/dialog", () => ({
 		open ? (
 			<div>
 				{children}
+				<button type="button" onClick={() => onOpenChange?.(true)}>
+					Stay open
+				</button>
 				<button type="button" onClick={() => onOpenChange?.(false)}>
 					Close dialog
 				</button>
@@ -108,7 +111,7 @@ describe("DeleteDayModal", () => {
 
 		render(<DeleteDayModal open onClose={onClose} dayId="day-1" />);
 
-		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
-		expect(onClose).toHaveBeenCalledTimes(1);
+		fireEvent.click(screen.getByRole("button", { name: "Stay open" }));
+		expect(onClose).not.toHaveBeenCalled();
 	});
 });

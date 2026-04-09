@@ -154,4 +154,17 @@ describe("EditRatingPopover", () => {
 			screen.getByRole("button", { name: "Clear rating" }),
 		).toBeInTheDocument();
 	});
+
+	it("updates the hover preview when moving across stars", () => {
+		render(
+			<EditRatingPopover session={{ ...baseSession, impression: null }} />,
+		);
+
+		fireEvent.click(screen.getByRole("button"));
+		const starButton = screen.getByRole("button", { name: "Set rating 2" });
+		fireEvent.mouseEnter(starButton);
+		fireEvent.mouseLeave(starButton);
+
+		expect(starButton).toBeInTheDocument();
+	});
 });

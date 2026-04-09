@@ -24,6 +24,9 @@ vi.mock("@/components/ui/dialog", () => ({
 		open ? (
 			<div>
 				{children}
+				<button type="button" onClick={() => onOpenChange?.(true)}>
+					Stay open
+				</button>
 				<button type="button" onClick={() => onOpenChange?.(false)}>
 					Close dialog
 				</button>
@@ -103,6 +106,15 @@ describe("DeleteRoutineModal", () => {
 		expect(
 			screen.getByRole("button", { name: "Delete Routine" }),
 		).toBeInTheDocument();
+		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it("does not close when the dialog reports staying open", () => {
+		const onClose = vi.fn();
+
+		render(<DeleteRoutineModal open onClose={onClose} routineId="routine-1" />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Stay open" }));
 		expect(onClose).not.toHaveBeenCalled();
 	});
 });

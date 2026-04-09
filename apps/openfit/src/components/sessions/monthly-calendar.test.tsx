@@ -227,4 +227,46 @@ describe("MonthlyCalendar", () => {
 		expect(screen.getByText("Short Session")).toBeInTheDocument();
 		expect(screen.getByText("45m")).toBeInTheDocument();
 	});
+
+	it("opens the session detail modal when a visible session card is clicked", () => {
+		mockSessionData["session-6"] = {
+			id: "session-6",
+			userId: "user-1",
+			name: "Visible Session",
+			notes: "",
+			impression: null,
+			startTime: new Date("2026-04-15T08:00:00.000Z"),
+			endTime: new Date("2026-04-15T08:30:00.000Z"),
+			templateId: null,
+			createdAt: new Date("2026-04-15T08:00:00.000Z"),
+			updatedAt: new Date("2026-04-15T08:00:00.000Z"),
+			setGroups: [],
+		};
+
+		render(
+			<MonthlyCalendar
+				currentMonth={dayjs("2026-04-01")}
+				sessions={[
+					{
+						id: "session-6",
+						name: "Visible Session",
+						startTime: new Date("2026-04-15T08:00:00.000Z"),
+						endTime: new Date("2026-04-15T08:30:00.000Z"),
+						impression: null,
+						createdAt: new Date("2026-04-15T08:00:00.000Z"),
+					},
+				]}
+				units={mockUnits}
+				onMonthChange={vi.fn()}
+			/>,
+		);
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Visible Session 30m" }),
+		);
+
+		expect(
+			screen.getByRole("heading", { name: "Visible Session" }),
+		).toBeVisible();
+	});
 });

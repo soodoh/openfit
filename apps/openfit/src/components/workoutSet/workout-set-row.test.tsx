@@ -256,4 +256,53 @@ describe("WorkoutSetRow", () => {
 		expect(mockUpdateSet).toHaveBeenCalledWith({ id: "set-1", reps: 0 });
 		expect(startRestTimer).not.toHaveBeenCalled();
 	});
+
+	it("can uncheck a completed current-session set without starting rest", () => {
+		const startRestTimer = vi.fn();
+
+		render(
+			<WorkoutSetRow
+				view={ListView.CurrentSession}
+				set={buildSet({
+					completed: true,
+					restTime: 75,
+					repetitionUnit: { id: "rep", name: "Reps" },
+					repetitionUnitId: "rep",
+				})}
+				setNum={1}
+				units={mockUnits}
+				startRestTimer={startRestTimer}
+			/>,
+		);
+
+		fireEvent.click(
+			screen.getByRole("checkbox", { name: "Mark as Completed" }),
+		);
+
+		expect(mockUpdateSet).toHaveBeenCalledWith({
+			id: "set-1",
+			completed: false,
+		});
+		expect(startRestTimer).not.toHaveBeenCalled();
+	});
+
+	it("falls back to default unit labels when set units are missing", () => {
+		render(
+			<WorkoutSetRow
+				view={ListView.EditTemplate}
+				set={buildSet({
+					repetitionUnit: undefined,
+					repetitionUnitId: undefined,
+					weightUnit: undefined,
+					weightUnitId: undefined,
+				})}
+				setNum={1}
+				units={mockUnits}
+				startRestTimer={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByText("reps")).toBeInTheDocument();
+		expect(screen.getAllByText("lbs")).toHaveLength(2);
+	});
 });
