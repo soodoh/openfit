@@ -7,6 +7,7 @@ import { LookupFormModal } from "./lookup-form-modal";
 import { UserRoleModal } from "./user-role-modal";
 
 const mockUpdateUserRole = vi.fn();
+let selectOnValueChange: ((value: string) => void) | undefined;
 
 vi.mock("@/components/ui/dialog", () => ({
 	Dialog: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
@@ -29,14 +30,29 @@ vi.mock("@/components/ui/dialog", () => ({
 }));
 
 vi.mock("@/components/ui/select", () => ({
-	Select: ({ children }: { children: React.ReactNode }) => (
-		<div>{children}</div>
-	),
+	Select: ({
+		children,
+		onValueChange,
+	}: {
+		children: React.ReactNode;
+		onValueChange: (value: string) => void;
+	}) => {
+		selectOnValueChange = onValueChange;
+		return <div>{children}</div>;
+	},
 	SelectContent: ({ children }: { children: React.ReactNode }) => (
 		<div>{children}</div>
 	),
-	SelectItem: ({ children }: { children: React.ReactNode }) => (
-		<div>{children}</div>
+	SelectItem: ({
+		children,
+		value,
+	}: {
+		children: React.ReactNode;
+		value: string;
+	}) => (
+		<button type="button" onClick={() => selectOnValueChange?.(value)}>
+			{children}
+		</button>
 	),
 	SelectTrigger: ({ children }: { children: React.ReactNode }) => (
 		<div>{children}</div>
@@ -53,6 +69,7 @@ vi.mock("@/hooks", () => ({
 describe("admin modals and form state", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		selectOnValueChange = undefined;
 		mockUpdateUserRole.mockResolvedValue(undefined);
 	});
 
@@ -91,6 +108,55 @@ describe("admin modals and form state", () => {
 		);
 
 		expect(screen.getByLabelText("Name")).toHaveValue("Barbell");
+	});
+
+	it("shows lookup form edit text, pending state, and fallback errors", async () => {
+		const onSubmit = vi.fn().mockRejectedValue("lookup failed");
+		const onClose = vi.fn();
+
+		render(
+			<LookupFormModal
+				open
+				onClose={onClose}
+				title="Equipment"
+				item={{ id: "equipment-1", name: "Barbell" }}
+				onSubmit={onSubmit}
+				isPending={true}
+			/>,
+		);
+
+		expect(screen.getByText("Edit Equipment")).toBeInTheDocument();
+		expect(screen.getByText("Update the equipment name")).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled();
+
+		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it("surfaces lookup submission errors and keeps the modal open", async () => {
+		const onSubmit = vi.fn().mockRejectedValue("lookup failed");
+		const onClose = vi.fn();
+
+		render(
+			<LookupFormModal
+				open
+				onClose={onClose}
+				title="Equipment"
+				item={undefined}
+				onSubmit={onSubmit}
+				isPending={false}
+			/>,
+		);
+
+		fireEvent.change(screen.getByLabelText("Name"), {
+			target: { value: "Rope" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+		expect(
+			await screen.findByText("Failed to create equipment"),
+		).toBeInTheDocument();
+		expect(onClose).not.toHaveBeenCalled();
 	});
 
 	it("shows delete lookup errors while preserving the open state", async () => {
@@ -157,6 +223,67 @@ describe("admin modals and form state", () => {
 		).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Save Changes" })).toBeDisabled();
 
+		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it("changes the user role, submits the update, and closes on success", async () => {
+		const onClose = vi.fn();
+
+		render(
+			<UserRoleModal
+				user={{
+					id: "user-1",
+					userId: "user-1",
+					email: "coach@example.com",
+					role: RoleEnum.USER,
+				}}
+				onClose={onClose}
+			/>,
+		);
+
+		expect(
+			screen.getByText("Users can only manage their own data"),
+		).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Save Changes" })).toBeDisabled();
+
+		fireEvent.click(screen.getByRole("button", { name: "Admin" }));
+		expect(
+			screen.getByText("Admins can manage all global data and users"),
+		).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Save Changes" })).toBeEnabled();
+
+		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+		await waitFor(() => {
+			expect(mockUpdateUserRole).toHaveBeenCalledWith({
+				id: "user-1",
+				role: RoleEnum.ADMIN,
+			});
+		});
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it("shows user role update failures and keeps the modal open", async () => {
+		mockUpdateUserRole.mockRejectedValueOnce(new Error("role failed"));
+		const onClose = vi.fn();
+
+		render(
+			<UserRoleModal
+				user={{
+					id: "user-1",
+					userId: "user-1",
+					email: "coach@example.com",
+					role: RoleEnum.USER,
+				}}
+				onClose={onClose}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Admin" }));
+		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+		expect(await screen.findByText("role failed")).toBeInTheDocument();
+		expect(onClose).not.toHaveBeenCalled();
 		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});

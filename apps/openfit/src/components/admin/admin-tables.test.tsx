@@ -13,6 +13,71 @@ const mockUseCreateLookup = vi.fn();
 const mockUseUpdateLookup = vi.fn();
 const mockUseDeleteLookup = vi.fn();
 
+let usersSeed = {
+	data: {
+		items: [
+			{
+				id: "user-1",
+				userId: "user-1",
+				email: "coach@example.com",
+				role: "ADMIN",
+			},
+			{
+				id: "user-2",
+				userId: "user-2",
+				email: "athlete@example.com",
+				role: "USER",
+			},
+		],
+		total: 12,
+		page: 1,
+		pageSize: 10,
+	},
+	isLoading: false,
+};
+
+let exercisesSeed = {
+	data: {
+		items: [
+			{
+				id: "exercise-1",
+				name: "Bench Press",
+				level: "beginner",
+				equipment: { id: "equipment-1", name: "Barbell" },
+				category: { id: "category-1", name: "Chest" },
+				primaryMuscles: [{ id: "muscle-1", name: "Pectorals" }],
+				secondaryMuscles: [],
+			},
+			{
+				id: "exercise-2",
+				name: "Air Squat",
+				level: "expert",
+				equipment: undefined,
+				category: undefined,
+				primaryMuscles: [],
+				secondaryMuscles: [],
+			},
+		],
+		total: 2,
+		page: 1,
+		pageSize: 10,
+	},
+	isLoading: false,
+};
+
+let lookupsSeed = {
+	data: {
+		items: [
+			{ id: "lookup-1", name: "Rope" },
+			{ id: "lookup-2", name: "Machine" },
+		],
+		total: 2,
+		page: 1,
+		pageSize: 10,
+	},
+	isLoading: false,
+};
+
 const mockPagination = vi.fn(
 	({
 		currentPage,
@@ -188,7 +253,7 @@ vi.mock("@/hooks", () => ({
 describe("admin tables", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockUseAdminUsersPaginated.mockReturnValue({
+		usersSeed = {
 			data: {
 				items: [
 					{
@@ -209,8 +274,8 @@ describe("admin tables", () => {
 				pageSize: 10,
 			},
 			isLoading: false,
-		});
-		mockUseAdminExercisesPaginated.mockReturnValue({
+		};
+		exercisesSeed = {
 			data: {
 				items: [
 					{
@@ -222,14 +287,23 @@ describe("admin tables", () => {
 						primaryMuscles: [{ id: "muscle-1", name: "Pectorals" }],
 						secondaryMuscles: [],
 					},
+					{
+						id: "exercise-2",
+						name: "Air Squat",
+						level: "expert",
+						equipment: undefined,
+						category: undefined,
+						primaryMuscles: [],
+						secondaryMuscles: [],
+					},
 				],
-				total: 1,
+				total: 2,
 				page: 1,
 				pageSize: 10,
 			},
 			isLoading: false,
-		});
-		mockUseAdminLookupPaginated.mockReturnValue({
+		};
+		lookupsSeed = {
 			data: {
 				items: [
 					{ id: "lookup-1", name: "Rope" },
@@ -240,7 +314,10 @@ describe("admin tables", () => {
 				pageSize: 10,
 			},
 			isLoading: false,
-		});
+		};
+		mockUseAdminUsersPaginated.mockReturnValue(usersSeed);
+		mockUseAdminExercisesPaginated.mockReturnValue(exercisesSeed);
+		mockUseAdminLookupPaginated.mockReturnValue(lookupsSeed);
 		mockUseAdminDeleteExercise.mockReturnValue({ mutate: vi.fn() });
 		mockUseCreateLookup.mockReturnValue({
 			mutateAsync: vi.fn(),
@@ -281,6 +358,13 @@ describe("admin tables", () => {
 			search: "coach",
 		});
 
+		fireEvent.click(screen.getAllByRole("button", { name: "Page size 20" })[0]);
+		expect(mockUseAdminUsersPaginated).toHaveBeenLastCalledWith({
+			page: 1,
+			pageSize: 20,
+			search: "coach",
+		});
+
 		fireEvent.click(
 			screen
 				.getByText("coach@example.com")
@@ -292,6 +376,40 @@ describe("admin tables", () => {
 		expect(
 			screen.getByText("Role modal: coach@example.com"),
 		).toBeInTheDocument();
+	});
+
+	it("shows loading skeletons and empty states when tables have no data", () => {
+		usersSeed = {
+			data: undefined,
+			isLoading: true,
+		} as typeof usersSeed;
+		exercisesSeed = {
+			data: undefined,
+			isLoading: true,
+		} as typeof exercisesSeed;
+		lookupsSeed = {
+			data: undefined,
+			isLoading: true,
+		} as typeof lookupsSeed;
+		mockUseAdminUsersPaginated.mockReturnValue(usersSeed);
+		mockUseAdminExercisesPaginated.mockReturnValue(exercisesSeed);
+		mockUseAdminLookupPaginated.mockReturnValue(lookupsSeed);
+
+		render(
+			<div>
+				<UserTable />
+				<ExerciseTable />
+				<LookupTable
+					title="Equipment"
+					singularTitle="Equipment"
+					lookupType="equipment"
+				/>
+			</div>,
+		);
+
+		expect(document.querySelectorAll(".animate-pulse").length).toBeGreaterThan(
+			0,
+		);
 	});
 
 	it("creates, updates, and deletes lookups from the table controls", async () => {
@@ -375,6 +493,7 @@ describe("admin tables", () => {
 		expect(screen.getByText("Bench Press")).toBeInTheDocument();
 		expect(screen.getByText("Barbell")).toBeInTheDocument();
 		expect(screen.getByText("Pectorals")).toBeInTheDocument();
+		expect(screen.getByText("Air Squat")).toBeInTheDocument();
 
 		fireEvent.click(screen.getByRole("button", { name: "Add Exercise" }));
 		expect(screen.getByText("Create exercise")).toBeInTheDocument();

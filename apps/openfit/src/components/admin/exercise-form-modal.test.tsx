@@ -30,6 +30,11 @@ let imageSeed = [
 		url: "blob:new",
 	},
 ];
+let adminDataSeed = {
+	equipment: [{ id: "equipment-1", name: "Barbell" }],
+	categories: [{ id: "category-1", name: "Chest" }],
+	muscleGroups: [{ id: "muscle-1", name: "Pectorals" }],
+};
 
 const mockUseExerciseFormState = vi.fn(() => {
 	const [name, setName] = useState(formSeed.name);
@@ -189,16 +194,16 @@ vi.mock("./use-exercise-image-queue", () => ({
 
 vi.mock("@/hooks", () => ({
 	useAdminCategories: () => ({
-		data: [{ id: "category-1", name: "Chest" }],
+		data: adminDataSeed.categories,
 	}),
 	useAdminCreateExercise: () => ({
 		mutateAsync: mockCreateExercise,
 	}),
 	useAdminEquipment: () => ({
-		data: [{ id: "equipment-1", name: "Barbell" }],
+		data: adminDataSeed.equipment,
 	}),
 	useAdminMuscleGroups: () => ({
-		data: [{ id: "muscle-1", name: "Pectorals" }],
+		data: adminDataSeed.muscleGroups,
 	}),
 	useAdminUpdateExercise: () => ({
 		mutateAsync: mockUpdateExercise,
@@ -233,9 +238,27 @@ describe("ExerciseFormModal", () => {
 				url: "blob:new",
 			},
 		];
+		adminDataSeed = {
+			equipment: [{ id: "equipment-1", name: "Barbell" }],
+			categories: [{ id: "category-1", name: "Chest" }],
+			muscleGroups: [{ id: "muscle-1", name: "Pectorals" }],
+		};
 		mockCreateExercise.mockResolvedValue(undefined);
 		mockUpdateExercise.mockResolvedValue(undefined);
 		mockUploadFile.mockResolvedValue("/uploaded/new.jpg");
+	});
+
+	it("shows a loading state while exercise metadata is still loading", () => {
+		adminDataSeed = {
+			equipment: undefined as never,
+			categories: undefined as never,
+			muscleGroups: undefined as never,
+		};
+
+		render(<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />);
+
+		expect(screen.queryByLabelText("Name *")).not.toBeInTheDocument();
+		expect(screen.getByText("Add Exercise")).toBeInTheDocument();
 	});
 
 	it("shows validation errors before submitting", async () => {
@@ -258,6 +281,49 @@ describe("ExerciseFormModal", () => {
 		expect(mockUpdateExercise).not.toHaveBeenCalled();
 		expect(mockUploadFile).not.toHaveBeenCalled();
 		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it("validates category and primary muscle requirements in order", async () => {
+		formSeed = {
+			...formSeed,
+			name: "Bench Press",
+			categoryId: "",
+			primaryMuscleIds: [],
+		};
+		const onClose = vi.fn();
+
+		render(<ExerciseFormModal open onClose={onClose} exercise={undefined} />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+		expect(await screen.findByText("Category is required")).toBeInTheDocument();
+		expect(mockCreateExercise).not.toHaveBeenCalled();
+		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it("creates a new exercise without uploads and closes on success", async () => {
+		imageSeed = [];
+		const onClose = vi.fn();
+
+		render(<ExerciseFormModal open onClose={onClose} exercise={undefined} />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+		await waitFor(() => {
+			expect(mockCreateExercise).toHaveBeenCalledWith({
+				name: "Bench Press",
+				equipmentId: "equipment-1",
+				categoryId: "category-1",
+				level: "intermediate",
+				force: "push",
+				mechanic: "compound",
+				primaryMuscleIds: ["muscle-1"],
+				secondaryMuscleIds: ["muscle-2"],
+				instructions: ["Set up"],
+				imageUrls: [],
+			});
+		});
+		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
 	it("uploads new images and submits the update flow with cleaned instructions", async () => {
@@ -303,5 +369,18 @@ describe("ExerciseFormModal", () => {
 			imageUrls: ["/existing.jpg", "/uploaded/new.jpg"],
 		});
 		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it("surfaces create errors without closing the modal", async () => {
+		mockCreateExercise.mockRejectedValueOnce(new Error("create failed"));
+		imageSeed = [];
+		const onClose = vi.fn();
+
+		render(<ExerciseFormModal open onClose={onClose} exercise={undefined} />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+		expect(await screen.findByText("create failed")).toBeInTheDocument();
+		expect(onClose).not.toHaveBeenCalled();
 	});
 });
