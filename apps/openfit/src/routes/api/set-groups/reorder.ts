@@ -23,6 +23,10 @@ export const Route = createFileRoute("/api/set-groups/reorder")({
 					const body = await parseJsonBody(request, reorderSetGroupsSchema);
 					const { setGroupIds } = body;
 					const setGroupsToUpdate: Array<{ id: string; order: number }> = [];
+					let parentScope: {
+						sessionId: string | null;
+						routineDayId: string | null;
+					} | null = null;
 					// Validate ownership for every existing set group before mutating.
 					for (const [index, setGroupId] of setGroupIds.entries()) {
 						const setGroup = await db.query.workoutSetGroups.findFirst({
@@ -33,6 +37,21 @@ export const Route = createFileRoute("/api/set-groups/reorder")({
 						}
 						if (setGroup.userId !== session.user.id) {
 							return Response.json({ error: "Unauthorized" }, { status: 403 });
+						}
+						const nextParentScope = {
+							sessionId: setGroup.sessionId ?? null,
+							routineDayId: setGroup.routineDayId ?? null,
+						};
+						if (!parentScope) {
+							parentScope = nextParentScope;
+						} else if (
+							parentScope.sessionId !== nextParentScope.sessionId ||
+							parentScope.routineDayId !== nextParentScope.routineDayId
+						) {
+							return Response.json(
+								{ error: "Set groups must share the same parent" },
+								{ status: 400 },
+							);
 						}
 						setGroupsToUpdate.push({ id: setGroupId, order: index });
 					}

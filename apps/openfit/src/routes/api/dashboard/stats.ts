@@ -57,7 +57,7 @@ export const Route = createFileRoute("/api/dashboard/stats")({
 				// Get all completed session dates
 				const sessionDates = await db
 					.select({
-						date: sql<string>`date(${schema.workoutSessions.startTime}, 'unixepoch')`.as(
+						date: sql<string>`date(${schema.workoutSessions.startTime}, 'unixepoch', 'localtime')`.as(
 							"date",
 						),
 					})
@@ -68,9 +68,13 @@ export const Route = createFileRoute("/api/dashboard/stats")({
 							isNotNull(schema.workoutSessions.endTime),
 						),
 					)
-					.groupBy(sql`date(${schema.workoutSessions.startTime}, 'unixepoch')`)
+					.groupBy(
+						sql`date(${schema.workoutSessions.startTime}, 'unixepoch', 'localtime')`,
+					)
 					.orderBy(
-						desc(sql`date(${schema.workoutSessions.startTime}, 'unixepoch')`),
+						desc(
+							sql`date(${schema.workoutSessions.startTime}, 'unixepoch', 'localtime')`,
+						),
 					);
 				let currentStreak = 0;
 				const today = new Date();

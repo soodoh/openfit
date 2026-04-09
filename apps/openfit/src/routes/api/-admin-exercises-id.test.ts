@@ -211,22 +211,17 @@ describe("PATCH /api/admin/exercises/:id", () => {
 				right: "exercise_1",
 			},
 		});
-		expect(mocks.delete).toHaveBeenNthCalledWith(
-			1,
+		expect(mocks.delete).toHaveBeenCalledTimes(4);
+		expect(mocks.delete).toHaveBeenCalledWith(
 			mocks.schema.exercisePrimaryMuscles,
 		);
-		expect(mocks.delete).toHaveBeenNthCalledWith(
-			2,
+		expect(mocks.delete).toHaveBeenCalledWith(
 			mocks.schema.exerciseSecondaryMuscles,
 		);
-		expect(mocks.delete).toHaveBeenNthCalledWith(
-			3,
+		expect(mocks.delete).toHaveBeenCalledWith(
 			mocks.schema.exerciseInstructions,
 		);
-		expect(mocks.delete).toHaveBeenNthCalledWith(
-			4,
-			mocks.schema.exerciseImages,
-		);
+		expect(mocks.delete).toHaveBeenCalledWith(mocks.schema.exerciseImages);
 		expect(mocks.deleteWhere).toHaveBeenNthCalledWith(1, {
 			type: "eq",
 			left: mocks.schema.exercisePrimaryMuscles.exerciseId,
@@ -247,22 +242,17 @@ describe("PATCH /api/admin/exercises/:id", () => {
 			left: mocks.schema.exerciseImages.exerciseId,
 			right: "exercise_1",
 		});
-		expect(mocks.insert).toHaveBeenNthCalledWith(
-			1,
+		expect(mocks.insert).toHaveBeenCalledTimes(4);
+		expect(mocks.insert).toHaveBeenCalledWith(
 			mocks.schema.exercisePrimaryMuscles,
 		);
-		expect(mocks.insert).toHaveBeenNthCalledWith(
-			2,
+		expect(mocks.insert).toHaveBeenCalledWith(
 			mocks.schema.exerciseSecondaryMuscles,
 		);
-		expect(mocks.insert).toHaveBeenNthCalledWith(
-			3,
+		expect(mocks.insert).toHaveBeenCalledWith(
 			mocks.schema.exerciseInstructions,
 		);
-		expect(mocks.insert).toHaveBeenNthCalledWith(
-			4,
-			mocks.schema.exerciseImages,
-		);
+		expect(mocks.insert).toHaveBeenCalledWith(mocks.schema.exerciseImages);
 		expect(mocks.insertValues).toHaveBeenNthCalledWith(1, [
 			{
 				id: "primary_1",
@@ -344,22 +334,17 @@ describe("PATCH /api/admin/exercises/:id", () => {
 
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ success: true });
-		expect(mocks.delete).toHaveBeenNthCalledWith(
-			1,
+		expect(mocks.delete).toHaveBeenCalledTimes(4);
+		expect(mocks.delete).toHaveBeenCalledWith(
 			mocks.schema.exercisePrimaryMuscles,
 		);
-		expect(mocks.delete).toHaveBeenNthCalledWith(
-			2,
+		expect(mocks.delete).toHaveBeenCalledWith(
 			mocks.schema.exerciseSecondaryMuscles,
 		);
-		expect(mocks.delete).toHaveBeenNthCalledWith(
-			3,
+		expect(mocks.delete).toHaveBeenCalledWith(
 			mocks.schema.exerciseInstructions,
 		);
-		expect(mocks.delete).toHaveBeenNthCalledWith(
-			4,
-			mocks.schema.exerciseImages,
-		);
+		expect(mocks.delete).toHaveBeenCalledWith(mocks.schema.exerciseImages);
 		expect(mocks.insert).not.toHaveBeenCalled();
 	});
 
@@ -445,23 +430,18 @@ describe("DELETE /api/admin/exercises/:id", () => {
 
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ success: true });
-		expect(mocks.delete).toHaveBeenNthCalledWith(
-			1,
+		expect(mocks.delete).toHaveBeenCalledTimes(5);
+		expect(mocks.delete).toHaveBeenCalledWith(
 			mocks.schema.exercisePrimaryMuscles,
 		);
-		expect(mocks.delete).toHaveBeenNthCalledWith(
-			2,
+		expect(mocks.delete).toHaveBeenCalledWith(
 			mocks.schema.exerciseSecondaryMuscles,
 		);
-		expect(mocks.delete).toHaveBeenNthCalledWith(
-			3,
+		expect(mocks.delete).toHaveBeenCalledWith(
 			mocks.schema.exerciseInstructions,
 		);
-		expect(mocks.delete).toHaveBeenNthCalledWith(
-			4,
-			mocks.schema.exerciseImages,
-		);
-		expect(mocks.delete).toHaveBeenNthCalledWith(5, mocks.schema.exercises);
+		expect(mocks.delete).toHaveBeenCalledWith(mocks.schema.exerciseImages);
+		expect(mocks.delete).toHaveBeenCalledWith(mocks.schema.exercises);
 		expect(mocks.deleteWhere).toHaveBeenNthCalledWith(1, {
 			type: "eq",
 			left: mocks.schema.exercisePrimaryMuscles.exerciseId,

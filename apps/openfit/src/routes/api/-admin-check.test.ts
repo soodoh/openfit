@@ -83,10 +83,13 @@ describe("GET /api/admin/check", () => {
 
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ isAdmin: true });
-		expect(mocks.eq).toHaveBeenCalledWith(
-			mocks.schema.userProfiles.userId,
-			"admin_123",
-		);
+		expect(mocks.findFirstUserProfile).toHaveBeenCalledWith({
+			where: {
+				type: "eq",
+				left: mocks.schema.userProfiles.userId,
+				right: "admin_123",
+			},
+		});
 	});
 
 	it("returns false when the current profile is missing", async () => {

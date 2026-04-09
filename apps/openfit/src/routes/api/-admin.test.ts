@@ -136,6 +136,12 @@ describe("GET /api/admin/users", () => {
 			left: mocks.schema.userProfiles.userId,
 			right: mocks.schema.users.id,
 		});
+		expect(mocks.select).toHaveBeenNthCalledWith(2, {
+			id: mocks.schema.userProfiles.id,
+			userId: mocks.schema.userProfiles.userId,
+			email: mocks.schema.users.email,
+			role: mocks.schema.userProfiles.role,
+		});
 		expect(totalQuery.where).toHaveBeenCalledWith({
 			type: "like",
 			left: mocks.schema.users.email,

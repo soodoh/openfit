@@ -351,23 +351,18 @@ describe("POST /api/admin/exercises", () => {
 
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ id: "exercise_1" });
-		expect(mocks.insert).toHaveBeenNthCalledWith(1, mocks.schema.exercises);
-		expect(mocks.insert).toHaveBeenNthCalledWith(
-			2,
+		expect(mocks.insert).toHaveBeenCalledTimes(5);
+		expect(mocks.insert).toHaveBeenCalledWith(mocks.schema.exercises);
+		expect(mocks.insert).toHaveBeenCalledWith(
 			mocks.schema.exercisePrimaryMuscles,
 		);
-		expect(mocks.insert).toHaveBeenNthCalledWith(
-			3,
+		expect(mocks.insert).toHaveBeenCalledWith(
 			mocks.schema.exerciseSecondaryMuscles,
 		);
-		expect(mocks.insert).toHaveBeenNthCalledWith(
-			4,
+		expect(mocks.insert).toHaveBeenCalledWith(
 			mocks.schema.exerciseInstructions,
 		);
-		expect(mocks.insert).toHaveBeenNthCalledWith(
-			5,
-			mocks.schema.exerciseImages,
-		);
+		expect(mocks.insert).toHaveBeenCalledWith(mocks.schema.exerciseImages);
 		expect(mocks.insertValues).toHaveBeenCalledWith({
 			id: "exercise_1",
 			name: "Bench Press",

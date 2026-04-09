@@ -120,8 +120,19 @@ describe("GET /api/dashboard/stats", () => {
 			mocks.schema.workoutSessions.startTime,
 			expectedMonday,
 		);
-		expect(mocks.sql).toHaveBeenCalledWith(
-			["date(", ", 'unixepoch')"],
+		expect(mocks.sql).toHaveBeenNthCalledWith(
+			1,
+			["date(", ", 'unixepoch', 'localtime')"],
+			mocks.schema.workoutSessions.startTime,
+		);
+		expect(mocks.sql).toHaveBeenNthCalledWith(
+			2,
+			["date(", ", 'unixepoch', 'localtime')"],
+			mocks.schema.workoutSessions.startTime,
+		);
+		expect(mocks.sql).toHaveBeenNthCalledWith(
+			3,
+			["date(", ", 'unixepoch', 'localtime')"],
 			mocks.schema.workoutSessions.startTime,
 		);
 	});

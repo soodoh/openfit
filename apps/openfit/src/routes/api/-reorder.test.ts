@@ -111,11 +111,15 @@ describe("POST /api/set-groups/reorder", () => {
 			.mockResolvedValueOnce({
 				id: "group_1",
 				userId: "user_123",
+				sessionId: "session_1",
+				routineDayId: null,
 			})
 			.mockResolvedValueOnce(null)
 			.mockResolvedValueOnce({
 				id: "group_2",
 				userId: "user_123",
+				sessionId: "session_1",
+				routineDayId: null,
 			});
 
 		const response = await setGroupHandlers.POST({
@@ -164,10 +168,14 @@ describe("POST /api/set-groups/reorder", () => {
 			.mockResolvedValueOnce({
 				id: "group_1",
 				userId: "user_123",
+				sessionId: "session_1",
+				routineDayId: null,
 			})
 			.mockResolvedValueOnce({
 				id: "group_2",
 				userId: "user_999",
+				sessionId: "session_1",
+				routineDayId: null,
 			});
 
 		const response = await setGroupHandlers.POST({
@@ -186,6 +194,39 @@ describe("POST /api/set-groups/reorder", () => {
 		expect(mocks.update).not.toHaveBeenCalled();
 		expect(mocks.txUpdate).not.toHaveBeenCalled();
 		expect(mocks.txUpdateSet).not.toHaveBeenCalled();
+	});
+
+	it("returns 400 when reordered set groups do not share the same parent", async () => {
+		mocks.findFirstWorkoutSetGroup
+			.mockResolvedValueOnce({
+				id: "group_1",
+				userId: "user_123",
+				sessionId: "session_1",
+				routineDayId: null,
+			})
+			.mockResolvedValueOnce({
+				id: "group_2",
+				userId: "user_123",
+				sessionId: "session_2",
+				routineDayId: null,
+			});
+
+		const response = await setGroupHandlers.POST({
+			request: new Request("http://localhost/api/set-groups/reorder", {
+				method: "POST",
+				body: JSON.stringify({
+					setGroupIds: ["group_1", "group_2"],
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(400);
+		await expect(response.json()).resolves.toEqual({
+			error: "Set groups must share the same parent",
+		});
+		expect(mocks.transaction).not.toHaveBeenCalled();
+		expect(mocks.txUpdate).not.toHaveBeenCalled();
 	});
 
 	it("returns the auth response when authentication throws a Response", async () => {
