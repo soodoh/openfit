@@ -205,4 +205,73 @@ describe("useProfileSettingsForm", () => {
 		expect(result.current.selectedTheme).toBe(ThemeEnum.system);
 		expect(result.current.activeTab).toBe("settings");
 	});
+
+	it("requires both units before saving settings", async () => {
+		const onClose = vi.fn();
+		const { result } = renderHook(() =>
+			useProfileSettingsForm({ open: true, onClose }),
+		);
+
+		await waitFor(() => {
+			expect(result.current.defaultRepUnitId).toBe("rep-default");
+		});
+
+		act(() => {
+			result.current.setDefaultRepUnitId("");
+		});
+
+		await act(async () => {
+			await result.current.handleSubmitSettings({
+				preventDefault: vi.fn(),
+			} as never);
+		});
+
+		expect(result.current.error).toBe("Please select both units");
+		expect(mockUpdateProfile).not.toHaveBeenCalled();
+		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it("surfaces profile save failures", async () => {
+		mockUpdateProfile.mockRejectedValueOnce(new Error("save failed"));
+		const onClose = vi.fn();
+		const { result } = renderHook(() =>
+			useProfileSettingsForm({ open: true, onClose }),
+		);
+
+		await waitFor(() => {
+			expect(result.current.defaultRepUnitId).toBe("rep-default");
+		});
+
+		await act(async () => {
+			await result.current.handleSubmitSettings({
+				preventDefault: vi.fn(),
+			} as never);
+		});
+
+		expect(result.current.error).toBe("Failed to save profile settings");
+		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it("validates gym drafts before creating", async () => {
+		const { result } = renderHook(() =>
+			useProfileSettingsForm({ open: true, onClose: vi.fn() }),
+		);
+
+		await waitFor(() => {
+			expect(result.current.defaultRepUnitId).toBe("rep-default");
+		});
+
+		act(() => {
+			result.current.handleOpenAddGym();
+		});
+
+		await act(async () => {
+			await result.current.handleSubmitGym({
+				preventDefault: vi.fn(),
+			} as never);
+		});
+
+		expect(result.current.gymError).toBe("Gym name is required");
+		expect(mockCreateGym).not.toHaveBeenCalled();
+	});
 });

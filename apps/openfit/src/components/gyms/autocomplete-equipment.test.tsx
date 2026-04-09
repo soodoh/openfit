@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { type ReactNode, useState } from "react";
+import { forwardRef, type ReactNode, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AutocompleteEquipment } from "./autocomplete-equipment";
 
@@ -28,30 +28,33 @@ vi.mock("@/components/ui/command", () => ({
 }));
 
 vi.mock("@/components/ui/input", () => ({
-	Input: ({
-		value,
-		onBlur,
-		onChange,
-		onFocus,
-		onKeyDown,
-		placeholder,
-		disabled,
-	}: React.InputHTMLAttributes<HTMLInputElement>) => (
-		<input
-			placeholder={placeholder}
-			value={value}
-			onBlur={onBlur}
-			onChange={onChange}
-			onFocus={onFocus}
-			onKeyDown={onKeyDown}
-			disabled={disabled}
-		/>
+	Input: forwardRef<
+		HTMLInputElement,
+		React.InputHTMLAttributes<HTMLInputElement>
+	>(
+		(
+			{ value, onBlur, onChange, onFocus, onKeyDown, placeholder, disabled },
+			ref,
+		) => (
+			<input
+				ref={ref}
+				placeholder={placeholder}
+				value={value}
+				onBlur={onBlur}
+				onChange={onChange}
+				onFocus={onFocus}
+				onKeyDown={onKeyDown}
+				disabled={disabled}
+			/>
+		),
 	),
 }));
 
 vi.mock("@/components/ui/popover", () => ({
 	Popover: ({ children, open }: { children: ReactNode; open?: boolean }) => (
-		<div data-open={open ? "true" : "false"}>{children}</div>
+		<div data-testid="popover" data-open={open ? "true" : "false"}>
+			{children}
+		</div>
 	),
 	PopoverAnchor: ({ children }: { children: ReactNode }) => <>{children}</>,
 	PopoverContent: ({ children }: { children: ReactNode }) => (
@@ -137,5 +140,26 @@ describe("AutocompleteEquipment", () => {
 		);
 
 		expect(screen.getByPlaceholderText("Search equipment...")).toBeDisabled();
+	});
+
+	it("treats missing equipment data as an empty list", () => {
+		mockUseEquipment.mockReturnValue({ data: undefined });
+
+		render(<Harness />);
+
+		expect(screen.getByPlaceholderText("Search equipment...")).toBeEnabled();
+		expect(screen.getByText("All equipment added")).toBeInTheDocument();
+	});
+
+	it("returns focus to the input after selecting equipment", () => {
+		render(<Harness />);
+
+		const input = screen.getByPlaceholderText("Search equipment...");
+		fireEvent.focus(input);
+		fireEvent.change(input, { target: { value: "ket" } });
+		fireEvent.click(screen.getByRole("button", { name: "Kettlebell" }));
+
+		expect(screen.getByDisplayValue("")).toBeInTheDocument();
+		expect(input).toHaveFocus();
 	});
 });

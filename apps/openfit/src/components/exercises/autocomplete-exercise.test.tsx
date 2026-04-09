@@ -57,7 +57,9 @@ vi.mock("@/components/ui/dropdown-menu", () => ({
 
 vi.mock("@/components/ui/popover", () => ({
 	Popover: ({ children, open }: { children: ReactNode; open?: boolean }) => (
-		<div data-open={open ? "true" : "false"}>{children}</div>
+		<div data-testid="popover" data-open={open ? "true" : "false"}>
+			{children}
+		</div>
 	),
 	PopoverAnchor: ({ children }: { children: ReactNode }) => <>{children}</>,
 	PopoverContent: ({ children }: { children: ReactNode }) => (
@@ -205,5 +207,36 @@ describe("AutocompleteExercise", () => {
 		expect(mockUseExerciseSearch).toHaveBeenLastCalledWith("b", [
 			"equipment-1",
 		]);
+	});
+
+	it("clears the selected exercise when Backspace is pressed", () => {
+		render(
+			<ExerciseHarness
+				initialValue={
+					{
+						id: "exercise-1",
+						name: "Bench Press",
+					} as Exercise
+				}
+			/>,
+		);
+
+		fireEvent.keyDown(screen.getByDisplayValue("Bench Press"), {
+			key: "Backspace",
+		});
+
+		expect(screen.getByDisplayValue("")).toBeInTheDocument();
+	});
+
+	it("closes the popover when Escape is pressed without a selection", () => {
+		render(<ExerciseHarness />);
+
+		const input = screen.getByPlaceholderText("Search exercises...");
+		fireEvent.focus(input);
+		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+
+		fireEvent.keyDown(input, { key: "Escape" });
+
+		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "false");
 	});
 });

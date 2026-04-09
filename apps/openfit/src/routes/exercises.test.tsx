@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ExercisesRoute from "./exercises";
 
@@ -10,6 +10,8 @@ const mockUseExerciseSearch = vi.fn();
 const mockUseExercises = vi.fn();
 const mockUseInView = vi.fn();
 const mockUseMuscleGroups = vi.fn();
+
+const SelectValueContext = createContext<(value: string) => void>(() => {});
 
 vi.mock("@/components/exercises/exercise-card", () => ({
 	ExerciseCard: ({ exercise }: { exercise: { id: string; name: string } }) => (
@@ -53,11 +55,30 @@ vi.mock("@/components/ui/input", () => ({
 }));
 
 vi.mock("@/components/ui/select", () => ({
-	Select: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	Select: ({
+		children,
+		onValueChange,
+		value,
+	}: {
+		children: ReactNode;
+		onValueChange?: (value: string) => void;
+		value?: string;
+	}) => (
+		<SelectValueContext.Provider value={onValueChange ?? (() => undefined)}>
+			<div data-value={value}>{children}</div>
+		</SelectValueContext.Provider>
+	),
 	SelectContent: ({ children }: { children: ReactNode }) => (
 		<div>{children}</div>
 	),
-	SelectItem: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	SelectItem: ({ children, value }: { children: ReactNode; value: string }) => {
+		const onValueChange = useContext(SelectValueContext);
+		return (
+			<button type="button" onClick={() => onValueChange(value)}>
+				{children}
+			</button>
+		);
+	},
 	SelectTrigger: ({ children }: { children: ReactNode }) => (
 		<div>{children}</div>
 	),
@@ -173,5 +194,44 @@ describe("exercises route", () => {
 			screen.getByText('No exercises match "missing"'),
 		).toBeInTheDocument();
 		expect(mockFetchNextPage).not.toHaveBeenCalled();
+	});
+
+	it("applies filters and clears them from the empty state", async () => {
+		mockUseExercises.mockReturnValue({
+			data: { pages: [] },
+			isLoading: false,
+			fetchNextPage: mockFetchNextPage,
+			hasNextPage: false,
+			isFetchingNextPage: false,
+		});
+
+		render(<ExercisesRoute.options.component />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Beginner" }));
+
+		await waitFor(() => {
+			expect(mockUseExercises).toHaveBeenLastCalledWith(
+				expect.objectContaining({ level: "beginner" }),
+			);
+		});
+
+		expect(
+			screen.getAllByRole("button", { name: "Clear filters" })[0],
+		).toBeInTheDocument();
+
+		fireEvent.click(
+			screen.getAllByRole("button", { name: "Clear filters" })[0],
+		);
+
+		await waitFor(() => {
+			expect(mockUseExercises).toHaveBeenLastCalledWith(
+				expect.objectContaining({
+					equipmentId: undefined,
+					level: undefined,
+					categoryId: undefined,
+					primaryMuscleId: undefined,
+				}),
+			);
+		});
 	});
 });
