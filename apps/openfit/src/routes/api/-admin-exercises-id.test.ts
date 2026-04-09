@@ -223,6 +223,26 @@ describe("PATCH /api/admin/exercises/:id", () => {
 			mocks.schema.exerciseImages,
 		);
 	});
+
+	it("returns 500 when updating an exercise throws an unexpected error", async () => {
+		mocks.update.mockImplementationOnce(() => {
+			throw new Error("boom");
+		});
+
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/admin/exercises/exercise_1", {
+				method: "PATCH",
+				body: JSON.stringify({ name: "Updated Bench Press" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "exercise_1" },
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to update exercise",
+		});
+	});
 });
 
 describe("DELETE /api/admin/exercises/:id", () => {
@@ -236,6 +256,24 @@ describe("DELETE /api/admin/exercises/:id", () => {
 			where: mocks.deleteWhere,
 		});
 		mocks.deleteWhere.mockResolvedValue(undefined);
+	});
+
+	it("returns the auth response when admin access fails", async () => {
+		mocks.requireAdmin.mockRejectedValue(
+			Response.json({ error: "Forbidden" }, { status: 403 }),
+		);
+
+		const response = await handlers.DELETE({
+			request: new Request("http://localhost/api/admin/exercises/exercise_1", {
+				method: "DELETE",
+			}),
+			params: { id: "exercise_1" },
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+		expect(mocks.findFirstExercise).not.toHaveBeenCalled();
+		expect(mocks.delete).not.toHaveBeenCalled();
 	});
 
 	it("returns 404 when the exercise does not exist", async () => {
@@ -289,5 +327,23 @@ describe("DELETE /api/admin/exercises/:id", () => {
 			mocks.schema.exercises.id,
 			"exercise_1",
 		);
+	});
+
+	it("returns 500 when deleting an exercise throws an unexpected error", async () => {
+		mocks.delete.mockImplementationOnce(() => {
+			throw new Error("boom");
+		});
+
+		const response = await handlers.DELETE({
+			request: new Request("http://localhost/api/admin/exercises/exercise_1", {
+				method: "DELETE",
+			}),
+			params: { id: "exercise_1" },
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to delete exercise",
+		});
 	});
 });

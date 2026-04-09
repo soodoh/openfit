@@ -140,6 +140,29 @@ describe("PATCH /api/admin/lookups/:id", () => {
 			"lookup_1",
 		);
 	});
+
+	it("returns 500 when updating a lookup throws an unexpected error", async () => {
+		mocks.update.mockImplementationOnce(() => {
+			throw new Error("boom");
+		});
+
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/admin/lookups/lookup_1", {
+				method: "PATCH",
+				body: JSON.stringify({
+					type: "categories",
+					name: "Strength",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "lookup_1" },
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to update lookup",
+		});
+	});
 });
 
 describe("DELETE /api/admin/lookups/:id", () => {
@@ -150,6 +173,24 @@ describe("DELETE /api/admin/lookups/:id", () => {
 			where: mocks.deleteWhere,
 		});
 		mocks.deleteWhere.mockResolvedValue(undefined);
+	});
+
+	it("returns the auth response when admin access fails", async () => {
+		mocks.requireAdmin.mockRejectedValue(
+			Response.json({ error: "Forbidden" }, { status: 403 }),
+		);
+
+		const response = await handlers.DELETE({
+			request: new Request(
+				"http://localhost/api/admin/lookups/lookup_1?type=equipment",
+				{ method: "DELETE" },
+			),
+			params: { id: "lookup_1" },
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+		expect(mocks.delete).not.toHaveBeenCalled();
 	});
 
 	it("returns 400 for a missing lookup type", async () => {
@@ -185,5 +226,24 @@ describe("DELETE /api/admin/lookups/:id", () => {
 			mocks.schema.equipment.id,
 			"lookup_1",
 		);
+	});
+
+	it("returns 500 when deleting a lookup throws an unexpected error", async () => {
+		mocks.delete.mockImplementationOnce(() => {
+			throw new Error("boom");
+		});
+
+		const response = await handlers.DELETE({
+			request: new Request(
+				"http://localhost/api/admin/lookups/lookup_1?type=equipment",
+				{ method: "DELETE" },
+			),
+			params: { id: "lookup_1" },
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to delete lookup",
+		});
 	});
 });

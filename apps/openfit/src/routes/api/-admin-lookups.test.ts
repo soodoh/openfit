@@ -177,6 +177,27 @@ describe("POST /api/admin/lookups", () => {
 		mocks.createId.mockReturnValue("lookup_1");
 	});
 
+	it("returns the auth response when admin access fails", async () => {
+		mocks.requireAdmin.mockRejectedValue(
+			Response.json({ error: "Forbidden" }, { status: 403 }),
+		);
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/admin/lookups", {
+				method: "POST",
+				body: JSON.stringify({
+					type: "equipment",
+					name: "Cable Machine",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+		expect(mocks.insert).not.toHaveBeenCalled();
+	});
+
 	it("returns 400 for an invalid create payload", async () => {
 		const response = await handlers.POST({
 			request: new Request("http://localhost/api/admin/lookups", {
@@ -213,6 +234,28 @@ describe("POST /api/admin/lookups", () => {
 		expect(mocks.insertValues).toHaveBeenCalledWith({
 			id: "lookup_1",
 			name: "Cable Machine",
+		});
+	});
+
+	it("returns 500 when creating a lookup throws an unexpected error", async () => {
+		mocks.insert.mockImplementationOnce(() => {
+			throw new Error("boom");
+		});
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/admin/lookups", {
+				method: "POST",
+				body: JSON.stringify({
+					type: "equipment",
+					name: "Cable Machine",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to create lookup",
 		});
 	});
 });

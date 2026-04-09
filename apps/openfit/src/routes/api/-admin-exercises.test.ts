@@ -259,6 +259,27 @@ describe("POST /api/admin/exercises", () => {
 		mocks.createId.mockReturnValue("exercise_1");
 	});
 
+	it("returns the auth response when admin access fails", async () => {
+		mocks.requireAdmin.mockRejectedValue(
+			Response.json({ error: "Forbidden" }, { status: 403 }),
+		);
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/admin/exercises", {
+				method: "POST",
+				body: JSON.stringify({
+					name: "Bench Press",
+					categoryId: "chest",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+		expect(mocks.insert).not.toHaveBeenCalled();
+	});
+
 	it("returns 400 for an invalid create payload", async () => {
 		const response = await handlers.POST({
 			request: new Request("http://localhost/api/admin/exercises", {
@@ -324,6 +345,28 @@ describe("POST /api/admin/exercises", () => {
 			mechanic: "compound",
 			equipmentId: "barbell",
 			categoryId: "chest",
+		});
+	});
+
+	it("returns 500 when creating an exercise throws an unexpected error", async () => {
+		mocks.insert.mockImplementationOnce(() => {
+			throw new Error("boom");
+		});
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/admin/exercises", {
+				method: "POST",
+				body: JSON.stringify({
+					name: "Bench Press",
+					categoryId: "chest",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to create exercise",
 		});
 	});
 });

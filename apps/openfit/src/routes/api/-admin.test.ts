@@ -148,4 +148,19 @@ describe("GET /api/admin/users", () => {
 		);
 		expect(mocks.select).not.toHaveBeenCalled();
 	});
+
+	it("returns 500 when fetching users throws an unexpected error", async () => {
+		mocks.select.mockImplementationOnce(() => {
+			throw new Error("boom");
+		});
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/admin/users"),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to fetch users",
+		});
+	});
 });
