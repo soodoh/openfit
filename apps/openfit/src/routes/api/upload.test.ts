@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as requestHelpers from "@/lib/request-helpers";
 
 const mocks = vi.hoisted(() => ({
 	mkdir: vi.fn(),
@@ -114,6 +115,23 @@ describe("POST /api/upload", () => {
 		});
 	});
 
+	it("returns 413 when the file is too large", async () => {
+		const oversizedFile = new File(
+			[Buffer.alloc(5 * 1024 * 1024 + 1)],
+			"avatar.png",
+			{ type: "image/png" },
+		);
+
+		const response = await handlers.POST({
+			request: createUploadRequest(oversizedFile),
+		});
+
+		expect(response.status).toBe(413);
+		await expect(response.json()).resolves.toEqual({
+			error: "File too large. Maximum size is 5MB.",
+		});
+	});
+
 	it("returns 500 when the upload destination cannot be prepared", async () => {
 		mocks.nanoid.mockReturnValueOnce("../escape");
 
@@ -124,6 +142,19 @@ describe("POST /api/upload", () => {
 		expect(response.status).toBe(500);
 		await expect(response.json()).resolves.toEqual({
 			error: "Failed to prepare upload destination",
+		});
+	});
+
+	it("returns 500 when writing the file fails unexpectedly", async () => {
+		mocks.writeFile.mockRejectedValueOnce(new Error("disk full"));
+
+		const response = await handlers.POST({
+			request: createUploadRequest(createBinaryFile("avatar.png", "image/png")),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to upload file",
 		});
 	});
 
@@ -191,6 +222,23 @@ describe("DELETE /api/upload", () => {
 				},
 			],
 		});
+	});
+
+	it("returns 400 when the parser yields an empty filename", async () => {
+		const parseSearchParamsSpy = vi
+			.spyOn(requestHelpers, "parseSearchParams")
+			.mockReturnValueOnce({ filename: undefined } as never);
+
+		const response = await handlers.DELETE({
+			request: createDeleteRequest("?filename=avatar.png"),
+		});
+
+		expect(response.status).toBe(400);
+		await expect(response.json()).resolves.toEqual({
+			error: "Filename is required",
+		});
+		expect(mocks.unlink).not.toHaveBeenCalled();
+		parseSearchParamsSpy.mockRestore();
 	});
 
 	it("returns 400 when the filename is invalid", async () => {

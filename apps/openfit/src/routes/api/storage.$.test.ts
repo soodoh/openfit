@@ -62,6 +62,23 @@ describe("GET /api/storage/$", () => {
 		expect(fetchMock).not.toHaveBeenCalled();
 	});
 
+	it("returns 404 for POST outside development", async () => {
+		process.env.NODE_ENV = "production";
+
+		const handlers = await loadHandlers();
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/storage/images/avatar.png", {
+				method: "POST",
+				body: "upload body",
+			}),
+			params: { _splat: "images/avatar.png" },
+		});
+
+		expect(response.status).toBe(404);
+		expect(await response.text()).toBe("Not found");
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
 	it("proxies successful requests and falls back to image/jpeg when the upstream content type is missing", async () => {
 		process.env.NODE_ENV = "development";
 		process.env.CONVEX_SELF_HOSTED_URL = "http://convex.example.com";
@@ -84,6 +101,27 @@ describe("GET /api/storage/$", () => {
 		);
 		expect(Buffer.from(await response.arrayBuffer())).toEqual(
 			Buffer.from([1, 2, 3]),
+		);
+	});
+
+	it("preserves an upstream content type when one is provided", async () => {
+		process.env.NODE_ENV = "development";
+		process.env.CONVEX_SELF_HOSTED_URL = "http://convex.example.com";
+		fetchMock.mockResolvedValueOnce(
+			new Response(new Uint8Array([4, 5, 6]), {
+				status: 200,
+				headers: { "Content-Type": "image/png" },
+			}),
+		);
+
+		const handlers = await loadHandlers();
+		const response = await handlers.GET({
+			params: { _splat: "images/avatar.png" },
+		});
+
+		expect(response.headers.get("content-type")).toBe("image/png");
+		expect(Buffer.from(await response.arrayBuffer())).toEqual(
+			Buffer.from([4, 5, 6]),
 		);
 	});
 
@@ -140,6 +178,41 @@ describe("POST /api/storage/$", () => {
 			RequestInit & { body: ArrayBuffer },
 		];
 		expect(Buffer.from(init.body)).toEqual(Buffer.from("upload body"));
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({ stored: true });
+	});
+
+	it("forwards an explicit content type to the upstream storage endpoint", async () => {
+		process.env.NODE_ENV = "development";
+		process.env.CONVEX_SELF_HOSTED_URL = "http://convex.example.com";
+		fetchMock.mockResolvedValueOnce(Response.json({ stored: true }));
+
+		const handlers = await loadHandlers();
+		const request = new Request(
+			"http://localhost/api/storage/images/avatar.png?version=3",
+			{
+				method: "POST",
+				body: "upload body",
+				headers: {
+					"Content-Type": "image/png",
+				},
+			},
+		);
+
+		const response = await handlers.POST({
+			request,
+			params: { _splat: "images/avatar.png" },
+		});
+
+		expect(fetchMock).toHaveBeenCalledWith(
+			"http://convex.example.com/api/storage/images/avatar.png?version=3",
+			expect.objectContaining({
+				method: "POST",
+				headers: {
+					"Content-Type": "image/png",
+				},
+			}),
+		);
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ stored: true });
 	});

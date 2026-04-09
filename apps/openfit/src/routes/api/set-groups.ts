@@ -43,7 +43,7 @@ async function getNextSetGroupOrder(
 ): Promise<number> {
 	let existingSetGroups: Awaited<
 		ReturnType<typeof db.query.workoutSetGroups.findMany>
-	>;
+	> = [];
 	if (sessionId) {
 		existingSetGroups = await db.query.workoutSetGroups.findMany({
 			where: eq(schema.workoutSetGroups.sessionId, sessionId),
@@ -52,8 +52,6 @@ async function getNextSetGroupOrder(
 		existingSetGroups = await db.query.workoutSetGroups.findMany({
 			where: eq(schema.workoutSetGroups.routineDayId, routineDayId),
 		});
-	} else {
-		return 0;
 	}
 	if (existingSetGroups.length === 0) {
 		return 0;

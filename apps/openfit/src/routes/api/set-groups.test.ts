@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as requestHelpers from "@/lib/request-helpers";
 
 const mocks = vi.hoisted(() => ({
 	requireAuth: vi.fn(),
@@ -200,6 +201,28 @@ describe("POST /api/set-groups", () => {
 		expect(mocks.findManyRepetitionUnits).not.toHaveBeenCalled();
 	});
 
+	it("returns 403 when the target routine day belongs to another user", async () => {
+		mocks.findFirstRoutineDay.mockResolvedValue({
+			id: "routine_123",
+			userId: "user_other",
+		});
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/set-groups", {
+				method: "POST",
+				body: JSON.stringify({
+					routineDayId: "routine_123",
+					exerciseId: "exercise_1",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.findManyRepetitionUnits).not.toHaveBeenCalled();
+	});
+
 	it("returns 500 when default units are missing", async () => {
 		mocks.findFirstWorkoutSession.mockResolvedValue({
 			id: "session_123",
@@ -370,6 +393,74 @@ describe("POST /api/set-groups", () => {
 		);
 	});
 
+	it("creates a set group for a session with session ordering", async () => {
+		mocks.findFirstWorkoutSession.mockResolvedValue({
+			id: "session_123",
+			userId: "user_123",
+			endTime: new Date("2025-01-01T01:00:00.000Z"),
+		});
+		mocks.findManyWorkoutSetGroups.mockResolvedValue([
+			{ id: "group_1", order: 1 },
+			{ id: "group_2", order: 4 },
+		]);
+		mocks.findManyRepetitionUnits.mockResolvedValue([{ id: "rep_unit" }]);
+		mocks.findManyWeightUnits.mockResolvedValue([{ id: "weight_unit" }]);
+		mocks.findFirstWorkoutSetGroup.mockResolvedValue({
+			id: "generated_id",
+			userId: "user_123",
+			sessionId: "session_123",
+			type: "SUPERSET",
+			order: 5,
+		});
+		mocks.findManyWorkoutSets.mockResolvedValue([
+			{
+				id: "set_1",
+				order: 0,
+				completed: true,
+				exercise: { id: "exercise_1" },
+				repetitionUnit: { id: "rep_unit" },
+				weightUnit: { id: "weight_unit" },
+			},
+		]);
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/set-groups", {
+				method: "POST",
+				body: JSON.stringify({
+					sessionId: "session_123",
+					type: "SUPERSET",
+					exerciseId: "exercise_1",
+					numSets: 1,
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(201);
+		await expect(response.json()).resolves.toEqual(
+			expect.objectContaining({
+				id: "generated_id",
+				sessionId: "session_123",
+				type: "SUPERSET",
+				order: 5,
+				sets: [expect.objectContaining({ id: "set_1", completed: true })],
+			}),
+		);
+		expect(mocks.findManyWorkoutSetGroups).toHaveBeenCalledWith({
+			where: {
+				type: "eq",
+				left: mocks.schema.workoutSetGroups.sessionId,
+				right: "session_123",
+			},
+		});
+		expect(mocks.insertValues).toHaveBeenCalledWith(
+			expect.objectContaining({
+				sessionId: "session_123",
+				type: "SUPERSET",
+			}),
+		);
+	});
+
 	it("returns 500 for unexpected database failures", async () => {
 		mocks.findFirstWorkoutSession.mockResolvedValue({
 			id: "session_123",
@@ -394,5 +485,55 @@ describe("POST /api/set-groups", () => {
 		await expect(response.json()).resolves.toEqual({
 			error: "Failed to create set group",
 		});
+	});
+
+	it("returns 400 when the parsed body omits both target ids", async () => {
+		const parseJsonBodySpy = vi
+			.spyOn(requestHelpers, "parseJsonBody")
+			.mockResolvedValueOnce({
+				exerciseId: "exercise_1",
+			});
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/set-groups", {
+				method: "POST",
+				body: JSON.stringify({
+					exerciseId: "exercise_1",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(400);
+		await expect(response.json()).resolves.toEqual({
+			error: "Either sessionId or routineDayId is required",
+		});
+		expect(mocks.findManyRepetitionUnits).not.toHaveBeenCalled();
+		parseJsonBodySpy.mockRestore();
+	});
+
+	it("returns 400 when the parsed body omits exerciseId", async () => {
+		const parseJsonBodySpy = vi
+			.spyOn(requestHelpers, "parseJsonBody")
+			.mockResolvedValueOnce({
+				sessionId: "session_123",
+			});
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/set-groups", {
+				method: "POST",
+				body: JSON.stringify({
+					sessionId: "session_123",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(400);
+		await expect(response.json()).resolves.toEqual({
+			error: "exerciseId is required",
+		});
+		expect(mocks.findFirstWorkoutSession).not.toHaveBeenCalled();
+		parseJsonBodySpy.mockRestore();
 	});
 });

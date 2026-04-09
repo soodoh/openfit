@@ -92,6 +92,22 @@ describe("PATCH /api/sets/:id", () => {
 		await expect(response.json()).resolves.toEqual({ error: "Nope" });
 	});
 
+	it("falls back to a generic 401 when auth throws unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValue(new Error("auth failed"));
+
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/sets/set_123", {
+				method: "PATCH",
+				body: JSON.stringify({ reps: 12 }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "set_123" },
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+	});
+
 	it("returns 400 when the update payload is empty", async () => {
 		mocks.findFirstWorkoutSet.mockResolvedValue({
 			id: "set_123",
@@ -205,6 +221,71 @@ describe("PATCH /api/sets/:id", () => {
 		expect(mocks.updateSet.mock.calls[0][0]).not.toHaveProperty("weight");
 	});
 
+	it("updates every optional field when they are provided", async () => {
+		mocks.findFirstWorkoutSet
+			.mockResolvedValueOnce({
+				id: "set_123",
+				userId: "user_123",
+			})
+			.mockResolvedValueOnce({
+				id: "set_123",
+				userId: "user_123",
+				type: "WARMUP",
+				reps: 15,
+				repetitionUnitId: "rep_unit",
+				weight: 225,
+				weightUnitId: "weight_unit",
+				restTime: 120,
+				completed: false,
+				exercise: { id: "exercise_1" },
+				repetitionUnit: { id: "rep_unit" },
+				weightUnit: { id: "weight_unit" },
+			});
+
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/sets/set_123", {
+				method: "PATCH",
+				body: JSON.stringify({
+					type: "WARMUP",
+					reps: 15,
+					repetitionUnitId: "rep_unit",
+					weight: 225,
+					weightUnitId: "weight_unit",
+					restTime: 120,
+					completed: false,
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "set_123" },
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual(
+			expect.objectContaining({
+				id: "set_123",
+				type: "WARMUP",
+				reps: 15,
+				repetitionUnitId: "rep_unit",
+				weight: 225,
+				weightUnitId: "weight_unit",
+				restTime: 120,
+				completed: false,
+			}),
+		);
+		expect(mocks.updateSet).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "WARMUP",
+				reps: 15,
+				repetitionUnitId: "rep_unit",
+				weight: 225,
+				weightUnitId: "weight_unit",
+				restTime: 120,
+				completed: false,
+				updatedAt: expect.any(Date),
+			}),
+		);
+	});
+
 	it("returns 500 for unexpected update failures", async () => {
 		mocks.findFirstWorkoutSet.mockResolvedValue({
 			id: "set_123",
@@ -248,6 +329,22 @@ describe("DELETE /api/sets/:id", () => {
 
 		expect(response.status).toBe(401);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+	});
+
+	it("returns the auth response when authorization fails", async () => {
+		const authResponse = Response.json({ error: "Nope" }, { status: 401 });
+		mocks.requireAuth.mockRejectedValue(authResponse);
+
+		const response = await handlers.DELETE({
+			request: new Request("http://localhost/api/sets/set_123", {
+				method: "DELETE",
+			}),
+			params: { id: "set_123" },
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Nope" });
+		expect(mocks.delete).not.toHaveBeenCalled();
 	});
 
 	it("returns 404 when the set does not exist", async () => {

@@ -378,6 +378,37 @@ describe("GET /api/gyms/:id", () => {
 		expect(mocks.requireOwnedGym).not.toHaveBeenCalled();
 	});
 
+	it("returns 401 when authentication fails unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValue(new Error("boom"));
+
+		const response = await detailHandlers.GET({
+			request: new Request("http://localhost/api/gyms/gym_123"),
+			params: { id: "gym_123" },
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.requireOwnedGym).not.toHaveBeenCalled();
+	});
+
+	it("returns the auth response when authentication throws a Response", async () => {
+		const authResponse = Response.json({ error: "Denied" }, { status: 403 });
+		mocks.requireAuth.mockRejectedValue(authResponse);
+
+		const response = await detailHandlers.PATCH({
+			request: new Request("http://localhost/api/gyms/gym_123", {
+				method: "PATCH",
+				body: JSON.stringify({ name: "Updated Gym" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "gym_123" },
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Denied" });
+		expect(mocks.requireOwnedGym).not.toHaveBeenCalled();
+	});
+
 	it("returns 404 when the gym does not exist", async () => {
 		mocks.requireOwnedGym.mockResolvedValue({
 			status: 404,
@@ -495,6 +526,26 @@ describe("PATCH /api/gyms/:id", () => {
 		expect(mocks.update).not.toHaveBeenCalled();
 	});
 
+	it("returns 404 when the gym does not exist", async () => {
+		mocks.requireOwnedGym.mockResolvedValue({
+			status: 404,
+			error: "Gym not found",
+		});
+
+		const response = await detailHandlers.PATCH({
+			request: new Request("http://localhost/api/gyms/gym_missing", {
+				method: "PATCH",
+				body: JSON.stringify({ name: "Updated Gym" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "gym_missing" },
+		});
+
+		expect(response.status).toBe(404);
+		await expect(response.json()).resolves.toEqual({ error: "Gym not found" });
+		expect(mocks.update).not.toHaveBeenCalled();
+	});
+
 	it("updates the name without replacing equipment when only the name changes", async () => {
 		mocks.loadGymWithEquipment.mockResolvedValue(
 			makeGym({
@@ -530,6 +581,23 @@ describe("PATCH /api/gyms/:id", () => {
 				updatedAt: expect.any(Date),
 			}),
 		);
+	});
+
+	it("returns 401 when authentication fails unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValue(new Error("boom"));
+
+		const response = await detailHandlers.PATCH({
+			request: new Request("http://localhost/api/gyms/gym_123", {
+				method: "PATCH",
+				body: JSON.stringify({ name: "Updated Gym" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "gym_123" },
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.requireOwnedGym).not.toHaveBeenCalled();
 	});
 
 	it("replaces equipment when equipment ids are provided", async () => {
@@ -611,6 +679,24 @@ describe("PATCH /api/gyms/:id", () => {
 			error: "Failed to update gym",
 		});
 	});
+
+	it("returns a thrown Response from the update flow", async () => {
+		mocks.updateWhere.mockRejectedValue(
+			Response.json({ error: "Stop" }, { status: 418 }),
+		);
+
+		const response = await detailHandlers.PATCH({
+			request: new Request("http://localhost/api/gyms/gym_123", {
+				method: "PATCH",
+				body: JSON.stringify({ name: "Updated Gym" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "gym_123" },
+		});
+
+		expect(response.status).toBe(418);
+		await expect(response.json()).resolves.toEqual({ error: "Stop" });
+	});
 });
 
 describe("DELETE /api/gyms/:id", () => {
@@ -648,6 +734,24 @@ describe("DELETE /api/gyms/:id", () => {
 		expect(mocks.delete).not.toHaveBeenCalled();
 	});
 
+	it("returns 404 when the gym does not exist", async () => {
+		mocks.requireOwnedGym.mockResolvedValue({
+			status: 404,
+			error: "Gym not found",
+		});
+
+		const response = await detailHandlers.DELETE({
+			request: new Request("http://localhost/api/gyms/gym_missing", {
+				method: "DELETE",
+			}),
+			params: { id: "gym_missing" },
+		});
+
+		expect(response.status).toBe(404);
+		await expect(response.json()).resolves.toEqual({ error: "Gym not found" });
+		expect(mocks.delete).not.toHaveBeenCalled();
+	});
+
 	it("deletes an owned gym", async () => {
 		const response = await detailHandlers.DELETE({
 			request: new Request("http://localhost/api/gyms/gym_123", {
@@ -663,6 +767,37 @@ describe("DELETE /api/gyms/:id", () => {
 			left: mocks.schema.gyms.id,
 			right: "gym_123",
 		});
+	});
+
+	it("returns 401 when authentication fails unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValue(new Error("boom"));
+
+		const response = await detailHandlers.DELETE({
+			request: new Request("http://localhost/api/gyms/gym_123", {
+				method: "DELETE",
+			}),
+			params: { id: "gym_123" },
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.requireOwnedGym).not.toHaveBeenCalled();
+	});
+
+	it("returns the auth response when authentication throws a Response", async () => {
+		const authResponse = Response.json({ error: "Denied" }, { status: 403 });
+		mocks.requireAuth.mockRejectedValue(authResponse);
+
+		const response = await detailHandlers.DELETE({
+			request: new Request("http://localhost/api/gyms/gym_123", {
+				method: "DELETE",
+			}),
+			params: { id: "gym_123" },
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Denied" });
+		expect(mocks.requireOwnedGym).not.toHaveBeenCalled();
 	});
 
 	it("returns 500 when deleting a gym throws an unexpected error", async () => {

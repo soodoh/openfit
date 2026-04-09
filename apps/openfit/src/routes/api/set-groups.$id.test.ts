@@ -83,6 +83,22 @@ describe("PATCH /api/set-groups/:id", () => {
 		await expect(response.json()).resolves.toEqual({ error: "Nope" });
 	});
 
+	it("falls back to a generic 401 when auth throws unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValue(new Error("auth failed"));
+
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/set-groups/group_123", {
+				method: "PATCH",
+				body: JSON.stringify({ type: "SUPERSET" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "group_123" },
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+	});
+
 	it("returns 400 when the update payload is empty", async () => {
 		mocks.findFirstWorkoutSetGroup.mockResolvedValue({
 			id: "group_123",
@@ -166,7 +182,10 @@ describe("PATCH /api/set-groups/:id", () => {
 		const response = await handlers.PATCH({
 			request: new Request("http://localhost/api/set-groups/group_123", {
 				method: "PATCH",
-				body: JSON.stringify({ comment: "Upper body day" }),
+				body: JSON.stringify({
+					type: "SUPERSET",
+					comment: "Upper body day",
+				}),
 				headers: { "Content-Type": "application/json" },
 			}),
 			params: { id: "group_123" },
@@ -181,11 +200,11 @@ describe("PATCH /api/set-groups/:id", () => {
 		);
 		expect(mocks.updateSet).toHaveBeenCalledWith(
 			expect.objectContaining({
+				type: "SUPERSET",
 				comment: "Upper body day",
 				updatedAt: expect.any(Date),
 			}),
 		);
-		expect(mocks.updateSet.mock.calls[0][0]).not.toHaveProperty("type");
 	});
 
 	it("returns 500 for unexpected update failures", async () => {
@@ -216,6 +235,22 @@ describe("DELETE /api/set-groups/:id", () => {
 		vi.clearAllMocks();
 		mocks.delete.mockReturnValue({ where: mocks.deleteWhere });
 		mocks.deleteWhere.mockResolvedValue(undefined);
+	});
+
+	it("returns the auth response when authorization fails", async () => {
+		const authResponse = Response.json({ error: "Nope" }, { status: 401 });
+		mocks.requireAuth.mockRejectedValue(authResponse);
+
+		const response = await handlers.DELETE({
+			request: new Request("http://localhost/api/set-groups/group_123", {
+				method: "DELETE",
+			}),
+			params: { id: "group_123" },
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Nope" });
+		expect(mocks.delete).not.toHaveBeenCalled();
 	});
 
 	it("falls back to a generic 401 when auth throws unexpectedly", async () => {

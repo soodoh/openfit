@@ -228,6 +228,77 @@ describe("POST /api/sets", () => {
 		);
 	});
 
+	it("creates a set with every optional field when they are provided", async () => {
+		mocks.findFirstWorkoutSetGroup.mockResolvedValue({
+			id: "group_123",
+			userId: "user_123",
+			sessionId: "session_123",
+		});
+		mocks.findFirstWorkoutSession.mockResolvedValue({
+			id: "session_123",
+		});
+		mocks.findManyWorkoutSets.mockResolvedValue([{ id: "set_1", order: 0 }]);
+		mocks.findManyRepetitionUnits.mockResolvedValue([{ id: "rep_unit" }]);
+		mocks.findManyWeightUnits.mockResolvedValue([{ id: "weight_unit" }]);
+		mocks.findFirstWorkoutSet.mockResolvedValue({
+			id: "set_new",
+			setGroupId: "group_123",
+			type: "WARMUP",
+			reps: 15,
+			repetitionUnitId: "rep_unit",
+			weight: 225,
+			weightUnitId: "weight_unit",
+			restTime: 120,
+			completed: false,
+			exercise: { id: "exercise_1" },
+			repetitionUnit: { id: "rep_unit" },
+			weightUnit: { id: "weight_unit" },
+		});
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/sets", {
+				method: "POST",
+				body: JSON.stringify({
+					setGroupId: "group_123",
+					exerciseId: "exercise_1",
+					type: "WARMUP",
+					reps: 15,
+					repetitionUnitId: "rep_unit",
+					weight: 225,
+					weightUnitId: "weight_unit",
+					restTime: 120,
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(201);
+		await expect(response.json()).resolves.toEqual(
+			expect.objectContaining({
+				id: "set_new",
+				setGroupId: "group_123",
+				type: "WARMUP",
+				reps: 15,
+				repetitionUnitId: "rep_unit",
+				weight: 225,
+				weightUnitId: "weight_unit",
+				restTime: 120,
+				completed: false,
+			}),
+		);
+		expect(mocks.insertValues).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "WARMUP",
+				reps: 15,
+				repetitionUnitId: "rep_unit",
+				weight: 225,
+				weightUnitId: "weight_unit",
+				restTime: 120,
+				completed: false,
+			}),
+		);
+	});
+
 	it("returns 500 for unexpected database failures", async () => {
 		mocks.findFirstWorkoutSetGroup.mockResolvedValue({
 			id: "group_123",
