@@ -112,6 +112,15 @@ async function createSetGroupResponse(
 			{ status: 500 },
 		);
 	}
+	let shouldAutoComplete = false;
+	if (sessionId) {
+		const workoutSession = await db.query.workoutSessions.findFirst({
+			where: eq(schema.workoutSessions.id, sessionId),
+		});
+		if (workoutSession?.endTime) {
+			shouldAutoComplete = true;
+		}
+	}
 	const setGroupId = nanoid();
 	await db.insert(schema.workoutSetGroups).values({
 		id: setGroupId,
@@ -134,7 +143,7 @@ async function createSetGroupResponse(
 			weight: 0,
 			weightUnitId: unitIds.weightUnitId,
 			restTime: 0,
-			completed: false,
+			completed: shouldAutoComplete,
 		});
 	}
 	const setGroup = await db.query.workoutSetGroups.findFirst({
