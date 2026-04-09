@@ -67,25 +67,35 @@ export const Route = createFileRoute("/api/dashboard/stats")({
 				let currentStreak = 0;
 				const today = new Date();
 				today.setHours(0, 0, 0, 0);
+				let lastMatchedDate: Date | null = null;
 				for (let i = 0; i < sessionDates.length; i += 1) {
 					const sessionDate = new Date(sessionDates[i].date);
 					sessionDate.setHours(0, 0, 0, 0);
-					const expectedDate = new Date(today);
-					expectedDate.setDate(today.getDate() - i);
-					expectedDate.setHours(0, 0, 0, 0);
-					if (sessionDate.getTime() === expectedDate.getTime()) {
+					if (lastMatchedDate) {
+						const expectedDate = new Date(lastMatchedDate);
+						expectedDate.setDate(lastMatchedDate.getDate() - 1);
+						expectedDate.setHours(0, 0, 0, 0);
+						if (sessionDate.getTime() !== expectedDate.getTime()) {
+							break;
+						}
 						currentStreak += 1;
-					} else if (i === 0) {
-						// If today has no session, check if yesterday was the start
+						lastMatchedDate = expectedDate;
+						continue;
+					}
+					if (sessionDate.getTime() === today.getTime()) {
+						currentStreak += 1;
+						lastMatchedDate = today;
+					} else {
+						// If today has no session, allow the streak to start yesterday.
 						const yesterday = new Date(today);
 						yesterday.setDate(today.getDate() - 1);
+						yesterday.setHours(0, 0, 0, 0);
 						if (sessionDate.getTime() === yesterday.getTime()) {
 							currentStreak += 1;
+							lastMatchedDate = yesterday;
 						} else {
 							break;
 						}
-					} else {
-						break;
 					}
 				}
 				return Response.json({

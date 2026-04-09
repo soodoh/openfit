@@ -172,7 +172,8 @@ describe("POST /api/set-groups/reorder", () => {
 
 		expect(response.status).toBe(403);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
-		expect(mocks.updateSet).toHaveBeenCalledTimes(1);
+		expect(mocks.update).not.toHaveBeenCalled();
+		expect(mocks.updateSet).not.toHaveBeenCalled();
 	});
 
 	it("returns the auth response when authentication throws a Response", async () => {
@@ -335,7 +336,8 @@ describe("POST /api/sets/reorder", () => {
 
 		expect(response.status).toBe(403);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
-		expect(mocks.updateSet).toHaveBeenCalledTimes(1);
+		expect(mocks.update).not.toHaveBeenCalled();
+		expect(mocks.updateSet).not.toHaveBeenCalled();
 	});
 
 	it("returns 403 when a reordered set belongs to a different set group", async () => {

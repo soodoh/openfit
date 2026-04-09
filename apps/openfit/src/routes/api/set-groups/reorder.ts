@@ -22,7 +22,8 @@ export const Route = createFileRoute("/api/set-groups/reorder")({
 				try {
 					const body = await parseJsonBody(request, reorderSetGroupsSchema);
 					const { setGroupIds } = body;
-					// Update the order for each set group
+					const setGroupsToUpdate: Array<{ id: string; order: number }> = [];
+					// Validate ownership for every existing set group before mutating.
 					for (const [index, setGroupId] of setGroupIds.entries()) {
 						const setGroup = await db.query.workoutSetGroups.findFirst({
 							where: eq(schema.workoutSetGroups.id, setGroupId),
@@ -33,13 +34,17 @@ export const Route = createFileRoute("/api/set-groups/reorder")({
 						if (setGroup.userId !== session.user.id) {
 							return Response.json({ error: "Unauthorized" }, { status: 403 });
 						}
+						setGroupsToUpdate.push({ id: setGroupId, order: index });
+					}
+					// Update the order for each set group after validation succeeds.
+					for (const { id, order } of setGroupsToUpdate) {
 						await db
 							.update(schema.workoutSetGroups)
 							.set({
-								order: index,
+								order,
 								updatedAt: new Date(),
 							})
-							.where(eq(schema.workoutSetGroups.id, setGroupId));
+							.where(eq(schema.workoutSetGroups.id, id));
 					}
 					return Response.json({ success: true });
 				} catch (error) {

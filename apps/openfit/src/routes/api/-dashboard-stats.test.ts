@@ -122,6 +122,25 @@ describe("GET /api/dashboard/stats", () => {
 		);
 	});
 
+	it("counts a streak starting yesterday when today has no workout", async () => {
+		mocks.orderBy.mockResolvedValueOnce([
+			{ date: "2026-04-07T00:00:00" },
+			{ date: "2026-04-06T00:00:00" },
+		]);
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/dashboard/stats"),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			totalSessions: 7,
+			totalRoutines: 4,
+			thisWeekSessions: 2,
+			currentStreak: 2,
+		});
+	});
+
 	it("returns 401 when authentication throws a non-response error", async () => {
 		mocks.requireAuth.mockRejectedValue(new Error("boom"));
 
