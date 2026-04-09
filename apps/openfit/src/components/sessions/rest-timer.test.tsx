@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RestTimer } from "./rest-timer";
 
 dayjs.extend(duration);
@@ -33,6 +33,10 @@ describe("RestTimer", () => {
 	beforeEach(() => {
 		vi.useFakeTimers();
 		vi.setSystemTime(new Date("2026-04-08T12:00:00.000Z"));
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
 	});
 
 	it("renders a finite progress ring when the timer length is zero", () => {
@@ -81,8 +85,8 @@ describe("RestTimer", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Reset" }));
-		fireEvent.click(screen.getByRole("button", { name: "Skip" }));
+		fireEvent.click(screen.getByRole("button", { name: "Reset rest timer" }));
+		fireEvent.click(screen.getByRole("button", { name: "Skip rest timer" }));
 
 		expect(restart).toHaveBeenNthCalledWith(
 			1,
@@ -91,5 +95,70 @@ describe("RestTimer", () => {
 		);
 		expect(setOpen).toHaveBeenCalledWith(false);
 		expect(setTotalSeconds).not.toHaveBeenCalled();
+	});
+
+	it("can adjust the timer and start it from the dialog controls", () => {
+		const timer = {
+			isRunning: false,
+			totalSeconds: 40,
+			start: vi.fn(),
+			pause: vi.fn(),
+			restart: vi.fn(),
+		};
+
+		render(
+			<RestTimer
+				open
+				setOpen={vi.fn()}
+				totalSeconds={40}
+				setTotalSeconds={vi.fn()}
+				timer={timer}
+			/>,
+		);
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Decrease rest timer by 10 seconds" }),
+		);
+		fireEvent.click(
+			screen.getByRole("button", { name: "Increase rest timer by 10 seconds" }),
+		);
+		fireEvent.click(screen.getByRole("button", { name: "Start rest timer" }));
+
+		expect(timer.restart).toHaveBeenNthCalledWith(
+			1,
+			dayjs("2026-04-08T12:00:00.000Z").add(30, "seconds").toDate(),
+			false,
+		);
+		expect(timer.restart).toHaveBeenNthCalledWith(
+			2,
+			dayjs("2026-04-08T12:00:00.000Z").add(50, "seconds").toDate(),
+			false,
+		);
+		expect(timer.start).toHaveBeenCalledTimes(1);
+	});
+
+	it("pauses the timer when it is already running", () => {
+		const timer = {
+			isRunning: true,
+			totalSeconds: 40,
+			start: vi.fn(),
+			pause: vi.fn(),
+			restart: vi.fn(),
+		};
+
+		render(
+			<RestTimer
+				open
+				setOpen={vi.fn()}
+				totalSeconds={40}
+				setTotalSeconds={vi.fn()}
+				timer={timer}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Pause rest timer" }));
+
+		expect(timer.pause).toHaveBeenCalledTimes(1);
+		expect(timer.start).not.toHaveBeenCalled();
 	});
 });

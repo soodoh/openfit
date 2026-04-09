@@ -112,4 +112,21 @@ describe("SessionPage", () => {
 		expect(screen.getByTestId("edit-session-menu")).toBeInTheDocument();
 		expect(screen.getByTestId("workout-list")).toHaveTextContent("session-1:1");
 	});
+
+	it("renders notes and rating details when they are present", () => {
+		render(
+			<SessionPage
+				session={{
+					...session,
+					name: "Lower Body",
+					notes: "Felt strong",
+					impression: 5,
+				}}
+				units={units}
+			/>,
+		);
+
+		expect(screen.getByText("Felt strong")).toBeInTheDocument();
+		expect(screen.getByText("Rating")).toBeInTheDocument();
+	});
 });

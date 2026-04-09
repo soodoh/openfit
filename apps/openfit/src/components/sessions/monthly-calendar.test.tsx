@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
@@ -8,6 +9,8 @@ import type {
 	WorkoutSessionWithData,
 } from "@/lib/types";
 import { MonthlyCalendar } from "./monthly-calendar";
+
+dayjs.extend(duration);
 
 const mockCreateSession = vi.fn();
 const mockUpdateSession = vi.fn();
@@ -105,22 +108,30 @@ describe("MonthlyCalendar", () => {
 
 	it("renders sessions, highlights the current session, and opens real session details via +N more", () => {
 		const sessions: WorkoutSessionSummary[] = [
+			{
+				id: "session-0",
+				name: "Long Session",
+				startTime: new Date("2026-04-10T07:00:00.000Z"),
+				endTime: new Date("2026-04-10T09:30:00.000Z"),
+				impression: 3,
+				createdAt: new Date("2026-04-10T07:00:00.000Z"),
+			},
 			buildSession("session-1", "Push A", "2026-04-10T08:00:00.000Z"),
 			buildSession("session-2", "Active Session", "2026-04-10T09:00:00.000Z"),
-			buildSession("session-3", "Upper B", "2026-04-10T10:00:00.000Z"),
-			buildSession("session-4", "Hidden Session", "2026-04-10T11:00:00.000Z"),
+			buildSession("session-3", "Hidden Session", "2026-04-10T10:00:00.000Z"),
+			buildSession("session-4", "Upper B", "2026-04-10T11:00:00.000Z"),
 		];
-		mockSessionData["session-4"] = {
-			id: "session-4",
+		mockSessionData["session-3"] = {
+			id: "session-3",
 			userId: "user-1",
 			name: "Hidden Session",
 			notes: "",
 			impression: null,
-			startTime: new Date("2026-04-10T11:00:00.000Z"),
+			startTime: new Date("2026-04-10T10:00:00.000Z"),
 			endTime: null,
 			templateId: null,
-			createdAt: new Date("2026-04-10T11:00:00.000Z"),
-			updatedAt: new Date("2026-04-10T11:00:00.000Z"),
+			createdAt: new Date("2026-04-10T10:00:00.000Z"),
+			updatedAt: new Date("2026-04-10T10:00:00.000Z"),
 			setGroups: [],
 		};
 
@@ -135,11 +146,12 @@ describe("MonthlyCalendar", () => {
 		);
 
 		expect(screen.getByText("Push A")).toBeInTheDocument();
+		expect(screen.getByText("2h 30m")).toBeInTheDocument();
 		expect(screen.getByText("Active Session").closest("button")).toHaveClass(
 			"bg-primary",
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "+1 more" }));
+		fireEvent.click(screen.getByRole("button", { name: "+2 more" }));
 
 		expect(
 			screen.getByRole("heading", { name: "Hidden Session" }),

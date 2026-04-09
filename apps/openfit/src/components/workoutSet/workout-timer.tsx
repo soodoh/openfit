@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { Pause, Play, Plus, Timer } from "lucide-react";
+import { Minus, Pause, Play, Plus, Timer } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,6 +59,7 @@ export const WorkoutTimer = ({
 									<Button
 										size="sm"
 										variant="outline"
+										aria-label="Decrease workout timer by 10 seconds"
 										onClick={() => {
 											setTotalSeconds(Math.max(0, totalSeconds - 10));
 											restart(
@@ -73,6 +74,9 @@ export const WorkoutTimer = ({
 									</Button>
 									<Button
 										size="sm"
+										aria-label={
+											isRunning ? "Pause workout timer" : "Start workout timer"
+										}
 										onClick={() => {
 											if (isRunning) {
 												pause();
@@ -90,6 +94,7 @@ export const WorkoutTimer = ({
 									<Button
 										size="sm"
 										variant="default"
+										aria-label="Increase workout timer by 10 seconds"
 										onClick={() => {
 											setTotalSeconds(totalSeconds + 10);
 											restart(
@@ -100,7 +105,7 @@ export const WorkoutTimer = ({
 											);
 										}}
 									>
-										<Plus className="h-4 w-4" />
+										<Minus className="h-4 w-4" />
 									</Button>
 								</div>
 							</div>
@@ -127,6 +132,7 @@ export const WorkoutTimer = ({
 					variant="ghost"
 					size="icon"
 					onClick={() => setTimerOpen(!isTimerOpen)}
+					aria-label="Toggle workout timer"
 					className="relative h-10 w-10"
 				>
 					{!isRunning && remainingSeconds < totalSeconds ? (

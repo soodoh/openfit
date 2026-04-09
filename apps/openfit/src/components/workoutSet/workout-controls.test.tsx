@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
 	SetGroupWithRelations,
 	SetWithRelations,
@@ -166,6 +166,10 @@ describe("workout controls", () => {
 		mockCountdown.totalSeconds = 45;
 	});
 
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
 	it("bulk edits reps, weight, units, and rest time", async () => {
 		const onClose = vi.fn();
 
@@ -204,6 +208,33 @@ describe("workout controls", () => {
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
+	it("leaves bulk-edit fields unchanged when the inputs are blank", async () => {
+		const onClose = vi.fn();
+
+		render(
+			<BulkEditSetModal
+				open
+				onClose={onClose}
+				setGroup={setGroup}
+				units={units}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Update" }));
+
+		await waitFor(() => {
+			expect(mockBulkEditSetGroup).toHaveBeenCalledWith({
+				id: "group-1",
+				reps: undefined,
+				weight: undefined,
+				repetitionUnitId: "rep",
+				weightUnitId: "lb",
+				restTime: undefined,
+			});
+		});
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
 	it("clears a set comment when the textarea is emptied", async () => {
 		const onClose = vi.fn();
 
@@ -233,13 +264,60 @@ describe("workout controls", () => {
 		const onComplete = vi.fn().mockResolvedValue(undefined);
 
 		render(<WorkoutTimer set={set} onComplete={onComplete} />);
-		fireEvent.click(screen.getAllByRole("button")[0]);
+		fireEvent.click(
+			screen.getByRole("button", { name: "Toggle workout timer" }),
+		);
 
 		fireEvent.click(screen.getByRole("button", { name: "Mark as Completed" }));
 
 		await waitFor(() => {
 			expect(onComplete).toHaveBeenCalledTimes(1);
 		});
+	});
+
+	it("adjusts the workout timer controls", () => {
+		const onComplete = vi.fn().mockResolvedValue(undefined);
+
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date("2026-04-08T12:00:00.000Z"));
+		mockCountdown.isRunning = false;
+		mockCountdown.totalSeconds = 45;
+
+		render(<WorkoutTimer set={set} onComplete={onComplete} />);
+		fireEvent.click(
+			screen.getByRole("button", { name: "Toggle workout timer" }),
+		);
+		fireEvent.click(
+			screen.getByRole("button", {
+				name: "Decrease workout timer by 10 seconds",
+			}),
+		);
+		fireEvent.click(
+			screen.getByRole("button", {
+				name: "Increase workout timer by 10 seconds",
+			}),
+		);
+		fireEvent.click(
+			screen.getByRole("button", { name: "Start workout timer" }),
+		);
+
+		expect(mockCountdown.restart).toHaveBeenNthCalledWith(
+			1,
+			new Date("2026-04-08T12:00:08.000Z"),
+			false,
+		);
+		expect(mockCountdown.restart).toHaveBeenNthCalledWith(
+			2,
+			new Date("2026-04-08T12:00:35.000Z"),
+			false,
+		);
+		expect(mockCountdown.restart).toHaveBeenNthCalledWith(
+			3,
+			new Date("2026-04-08T12:00:55.000Z"),
+			false,
+		);
+		expect(mockCountdown.start).toHaveBeenCalledTimes(2);
+		vi.useRealTimers();
 	});
 
 	it("falls back to the set number for an unknown set type and updates the type selection", async () => {

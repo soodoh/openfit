@@ -218,4 +218,25 @@ describe("SessionDetailModal", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Confirm delete" }));
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
+
+	it("renders an inactive session without the continue workout action", () => {
+		mockUseSession.mockReturnValue({ data: session });
+
+		render(
+			<SessionDetailModal
+				sessionId="session-1"
+				units={mockUnits}
+				open
+				onClose={vi.fn()}
+			/>,
+		);
+
+		expect(screen.queryByText("In Progress")).not.toBeInTheDocument();
+		expect(
+			screen.queryByRole("link", { name: "Continue Workout" }),
+		).not.toBeInTheDocument();
+		expect(screen.getByTestId("workout-list")).toHaveTextContent(
+			"ViewSession:session-1:2",
+		);
+	});
 });

@@ -44,6 +44,28 @@ describe("SessionSummaryCard", () => {
 		).not.toBeInTheDocument();
 	});
 
+	it("links completed sessions to logs and shows the edit menu by default", () => {
+		render(
+			<SessionSummaryCard
+				session={{
+					id: "session-3",
+					name: "Pull Day",
+					startTime: new Date("2026-04-01T08:00:00.000Z"),
+					endTime: new Date("2026-04-01T08:45:00.000Z"),
+					impression: null,
+					notes: null,
+					setGroups: [],
+				}}
+			/>,
+		);
+
+		expect(screen.getByRole("link")).toHaveAttribute("href", "/logs");
+		expect(
+			screen.getByRole("button", { name: "Edit session menu" }),
+		).toBeInTheDocument();
+		expect(screen.getByText("45 min")).toBeInTheDocument();
+	});
+
 	it("renders as a button when an onClick handler is provided", () => {
 		const onClick = vi.fn();
 

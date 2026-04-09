@@ -119,4 +119,37 @@ describe("SelectTemplate", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Push DayStrength" }));
 		expect(screen.getByRole("combobox")).toHaveTextContent("Empty workout");
 	});
+
+	it("shows loading and empty states from the search hook", () => {
+		mockUseRoutineDaySearch.mockReturnValueOnce({
+			data: [],
+			isLoading: true,
+		});
+
+		render(
+			<SelectTemplate
+				value={undefined}
+				onChange={vi.fn()}
+				disabled={false}
+				label="Start from a Routine"
+			/>,
+		);
+
+		expect(screen.getByText("Loading...")).toBeInTheDocument();
+
+		mockUseRoutineDaySearch.mockReturnValueOnce({
+			data: [],
+			isLoading: false,
+		});
+		render(
+			<SelectTemplate
+				value={undefined}
+				onChange={vi.fn()}
+				disabled={false}
+				label="Start from a Routine"
+			/>,
+		);
+
+		expect(screen.getByText("No workouts found.")).toBeInTheDocument();
+	});
 });
