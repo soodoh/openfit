@@ -53,6 +53,8 @@ import {
 	getRoutineDaysWithWeekdays,
 	getSessionsWithData,
 	getSessionWithData,
+	withFirstExerciseImageUrls,
+	withSessionsData,
 } from "./data-loaders";
 
 describe("data-loaders", () => {
@@ -68,6 +70,14 @@ describe("data-loaders", () => {
 
 		await expect(getFirstExerciseImageUrl("exercise_123")).resolves.toBe(
 			"/api/uploads/bench.webp",
+		);
+	});
+
+	it("returns undefined when the first exercise image does not exist", async () => {
+		mocks.findFirstExerciseImage.mockResolvedValue(null);
+
+		await expect(getFirstExerciseImageUrl("exercise_missing")).resolves.toBe(
+			undefined,
 		);
 	});
 
@@ -94,6 +104,42 @@ describe("data-loaders", () => {
 
 		expect(mocks.dbSelect).toHaveBeenCalledTimes(2);
 		expect(mocks.findManyExerciseImages).not.toHaveBeenCalled();
+	});
+
+	it("returns an empty map for empty exercise ids without querying", async () => {
+		await expect(getFirstExerciseImageUrls([])).resolves.toEqual(new Map());
+
+		expect(mocks.dbSelect).not.toHaveBeenCalled();
+		expect(mocks.findManyExerciseImages).not.toHaveBeenCalled();
+	});
+
+	it("adds first image urls to item lists and leaves missing image urls undefined", async () => {
+		mocks.selectResults.push([
+			{
+				exerciseId: "exercise_1",
+				path: "/api/uploads/e1-first.jpg",
+			},
+		]);
+
+		await expect(
+			withFirstExerciseImageUrls([
+				{ id: "exercise_1", name: "Bench Press" },
+				{ id: "exercise_2", name: "Row" },
+			]),
+		).resolves.toEqual([
+			{
+				id: "exercise_1",
+				name: "Bench Press",
+				imageUrl: "/api/uploads/e1-first.jpg",
+			},
+			{
+				id: "exercise_2",
+				name: "Row",
+				imageUrl: undefined,
+			},
+		]);
+
+		expect(mocks.dbSelect).toHaveBeenCalledTimes(2);
 	});
 
 	it("returns the first ordered image for each exercise from the batched SQL result", async () => {
@@ -192,6 +238,149 @@ describe("data-loaders", () => {
 				},
 			],
 		});
+	});
+
+	it("hydrates sets that do not have an exercise relation", async () => {
+		mocks.findFirstWorkoutSession.mockResolvedValue({
+			id: "session_456",
+			name: "No Exercise Session",
+		});
+		mocks.findManyWorkoutSetGroups.mockResolvedValue([
+			{
+				id: "group_456",
+				sessionId: "session_456",
+				order: 0,
+			},
+		]);
+		mocks.findManyWorkoutSets.mockResolvedValue([
+			{
+				id: "set_456",
+				setGroupId: "group_456",
+				order: 0,
+				exercise: null,
+				repetitionUnit: null,
+				weightUnit: null,
+			},
+		]);
+
+		await expect(getSessionWithData("session_456")).resolves.toEqual({
+			id: "session_456",
+			name: "No Exercise Session",
+			setGroups: [
+				{
+					id: "group_456",
+					sessionId: "session_456",
+					order: 0,
+					sets: [
+						{
+							id: "set_456",
+							setGroupId: "group_456",
+							order: 0,
+							exercise: null,
+							repetitionUnit: null,
+							weightUnit: null,
+						},
+					],
+				},
+			],
+		});
+
+		expect(mocks.dbSelect).not.toHaveBeenCalled();
+	});
+
+	it("keeps exercise relationships when no image lookup result is found", async () => {
+		mocks.findFirstWorkoutSession.mockResolvedValue({
+			id: "session_789",
+			name: "Missing Image Session",
+		});
+		mocks.findManyWorkoutSetGroups.mockResolvedValue([
+			{
+				id: "group_789",
+				sessionId: "session_789",
+				order: 0,
+			},
+			{
+				id: "group_orphan",
+				sessionId: null,
+				order: 1,
+			},
+		]);
+		mocks.findManyWorkoutSets.mockResolvedValue([
+			{
+				id: "set_789",
+				setGroupId: "group_789",
+				order: 0,
+				exercise: {
+					id: "exercise_789",
+					name: "Lat Pulldown",
+				},
+				repetitionUnit: null,
+				weightUnit: null,
+			},
+		]);
+
+		await expect(getSessionWithData("session_789")).resolves.toEqual({
+			id: "session_789",
+			name: "Missing Image Session",
+			setGroups: [
+				{
+					id: "group_789",
+					sessionId: "session_789",
+					order: 0,
+					sets: [
+						{
+							id: "set_789",
+							setGroupId: "group_789",
+							order: 0,
+							exercise: {
+								id: "exercise_789",
+								name: "Lat Pulldown",
+								imageUrl: null,
+							},
+							repetitionUnit: null,
+							weightUnit: null,
+						},
+					],
+				},
+			],
+		});
+
+		expect(mocks.dbSelect).toHaveBeenCalledTimes(2);
+	});
+
+	it("returns empty session hydration results for an empty input list", async () => {
+		await expect(withSessionsData([])).resolves.toEqual([]);
+
+		expect(mocks.findManyWorkoutSetGroups).not.toHaveBeenCalled();
+		expect(mocks.findManyWorkoutSets).not.toHaveBeenCalled();
+		expect(mocks.dbSelect).not.toHaveBeenCalled();
+	});
+
+	it("returns sessions with empty set groups when no set groups are found", async () => {
+		mocks.findManyWorkoutSetGroups.mockResolvedValue([]);
+
+		await expect(
+			withSessionsData([{ id: "session_empty", name: "Empty Session" }]),
+		).resolves.toEqual([
+			{
+				id: "session_empty",
+				name: "Empty Session",
+				setGroups: [],
+			},
+		]);
+
+		expect(mocks.findManyWorkoutSetGroups).toHaveBeenCalledTimes(1);
+		expect(mocks.findManyWorkoutSets).not.toHaveBeenCalled();
+		expect(mocks.dbSelect).not.toHaveBeenCalled();
+	});
+
+	it("returns early in getSessionsWithData when no ids are provided", async () => {
+		await expect(getSessionsWithData([])).resolves.toEqual([]);
+
+		expect(mocks.findManyWorkoutSessions).not.toHaveBeenCalled();
+		expect(mocks.findManyWorkoutSetGroups).not.toHaveBeenCalled();
+		expect(mocks.findManyWorkoutSets).not.toHaveBeenCalled();
+		expect(mocks.dbSelect).not.toHaveBeenCalled();
 	});
 
 	it("hydrates many sessions with one session, set group, set, and image query", async () => {

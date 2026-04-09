@@ -43,7 +43,7 @@ async function getNextSetGroupOrder(
 ): Promise<number> {
 	let existingSetGroups: Awaited<
 		ReturnType<typeof db.query.workoutSetGroups.findMany>
-	>;
+	> = [];
 	if (sessionId) {
 		existingSetGroups = await db.query.workoutSetGroups.findMany({
 			where: eq(schema.workoutSetGroups.sessionId, sessionId),
@@ -52,8 +52,6 @@ async function getNextSetGroupOrder(
 		existingSetGroups = await db.query.workoutSetGroups.findMany({
 			where: eq(schema.workoutSetGroups.routineDayId, routineDayId),
 		});
-	} else {
-		return 0;
 	}
 	if (existingSetGroups.length === 0) {
 		return 0;
@@ -112,6 +110,15 @@ async function createSetGroupResponse(
 			{ status: 500 },
 		);
 	}
+	let shouldAutoComplete = false;
+	if (sessionId) {
+		const workoutSession = await db.query.workoutSessions.findFirst({
+			where: eq(schema.workoutSessions.id, sessionId),
+		});
+		if (workoutSession?.endTime) {
+			shouldAutoComplete = true;
+		}
+	}
 	const setGroupId = nanoid();
 	await db.insert(schema.workoutSetGroups).values({
 		id: setGroupId,
@@ -134,7 +141,7 @@ async function createSetGroupResponse(
 			weight: 0,
 			weightUnitId: unitIds.weightUnitId,
 			restTime: 0,
-			completed: false,
+			completed: shouldAutoComplete,
 		});
 	}
 	const setGroup = await db.query.workoutSetGroups.findFirst({

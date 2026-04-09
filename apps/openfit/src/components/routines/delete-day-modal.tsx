@@ -34,7 +34,14 @@ export const DeleteDayModal = ({
 		}
 	};
 	return (
-		<Dialog open={open} onOpenChange={() => onClose()}>
+		<Dialog
+			open={open}
+			onOpenChange={(isOpen) => {
+				if (!isOpen) {
+					onClose();
+				}
+			}}
+		>
 			<DialogContent className="sm:max-w-[400px] p-0 overflow-hidden">
 				{/* Header with warning styling */}
 				<DialogHeader className="px-6 pt-6 pb-4 bg-linear-to-br from-destructive/10 via-transparent to-transparent">

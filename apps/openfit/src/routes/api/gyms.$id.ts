@@ -32,15 +32,22 @@ export const Route = createFileRoute("/api/gyms/$id")({
 					}
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
-				const { id } = params;
-				const ownership = await requireOwnedGym(session.user.id, id);
-				if (ownership.status !== 200) {
+				try {
+					const { id } = params;
+					const ownership = await requireOwnedGym(session.user.id, id);
+					if (ownership.status !== 200) {
+						return Response.json(
+							{ error: ownership.error },
+							{ status: ownership.status },
+						);
+					}
+					return Response.json(serializeGym(ownership.gym));
+				} catch {
 					return Response.json(
-						{ error: ownership.error },
-						{ status: ownership.status },
+						{ error: "Failed to load gym" },
+						{ status: 500 },
 					);
 				}
-				return Response.json(serializeGym(ownership.gym));
 			},
 			// PATCH /api/gyms/[id] - Update gym
 			PATCH: async ({

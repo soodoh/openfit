@@ -96,7 +96,12 @@ export async function fetchJson<T>(
 	errorMessage: string,
 ): Promise<T> {
 	if (!response.ok) {
-		const body = (await response.json()) as { error?: string };
+		let body: { error?: string } | undefined;
+		try {
+			body = (await response.json()) as { error?: string };
+		} catch {
+			throw new Error(errorMessage);
+		}
 		throw new Error(body.error ?? errorMessage);
 	}
 	return (await response.json()) as T;

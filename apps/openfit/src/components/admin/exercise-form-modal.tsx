@@ -506,7 +506,8 @@ export function ExerciseFormModal({
 								</div>
 								<div className="space-y-2">
 									{instructions.map((instruction, index) => (
-										<div key={instruction} className="flex items-start gap-2">
+										// biome-ignore lint/suspicious/noArrayIndexKey: instruction rows can contain duplicate blank values
+										<div key={index} className="flex items-start gap-2">
 											<span className="text-sm text-muted-foreground mt-2 w-6">
 												{index + 1}.
 											</span>

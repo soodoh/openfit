@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { RoutineDayTab } from "@/components/routines/routine-day-tab";
 import { RoutineOverviewTab } from "@/components/routines/routine-overview-tab";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -26,6 +26,11 @@ export const RoutineModal = ({
 	initialTab?: string;
 }): ReactNode => {
 	const [activeTab, setActiveTab] = useState(initialTab ?? OVERVIEW_TAB);
+	useEffect(() => {
+		if (open) {
+			setActiveTab(initialTab ?? OVERVIEW_TAB);
+		}
+	}, [initialTab, open]);
 	// Compute valid tab - if current tab doesn't exist, show overview
 	const validTab = useMemo(() => {
 		if (activeTab === OVERVIEW_TAB) {

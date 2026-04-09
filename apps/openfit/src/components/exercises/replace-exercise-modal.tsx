@@ -78,6 +78,7 @@ export const ReplaceExerciseModal = ({
 		if (open) {
 			setSearchTerm("");
 			setSelectedExercise(undefined);
+			setSelectedGymId(undefined);
 		}
 	}, [open]);
 	// Determine equipment IDs for filtering

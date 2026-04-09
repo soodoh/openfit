@@ -11,15 +11,26 @@ export default defineConfig({
 		environment: "jsdom",
 		setupFiles: ["./vitest.setup.ts"],
 		include: [
-			"src/lib/**/*.test.ts",
+			"src/*.test.{ts,tsx}",
+			"src/lib/**/*.test.{ts,tsx}",
 			"src/components/**/*.test.{ts,tsx}",
-			"src/hooks/mutations/**/*.test.ts",
+			"src/hooks/**/*.test.{ts,tsx}",
 			"src/routes/**/*.test.{ts,tsx}",
 		],
 		exclude: ["node_modules", ".output"],
 		coverage: {
 			provider: "v8",
-			reporter: ["text", "html"],
+			reporter: ["text", "html", "json-summary"],
+			all: true,
+			include: ["src/**/*.{ts,tsx}"],
+			exclude: [
+				"src/**/*.test.{ts,tsx}",
+				"src/routeTree.gen.ts",
+				// These modules do not contain executable runtime logic under V8 coverage.
+				"src/hooks.ts",
+				"src/lib/api-types.ts",
+				"db/schema/**",
+			],
 		},
 	},
 });

@@ -55,18 +55,24 @@ function handleAutocompleteKeyDown(args: {
 	const { event, value, options, onChange, onSelect, setSearchTerm, setOpen } =
 		args;
 	if (value) {
-		onChange(undefined);
 		if (event.key === "Backspace" || event.key === "Delete") {
 			event.preventDefault();
+			onChange(undefined);
 			setSearchTerm("");
 			return;
 		}
 		if (event.key.length === 1) {
 			event.preventDefault();
+			onChange(undefined);
 			setSearchTerm(event.key);
 			setOpen(true);
 			return;
 		}
+		if (event.key === "Escape") {
+			setOpen(false);
+			return;
+		}
+		return;
 	}
 	if (event.key === "Enter" && options && options.length > 0) {
 		event.preventDefault();

@@ -29,7 +29,8 @@ export const RestTimer = ({
 		pause,
 		restart,
 	} = timer;
-	const percentage = (remainingSeconds / totalSeconds) * 100;
+	const percentage =
+		totalSeconds > 0 ? (remainingSeconds / totalSeconds) * 100 : 0;
 	const circumference = 2 * Math.PI * 45;
 	return (
 		<>
@@ -90,6 +91,7 @@ export const RestTimer = ({
 								size="icon"
 								variant="outline"
 								className="h-12 w-12 rounded-full"
+								aria-label="Decrease rest timer by 10 seconds"
 								onClick={() => {
 									setTotalSeconds(Math.max(10, totalSeconds - 10));
 									restart(
@@ -106,6 +108,7 @@ export const RestTimer = ({
 							<Button
 								size="icon"
 								className="h-16 w-16 rounded-full"
+								aria-label={isRunning ? "Pause rest timer" : "Start rest timer"}
 								onClick={() => {
 									if (isRunning) {
 										pause();
@@ -125,6 +128,7 @@ export const RestTimer = ({
 								size="icon"
 								variant="outline"
 								className="h-12 w-12 rounded-full"
+								aria-label="Increase rest timer by 10 seconds"
 								onClick={() => {
 									setTotalSeconds(totalSeconds + 10);
 									restart(
@@ -145,6 +149,7 @@ export const RestTimer = ({
 								size="sm"
 								variant="ghost"
 								className="text-muted-foreground"
+								aria-label="Reset rest timer"
 								onClick={() => {
 									restart(dayjs().add(totalSeconds, "seconds").toDate(), false);
 								}}
@@ -156,6 +161,7 @@ export const RestTimer = ({
 								size="sm"
 								variant="ghost"
 								className="text-muted-foreground"
+								aria-label="Skip rest timer"
 								onClick={() => {
 									setOpen(false);
 									restart(dayjs().add(totalSeconds, "seconds").toDate(), false);
@@ -173,6 +179,7 @@ export const RestTimer = ({
 			<button
 				type="button"
 				onClick={() => setOpen(!open)}
+				aria-label="Toggle rest timer"
 				className="flex items-center gap-2 h-9 px-3 rounded-full bg-card border shadow-xs hover:shadow-md transition-shadow"
 			>
 				<Timer className="h-4 w-4 text-muted-foreground" />

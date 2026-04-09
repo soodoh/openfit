@@ -60,12 +60,10 @@ function parseRoutineDayDetail(
 }
 
 // Fetch routine day with full data
-async function fetchRoutineDay(
-	id: string,
-): Promise<RoutineDayDetailResult | undefined> {
+async function fetchRoutineDay(id: string): Promise<RoutineDayDetailResult> {
 	const response = await fetch(`/api/routine-days/${id}`);
 	if (response.status === 404) {
-		return undefined;
+		throw new Error("Routine day not found");
 	}
 	const payload = await fetchJson<RoutineDayDetailDto>(
 		response,
@@ -90,13 +88,17 @@ async function searchRoutineDays(
 	);
 	return payload.map(parseRoutineDaySearch);
 }
+
+function routineDaySearchQueryKey(term: string, limit: number) {
+	return [...queryKeys.routineDays.search(term), { limit }] as const;
+}
 // Hook for single routine day with full data
 export function useRoutineDay(
 	id: string | undefined,
-): UseQueryResult<RoutineDayDetailResult | undefined> {
+): UseQueryResult<RoutineDayDetailResult> {
 	return useQuery({
 		queryKey: queryKeys.routineDays.detail(id ?? ""),
-		queryFn: async () => fetchRoutineDay(id ?? ""),
+		queryFn: async () => fetchRoutineDay(id!),
 		enabled: Boolean(id),
 	});
 }
@@ -106,7 +108,7 @@ export function useRoutineDaySearch(
 	limit = 10,
 ): UseQueryResult<RoutineDaySearchResult[]> {
 	return useQuery({
-		queryKey: queryKeys.routineDays.search(term),
+		queryKey: routineDaySearchQueryKey(term, limit),
 		queryFn: async () => searchRoutineDays(term, limit),
 	});
 }

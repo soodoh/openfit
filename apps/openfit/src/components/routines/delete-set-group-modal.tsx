@@ -22,7 +22,14 @@ export const DeleteSetGroupModal = ({
 }): ReactNode => {
 	const deleteSetGroupMutation = useDeleteSetGroup();
 	return (
-		<Dialog open={open} onOpenChange={() => onClose()}>
+		<Dialog
+			open={open}
+			onOpenChange={(isOpen) => {
+				if (!isOpen) {
+					onClose();
+				}
+			}}
+		>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Delete Exercise</DialogTitle>

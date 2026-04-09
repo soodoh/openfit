@@ -31,10 +31,9 @@ export const Route = createFileRoute("/api/routines")({
 					const { searchParams } = new URL(request.url);
 					const {
 						cursor,
-						limit: rawLimit,
+						limit,
 						search: searchTerm,
 					} = parseSearchParams(searchParams, routinesListQuerySchema);
-					const limit = rawLimit ?? 20;
 					// Build query conditions
 					const conditions = [eq(schema.routines.userId, session.user.id)];
 					if (searchTerm) {

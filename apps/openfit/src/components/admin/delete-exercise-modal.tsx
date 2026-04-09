@@ -27,14 +27,14 @@ export function DeleteExerciseModal({
 	const open = Boolean(exercise);
 	const [error, setError] = useState<string | undefined>(undefined);
 	const [isPending, setIsPending] = useState(false);
-	const handleDelete = () => {
+	const handleDelete = async () => {
 		if (!exercise) {
 			return;
 		}
 		setError(undefined);
 		setIsPending(true);
 		try {
-			onDelete(exercise.id);
+			await Promise.resolve(onDelete(exercise.id));
 			onClose();
 		} catch (caughtError) {
 			setError(

@@ -29,7 +29,8 @@ export const Route = createFileRoute("/api/sets/reorder")({
 					if (!setGroup || setGroup.userId !== session.user.id) {
 						return Response.json({ error: "Unauthorized" }, { status: 403 });
 					}
-					// Update the order for each set
+					const setsToUpdate: Array<{ id: string; order: number }> = [];
+					// Validate every existing set before applying any reorder mutation.
 					for (const [index, setId] of setIds.entries()) {
 						const set = await db.query.workoutSets.findFirst({
 							where: eq(schema.workoutSets.id, setId),
@@ -37,17 +38,27 @@ export const Route = createFileRoute("/api/sets/reorder")({
 						if (!set) {
 							continue;
 						}
-						if (set.userId !== session.user.id) {
+						if (
+							set.userId !== session.user.id ||
+							set.setGroupId !== setGroupId
+						) {
 							return Response.json({ error: "Unauthorized" }, { status: 403 });
 						}
-						await db
-							.update(schema.workoutSets)
-							.set({
-								order: index,
-								updatedAt: new Date(),
-							})
-							.where(eq(schema.workoutSets.id, setId));
+						setsToUpdate.push({ id: setId, order: index });
 					}
+					// Apply the reorder atomically so a later write failure cannot leave
+					// the earlier rows partially updated.
+					await db.transaction(async (tx) => {
+						for (const { id, order } of setsToUpdate) {
+							await tx
+								.update(schema.workoutSets)
+								.set({
+									order,
+									updatedAt: new Date(),
+								})
+								.where(eq(schema.workoutSets.id, id));
+						}
+					});
 					return Response.json({ success: true });
 				} catch (error) {
 					if (error instanceof Response) {

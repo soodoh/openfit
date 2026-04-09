@@ -73,4 +73,87 @@ describe("CurrentSessionPage end session confirmation", () => {
 		expect(typeof payload.endTime).toBe("number");
 		expect(mockNavigate).toHaveBeenCalledWith({ to: "/logs" });
 	});
+
+	it("renders fallback title, notes, and computed progress stats", () => {
+		const sessionWithProgress = {
+			...mockSession,
+			name: "",
+			notes: "Keep elbows tucked",
+			setGroups: [
+				{
+					id: "group-1",
+					userId: "user-1",
+					routineDayId: null,
+					sessionId: "session-1",
+					type: "NORMAL",
+					order: 0,
+					comment: null,
+					sets: [
+						{
+							id: "set-1",
+							userId: "user-1",
+							setGroupId: "group-1",
+							exerciseId: "exercise-1",
+							type: "NORMAL",
+							order: 0,
+							reps: 8,
+							repetitionUnitId: "rep",
+							weight: 135,
+							weightUnitId: "weight",
+							restTime: 90,
+							completed: true,
+							exercise: { id: "exercise-1", name: "Bench", imageUrl: null },
+							repetitionUnit: { id: "rep", name: "Reps" },
+							weightUnit: { id: "weight", name: "lb" },
+						},
+						{
+							id: "set-2",
+							userId: "user-1",
+							setGroupId: "group-1",
+							exerciseId: "exercise-1",
+							type: "NORMAL",
+							order: 1,
+							reps: 8,
+							repetitionUnitId: "rep",
+							weight: 135,
+							weightUnitId: "weight",
+							restTime: 90,
+							completed: false,
+							exercise: { id: "exercise-1", name: "Bench", imageUrl: null },
+							repetitionUnit: { id: "rep", name: "Reps" },
+							weightUnit: { id: "weight", name: "lb" },
+						},
+						{
+							id: "set-3",
+							userId: "user-1",
+							setGroupId: "group-1",
+							exerciseId: "exercise-1",
+							type: "NORMAL",
+							order: 2,
+							reps: 8,
+							repetitionUnitId: "rep",
+							weight: 135,
+							weightUnitId: "weight",
+							restTime: 90,
+							completed: false,
+							exercise: { id: "exercise-1", name: "Bench", imageUrl: null },
+							repetitionUnit: { id: "rep", name: "Reps" },
+							weightUnit: { id: "weight", name: "lb" },
+						},
+					],
+				},
+			],
+		} satisfies WorkoutSessionWithData;
+
+		render(
+			<CurrentSessionPage session={sessionWithProgress} units={mockUnits} />,
+		);
+
+		expect(
+			screen.getByRole("heading", { name: "Workout Session" }),
+		).toBeInTheDocument();
+		expect(screen.getByText("Keep elbows tucked")).toBeInTheDocument();
+		expect(screen.getByText("33%")).toBeInTheDocument();
+		expect(screen.getByText("1 / 3 sets")).toBeInTheDocument();
+	});
 });

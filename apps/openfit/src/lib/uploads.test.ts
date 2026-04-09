@@ -53,6 +53,8 @@ describe("resolveUploadPath", () => {
 		const uploadDir = path.resolve("/tmp/uploads");
 		expect(resolveUploadPath(uploadDir, "../secrets.txt")).toBeNull();
 		expect(resolveUploadPath(uploadDir, "/etc/passwd")).toBeNull();
+		expect(resolveUploadPath(uploadDir, ".")).toBeNull();
+		expect(resolveUploadPath(uploadDir, "///")).toBeNull();
 	});
 });
 

@@ -27,17 +27,30 @@ export const Route = createFileRoute("/api/sessions/$id")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				const { id } = params;
-				const session = await db.query.workoutSessions.findFirst({
-					where: eq(schema.workoutSessions.id, id),
-				});
-				if (!session) {
-					return Response.json({ error: "Session not found" }, { status: 404 });
+				try {
+					const session = await db.query.workoutSessions.findFirst({
+						where: eq(schema.workoutSessions.id, id),
+					});
+					if (!session) {
+						return Response.json(
+							{ error: "Session not found" },
+							{ status: 404 },
+						);
+					}
+					if (session.userId !== authSession.user.id) {
+						return Response.json({ error: "Unauthorized" }, { status: 403 });
+					}
+					const sessionWithData = await getSessionWithData(id);
+					return Response.json(sessionWithData);
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
+					return Response.json(
+						{ error: "Failed to fetch session" },
+						{ status: 500 },
+					);
 				}
-				if (session.userId !== authSession.user.id) {
-					return Response.json({ error: "Unauthorized" }, { status: 403 });
-				}
-				const sessionWithData = await getSessionWithData(id);
-				return Response.json(sessionWithData);
 			},
 			// PATCH /api/sessions/[id] - Update session
 			PATCH: async ({

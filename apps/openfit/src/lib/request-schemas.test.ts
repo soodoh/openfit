@@ -6,6 +6,7 @@ import {
 	adminLookupMutationSchema,
 	adminUserListQuerySchema,
 	adminUserRoleUpdateSchema,
+	bulkEditSetGroupSchema,
 	createAdminExerciseSchema,
 	createGymSchema,
 	createRoutineDaySchema,
@@ -42,6 +43,12 @@ describe("adminUserRoleUpdateSchema", () => {
 		);
 	});
 
+	it("trims role values before validation", () => {
+		expect(adminUserRoleUpdateSchema.parse({ role: " ADMIN " })).toEqual({
+			role: "ADMIN",
+		});
+	});
+
 	it("rejects invalid roles", () => {
 		expect(adminUserRoleUpdateSchema.safeParse({ role: "ROOT" }).success).toBe(
 			false,
@@ -72,6 +79,20 @@ describe("updateUserProfileSchema", () => {
 			updateUserProfileSchema.safeParse({ theme: "midnight" }).success,
 		).toBe(false);
 	});
+
+	it("accepts light theme updates", () => {
+		expect(
+			updateUserProfileSchema.parse({
+				theme: "light",
+			}),
+		).toEqual({
+			theme: "light",
+		});
+	});
+
+	it("rejects empty profile updates", () => {
+		expect(updateUserProfileSchema.safeParse({}).success).toBe(false);
+	});
 });
 
 describe("adminLookupMutationSchema", () => {
@@ -91,6 +112,18 @@ describe("adminLookupMutationSchema", () => {
 				name: "Whatever",
 			}).success,
 		).toBe(false);
+	});
+
+	it("accepts alternate lookup types", () => {
+		expect(
+			adminLookupMutationSchema.parse({
+				type: "categories",
+				name: "Back",
+			}),
+		).toEqual({
+			type: "categories",
+			name: "Back",
+		});
 	});
 });
 
@@ -121,9 +154,71 @@ describe("query schemas", () => {
 		).toBe(false);
 	});
 
+	it("normalizes blank query strings and optional arrays", () => {
+		expect(
+			exercisesListQuerySchema.parse({
+				cursor: "",
+				limit: "",
+				search: " bench ",
+				equipmentId: " ",
+				equipmentIds: "barbell",
+				level: " beginner ",
+				categoryId: " category_1 ",
+				primaryMuscleId: " muscle_1 ",
+			}),
+		).toEqual({
+			limit: 20,
+			search: "bench",
+			equipmentIds: ["barbell"],
+			level: "beginner",
+			categoryId: "category_1",
+			primaryMuscleId: "muscle_1",
+		});
+	});
+
+	it("rejects invalid optional cursor values", () => {
+		expect(
+			exercisesListQuerySchema.safeParse({
+				cursor: "abc",
+			}).success,
+		).toBe(false);
+	});
+
+	it("rejects invalid non-optional integer query values", () => {
+		expect(
+			adminUserListQuerySchema.safeParse({
+				pageSize: "abc",
+			}).success,
+		).toBe(false);
+	});
+
+	it("accepts blank optional level filters", () => {
+		expect(
+			exercisesListQuerySchema.parse({
+				level: " ",
+			}),
+		).toEqual({
+			limit: 20,
+			search: "",
+		});
+	});
+
 	it("parses exercise search params with defaults", () => {
 		expect(exerciseSearchQuerySchema.parse({})).toEqual({
 			q: "",
+			limit: 20,
+		});
+	});
+
+	it("accepts single-value array query params", () => {
+		expect(
+			exerciseSearchQuerySchema.parse({
+				q: " pull ",
+				equipmentIds: "barbell",
+			}),
+		).toEqual({
+			q: "pull",
+			equipmentIds: ["barbell"],
 			limit: 20,
 		});
 	});
@@ -134,6 +229,22 @@ describe("query schemas", () => {
 				primaryMuscleIds: [""],
 			}).success,
 		).toBe(false);
+	});
+
+	it("normalizes optional similar-exercise params", () => {
+		expect(
+			similarExercisesQuerySchema.parse({
+				q: " push ",
+				equipmentIds: "barbell",
+				primaryMuscleIds: "chest",
+				exclude: " ",
+			}),
+		).toEqual({
+			q: "push",
+			equipmentIds: ["barbell"],
+			primaryMuscleIds: ["chest"],
+			limit: 20,
+		});
 	});
 
 	it("parses routine search params", () => {
@@ -151,6 +262,10 @@ describe("query schemas", () => {
 			search: "",
 			limit: 12,
 		});
+	});
+
+	it("allows empty session date filters", () => {
+		expect(sessionListQuerySchema.parse({})).toEqual({});
 	});
 
 	it("requires session date filters to be provided together", () => {
@@ -185,6 +300,14 @@ describe("query schemas", () => {
 			search: "rack",
 		});
 		expect(adminLookupDeleteQuerySchema.safeParse({}).success).toBe(false);
+	});
+
+	it("rejects blank admin lookup types", () => {
+		expect(
+			adminLookupDeleteQuerySchema.safeParse({
+				type: " ",
+			}).success,
+		).toBe(false);
 	});
 
 	it("caps admin pagination to valid integer ranges", () => {
@@ -285,6 +408,38 @@ describe("exercise schemas", () => {
 		).toBe(true);
 	});
 
+	it("accepts alternate exercise enum values", () => {
+		expect(
+			createUserExerciseSchema.parse({
+				name: "Pull Up",
+				categoryId: "category_123",
+				force: "pull",
+				level: "intermediate",
+				mechanic: "isolation",
+			}),
+		).toEqual({
+			name: "Pull Up",
+			categoryId: "category_123",
+			force: "pull",
+			level: "intermediate",
+			mechanic: "isolation",
+		});
+	});
+
+	it("accepts the remaining exercise enum values", () => {
+		expect(
+			updateUserExerciseSchema.parse({
+				name: "Static Hold",
+				force: "static",
+				level: "expert",
+			}),
+		).toEqual({
+			name: "Static Hold",
+			force: "static",
+			level: "expert",
+		});
+	});
+
 	it("rejects invalid admin exercise levels", () => {
 		expect(
 			createAdminExerciseSchema.safeParse({
@@ -343,6 +498,18 @@ describe("session schemas", () => {
 		).toBe(false);
 	});
 
+	it("accepts timestamp strings in session payloads", () => {
+		expect(
+			createSessionSchema.parse({
+				startTime: "1700000000000",
+				endTime: "1700000001000",
+			}),
+		).toEqual({
+			startTime: "1700000000000",
+			endTime: "1700000001000",
+		});
+	});
+
 	it("accepts valid session updates", () => {
 		expect(
 			updateSessionSchema.safeParse({
@@ -364,6 +531,20 @@ describe("createSetGroupSchema", () => {
 				exerciseId: "exercise_123",
 			}).success,
 		).toBe(false);
+	});
+
+	it("accepts routine-day-backed set groups", () => {
+		expect(
+			createSetGroupSchema.parse({
+				routineDayId: "routine_day_123",
+				exerciseId: "exercise_123",
+				type: " SUPERSET ",
+			}),
+		).toEqual({
+			routineDayId: "routine_day_123",
+			exerciseId: "exercise_123",
+			type: "SUPERSET",
+		});
 	});
 
 	it("rejects invalid set counts", () => {
@@ -389,6 +570,28 @@ describe("updateSetGroupSchema", () => {
 
 	it("rejects empty payloads", () => {
 		expect(updateSetGroupSchema.safeParse({}).success).toBe(false);
+	});
+
+	it("accepts normal group updates", () => {
+		expect(
+			updateSetGroupSchema.parse({
+				type: " NORMAL ",
+			}),
+		).toEqual({
+			type: "NORMAL",
+		});
+	});
+});
+
+describe("bulkEditSetGroupSchema", () => {
+	it("accepts at least one numeric bulk-edit field", () => {
+		expect(
+			bulkEditSetGroupSchema.parse({
+				reps: 8,
+			}),
+		).toEqual({
+			reps: 8,
+		});
 	});
 });
 
@@ -421,6 +624,34 @@ describe("createSetSchema", () => {
 			}).success,
 		).toBe(false);
 	});
+
+	it("trims set types before validation", () => {
+		expect(
+			createSetSchema.parse({
+				setGroupId: "set_group_123",
+				exerciseId: "exercise_123",
+				type: " WARMUP ",
+			}),
+		).toEqual({
+			setGroupId: "set_group_123",
+			exerciseId: "exercise_123",
+			type: "WARMUP",
+		});
+	});
+
+	it("accepts alternate set types", () => {
+		expect(
+			createSetSchema.parse({
+				setGroupId: "set_group_123",
+				exerciseId: "exercise_123",
+				type: " FAILURE ",
+			}),
+		).toEqual({
+			setGroupId: "set_group_123",
+			exerciseId: "exercise_123",
+			type: "FAILURE",
+		});
+	});
 });
 
 describe("updateSetSchema", () => {
@@ -436,6 +667,16 @@ describe("updateSetSchema", () => {
 	it("rejects empty set updates", () => {
 		expect(updateSetSchema.safeParse({}).success).toBe(false);
 	});
+
+	it("accepts false completion flags", () => {
+		expect(
+			updateSetSchema.parse({
+				completed: false,
+			}),
+		).toEqual({
+			completed: false,
+		});
+	});
 });
 
 describe("reorder schemas", () => {
@@ -445,9 +686,31 @@ describe("reorder schemas", () => {
 		);
 	});
 
+	it("accepts non-empty set group ordering", () => {
+		expect(
+			reorderSetGroupsSchema.parse({
+				setGroupIds: ["group_1", "group_2"],
+			}),
+		).toEqual({
+			setGroupIds: ["group_1", "group_2"],
+		});
+	});
+
 	it("requires a parent set group id when reordering sets", () => {
 		expect(reorderSetsSchema.safeParse({ setIds: ["set_123"] }).success).toBe(
 			false,
 		);
+	});
+
+	it("accepts set reordering with a parent set group", () => {
+		expect(
+			reorderSetsSchema.parse({
+				setGroupId: "group_1",
+				setIds: ["set_1", "set_2"],
+			}),
+		).toEqual({
+			setGroupId: "group_1",
+			setIds: ["set_1", "set_2"],
+		});
 	});
 });

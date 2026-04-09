@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { object, string } from "zod";
-import { parseJsonBody, parseSearchParams } from "./request-helpers";
+import {
+	fetchJson,
+	parseJsonBody,
+	parseResponseJson,
+	parseSearchParams,
+} from "./request-helpers";
 
 describe("parseJsonBody", () => {
 	it("parses typed JSON bodies without a schema", async () => {
@@ -57,6 +62,26 @@ describe("parseJsonBody", () => {
 			});
 		}
 	});
+
+	it("throws a 400 Response when the request body is invalid JSON", async () => {
+		const request = new Request("http://localhost/test", {
+			method: "POST",
+			body: "{invalid-json",
+			headers: { "Content-Type": "application/json" },
+		});
+
+		try {
+			await parseJsonBody(request);
+			throw new Error("Expected parseJsonBody to throw");
+		} catch (error) {
+			expect(error).toBeInstanceOf(Response);
+			const response = error as Response;
+			expect(response.status).toBe(400);
+			await expect(response.json()).resolves.toEqual({
+				error: "Invalid JSON body",
+			});
+		}
+	});
 });
 
 describe("parseSearchParams", () => {
@@ -77,6 +102,23 @@ describe("parseSearchParams", () => {
 		).toEqual({
 			q: "bench",
 			equipmentIds: ["barbell", "rack"],
+		});
+	});
+
+	it("keeps single query param values as strings", () => {
+		const searchParams = new URLSearchParams({
+			q: "bench press",
+		});
+
+		expect(
+			parseSearchParams(
+				searchParams,
+				object({
+					q: string(),
+				}),
+			),
+		).toEqual({
+			q: "bench press",
 		});
 	});
 
@@ -102,5 +144,54 @@ describe("parseSearchParams", () => {
 				issues: [{ message: "Limit must be numeric", path: ["limit"] }],
 			});
 		}
+	});
+});
+
+describe("response JSON helpers", () => {
+	it("returns parsed JSON when fetchJson receives an OK response", async () => {
+		const response = Response.json({ ok: true }, { status: 200 });
+
+		await expect(
+			fetchJson<{ ok: boolean }>(response, "Fallback"),
+		).resolves.toEqual({ ok: true });
+	});
+
+	it("throws the fallback error message for empty/non-JSON error payloads", async () => {
+		const response = new Response("not-json", {
+			status: 500,
+			headers: { "Content-Type": "text/plain" },
+		});
+
+		await expect(
+			fetchJson<Record<string, never>>(response, "Fallback failure message"),
+		).rejects.toThrow("Fallback failure message");
+	});
+
+	it("throws the server-provided error message for non-OK responses", async () => {
+		const response = Response.json(
+			{ error: "Server says no" },
+			{ status: 403 },
+		);
+
+		await expect(
+			fetchJson<Record<string, never>>(response, "Fallback failure message"),
+		).rejects.toThrow("Server says no");
+	});
+
+	it("falls back to the provided error message when the response has no error field", async () => {
+		const response = Response.json({ detail: "Nope" }, { status: 500 });
+
+		await expect(
+			fetchJson<Record<string, never>>(response, "Fallback failure message"),
+		).rejects.toThrow("Fallback failure message");
+	});
+
+	it("parses response JSON without checking response.ok", async () => {
+		const payload = { reason: "teapot" };
+		const response = Response.json(payload, { status: 418 });
+
+		await expect(parseResponseJson<typeof payload>(response)).resolves.toEqual(
+			payload,
+		);
 	});
 });

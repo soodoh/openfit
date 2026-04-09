@@ -1,0 +1,49 @@
+import { render } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ThemeSync } from "./theme-sync";
+
+const mockSetTheme = vi.fn();
+const mockUseAuth = vi.fn();
+const mockUseUserProfile = vi.fn();
+
+vi.mock("next-themes", () => ({
+	useTheme: () => ({
+		setTheme: mockSetTheme,
+	}),
+}));
+
+vi.mock("@/components/providers/auth-provider", () => ({
+	useAuth: () => mockUseAuth(),
+}));
+
+vi.mock("@/hooks", () => ({
+	useUserProfile: () => mockUseUserProfile(),
+}));
+
+describe("ThemeSync", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("syncs the stored theme when the user is authenticated", () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
+		mockUseUserProfile.mockReturnValue({
+			data: { theme: "dark" },
+		});
+
+		render(<ThemeSync />);
+
+		expect(mockSetTheme).toHaveBeenCalledWith("dark");
+	});
+
+	it("does not sync a theme when the user is anonymous", () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
+		mockUseUserProfile.mockReturnValue({
+			data: { theme: "light" },
+		});
+
+		render(<ThemeSync />);
+
+		expect(mockSetTheme).not.toHaveBeenCalled();
+	});
+});

@@ -22,7 +22,12 @@ export const Route = createFileRoute("/api/set-groups/reorder")({
 				try {
 					const body = await parseJsonBody(request, reorderSetGroupsSchema);
 					const { setGroupIds } = body;
-					// Update the order for each set group
+					const setGroupsToUpdate: Array<{ id: string; order: number }> = [];
+					let parentScope: {
+						sessionId: string | null;
+						routineDayId: string | null;
+					} | null = null;
+					// Validate ownership for every existing set group before mutating.
 					for (const [index, setGroupId] of setGroupIds.entries()) {
 						const setGroup = await db.query.workoutSetGroups.findFirst({
 							where: eq(schema.workoutSetGroups.id, setGroupId),
@@ -33,14 +38,36 @@ export const Route = createFileRoute("/api/set-groups/reorder")({
 						if (setGroup.userId !== session.user.id) {
 							return Response.json({ error: "Unauthorized" }, { status: 403 });
 						}
-						await db
-							.update(schema.workoutSetGroups)
-							.set({
-								order: index,
-								updatedAt: new Date(),
-							})
-							.where(eq(schema.workoutSetGroups.id, setGroupId));
+						const nextParentScope = {
+							sessionId: setGroup.sessionId,
+							routineDayId: setGroup.routineDayId,
+						};
+						if (!parentScope) {
+							parentScope = nextParentScope;
+						} else if (
+							parentScope.sessionId !== nextParentScope.sessionId ||
+							parentScope.routineDayId !== nextParentScope.routineDayId
+						) {
+							return Response.json(
+								{ error: "Set groups must share the same parent" },
+								{ status: 400 },
+							);
+						}
+						setGroupsToUpdate.push({ id: setGroupId, order: index });
 					}
+					// Apply the reorder atomically so a later write failure cannot leave
+					// the earlier rows partially updated.
+					await db.transaction(async (tx) => {
+						for (const { id, order } of setGroupsToUpdate) {
+							await tx
+								.update(schema.workoutSetGroups)
+								.set({
+									order,
+									updatedAt: new Date(),
+								})
+								.where(eq(schema.workoutSetGroups.id, id));
+						}
+					});
 					return Response.json({ success: true });
 				} catch (error) {
 					if (error instanceof Response) {

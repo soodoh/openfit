@@ -29,18 +29,25 @@ export const Route = createFileRoute("/api/admin/exercises/$id")({
 							{ status: 404 },
 						);
 					}
+					const updates = {
+						...(body.name !== undefined ? { name: body.name } : {}),
+						...(body.level !== undefined ? { level: body.level } : {}),
+						...(body.force !== undefined ? { force: body.force } : {}),
+						...(body.mechanic !== undefined ? { mechanic: body.mechanic } : {}),
+						...(body.equipmentId !== undefined
+							? { equipmentId: body.equipmentId }
+							: {}),
+						...(body.categoryId !== undefined
+							? { categoryId: body.categoryId }
+							: {}),
+					};
 					// Update exercise
-					await db
-						.update(schema.exercises)
-						.set({
-							name: body.name,
-							level: body.level,
-							force: body.force,
-							mechanic: body.mechanic,
-							equipmentId: body.equipmentId,
-							categoryId: body.categoryId,
-						})
-						.where(eq(schema.exercises.id, id));
+					if (Object.keys(updates).length > 0) {
+						await db
+							.update(schema.exercises)
+							.set(updates)
+							.where(eq(schema.exercises.id, id));
+					}
 					// Update primary muscles
 					if (body.primaryMuscleIds !== undefined) {
 						await db

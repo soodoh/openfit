@@ -34,20 +34,30 @@ export const Route = createFileRoute("/api/routines/$id")({
 					return Response.json({ error: "Unauthorized" }, { status: 401 });
 				}
 				const { id } = params;
-				const ownership = await requireOwnedRoutine(session.user.id, id);
-				if (ownership.status !== 200) {
+				try {
+					const ownership = await requireOwnedRoutine(session.user.id, id);
+					if (ownership.status !== 200) {
+						return Response.json(
+							{ error: ownership.error },
+							{ status: ownership.status },
+						);
+					}
+					const routineDays = await getRoutineDaysWithWeekdays(id);
 					return Response.json(
-						{ error: ownership.error },
-						{ status: ownership.status },
+						serializeRoutine({
+							...ownership.routine,
+							routineDays,
+						}),
+					);
+				} catch (error) {
+					if (error instanceof Response) {
+						return error;
+					}
+					return Response.json(
+						{ error: "Failed to fetch routine" },
+						{ status: 500 },
 					);
 				}
-				const routineDays = await getRoutineDaysWithWeekdays(id);
-				return Response.json(
-					serializeRoutine({
-						...ownership.routine,
-						routineDays,
-					}),
-				);
 			},
 			// PATCH /api/routines/[id] - Update routine
 			PATCH: async ({
