@@ -100,6 +100,24 @@ describe("LoginForm redirects", () => {
 		expect(mockNavigate).not.toHaveBeenCalled();
 	});
 
+	it("shows validation errors and blocks submission when the form is invalid", async () => {
+		render(<LoginForm />);
+
+		fireEvent.change(screen.getByLabelText("Email"), {
+			target: { value: "invalid" },
+		});
+		fireEvent.change(screen.getByLabelText("Password"), {
+			target: { value: "abc" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Login" }));
+
+		await waitFor(() => {
+			expect(mockSignInEmail).not.toHaveBeenCalled();
+		});
+		expect(mockSignInEmail).not.toHaveBeenCalled();
+		expect(mockGetSession).not.toHaveBeenCalled();
+	});
+
 	it("shows sign-in API errors and does not refresh session", async () => {
 		mockSignInEmail.mockResolvedValue({
 			error: { message: "Invalid email or password" },
@@ -120,5 +138,27 @@ describe("LoginForm redirects", () => {
 		});
 		expect(mockGetSession).not.toHaveBeenCalled();
 		expect(mockNavigate).not.toHaveBeenCalled();
+	});
+
+	it("registers a new account when register mode is enabled", async () => {
+		render(<LoginForm register />);
+
+		fireEvent.change(screen.getByLabelText("Email"), {
+			target: { value: "newperson@example.com" },
+		});
+		fireEvent.change(screen.getByLabelText("Password"), {
+			target: { value: "Password1!" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Register" }));
+
+		await waitFor(() => {
+			expect(mockSignUpEmail).toHaveBeenCalledWith({
+				email: "newperson@example.com",
+				password: "Password1!",
+				name: "newperson",
+			});
+			expect(mockGetSession).toHaveBeenCalledTimes(1);
+			expect(mockNavigate).toHaveBeenCalledWith({ to: "/", replace: true });
+		});
 	});
 });

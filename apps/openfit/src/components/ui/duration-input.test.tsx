@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
-import { parseDurationToSeconds } from "./duration-input";
+import { fireEvent, render, screen } from "@testing-library/react";
+import * as React from "react";
+import { describe, expect, it, vi } from "vitest";
+import { DurationInput, parseDurationToSeconds } from "./duration-input";
 
 describe("parseDurationToSeconds", () => {
 	describe("basic parsing", () => {
@@ -55,5 +57,40 @@ describe("parseDurationToSeconds", () => {
 			expect(parseDurationToSeconds("1:5")).toBe(65);
 			expect(parseDurationToSeconds("1:9")).toBe(69);
 		});
+	});
+});
+
+describe("DurationInput", () => {
+	it("emits valid duration strings and ignores invalid input", () => {
+		const onChange = vi.fn();
+
+		function Harness() {
+			const [value, setValue] = React.useState("");
+			return React.createElement(DurationInput, {
+				value,
+				onChange: (next) => {
+					onChange(next);
+					setValue(next);
+				},
+				"aria-label": "Duration",
+			});
+		}
+
+		render(React.createElement(Harness));
+
+		fireEvent.change(screen.getByLabelText("Duration"), {
+			target: { value: "12:34" },
+		});
+		expect(onChange).toHaveBeenCalledWith("12:34");
+
+		fireEvent.change(screen.getByLabelText("Duration"), {
+			target: { value: "1:60" },
+		});
+		expect(onChange).toHaveBeenCalledTimes(1);
+
+		fireEvent.change(screen.getByLabelText("Duration"), {
+			target: { value: "" },
+		});
+		expect(onChange).toHaveBeenCalledWith("");
 	});
 });

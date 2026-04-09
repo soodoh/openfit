@@ -84,4 +84,19 @@ describe("AccountNavItem", () => {
 			expect(mockNavigate).toHaveBeenCalledWith({ to: "/signin" });
 		});
 	});
+
+	it("hides admin actions for non-admin users", () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: true });
+		mockUseUserProfile.mockReturnValue({
+			data: { role: "USER" },
+		});
+
+		render(<AccountNavItem />);
+
+		expect(
+			screen.queryByRole("button", { name: "Admin" }),
+		).not.toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Profile" })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Logout" })).toBeInTheDocument();
+	});
 });

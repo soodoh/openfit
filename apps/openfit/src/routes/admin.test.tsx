@@ -48,6 +48,15 @@ describe("admin route", () => {
 		expect(mockFetch).not.toHaveBeenCalled();
 	});
 
+	it("shows a loading spinner while auth is still loading", () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: true });
+
+		render(<AdminRoute.options.component />);
+
+		expect(document.querySelector(".animate-spin")).toBeInTheDocument();
+		expect(mockFetch).not.toHaveBeenCalled();
+	});
+
 	it("shows the admin page after confirming admin access", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
 		mockFetch.mockResolvedValue({ ok: true });
