@@ -242,6 +242,66 @@ describe("PATCH /api/sessions/:id", () => {
 		});
 	});
 
+	it("updates timing fields and clears endTime when provided as zero", async () => {
+		const startTime = 1735689600000;
+
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/sessions/session_123", {
+				method: "PATCH",
+				body: JSON.stringify({
+					startTime,
+					endTime: 0,
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "session_123" },
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			id: "session_123",
+			name: "Trimmed Name",
+			notes: "Trimmed Notes",
+		});
+		expect(mocks.updateSet).toHaveBeenCalledWith(
+			expect.objectContaining({
+				startTime: new Date(startTime),
+				endTime: null,
+				updatedAt: expect.any(Date),
+			}),
+		);
+	});
+
+	it("updates impression and a positive endTime", async () => {
+		const endTime = 1735693200000;
+
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/sessions/session_123", {
+				method: "PATCH",
+				body: JSON.stringify({
+					impression: 5,
+					endTime,
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "session_123" },
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			id: "session_123",
+			name: "Trimmed Name",
+			notes: "Trimmed Notes",
+		});
+		expect(mocks.updateSet).toHaveBeenCalledWith(
+			expect.objectContaining({
+				impression: 5,
+				endTime: new Date(endTime),
+				updatedAt: expect.any(Date),
+			}),
+		);
+	});
+
 	it("returns the auth response when patch authentication throws a Response", async () => {
 		mocks.requireAuth.mockRejectedValueOnce(
 			Response.json({ error: "Forbidden" }, { status: 403 }),

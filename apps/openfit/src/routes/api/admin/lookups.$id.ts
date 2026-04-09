@@ -17,8 +17,8 @@ const tableMap = {
 	weightUnits: schema.weightUnits,
 };
 
-function getLookupTable(type: keyof typeof tableMap | undefined) {
-	return type ? tableMap[type] : undefined;
+function getLookupTable(type: keyof typeof tableMap) {
+	return tableMap[type];
 }
 
 export const Route = createFileRoute("/api/admin/lookups/$id")({
@@ -36,9 +36,6 @@ export const Route = createFileRoute("/api/admin/lookups/$id")({
 					const { id } = params;
 					const body = await parseJsonBody(request, adminLookupMutationSchema);
 					const table = getLookupTable(body.type);
-					if (!table) {
-						return Response.json({ error: "Invalid type" }, { status: 400 });
-					}
 					await db
 						.update(table)
 						.set({ name: body.name })
@@ -70,9 +67,6 @@ export const Route = createFileRoute("/api/admin/lookups/$id")({
 						adminLookupDeleteQuerySchema,
 					);
 					const table = getLookupTable(type);
-					if (!table) {
-						return Response.json({ error: "Invalid type" }, { status: 400 });
-					}
 					await db.delete(table).where(eq(table.id, id));
 					return Response.json({ success: true });
 				} catch (error) {

@@ -39,8 +39,8 @@ export const Route = createFileRoute("/api/set-groups/reorder")({
 							return Response.json({ error: "Unauthorized" }, { status: 403 });
 						}
 						const nextParentScope = {
-							sessionId: setGroup.sessionId ?? null,
-							routineDayId: setGroup.routineDayId ?? null,
+							sessionId: setGroup.sessionId,
+							routineDayId: setGroup.routineDayId,
 						};
 						if (!parentScope) {
 							parentScope = nextParentScope;

@@ -18,8 +18,8 @@ const tableMap = {
 	weightUnits: schema.weightUnits,
 };
 
-function getLookupTable(type: keyof typeof tableMap | undefined) {
-	return type ? tableMap[type] : undefined;
+function getLookupTable(type: keyof typeof tableMap) {
+	return tableMap[type];
 }
 
 export const Route = createFileRoute("/api/admin/lookups")({
@@ -33,13 +33,8 @@ export const Route = createFileRoute("/api/admin/lookups")({
 						searchParams,
 						adminLookupListQuerySchema,
 					);
-					const { type, search } = query;
-					const page = query.page ?? 1;
-					const pageSize = query.pageSize ?? 10;
+					const { type, search, page, pageSize } = query;
 					const table = getLookupTable(type);
-					if (!table) {
-						return Response.json({ error: "Invalid type" }, { status: 400 });
-					}
 					const conditions = search
 						? like(table.name, `%${search}%`)
 						: undefined;
@@ -75,9 +70,6 @@ export const Route = createFileRoute("/api/admin/lookups")({
 					await requireAdmin(request);
 					const body = await parseJsonBody(request, adminLookupMutationSchema);
 					const table = getLookupTable(body.type);
-					if (!table) {
-						return Response.json({ error: "Invalid type" }, { status: 400 });
-					}
 					const id = createId();
 					await db.insert(table).values({
 						id,

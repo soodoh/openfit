@@ -16,13 +16,10 @@ export const Route = createFileRoute("/api/admin/exercises")({
 				try {
 					await requireAdmin(request);
 					const { searchParams } = new URL(request.url);
-					const {
-						page: rawPage,
-						pageSize: rawPageSize,
-						search,
-					} = parseSearchParams(searchParams, adminExerciseListQuerySchema);
-					const page = rawPage ?? 1;
-					const pageSize = rawPageSize ?? 10;
+					const { page, pageSize, search } = parseSearchParams(
+						searchParams,
+						adminExerciseListQuerySchema,
+					);
 					const conditions = search
 						? like(schema.exercises.name, `%${search}%`)
 						: undefined;

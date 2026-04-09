@@ -96,7 +96,7 @@ export const Route = createFileRoute("/api/routine-days/$id")({
 					);
 					const payload = {
 						...serializedRoutineDay,
-						routine: serializedRoutineDay.routine ?? null,
+						routine: serializedRoutineDay.routine,
 						setGroups: setGroupsWithSets,
 					} satisfies RoutineDayDetailDto;
 					return Response.json(payload);

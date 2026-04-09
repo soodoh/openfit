@@ -396,6 +396,35 @@ describe("POST /api/sessions", () => {
 		expect(mocks.getSessionWithData).toHaveBeenCalledWith("session_new");
 	});
 
+	it("creates a session with explicit timing fields", async () => {
+		const startTime = 1735689600000;
+		const endTime = 1735693200000;
+
+		const response = await handlers.POST({
+			request: new Request("http://localhost/api/sessions", {
+				method: "POST",
+				body: JSON.stringify({
+					name: "Timed Session",
+					startTime,
+					endTime,
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(201);
+		await expect(response.json()).resolves.toEqual({
+			id: "session_new",
+			name: "Created Session",
+		});
+		expect(mocks.insertValues).toHaveBeenCalledWith(
+			expect.objectContaining({
+				startTime: new Date(startTime),
+				endTime: new Date(endTime),
+			}),
+		);
+	});
+
 	it("creates a session from a template and clones the template groups", async () => {
 		const createdAt = new Date("2025-01-01T00:00:00.000Z");
 		mocks.findFirstRoutineDay.mockResolvedValue({

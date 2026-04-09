@@ -12,13 +12,10 @@ export const Route = createFileRoute("/api/admin/users")({
 				try {
 					await requireAdmin(request);
 					const { searchParams } = new URL(request.url);
-					const {
-						page: rawPage,
-						pageSize: rawPageSize,
-						search,
-					} = parseSearchParams(searchParams, adminUserListQuerySchema);
-					const page = rawPage ?? 1;
-					const pageSize = rawPageSize ?? 10;
+					const { page, pageSize, search } = parseSearchParams(
+						searchParams,
+						adminUserListQuerySchema,
+					);
 					const conditions = search
 						? like(schema.users.email, `%${search}%`)
 						: undefined;

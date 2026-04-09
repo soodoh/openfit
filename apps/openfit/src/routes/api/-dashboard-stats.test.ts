@@ -156,6 +156,41 @@ describe("GET /api/dashboard/stats", () => {
 		});
 	});
 
+	it("breaks an in-progress streak when the next session date skips a day", async () => {
+		mocks.orderBy.mockResolvedValueOnce([
+			{ date: "2026-04-08" },
+			{ date: "2026-04-06" },
+		]);
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/dashboard/stats"),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			totalSessions: 7,
+			totalRoutines: 4,
+			thisWeekSessions: 2,
+			currentStreak: 1,
+		});
+	});
+
+	it("returns a zero streak when the newest session is older than yesterday", async () => {
+		mocks.orderBy.mockResolvedValueOnce([{ date: "2026-04-06" }]);
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/dashboard/stats"),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			totalSessions: 7,
+			totalRoutines: 4,
+			thisWeekSessions: 2,
+			currentStreak: 0,
+		});
+	});
+
 	it("falls back to zero counts and uses Sunday as the week boundary start", async () => {
 		vi.setSystemTime(new Date(2026, 3, 12, 12, 0, 0, 0));
 		mocks.where1.mockResolvedValueOnce([]);

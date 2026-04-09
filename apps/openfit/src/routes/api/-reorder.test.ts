@@ -269,6 +269,31 @@ describe("POST /api/set-groups/reorder", () => {
 		expect(mocks.findFirstWorkoutSetGroup).not.toHaveBeenCalled();
 		expect(mocks.transaction).not.toHaveBeenCalled();
 	});
+
+	it("returns 500 when the set-group reorder transaction fails", async () => {
+		mocks.findFirstWorkoutSetGroup.mockResolvedValueOnce({
+			id: "group_1",
+			userId: "user_123",
+			sessionId: "session_1",
+			routineDayId: null,
+		});
+		mocks.transaction.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await setGroupHandlers.POST({
+			request: new Request("http://localhost/api/set-groups/reorder", {
+				method: "POST",
+				body: JSON.stringify({
+					setGroupIds: ["group_1"],
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to reorder set groups",
+		});
+	});
 });
 
 describe("POST /api/sets/reorder", () => {
@@ -494,5 +519,34 @@ describe("POST /api/sets/reorder", () => {
 		expect(mocks.findFirstWorkoutSetGroup).not.toHaveBeenCalled();
 		expect(mocks.findFirstWorkoutSet).not.toHaveBeenCalled();
 		expect(mocks.transaction).not.toHaveBeenCalled();
+	});
+
+	it("returns 500 when the set reorder transaction fails", async () => {
+		mocks.findFirstWorkoutSetGroup.mockResolvedValue({
+			id: "group_1",
+			userId: "user_123",
+		});
+		mocks.findFirstWorkoutSet.mockResolvedValueOnce({
+			id: "set_1",
+			userId: "user_123",
+			setGroupId: "group_1",
+		});
+		mocks.transaction.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await setHandlers.POST({
+			request: new Request("http://localhost/api/sets/reorder", {
+				method: "POST",
+				body: JSON.stringify({
+					setGroupId: "group_1",
+					setIds: ["set_1"],
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to reorder sets",
+		});
 	});
 });

@@ -316,6 +316,40 @@ describe("POST /api/routines", () => {
 		});
 	});
 
+	it("returns the auth response when authentication throws a Response", async () => {
+		mocks.requireAuth.mockRejectedValueOnce(
+			Response.json({ error: "Forbidden" }, { status: 403 }),
+		);
+
+		const response = await listHandlers.POST({
+			request: new Request("http://localhost/api/routines", {
+				method: "POST",
+				body: JSON.stringify({ name: "Pull Day" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+		expect(mocks.insert).not.toHaveBeenCalled();
+	});
+
+	it("falls back to a generic 401 when authentication throws unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await listHandlers.POST({
+			request: new Request("http://localhost/api/routines", {
+				method: "POST",
+				body: JSON.stringify({ name: "Pull Day" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.insert).not.toHaveBeenCalled();
+	});
+
 	it("returns 400 for an invalid create payload", async () => {
 		const response = await listHandlers.POST({
 			request: new Request("http://localhost/api/routines", {
@@ -361,6 +395,23 @@ describe("POST /api/routines", () => {
 
 	it("returns 500 when the created routine cannot be reloaded", async () => {
 		mocks.findFirstRoutine.mockResolvedValueOnce(null);
+
+		const response = await listHandlers.POST({
+			request: new Request("http://localhost/api/routines", {
+				method: "POST",
+				body: JSON.stringify({ name: "Pull Day" }),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to create routine",
+		});
+	});
+
+	it("returns 500 when creating a routine throws an unexpected error", async () => {
+		mocks.insertValues.mockRejectedValueOnce(new Error("boom"));
 
 		const response = await listHandlers.POST({
 			request: new Request("http://localhost/api/routines", {

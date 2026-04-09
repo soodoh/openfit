@@ -330,6 +330,27 @@ describe("POST /api/routine-days", () => {
 		expect(mocks.insert).not.toHaveBeenCalled();
 	});
 
+	it("returns 500 when the created routine day cannot be reloaded", async () => {
+		mocks.findFirstRoutineDay.mockResolvedValueOnce(null);
+
+		const response = await listHandlers.POST({
+			request: new Request("http://localhost/api/routine-days", {
+				method: "POST",
+				body: JSON.stringify({
+					routineId: "routine_123",
+					description: "Day 1",
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to create routine day",
+		});
+		expect(mocks.insertValues).toHaveBeenCalledTimes(1);
+	});
+
 	it("creates a routine day and returns the serialized payload", async () => {
 		const response = await listHandlers.POST({
 			request: new Request("http://localhost/api/routine-days", {
@@ -447,6 +468,82 @@ describe("GET /api/routine-days/:id", () => {
 			error: "Routine day not found",
 		});
 		expect(mocks.findManyWorkoutSetGroups).not.toHaveBeenCalled();
+	});
+
+	it("serializes string timestamps and leaves exercise data null when absent", async () => {
+		mocks.requireOwnedRoutineDay.mockResolvedValue({
+			status: 200,
+			routineDay: {
+				id: "routine_day_123",
+				userId: "user_123",
+				routineId: "routine_123",
+				description: "Chest Day",
+				createdAt: new Date("2025-01-01T00:00:00.000Z"),
+				updatedAt: new Date("2025-01-02T00:00:00.000Z"),
+				weekdays: [{ weekday: 1 }],
+				routine: {
+					id: "routine_123",
+					userId: "user_123",
+					name: "Push",
+					description: null,
+					createdAt: new Date("2025-01-01T00:00:00.000Z"),
+					updatedAt: new Date("2025-01-02T00:00:00.000Z"),
+				},
+			},
+		});
+		mocks.findManyWorkoutSetGroups.mockResolvedValue([
+			{
+				id: "group_1",
+				routineDayId: "routine_day_123",
+				type: "NORMAL",
+				order: 0,
+				createdAt: "2025-01-03T00:00:00.000Z",
+				updatedAt: "2025-01-04T00:00:00.000Z",
+			},
+		]);
+		mocks.findManyWorkoutSets.mockResolvedValue([
+			{
+				id: "set_1",
+				setGroupId: "group_1",
+				exerciseId: null,
+				type: "NORMAL",
+				order: 0,
+				reps: 10,
+				weight: 135,
+				restTime: 60,
+				completed: false,
+				createdAt: "2025-01-05T00:00:00.000Z",
+				updatedAt: "2025-01-06T00:00:00.000Z",
+				exercise: null,
+				repetitionUnit: null,
+				weightUnit: null,
+			},
+		]);
+
+		const response = await detailHandlers.GET({
+			request: new Request("http://localhost/api/routine-days/routine_day_123"),
+			params: { id: "routine_day_123" },
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual(
+			expect.objectContaining({
+				setGroups: [
+					expect.objectContaining({
+						createdAt: "2025-01-03T00:00:00.000Z",
+						updatedAt: "2025-01-04T00:00:00.000Z",
+						sets: [
+							expect.objectContaining({
+								createdAt: "2025-01-05T00:00:00.000Z",
+								updatedAt: "2025-01-06T00:00:00.000Z",
+								exercise: null,
+							}),
+						],
+					}),
+				],
+			}),
+		);
+		expect(mocks.getFirstExerciseImageUrl).not.toHaveBeenCalled();
 	});
 
 	it("returns a detailed routine day payload with set groups", async () => {
@@ -754,6 +851,36 @@ describe("PATCH /api/routine-days/:id", () => {
 			left: mocks.schema.routineDayWeekdays.routineDayId,
 			right: "routine_day_123",
 		});
+	});
+
+	it("updates a routine day without rewriting weekdays when they are omitted", async () => {
+		const response = await detailHandlers.PATCH({
+			request: new Request(
+				"http://localhost/api/routine-days/routine_day_123",
+				{
+					method: "PATCH",
+					body: JSON.stringify({ description: "Updated Only" }),
+					headers: { "Content-Type": "application/json" },
+				},
+			),
+			params: { id: "routine_day_123" },
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual(
+			expect.objectContaining({
+				description: "Updated Day",
+				weekdays: [2, 4],
+			}),
+		);
+		expect(mocks.updateSet).toHaveBeenCalledWith(
+			expect.objectContaining({
+				description: "Updated Only",
+				updatedAt: expect.any(Date),
+			}),
+		);
+		expect(mocks.delete).not.toHaveBeenCalled();
+		expect(mocks.insert).not.toHaveBeenCalled();
 	});
 
 	it("updates a routine day and returns the serialized payload", async () => {
