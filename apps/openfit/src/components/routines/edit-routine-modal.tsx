@@ -66,7 +66,14 @@ export const EditRoutineModal = ({
 		}
 	};
 	return (
-		<Dialog open={open} onOpenChange={() => onClose()}>
+		<Dialog
+			open={open}
+			onOpenChange={(isOpen) => {
+				if (!isOpen) {
+					onClose();
+				}
+			}}
+		>
 			<DialogContent className="sm:max-w-[480px] p-0 overflow-hidden">
 				<form onSubmit={handleSubmit}>
 					{/* Header with gradient */}

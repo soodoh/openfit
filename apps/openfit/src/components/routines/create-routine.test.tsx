@@ -39,6 +39,15 @@ describe("CreateRoutine", () => {
 		expect(screen.getByRole("dialog")).toHaveTextContent("Edit Routine Modal");
 	});
 
+	it("closes the default routine modal from its footer action", () => {
+		render(<CreateRoutine />);
+
+		fireEvent.click(screen.getByRole("button", { name: "New Routine" }));
+		fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
+
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+	});
+
 	it("uses the empty-state variant label and closes the modal", () => {
 		render(<CreateRoutine variant="empty-state" />);
 

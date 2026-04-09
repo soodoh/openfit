@@ -93,4 +93,14 @@ describe("AddExerciseRow", () => {
 			});
 		});
 	});
+
+	it("does not submit when no exercise has been selected", () => {
+		const { container } = render(
+			<AddExerciseRow sessionOrDayId="day-1" isSession={false} />,
+		);
+
+		fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+
+		expect(mockCreateSetGroup).not.toHaveBeenCalled();
+	});
 });

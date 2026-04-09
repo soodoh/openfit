@@ -50,4 +50,14 @@ describe("DeleteRoutineModal", () => {
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
+
+	it("closes from the dialog close button", () => {
+		const onClose = vi.fn();
+
+		render(<DeleteRoutineModal open onClose={onClose} routineId="routine-1" />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
 });

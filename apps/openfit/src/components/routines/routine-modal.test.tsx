@@ -100,6 +100,31 @@ describe("RoutineModal", () => {
 		expect(screen.queryByText("Overview body")).not.toBeInTheDocument();
 	});
 
+	it("truncates long routine day names in the tab list", () => {
+		const routine = {
+			...mockRoutine,
+			routineDays: [
+				{
+					...mockRoutine.routineDays[0],
+					description: "An extremely long workout day name",
+				},
+			],
+		};
+
+		render(
+			<RoutineModal
+				open
+				onClose={vi.fn()}
+				routine={routine}
+				currentSession={undefined}
+			/>,
+		);
+
+		expect(
+			screen.getByRole("tab", { name: "Day 1: An extremely lo..." }),
+		).toBeInTheDocument();
+	});
+
 	it("returns to overview when day-tab deletion callback fires", () => {
 		render(
 			<RoutineModal
@@ -223,5 +248,22 @@ describe("RoutineModal", () => {
 
 		expect(screen.getByText("Overview body")).toBeInTheDocument();
 		expect(screen.queryByText("Day tab day-1")).not.toBeInTheDocument();
+	});
+
+	it("closes from the dialog close button", () => {
+		const onClose = vi.fn();
+
+		render(
+			<RoutineModal
+				open
+				onClose={onClose}
+				routine={mockRoutine}
+				currentSession={undefined}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 });

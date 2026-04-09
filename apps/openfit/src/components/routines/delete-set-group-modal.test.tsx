@@ -49,4 +49,20 @@ describe("DeleteSetGroupModal", () => {
 		expect(onClose).toHaveBeenCalledTimes(1);
 		expect(mockDeleteSetGroup).not.toHaveBeenCalled();
 	});
+
+	it("closes from the dialog close button", () => {
+		const onClose = vi.fn();
+
+		render(
+			<DeleteSetGroupModal
+				open
+				onClose={onClose}
+				setGroup={{ id: "set-group-1" } as WorkoutSetGroup}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
 });

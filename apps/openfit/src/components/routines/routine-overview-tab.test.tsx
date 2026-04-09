@@ -56,16 +56,31 @@ vi.mock("@/hooks", () => ({
 }));
 
 vi.mock("./edit-routine-modal", () => ({
-	EditRoutineModal: ({ open }: { open: boolean }) =>
-		open ? <div role="dialog">Edit Routine Modal</div> : null,
+	EditRoutineModal: ({
+		open,
+		onClose,
+	}: {
+		open: boolean;
+		onClose: () => void;
+	}) =>
+		open ? (
+			<div role="dialog">
+				<div>Edit Routine Modal</div>
+				<button type="button" onClick={onClose}>
+					Close modal
+				</button>
+			</div>
+		) : null,
 }));
 
 vi.mock("./edit-day-modal", () => ({
 	EditDayModal: ({
 		open,
+		onClose,
 		onSuccess,
 	}: {
 		open: boolean;
+		onClose: () => void;
 		onSuccess?: (dayId: string) => void;
 	}) =>
 		open ? (
@@ -74,18 +89,47 @@ vi.mock("./edit-day-modal", () => ({
 				<button type="button" onClick={() => onSuccess?.("day-3")}>
 					Confirm Add Day
 				</button>
+				<button type="button" onClick={onClose}>
+					Close modal
+				</button>
 			</div>
 		) : null,
 }));
 
 vi.mock("./delete-routine-modal", () => ({
-	DeleteRoutineModal: ({ open }: { open: boolean }) =>
-		open ? <div role="dialog">Delete Routine Modal</div> : null,
+	DeleteRoutineModal: ({
+		open,
+		onClose,
+	}: {
+		open: boolean;
+		onClose: () => void;
+	}) =>
+		open ? (
+			<div role="dialog">
+				<div>Delete Routine Modal</div>
+				<button type="button" onClick={onClose}>
+					Close modal
+				</button>
+			</div>
+		) : null,
 }));
 
 vi.mock("./delete-day-modal", () => ({
-	DeleteDayModal: ({ open }: { open: boolean }) =>
-		open ? <div role="dialog">Delete Day Modal</div> : null,
+	DeleteDayModal: ({
+		open,
+		onClose,
+	}: {
+		open: boolean;
+		onClose: () => void;
+	}) =>
+		open ? (
+			<div role="dialog">
+				<div>Delete Day Modal</div>
+				<button type="button" onClick={onClose}>
+					Close modal
+				</button>
+			</div>
+		) : null,
 }));
 
 const buildRoutine = (
@@ -123,9 +167,13 @@ describe("RoutineOverviewTab", () => {
 
 		fireEvent.click(screen.getByRole("button", { name: "Edit" }));
 		expect(screen.getByRole("dialog")).toHaveTextContent("Edit Routine Modal");
+		fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
 		fireEvent.click(screen.getByRole("button", { name: "Delete Routine" }));
 		expect(screen.getByText("Delete Routine Modal")).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 	});
 
 	it("starts a day workout, selects a day, and opens the day delete modal", async () => {
@@ -165,6 +213,8 @@ describe("RoutineOverviewTab", () => {
 			screen.getByRole("button", { name: "Delete workout day Pull Day" }),
 		);
 		expect(screen.getByRole("dialog")).toHaveTextContent("Delete Day Modal");
+		fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 	});
 
 	it("does not navigate when starting a workout does not return a session id", async () => {
@@ -209,6 +259,33 @@ describe("RoutineOverviewTab", () => {
 
 		fireEvent.click(screen.getByRole("button", { name: "Add Workout Day" }));
 		expect(screen.getByRole("dialog")).toHaveTextContent("Add Day Modal");
+	});
+
+	it("opens the add-day modal from the footer when the routine already has days", () => {
+		const routine = buildRoutine([
+			{
+				id: "day-1",
+				routineId: "routine-1",
+				userId: "user-1",
+				description: "Pull Day",
+				createdAt: new Date("2026-03-01T00:00:00.000Z"),
+				updatedAt: new Date("2026-03-01T00:00:00.000Z"),
+				weekdays: [1, 3],
+			},
+		]);
+
+		render(
+			<RoutineOverviewTab
+				routine={routine}
+				currentSession={undefined}
+				onSelectDay={vi.fn()}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Add Day" }));
+		expect(screen.getByRole("dialog")).toHaveTextContent("Add Day Modal");
+		fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 	});
 
 	it("propagates the added day id from the modal", () => {

@@ -71,6 +71,25 @@ describe("EditRoutineModal", () => {
 		});
 	});
 
+	it("omits the description when the textarea is left blank", async () => {
+		const onClose = vi.fn();
+
+		render(<EditRoutineModal open onClose={onClose} />);
+
+		fireEvent.change(screen.getByLabelText("Routine Name"), {
+			target: { value: "Minimal Routine" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Create Routine" }));
+
+		await waitFor(() => {
+			expect(mockCreateRoutine).toHaveBeenCalledWith({
+				name: "Minimal Routine",
+				description: undefined,
+			});
+			expect(onClose).toHaveBeenCalledTimes(1);
+		});
+	});
+
 	it("shows a save error when the mutation fails", async () => {
 		mockCreateRoutine.mockRejectedValueOnce(new Error("boom"));
 
@@ -116,5 +135,53 @@ describe("EditRoutineModal", () => {
 			});
 			expect(onClose).toHaveBeenCalledTimes(1);
 		});
+	});
+
+	it("resets fields when the dialog reopens for another routine", async () => {
+		const firstRoutine = {
+			id: "routine-1",
+			userId: "user-1",
+			name: "Upper Lower",
+			description: "Existing description",
+			createdAt: new Date("2026-03-01T00:00:00.000Z"),
+			updatedAt: new Date("2026-03-01T00:00:00.000Z"),
+			routineDays: [],
+		} as Routine;
+
+		const { rerender } = render(
+			<EditRoutineModal open onClose={vi.fn()} routine={firstRoutine} />,
+		);
+
+		fireEvent.change(screen.getByLabelText("Routine Name"), {
+			target: { value: "Edited value" },
+		});
+
+		rerender(
+			<EditRoutineModal
+				open={false}
+				onClose={vi.fn()}
+				routine={firstRoutine}
+			/>,
+		);
+		rerender(
+			<EditRoutineModal open onClose={vi.fn()} routine={firstRoutine} />,
+		);
+
+		await waitFor(() => {
+			expect(screen.getByLabelText("Routine Name")).toHaveValue("Upper Lower");
+			expect(screen.getByLabelText(/Description/)).toHaveValue(
+				"Existing description",
+			);
+		});
+	});
+
+	it("closes from the dialog close button", () => {
+		const onClose = vi.fn();
+
+		render(<EditRoutineModal open onClose={onClose} />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 });

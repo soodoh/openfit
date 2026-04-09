@@ -121,4 +121,62 @@ describe("EditDayModal", () => {
 			expect(onClose).toHaveBeenCalledTimes(1);
 		});
 	});
+
+	it("resets the form when reopened for the same day", async () => {
+		const routineDay = {
+			id: "day-1",
+			routineId: "routine-1",
+			userId: "user-1",
+			description: "Push Day",
+			createdAt: new Date("2026-03-01T00:00:00.000Z"),
+			updatedAt: new Date("2026-03-01T00:00:00.000Z"),
+			weekdays: [2, 4],
+		} as RoutineDay;
+
+		const { rerender } = render(
+			<EditDayModal
+				open
+				onClose={vi.fn()}
+				routineId="routine-1"
+				routineDay={routineDay}
+			/>,
+		);
+
+		fireEvent.change(screen.getByLabelText("Day Name"), {
+			target: { value: "Changed name" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Set weekdays" }));
+
+		rerender(
+			<EditDayModal
+				open={false}
+				onClose={vi.fn()}
+				routineId="routine-1"
+				routineDay={routineDay}
+			/>,
+		);
+		rerender(
+			<EditDayModal
+				open
+				onClose={vi.fn()}
+				routineId="routine-1"
+				routineDay={routineDay}
+			/>,
+		);
+
+		await waitFor(() => {
+			expect(screen.getByLabelText("Day Name")).toHaveValue("Push Day");
+			expect(screen.getByText("Selected 2,4")).toBeInTheDocument();
+		});
+	});
+
+	it("closes from the dialog close button", () => {
+		const onClose = vi.fn();
+
+		render(<EditDayModal open onClose={onClose} routineId="routine-1" />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
 });
