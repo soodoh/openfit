@@ -36,16 +36,19 @@ export const Route = createFileRoute("/api/set-groups/reorder")({
 						}
 						setGroupsToUpdate.push({ id: setGroupId, order: index });
 					}
-					// Update the order for each set group after validation succeeds.
-					for (const { id, order } of setGroupsToUpdate) {
-						await db
-							.update(schema.workoutSetGroups)
-							.set({
-								order,
-								updatedAt: new Date(),
-							})
-							.where(eq(schema.workoutSetGroups.id, id));
-					}
+					// Apply the reorder atomically so a later write failure cannot leave
+					// the earlier rows partially updated.
+					await db.transaction(async (tx) => {
+						for (const { id, order } of setGroupsToUpdate) {
+							await tx
+								.update(schema.workoutSetGroups)
+								.set({
+									order,
+									updatedAt: new Date(),
+								})
+								.where(eq(schema.workoutSetGroups.id, id));
+						}
+					});
 					return Response.json({ success: true });
 				} catch (error) {
 					if (error instanceof Response) {

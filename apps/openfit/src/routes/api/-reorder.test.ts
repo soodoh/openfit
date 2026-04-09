@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
 	requireAuth: vi.fn(),
 	findFirstWorkoutSetGroup: vi.fn(),
 	findFirstWorkoutSet: vi.fn(),
+	transaction: vi.fn(),
 	update: vi.fn(),
 	updateSet: vi.fn(),
 	updateWhere: vi.fn(),
@@ -37,6 +38,7 @@ vi.mock("@/db", () => ({
 				findFirst: mocks.findFirstWorkoutSet,
 			},
 		},
+		transaction: mocks.transaction,
 		update: mocks.update,
 	},
 }));
@@ -74,6 +76,9 @@ describe("POST /api/set-groups/reorder", () => {
 		mocks.findFirstWorkoutSetGroup.mockReset();
 		mocks.findFirstWorkoutSet.mockReset();
 		mocks.requireAuth.mockResolvedValue({ user: { id: "user_123" } });
+		mocks.transaction.mockImplementation(async (callback) =>
+			callback({ update: mocks.update }),
+		);
 		mocks.update.mockReturnValue(setGroupUpdateShape);
 		mocks.updateSet.mockReturnValue({
 			where: mocks.updateWhere,
@@ -122,6 +127,7 @@ describe("POST /api/set-groups/reorder", () => {
 
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ success: true });
+		expect(mocks.transaction).toHaveBeenCalledTimes(1);
 		expect(mocks.update).toHaveBeenCalledWith(mocks.schema.workoutSetGroups);
 		expect(mocks.updateSet).toHaveBeenNthCalledWith(
 			1,
@@ -202,6 +208,9 @@ describe("POST /api/sets/reorder", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mocks.requireAuth.mockResolvedValue({ user: { id: "user_123" } });
+		mocks.transaction.mockImplementation(async (callback) =>
+			callback({ update: mocks.update }),
+		);
 		mocks.update.mockReturnValue(setUpdateShape);
 		mocks.updateSet.mockReturnValue({
 			where: mocks.updateWhere,
@@ -257,6 +266,7 @@ describe("POST /api/sets/reorder", () => {
 
 		expect(response.status).toBe(200);
 		await expect(response.json()).resolves.toEqual({ success: true });
+		expect(mocks.transaction).toHaveBeenCalledTimes(1);
 		expect(mocks.update).toHaveBeenCalledWith(mocks.schema.workoutSets);
 		expect(mocks.updateSet).toHaveBeenNthCalledWith(
 			1,

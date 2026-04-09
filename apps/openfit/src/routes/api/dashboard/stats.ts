@@ -3,6 +3,12 @@ import { and, count, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { type AuthSession, requireAuth } from "@/lib/auth-middleware";
+
+function parseLocalDate(date: string): Date {
+	const [year, month, day] = date.split("-").map(Number);
+	return new Date(year, month - 1, day);
+}
+
 // GET /api/dashboard/stats - Get dashboard statistics
 export const Route = createFileRoute("/api/dashboard/stats")({
 	server: {
@@ -69,7 +75,7 @@ export const Route = createFileRoute("/api/dashboard/stats")({
 				today.setHours(0, 0, 0, 0);
 				let lastMatchedDate: Date | null = null;
 				for (let i = 0; i < sessionDates.length; i += 1) {
-					const sessionDate = new Date(sessionDates[i].date);
+					const sessionDate = parseLocalDate(sessionDates[i].date);
 					sessionDate.setHours(0, 0, 0, 0);
 					if (lastMatchedDate) {
 						const expectedDate = new Date(lastMatchedDate);

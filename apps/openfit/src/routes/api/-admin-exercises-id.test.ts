@@ -317,6 +317,43 @@ describe("PATCH /api/admin/exercises/:id", () => {
 		expect(mocks.insert).not.toHaveBeenCalled();
 	});
 
+	it("clears related records when relation arrays are explicitly empty", async () => {
+		const response = await handlers.PATCH({
+			request: new Request("http://localhost/api/admin/exercises/exercise_1", {
+				method: "PATCH",
+				body: JSON.stringify({
+					name: "Cleared Bench Press",
+					primaryMuscleIds: [],
+					secondaryMuscleIds: [],
+					instructions: [],
+					imageUrls: [],
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+			params: { id: "exercise_1" },
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({ success: true });
+		expect(mocks.delete).toHaveBeenNthCalledWith(
+			1,
+			mocks.schema.exercisePrimaryMuscles,
+		);
+		expect(mocks.delete).toHaveBeenNthCalledWith(
+			2,
+			mocks.schema.exerciseSecondaryMuscles,
+		);
+		expect(mocks.delete).toHaveBeenNthCalledWith(
+			3,
+			mocks.schema.exerciseInstructions,
+		);
+		expect(mocks.delete).toHaveBeenNthCalledWith(
+			4,
+			mocks.schema.exerciseImages,
+		);
+		expect(mocks.insert).not.toHaveBeenCalled();
+	});
+
 	it("returns 500 when updating an exercise throws an unexpected error", async () => {
 		mocks.update.mockImplementationOnce(() => {
 			throw new Error("boom");
@@ -416,6 +453,31 @@ describe("DELETE /api/admin/exercises/:id", () => {
 			mocks.schema.exerciseImages,
 		);
 		expect(mocks.delete).toHaveBeenNthCalledWith(5, mocks.schema.exercises);
+		expect(mocks.deleteWhere).toHaveBeenNthCalledWith(1, {
+			type: "eq",
+			left: mocks.schema.exercisePrimaryMuscles.exerciseId,
+			right: "exercise_1",
+		});
+		expect(mocks.deleteWhere).toHaveBeenNthCalledWith(2, {
+			type: "eq",
+			left: mocks.schema.exerciseSecondaryMuscles.exerciseId,
+			right: "exercise_1",
+		});
+		expect(mocks.deleteWhere).toHaveBeenNthCalledWith(3, {
+			type: "eq",
+			left: mocks.schema.exerciseInstructions.exerciseId,
+			right: "exercise_1",
+		});
+		expect(mocks.deleteWhere).toHaveBeenNthCalledWith(4, {
+			type: "eq",
+			left: mocks.schema.exerciseImages.exerciseId,
+			right: "exercise_1",
+		});
+		expect(mocks.deleteWhere).toHaveBeenNthCalledWith(5, {
+			type: "eq",
+			left: mocks.schema.exercises.id,
+			right: "exercise_1",
+		});
 		expect(mocks.eq).toHaveBeenCalledWith(
 			mocks.schema.exercises.id,
 			"exercise_1",

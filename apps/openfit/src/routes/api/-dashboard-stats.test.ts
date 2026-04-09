@@ -93,8 +93,8 @@ describe("GET /api/dashboard/stats", () => {
 			orderBy: mocks.orderBy,
 		});
 		mocks.orderBy.mockResolvedValue([
-			{ date: "2026-04-08T00:00:00" },
-			{ date: "2026-04-07T00:00:00" },
+			{ date: "2026-04-08" },
+			{ date: "2026-04-07" },
 		]);
 	});
 
@@ -124,8 +124,8 @@ describe("GET /api/dashboard/stats", () => {
 
 	it("counts a streak starting yesterday when today has no workout", async () => {
 		mocks.orderBy.mockResolvedValueOnce([
-			{ date: "2026-04-07T00:00:00" },
-			{ date: "2026-04-06T00:00:00" },
+			{ date: "2026-04-07" },
+			{ date: "2026-04-06" },
 		]);
 
 		const response = await handlers.GET({

@@ -131,6 +131,11 @@ describe("GET /api/admin/users", () => {
 			mocks.schema.users.email,
 			"%athlete%",
 		);
+		expect(totalQuery.innerJoin).toHaveBeenCalledWith(mocks.schema.users, {
+			type: "eq",
+			left: mocks.schema.userProfiles.userId,
+			right: mocks.schema.users.id,
+		});
 		expect(totalQuery.where).toHaveBeenCalledWith({
 			type: "like",
 			left: mocks.schema.users.email,

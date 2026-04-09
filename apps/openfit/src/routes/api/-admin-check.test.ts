@@ -89,7 +89,16 @@ describe("GET /api/admin/check", () => {
 		);
 	});
 
-	it("returns false when the current profile is missing or not an admin", async () => {
+	it("returns false when the current profile is missing", async () => {
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/admin/check"),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({ isAdmin: false });
+	});
+
+	it("returns false when the current profile is not an admin", async () => {
 		mocks.findFirstUserProfile.mockResolvedValue({
 			role: "USER",
 		});
