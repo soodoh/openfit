@@ -28,6 +28,15 @@ function getFetchRequest(fetchMock: FetchMock) {
 	};
 }
 
+function createDeferred<T>() {
+	let resolve!: (value: T | PromiseLike<T>) => void;
+	const promise = new Promise<T>((res) => {
+		resolve = res;
+	});
+
+	return { promise, resolve };
+}
+
 const exercise = {
 	id: "exercise-1",
 	name: "Bench Press",
@@ -163,6 +172,53 @@ describe("use-exercises queries", () => {
 				}),
 			),
 		).toEqual(results);
+	});
+
+	it("keeps previous search results visible while a new exercise search is loading", async () => {
+		const firstResults = [exercise];
+		const nextResults = createDeferred<Response>();
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValueOnce(Response.json(firstResults))
+			.mockReturnValueOnce(nextResults.promise);
+		vi.stubGlobal("fetch", fetchMock);
+		const { queryClient, wrapper } = createTestQueryWrapper();
+
+		const { result, rerender } = renderHook(
+			({ term }) => useExerciseSearch(term, ["equipment-1"], 5),
+			{
+				initialProps: { term: "bench" },
+				wrapper,
+			},
+		);
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		rerender({ term: "press" });
+
+		await waitFor(() => {
+			expect(result.current.isPlaceholderData).toBe(true);
+		});
+
+		expect(result.current.data).toEqual(firstResults);
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+		expect(
+			queryClient.getQueryData(
+				queryKeys.exercises.search("press", {
+					equipmentIds: ["equipment-1"],
+					limit: 5,
+				}),
+			),
+		).toBeUndefined();
+
+		nextResults.resolve(Response.json([exercise]));
+
+		await waitFor(() => {
+			expect(result.current.isPlaceholderData).toBe(false);
+			expect(result.current.data).toEqual([exercise]);
+		});
 	});
 
 	it("does not fetch similar exercises without primary muscle ids", async () => {

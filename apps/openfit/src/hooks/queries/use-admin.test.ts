@@ -35,6 +35,15 @@ function getFetchRequest(fetchMock: FetchMock) {
 	};
 }
 
+function createDeferred<T>() {
+	let resolve!: (value: T | PromiseLike<T>) => void;
+	const promise = new Promise<T>((res) => {
+		resolve = res;
+	});
+
+	return { promise, resolve };
+}
+
 const originalFetch = globalThis.fetch;
 
 describe("use-admin queries", () => {
@@ -119,6 +128,62 @@ describe("use-admin queries", () => {
 		expect(
 			queryClient.getQueryData(queryKeys.admin.exerciseList(params)),
 		).toEqual(response);
+	});
+
+	it("keeps previous paginated admin exercise data visible while a new page loads", async () => {
+		const firstParams = { page: 1, pageSize: 25, search: "bench" };
+		const secondParams = { page: 2, pageSize: 25, search: "bench" };
+		const firstPage = {
+			items: [{ id: "exercise-1", name: "Bench Press" }],
+			total: 2,
+			page: 1,
+			pageSize: 25,
+		} satisfies PaginatedResponse<AdminExerciseWithRelations>;
+		const secondPage = createDeferred<Response>();
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValueOnce(Response.json(firstPage))
+			.mockReturnValueOnce(secondPage.promise);
+		vi.stubGlobal("fetch", fetchMock);
+		const { queryClient, wrapper } = createTestQueryWrapper();
+
+		const { result, rerender } = renderHook(
+			({ params }) => useAdminExercisesPaginated(params),
+			{
+				initialProps: { params: firstParams },
+				wrapper,
+			},
+		);
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		rerender({ params: secondParams });
+
+		await waitFor(() => {
+			expect(result.current.isPlaceholderData).toBe(true);
+		});
+
+		expect(result.current.data).toEqual(firstPage);
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+		expect(
+			queryClient.getQueryData(queryKeys.admin.exerciseList(secondParams)),
+		).toBeUndefined();
+
+		secondPage.resolve(
+			Response.json({
+				items: [{ id: "exercise-2", name: "Incline Press" }],
+				total: 2,
+				page: 2,
+				pageSize: 25,
+			} satisfies PaginatedResponse<AdminExerciseWithRelations>),
+		);
+
+		await waitFor(() => {
+			expect(result.current.isPlaceholderData).toBe(false);
+			expect(result.current.data?.page).toBe(2);
+		});
 	});
 
 	it("requests paginated admin lookup data for the provided type", async () => {
