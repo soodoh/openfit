@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+	act,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import { type ReactNode, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ExerciseFormModal } from "./exercise-form-modal";
@@ -38,6 +44,7 @@ let adminDataSeed = {
 	categories: [{ id: "category-1", name: "Chest" }],
 	muscleGroups: [{ id: "muscle-1", name: "Pectorals" }],
 };
+let latestFormState: ReturnType<typeof mockUseExerciseFormState> | undefined;
 
 const mockUseExerciseFormState = vi.fn(() => {
 	const [name, setName] = useState(formSeed.name);
@@ -57,7 +64,7 @@ const mockUseExerciseFormState = vi.fn(() => {
 	const [isPending, setIsPending] = useState(formSeed.isPending);
 	const [uploadProgress, setUploadProgress] = useState(formSeed.uploadProgress);
 
-	return {
+	const state = {
 		name,
 		setName,
 		equipmentId,
@@ -121,6 +128,8 @@ const mockUseExerciseFormState = vi.fn(() => {
 			);
 		},
 	};
+	latestFormState = state;
+	return state;
 });
 
 vi.mock("@unpic/react", () => ({
@@ -219,6 +228,7 @@ vi.mock("@/hooks", () => ({
 describe("ExerciseFormModal", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		latestFormState = undefined;
 		formSeed = {
 			name: "Bench Press",
 			equipmentId: "equipment-1",
@@ -427,6 +437,28 @@ describe("ExerciseFormModal", () => {
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
+	it("requires at least one primary muscle when the rest of the form is valid", async () => {
+		formSeed = {
+			...formSeed,
+			name: "Bench Press",
+			categoryId: "category-1",
+			primaryMuscleIds: [],
+		};
+		const onClose = vi.fn();
+
+		render(<ExerciseFormModal open onClose={onClose} exercise={undefined} />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+		expect(
+			await screen.findByText("At least one primary muscle is required"),
+		).toBeInTheDocument();
+		expect(mockCreateExercise).not.toHaveBeenCalled();
+		expect(mockUpdateExercise).not.toHaveBeenCalled();
+		expect(mockUploadFile).not.toHaveBeenCalled();
+		expect(onClose).not.toHaveBeenCalled();
+	});
+
 	it("creates a new exercise without uploads and closes on success", async () => {
 		imageSeed = [];
 		const onClose = vi.fn();
@@ -497,6 +529,40 @@ describe("ExerciseFormModal", () => {
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
+	it("surfaces non-error update failures with the generic fallback", async () => {
+		mockUpdateExercise.mockRejectedValueOnce("update failed");
+		imageSeed = [];
+		const onClose = vi.fn();
+
+		render(
+			<ExerciseFormModal
+				open
+				onClose={onClose}
+				exercise={{
+					id: "exercise-1",
+					name: "Bench Press",
+					equipmentId: "equipment-1",
+					categoryId: "category-1",
+					level: "intermediate",
+					force: "push",
+					mechanic: "compound",
+					primaryMuscleIds: ["muscle-1"],
+					secondaryMuscleIds: ["muscle-2"],
+					instructions: ["Set up"],
+					imageUrls: [],
+				}}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+		expect(
+			await screen.findByText("Failed to update exercise"),
+		).toBeInTheDocument();
+		expect(mockUploadFile).not.toHaveBeenCalled();
+		expect(onClose).not.toHaveBeenCalled();
+	});
+
 	it("surfaces create errors without closing the modal", async () => {
 		mockCreateExercise.mockRejectedValueOnce(new Error("create failed"));
 		imageSeed = [];
@@ -551,5 +617,29 @@ describe("ExerciseFormModal", () => {
 		fireEvent.click(removeButtons[0]);
 
 		expect(mockRemoveImage).toHaveBeenCalledWith(0);
+	});
+
+	it("exercises the hidden muscle and instruction helper branches", () => {
+		formSeed = {
+			...formSeed,
+			instructions: ["Set up"],
+			primaryMuscleIds: [],
+			secondaryMuscleIds: [],
+		};
+
+		render(<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />);
+
+		expect(latestFormState).toBeDefined();
+		act(() => {
+			latestFormState.toggleMuscle("muscle-1", true, true);
+			latestFormState.toggleMuscle("muscle-1", true, false);
+			latestFormState.toggleMuscle("muscle-2", false, true);
+			latestFormState.toggleMuscle("muscle-2", false, false);
+			latestFormState.removeInstruction(0);
+		});
+
+		expect(
+			screen.getAllByPlaceholderText("Enter instruction step"),
+		).toHaveLength(1);
 	});
 });

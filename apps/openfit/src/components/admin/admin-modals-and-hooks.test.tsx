@@ -159,6 +159,30 @@ describe("admin modals and form state", () => {
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
+	it("surfaces lookup submission Error instances and keeps the modal open", async () => {
+		const onSubmit = vi.fn().mockRejectedValue(new Error("lookup failed"));
+		const onClose = vi.fn();
+
+		render(
+			<LookupFormModal
+				open
+				onClose={onClose}
+				title="Equipment"
+				item={undefined}
+				onSubmit={onSubmit}
+				isPending={false}
+			/>,
+		);
+
+		fireEvent.change(screen.getByLabelText("Name"), {
+			target: { value: "Rope" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+		expect(await screen.findByText("lookup failed")).toBeInTheDocument();
+		expect(onClose).not.toHaveBeenCalled();
+	});
+
 	it("leaves a closed lookup modal untouched until it opens", () => {
 		const onSubmit = vi.fn().mockResolvedValue(undefined);
 		const onClose = vi.fn();
