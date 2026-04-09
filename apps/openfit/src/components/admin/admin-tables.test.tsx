@@ -341,6 +341,13 @@ describe("admin tables", () => {
 		expect(screen.getByText("ADMIN")).toBeInTheDocument();
 		expect(screen.getAllByText("page 1 of 2")).toHaveLength(2);
 
+		fireEvent.click(screen.getAllByRole("button", { name: "Prev page" })[0]);
+		expect(mockUseAdminUsersPaginated).toHaveBeenLastCalledWith({
+			page: 1,
+			pageSize: 10,
+			search: undefined,
+		});
+
 		fireEvent.change(screen.getByPlaceholderText("Search users..."), {
 			target: { value: "coach" },
 		});
@@ -376,6 +383,10 @@ describe("admin tables", () => {
 		expect(
 			screen.getByText("Role modal: coach@example.com"),
 		).toBeInTheDocument();
+		fireEvent.click(screen.getByRole("button", { name: "Close role modal" }));
+		expect(
+			screen.queryByText("Role modal: coach@example.com"),
+		).not.toBeInTheDocument();
 	});
 
 	it("shows loading skeletons and empty states when tables have no data", () => {
@@ -437,6 +448,15 @@ describe("admin tables", () => {
 			/>,
 		);
 
+		fireEvent.click(screen.getAllByRole("button", { name: "Prev page" })[0]);
+		expect(mockUseAdminLookupPaginated).toHaveBeenLastCalledWith(
+			"equipment",
+			expect.objectContaining({
+				page: 1,
+				pageSize: 10,
+			}),
+		);
+
 		fireEvent.click(screen.getByRole("button", { name: "Add Equipment" }));
 		expect(screen.getByText("Create Equipment")).toBeInTheDocument();
 
@@ -495,8 +515,19 @@ describe("admin tables", () => {
 		expect(screen.getByText("Pectorals")).toBeInTheDocument();
 		expect(screen.getByText("Air Squat")).toBeInTheDocument();
 
+		fireEvent.click(screen.getAllByRole("button", { name: "Prev page" })[0]);
+		expect(mockUseAdminExercisesPaginated).toHaveBeenLastCalledWith({
+			page: 1,
+			pageSize: 10,
+			search: undefined,
+		});
+
 		fireEvent.click(screen.getByRole("button", { name: "Add Exercise" }));
 		expect(screen.getByText("Create exercise")).toBeInTheDocument();
+		fireEvent.click(
+			screen.getByRole("button", { name: "Close exercise form" }),
+		);
+		expect(screen.queryByText("Create exercise")).not.toBeInTheDocument();
 
 		fireEvent.click(
 			screen
@@ -536,5 +567,48 @@ describe("admin tables", () => {
 			expect(screen.getAllByText("Configured")).toHaveLength(2);
 			expect(screen.getAllByText("Not configured")).toHaveLength(2);
 		});
+	});
+
+	it("keeps auth providers visible when the status request fails", async () => {
+		const fetchMock = vi.fn().mockRejectedValueOnce(new Error("network down"));
+		vi.stubGlobal("fetch", fetchMock);
+
+		render(<AuthProvidersTable />);
+
+		await waitFor(() => {
+			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
+		});
+
+		expect(screen.getByText("Google")).toBeInTheDocument();
+		expect(screen.getAllByText("Not configured")).toHaveLength(4);
+	});
+
+	it("shows empty lookup results when the search returns no items", () => {
+		lookupsSeed = {
+			data: {
+				items: [],
+				total: 0,
+				page: 1,
+				pageSize: 10,
+			},
+			isLoading: false,
+		};
+		mockUseAdminLookupPaginated.mockReturnValue(lookupsSeed);
+
+		render(
+			<LookupTable
+				title="Equipment"
+				singularTitle="Equipment"
+				lookupType="equipment"
+			/>,
+		);
+
+		fireEvent.change(screen.getByPlaceholderText("Search equipment..."), {
+			target: { value: "rope" },
+		});
+
+		expect(
+			screen.getByText('No equipment found matching "rope"'),
+		).toBeInTheDocument();
 	});
 });

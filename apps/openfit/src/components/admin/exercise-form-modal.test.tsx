@@ -6,6 +6,9 @@ import { ExerciseFormModal } from "./exercise-form-modal";
 const mockCreateExercise = vi.fn();
 const mockUpdateExercise = vi.fn();
 const mockUploadFile = vi.fn();
+const mockAddFiles = vi.fn();
+const mockRemoveImage = vi.fn();
+const mockResetImages = vi.fn();
 
 let formSeed = {
 	name: "Bench Press",
@@ -186,9 +189,9 @@ vi.mock("./use-exercise-form-state", () => ({
 vi.mock("./use-exercise-image-queue", () => ({
 	useExerciseImageQueue: () => ({
 		images: imageSeed,
-		addFiles: vi.fn(),
-		removeImage: vi.fn(),
-		resetImages: vi.fn(),
+		addFiles: mockAddFiles,
+		removeImage: mockRemoveImage,
+		resetImages: mockResetImages,
 	}),
 }));
 
@@ -246,6 +249,9 @@ describe("ExerciseFormModal", () => {
 		mockCreateExercise.mockResolvedValue(undefined);
 		mockUpdateExercise.mockResolvedValue(undefined);
 		mockUploadFile.mockResolvedValue("/uploaded/new.jpg");
+		mockAddFiles.mockClear();
+		mockRemoveImage.mockClear();
+		mockResetImages.mockClear();
 	});
 
 	it("shows a loading state while exercise metadata is still loading", () => {
@@ -259,6 +265,41 @@ describe("ExerciseFormModal", () => {
 
 		expect(screen.queryByLabelText("Name *")).not.toBeInTheDocument();
 		expect(screen.getByText("Add Exercise")).toBeInTheDocument();
+	});
+
+	it("shows edit mode copy and a pending submit state", () => {
+		formSeed = {
+			...formSeed,
+			isPending: true,
+			uploadProgress: "Uploading images (1/1)...",
+		};
+
+		render(
+			<ExerciseFormModal
+				open
+				onClose={vi.fn()}
+				exercise={{
+					id: "exercise-1",
+					name: "Bench Press",
+					equipmentId: "equipment-1",
+					categoryId: "category-1",
+					level: "intermediate",
+					force: "push",
+					mechanic: "compound",
+					primaryMuscleIds: ["muscle-1"],
+					secondaryMuscleIds: ["muscle-2"],
+					instructions: ["Set up"],
+					imageUrls: ["/existing.jpg"],
+				}}
+			/>,
+		);
+
+		expect(screen.getByText("Edit Exercise")).toBeInTheDocument();
+		expect(screen.getByText("Update exercise details")).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Uploading images (1/1)..." }),
+		).toBeDisabled();
+		expect(screen.getByText("Uploading images (1/1)...")).toBeInTheDocument();
 	});
 
 	it("shows validation errors before submitting", async () => {
@@ -382,5 +423,48 @@ describe("ExerciseFormModal", () => {
 
 		expect(await screen.findByText("create failed")).toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it("surfaces non-error create failures with the generic fallback", async () => {
+		mockCreateExercise.mockRejectedValueOnce("create failed");
+		imageSeed = [];
+
+		render(<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />);
+
+		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+		expect(
+			await screen.findByText("Failed to create exercise"),
+		).toBeInTheDocument();
+	});
+
+	it("adds uploaded files through the image queue and clears the file input", () => {
+		const { container } = render(
+			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
+		);
+		const file = new File(["image"], "extra.jpg", { type: "image/jpeg" });
+		const input = container.querySelector('input[type="file"]');
+
+		expect(input).toBeTruthy();
+		fireEvent.change(input as HTMLInputElement, {
+			target: { files: [file] },
+		});
+
+		expect(mockAddFiles).toHaveBeenCalledWith([file]);
+	});
+
+	it("removes existing images from the queue", () => {
+		const { container } = render(
+			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
+		);
+
+		const removeButtons = container.querySelectorAll(
+			"button.absolute.top-1.right-1",
+		);
+
+		expect(removeButtons).toHaveLength(2);
+		fireEvent.click(removeButtons[0]);
+
+		expect(mockRemoveImage).toHaveBeenCalledWith(0);
 	});
 });

@@ -159,6 +159,52 @@ describe("admin modals and form state", () => {
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
+	it("validates lookup names before submitting", () => {
+		const onSubmit = vi.fn().mockResolvedValue(undefined);
+		const onClose = vi.fn();
+
+		render(
+			<LookupFormModal
+				open
+				onClose={onClose}
+				title="Equipment"
+				item={undefined}
+				onSubmit={onSubmit}
+				isPending={false}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+		expect(screen.getByText("Equipment name is required")).toBeInTheDocument();
+		expect(onSubmit).not.toHaveBeenCalled();
+		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	it("falls back to a generic lookup error for non-error rejections", async () => {
+		const onSubmit = vi.fn().mockRejectedValueOnce("lookup failed");
+
+		render(
+			<LookupFormModal
+				open
+				onClose={vi.fn()}
+				title="Equipment"
+				item={undefined}
+				onSubmit={onSubmit}
+				isPending={false}
+			/>,
+		);
+
+		fireEvent.change(screen.getByLabelText("Name"), {
+			target: { value: "Rope" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+		expect(
+			await screen.findByText("Failed to create equipment"),
+		).toBeInTheDocument();
+	});
+
 	it("shows delete lookup errors while preserving the open state", async () => {
 		const lookupClose = vi.fn();
 		const lookupDelete = vi
@@ -182,6 +228,40 @@ describe("admin modals and form state", () => {
 		expect(lookupClose).toHaveBeenCalledTimes(1);
 	});
 
+	it("falls back to a generic delete lookup error for non-error rejections", async () => {
+		const lookupDelete = vi.fn().mockRejectedValueOnce("lookup failed");
+
+		render(
+			<DeleteLookupModal
+				item={{ id: "lookup-1", name: "Rope" }}
+				title="Equipment"
+				onClose={vi.fn()}
+				onDelete={lookupDelete}
+				isPending={false}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+		expect(
+			await screen.findByText("Failed to delete equipment"),
+		).toBeInTheDocument();
+	});
+
+	it("shows delete lookup pending state", () => {
+		render(
+			<DeleteLookupModal
+				item={{ id: "lookup-1", name: "Rope" }}
+				title="Equipment"
+				onClose={vi.fn()}
+				onDelete={vi.fn()}
+				isPending={true}
+			/>,
+		);
+
+		expect(screen.getByRole("button", { name: "Deleting..." })).toBeDisabled();
+	});
+
 	it("shows delete exercise errors while preserving the open state", () => {
 		const exerciseClose = vi.fn();
 		const exerciseDelete = vi.fn(() => {
@@ -201,6 +281,48 @@ describe("admin modals and form state", () => {
 		expect(exerciseClose).not.toHaveBeenCalled();
 		fireEvent.click(screen.getByRole("button", { name: "Close" }));
 		expect(exerciseClose).toHaveBeenCalledTimes(1);
+	});
+
+	it("falls back to a generic exercise delete error for non-error throws", () => {
+		const exerciseClose = vi.fn();
+		const exerciseDelete = vi.fn(() => {
+			throw "exercise failed";
+		});
+
+		render(
+			<DeleteExerciseModal
+				exercise={{ id: "exercise-1", name: "Bench Press" }}
+				onClose={exerciseClose}
+				onDelete={exerciseDelete}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+		expect(screen.getByText("Failed to delete exercise")).toBeInTheDocument();
+		expect(exerciseClose).not.toHaveBeenCalled();
+	});
+
+	it("keeps the user role selection guard from accepting invalid values", () => {
+		const onClose = vi.fn();
+
+		render(
+			<UserRoleModal
+				user={{
+					id: "user-1",
+					userId: "user-1",
+					email: "coach@example.com",
+					role: RoleEnum.USER,
+				}}
+				onClose={onClose}
+			/>,
+		);
+
+		selectOnValueChange?.("SUPERADMIN");
+
+		expect(screen.getByRole("button", { name: "Save Changes" })).toBeDisabled();
+		expect(
+			screen.getByText("Users can only manage their own data"),
+		).toBeInTheDocument();
 	});
 
 	it("keeps the user role save button disabled until the role changes", () => {

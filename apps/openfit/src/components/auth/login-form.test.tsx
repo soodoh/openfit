@@ -5,6 +5,8 @@ import { LoginForm } from "./login-form";
 
 const mockNavigate = vi.fn();
 const mockSignInEmail = vi.fn();
+const mockSignInSocial = vi.fn();
+const mockSignInOauth2 = vi.fn();
 const mockSignUpEmail = vi.fn();
 const mockUseAuth = vi.fn();
 const mockGetSession = vi.fn();
@@ -21,8 +23,8 @@ vi.mock("@tanstack/react-router", () => ({
 vi.mock("@/components/providers/auth-provider", () => ({
 	signIn: {
 		email: (...args: unknown[]) => mockSignInEmail(...args),
-		social: vi.fn(),
-		oauth2: vi.fn(),
+		social: (...args: unknown[]) => mockSignInSocial(...args),
+		oauth2: (...args: unknown[]) => mockSignInOauth2(...args),
 	},
 	signUp: {
 		email: (...args: unknown[]) => mockSignUpEmail(...args),
@@ -37,8 +39,11 @@ vi.mock("@/lib/auth-client", () => ({
 describe("LoginForm redirects", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.unstubAllEnvs();
 		mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
 		mockSignInEmail.mockResolvedValue({ error: null });
+		mockSignInSocial.mockResolvedValue({ error: null });
+		mockSignInOauth2.mockResolvedValue({ error: null });
 		mockSignUpEmail.mockResolvedValue({ error: null });
 		mockGetSession.mockResolvedValue({
 			data: { session: { id: "session-1" } },
@@ -179,5 +184,62 @@ describe("LoginForm redirects", () => {
 			await screen.findByText("Authentication failed"),
 		).toBeInTheDocument();
 		expect(mockGetSession).not.toHaveBeenCalled();
+	});
+
+	it("shows registration errors when sign-up fails", async () => {
+		mockSignUpEmail.mockResolvedValueOnce({
+			error: { message: "Registration failed" },
+		});
+
+		render(<LoginForm register />);
+
+		fireEvent.change(screen.getByLabelText("Email"), {
+			target: { value: "newperson@example.com" },
+		});
+		fireEvent.change(screen.getByLabelText("Password"), {
+			target: { value: "Password1!" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Register" }));
+
+		expect(await screen.findByText("Registration failed")).toBeInTheDocument();
+		expect(mockGetSession).not.toHaveBeenCalled();
+		expect(mockNavigate).not.toHaveBeenCalled();
+	});
+
+	it("starts social OAuth sign-in when Google is enabled", async () => {
+		vi.stubEnv("VITE_AUTH_GOOGLE_ENABLED", "true");
+		vi.resetModules();
+
+		const { LoginForm: OAuthLoginForm } = await import("./login-form");
+
+		render(<OAuthLoginForm />);
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Continue with Google" }),
+		);
+
+		expect(mockSignInSocial).toHaveBeenCalledWith({
+			provider: "google",
+			callbackURL: "/",
+		});
+	});
+
+	it("starts OIDC OAuth sign-in when the provider is enabled", async () => {
+		vi.stubEnv("VITE_AUTH_OIDC_ENABLED", "true");
+		vi.stubEnv("VITE_AUTH_OIDC_PROVIDER_NAME", "Acme SSO");
+		vi.resetModules();
+
+		const { LoginForm: OAuthLoginForm } = await import("./login-form");
+
+		render(<OAuthLoginForm />);
+
+		fireEvent.click(
+			screen.getByRole("button", { name: "Continue with Acme SSO" }),
+		);
+
+		expect(mockSignInOauth2).toHaveBeenCalledWith({
+			providerId: "oidc",
+			callbackURL: "/",
+		});
 	});
 });

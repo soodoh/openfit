@@ -95,4 +95,43 @@ describe("useExerciseFormState", () => {
 		expect(result.current.primaryMuscleIds).toEqual(["muscle-3"]);
 		expect(result.current.secondaryMuscleIds).toEqual([]);
 	});
+
+	it("resets the form when a different exercise opens and removes secondary muscles", () => {
+		const { result, rerender } = renderHook(
+			({
+				open,
+				exercise,
+			}: {
+				open: boolean;
+				exercise?: ExerciseWithRelations;
+			}) => useExerciseFormState({ open, exercise }),
+			{
+				initialProps: { open: true, exercise: mockExercise },
+			},
+		);
+
+		act(() => {
+			result.current.setName("Changed");
+			result.current.setInstructions(["Warm up"]);
+		});
+
+		rerender({
+			open: true,
+			exercise: {
+				...mockExercise,
+				id: "exercise-2",
+				name: "Incline Press",
+				instructions: ["Press", "Lower"],
+			},
+		});
+
+		expect(result.current.name).toBe("Incline Press");
+		expect(result.current.instructions).toEqual(["Press", "Lower"]);
+
+		act(() => {
+			result.current.toggleMuscle("muscle-2", false, false);
+		});
+
+		expect(result.current.secondaryMuscleIds).toEqual([]);
+	});
 });
