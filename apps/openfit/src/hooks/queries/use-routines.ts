@@ -116,7 +116,7 @@ export function useRoutine(
 ): UseQueryResult<RoutineQueryResult> {
 	return useQuery({
 		queryKey: queryKeys.routines.detail(id ?? ""),
-		queryFn: async () => fetchRoutine(id ?? ""),
+		queryFn: async () => fetchRoutine(id!),
 		enabled: Boolean(id),
 	});
 }

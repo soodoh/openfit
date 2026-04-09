@@ -148,6 +148,26 @@ describe("use-admin queries", () => {
 		);
 	});
 
+	it("surfaces paginated admin user errors and omits the search param when absent", async () => {
+		const params = { page: 3, pageSize: 10 };
+		const fetchMock = mockJsonError("User request failed", { status: 500 });
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useAdminUsersPaginated(params), {
+			wrapper,
+		});
+
+		await waitFor(() => {
+			expect(result.current.isError).toBe(true);
+		});
+
+		expect((result.current.error as Error).message).toBe("User request failed");
+		const request = getFetchRequest(fetchMock);
+		expect(request.url.pathname).toBe("/api/admin/users");
+		expect(request.url.searchParams.get("search")).toBeNull();
+	});
+
 	it("keeps paginated exercise data cached under the current page key", async () => {
 		const params = { page: 1, pageSize: 25 };
 		const response = {
@@ -295,6 +315,36 @@ describe("use-admin queries", () => {
 				params,
 			]),
 		).toEqual(response);
+	});
+
+	it("omits the search param for paginated admin lookups when search is absent", async () => {
+		const params = { page: 1, pageSize: 50 };
+		const response = {
+			items: [{ id: "equipment-1", name: "Barbell" }],
+			total: 1,
+			page: 1,
+			pageSize: 50,
+		} satisfies PaginatedResponse<LookupItem>;
+		const fetchMock = mockJsonSuccess(response);
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(
+			() => useAdminLookupPaginated("equipment", params),
+			{ wrapper },
+		);
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(result.current.data).toEqual(response);
+		const request = getFetchRequest(fetchMock);
+		expect(request.url.pathname).toBe("/api/admin/lookups");
+		expect(request.url.searchParams.get("type")).toBe("equipment");
+		expect(request.url.searchParams.get("page")).toBe("1");
+		expect(request.url.searchParams.get("pageSize")).toBe("50");
+		expect(request.url.searchParams.get("search")).toBeNull();
 	});
 
 	it.each([

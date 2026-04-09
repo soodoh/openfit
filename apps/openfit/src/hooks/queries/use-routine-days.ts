@@ -98,7 +98,7 @@ export function useRoutineDay(
 ): UseQueryResult<RoutineDayDetailResult> {
 	return useQuery({
 		queryKey: queryKeys.routineDays.detail(id ?? ""),
-		queryFn: async () => fetchRoutineDay(id ?? ""),
+		queryFn: async () => fetchRoutineDay(id!),
 		enabled: Boolean(id),
 	});
 }

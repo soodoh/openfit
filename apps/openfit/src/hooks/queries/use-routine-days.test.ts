@@ -146,6 +146,33 @@ describe("use-routine-days queries", () => {
 		).toBe(result.current.data);
 	});
 
+	it("preserves a null routine in routine day detail responses", async () => {
+		const detail = {
+			id: "day-2",
+			routineId: "routine-2",
+			userId: "user-1",
+			description: null,
+			createdAt: "2026-01-12T00:00:00.000Z",
+			updatedAt: "2026-01-13T00:00:00.000Z",
+			weekdays: [2, 4],
+			routine: null,
+			setGroups: [],
+		} satisfies RoutineDayDetailDto;
+		const fetchMock = mockJsonSuccess(detail);
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useRoutineDay("day-2"), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(result.current.data?.routine).toBeNull();
+		expect(result.current.data?.createdAt).toBeInstanceOf(Date);
+		expect(getFetchRequest(fetchMock).pathname).toBe("/api/routine-days/day-2");
+	});
+
 	it("surfaces a coherent not-found error for missing routine day details", async () => {
 		const fetchMock = vi.fn(() =>
 			Promise.resolve(Response.json({ error: "Not found" }, { status: 404 })),
@@ -241,6 +268,27 @@ describe("use-routine-days queries", () => {
 		expect(queryClient.getQueryData(routineDaySearchKey("push", 5))).toEqual(
 			result.current.data,
 		);
+	});
+
+	it("surfaces search errors for routine day queries", async () => {
+		const fetchMock = mockJsonError("Routine day search failed", {
+			status: 500,
+		});
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useRoutineDaySearch("push"), {
+			wrapper,
+		});
+
+		await waitFor(() => {
+			expect(result.current.isError).toBe(true);
+		});
+
+		expect((result.current.error as Error).message).toBe(
+			"Routine day search failed",
+		);
+		expect(getFetchRequest(fetchMock).pathname).toBe("/api/routine-days");
 	});
 
 	it("uses distinct cache keys for the same term when limits differ", async () => {

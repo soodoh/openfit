@@ -62,7 +62,6 @@ export function useSessionsByDateRange(
 	return useQuery({
 		queryKey: queryKeys.sessions.byDateRange(startDate, endDate),
 		queryFn: async () => fetchSessionsByDateRange(startDate, endDate),
-		enabled: Boolean(startDate) && Boolean(endDate),
 	});
 }
 // Hook for current active session
@@ -82,7 +81,7 @@ export function useSession(
 ): UseQueryResult<WorkoutSessionWithData | undefined> {
 	return useQuery({
 		queryKey: queryKeys.sessions.detail(id ?? ""),
-		queryFn: async () => fetchSession(id ?? ""),
+		queryFn: async () => fetchSession(id!),
 		select: (session) => session ?? undefined,
 		enabled: Boolean(id),
 	});

@@ -5,6 +5,7 @@ import type { ExerciseWithImageUrl } from "@/lib/types";
 import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
 import { createTestQueryWrapper } from "@/test/query-client";
 import {
+	buildExerciseQueryString,
 	useExercise,
 	useExerciseSearch,
 	useExercises,
@@ -139,6 +140,49 @@ describe("use-exercises queries", () => {
 		expect(
 			queryClient.getQueryData(queryKeys.exercises.list(filters)),
 		).toBeDefined();
+	});
+
+	it("requests an unfiltered exercise page without optional filters", async () => {
+		const page = {
+			page: [exercise],
+			isDone: true,
+		};
+		const fetchMock = mockJsonSuccess(page);
+		vi.stubGlobal("fetch", fetchMock);
+		const { queryClient, wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useExercises(), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(result.current.data?.pages[0]).toEqual(page);
+		const request = getFetchRequest(fetchMock);
+		expect(request.url.pathname).toBe("/api/exercises");
+		expect(request.url.searchParams.get("search")).toBeNull();
+		expect(request.url.searchParams.get("equipmentId")).toBeNull();
+		expect(request.url.searchParams.getAll("equipmentIds")).toEqual([]);
+		expect(request.url.searchParams.get("level")).toBeNull();
+		expect(request.url.searchParams.get("categoryId")).toBeNull();
+		expect(request.url.searchParams.get("primaryMuscleId")).toBeNull();
+		expect(request.url.searchParams.get("limit")).toBe("20");
+		expect(
+			queryClient.getQueryData(queryKeys.exercises.list({})),
+		).toBeDefined();
+	});
+
+	it("builds exercise query strings with a cursor and singular equipment filter", () => {
+		const queryString = buildExerciseQueryString(
+			{ equipmentId: "equipment-1" },
+			"cursor-2",
+			20,
+		);
+		const params = new URLSearchParams(queryString);
+
+		expect(params.get("equipmentId")).toBe("equipment-1");
+		expect(params.get("cursor")).toBe("cursor-2");
+		expect(params.get("limit")).toBe("20");
 	});
 
 	it("requests exercise searches with the limit in the cache key", async () => {
@@ -293,6 +337,32 @@ describe("use-exercises queries", () => {
 		]);
 		expect(request.url.searchParams.get("exclude")).toBe("exercise-9");
 		expect(request.url.searchParams.get("limit")).toBe("5");
+	});
+
+	it("requests similar exercises without optional search filters", async () => {
+		const similarExercises = [exercise];
+		const fetchMock = mockJsonSuccess(similarExercises);
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useSimilarExercises(["muscle-1"]), {
+			wrapper,
+		});
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(result.current.data).toEqual(similarExercises);
+		const request = getFetchRequest(fetchMock);
+		expect(request.url.pathname).toBe("/api/exercises/similar");
+		expect(request.url.searchParams.get("q")).toBeNull();
+		expect(request.url.searchParams.getAll("equipmentIds")).toEqual([]);
+		expect(request.url.searchParams.getAll("primaryMuscleIds")).toEqual([
+			"muscle-1",
+		]);
+		expect(request.url.searchParams.get("exclude")).toBeNull();
+		expect(request.url.searchParams.get("limit")).toBeNull();
 	});
 
 	it("surfaces search failures for single exercises", async () => {

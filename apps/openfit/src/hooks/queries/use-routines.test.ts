@@ -273,6 +273,31 @@ describe("use-routines queries", () => {
 		).toBeDefined();
 	});
 
+	it("returns no next routines page when the continue cursor is absent", async () => {
+		const page = {
+			page: [createRoutineDto("routine-1", "Push")],
+			isDone: false,
+			continueCursor: null,
+		} satisfies CursorPage<RoutineQueryDto>;
+		const fetchMock = mockJsonSuccess(page);
+		vi.stubGlobal("fetch", fetchMock);
+		const { queryClient, wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useRoutines(), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		const request = getFetchRequest(fetchMock, 0);
+		expect(request.url.pathname).toBe("/api/routines");
+		expect(request.url.searchParams.get("search")).toBeNull();
+		expect(request.url.searchParams.get("cursor")).toBeNull();
+		expect(request.url.searchParams.get("limit")).toBe("20");
+		expect(result.current.hasNextPage).toBe(false);
+		expect(queryClient.getQueryData(queryKeys.routines.list({}))).toBeDefined();
+	});
+
 	it("surfaces errors when the routine list request fails", async () => {
 		const fetchMock = mockJsonError("Routine list failed", { status: 500 });
 		vi.stubGlobal("fetch", fetchMock);

@@ -101,6 +101,21 @@ describe("use-sessions queries", () => {
 		);
 	});
 
+	it("surfaces errors from the sessions list request", async () => {
+		const fetchMock = mockJsonError("Session list failed", { status: 500 });
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useSessions(), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isError).toBe(true);
+		});
+
+		expect((result.current.error as Error).message).toBe("Session list failed");
+		expect(getFetchRequest(fetchMock).pathname).toBe("/api/sessions");
+	});
+
 	it("does not fetch a single session when the id is undefined", async () => {
 		const fetchMock = mockJsonSuccess(session);
 		vi.stubGlobal("fetch", fetchMock);
@@ -139,6 +154,24 @@ describe("use-sessions queries", () => {
 		);
 	});
 
+	it("fetches a single session by id", async () => {
+		const fetchMock = mockJsonSuccess(session);
+		vi.stubGlobal("fetch", fetchMock);
+		const { queryClient, wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useSession("session-1"), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(result.current.data).toEqual(session);
+		expect(getFetchRequest(fetchMock).pathname).toBe("/api/sessions/session-1");
+		expect(
+			queryClient.getQueryData(queryKeys.sessions.detail("session-1")),
+		).toEqual(session);
+	});
+
 	it("fetches the sessions list successfully", async () => {
 		const sessions = [session];
 		const fetchMock = mockJsonSuccess(sessions);
@@ -175,5 +208,37 @@ describe("use-sessions queries", () => {
 				queryKey: queryKeys.sessions.current(),
 			})?.options.refetchInterval,
 		).toBe(30_000);
+	});
+
+	it("treats a null current session as undefined data", async () => {
+		const fetchMock = vi.fn(() => Promise.resolve(Response.json(null)));
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useCurrentSession(), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(result.current.data).toBeUndefined();
+		expect(getFetchRequest(fetchMock).pathname).toBe("/api/sessions/current");
+	});
+
+	it("surfaces errors from the current session request", async () => {
+		const fetchMock = mockJsonError("Current session failed", { status: 500 });
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useCurrentSession(), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isError).toBe(true);
+		});
+
+		expect((result.current.error as Error).message).toBe(
+			"Current session failed",
+		);
+		expect(getFetchRequest(fetchMock).pathname).toBe("/api/sessions/current");
 	});
 });

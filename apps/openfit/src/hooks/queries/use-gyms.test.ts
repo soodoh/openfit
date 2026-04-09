@@ -54,6 +54,21 @@ describe("use-gyms queries", () => {
 		expect(queryClient.getQueryData(queryKeys.gyms.list())).toEqual(gyms);
 	});
 
+	it("surfaces errors from the gyms list request", async () => {
+		const fetchMock = mockJsonError("Gym list failed", { status: 500 });
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useGyms(), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isError).toBe(true);
+		});
+
+		expect((result.current.error as Error).message).toBe("Gym list failed");
+		expect(getFetchRequest(fetchMock).pathname).toBe("/api/gyms");
+	});
+
 	it("does not fetch a single gym when the id is undefined", async () => {
 		const fetchMock = mockJsonSuccess({
 			id: "gym-1",

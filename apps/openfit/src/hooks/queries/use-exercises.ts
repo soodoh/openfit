@@ -28,7 +28,7 @@ type PaginatedResponse<T> = {
 	continueCursor: string | undefined;
 };
 // Helper to build query string
-function buildExerciseQueryString(
+export function buildExerciseQueryString(
 	filters: ExerciseFilters,
 	cursor?: string,
 	limit?: number,
@@ -156,7 +156,7 @@ export function useExercise(
 ): UseQueryResult<Exercise | undefined> {
 	return useQuery({
 		queryKey: queryKeys.exercises.detail(id ?? ""),
-		queryFn: async () => fetchExercise(id ?? ""),
+		queryFn: async () => fetchExercise(id!),
 		select: (exercise) => exercise ?? undefined,
 		enabled: Boolean(id),
 	});
