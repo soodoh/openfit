@@ -1,132 +1,347 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import type { MutationIdResult } from "@/lib/api-types";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderHook, waitFor } from "@testing-library/react";
+import { createElement, type ReactNode } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { queryKeys } from "@/lib/query-keys";
-import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
-import { createTestQueryWrapper } from "@/test/query-client";
 import {
 	useAdminCreateExercise,
+	useAdminDeleteExercise,
 	useAdminUpdateExercise,
+	useCreateLookup,
+	useDeleteLookup,
+	useUpdateLookup,
+	useUpdateUserRole,
+	useUploadFile,
 } from "./use-admin-mutations";
 
-function getRequest(fetchMock: { mock: { calls: Array<unknown[]> } }) {
-	const [input, init] = fetchMock.mock.calls[0] ?? [];
+function createQueryClient() {
+	return new QueryClient({
+		defaultOptions: {
+			queries: {
+				retry: false,
+			},
+			mutations: {
+				retry: false,
+			},
+		},
+	});
+}
 
-	expect(typeof input).toBe("string");
-
-	return {
-		url: new URL(input, "http://localhost"),
-		init: init as RequestInit | undefined,
+function createWrapper(queryClient: QueryClient) {
+	return function Wrapper({ children }: { children: ReactNode }) {
+		return createElement(
+			QueryClientProvider,
+			{ client: queryClient },
+			children,
+		);
 	};
 }
-const originalFetch = globalThis.fetch;
 
 describe("use-admin-mutations", () => {
+	let fetchSpy: ReturnType<typeof vi.spyOn<typeof globalThis, "fetch">>;
+
+	beforeEach(() => {
+		fetchSpy = vi.spyOn(globalThis, "fetch");
+	});
+
 	afterEach(() => {
 		vi.restoreAllMocks();
-		vi.unstubAllGlobals();
-		expect(globalThis.fetch).toBe(originalFetch);
 	});
 
-	it("creates an admin exercise and invalidates admin and public exercise keys", async () => {
-		const response = { id: "exercise-1" } satisfies MutationIdResult;
-		const fetchMock = mockJsonSuccess(response);
-		vi.stubGlobal("fetch", fetchMock);
-		const { queryClient, wrapper } = createTestQueryWrapper();
-		const invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
-		const input = {
-			name: "Bench Press",
-			level: "beginner" as const,
-			force: "push" as const,
-			mechanic: "compound" as const,
-			equipmentId: "equipment-1",
-			categoryId: "category-1",
-			primaryMuscleIds: ["muscle-1"],
-			secondaryMuscleIds: ["muscle-2"],
-			instructions: ["Set your shoulders", "Press the bar"],
-			imageUrls: ["/bench-press.jpg"],
+	it("updates a user role, returns the updated profile, and invalidates admin users", async () => {
+		const queryClient = createQueryClient();
+		queryClient.setQueryData(queryKeys.admin.users(), [
+			{ id: "user-1", role: "USER" },
+		]);
+		const { result } = renderHook(() => useUpdateUserRole(), {
+			wrapper: createWrapper(queryClient),
+		});
+		const response = {
+			id: "user-1",
+			role: "ADMIN",
+			name: "OpenFit Admin",
 		};
+		fetchSpy.mockResolvedValueOnce(Response.json(response));
 
-		const { result } = renderHook(() => useAdminCreateExercise(), { wrapper });
+		await expect(
+			result.current.mutateAsync({ id: "user-1", role: "ADMIN" }),
+		).resolves.toEqual(response);
 
-		await act(async () => {
-			await result.current.mutateAsync(input);
-		});
-
-		await waitFor(() => {
-			expect(result.current.isSuccess).toBe(true);
-		});
-
-		const request = getRequest(fetchMock);
-		expect(request.url.pathname).toBe("/api/admin/exercises");
-		expect(request.init).toEqual(
-			expect.objectContaining({
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(input),
-			}),
-		);
-		expect(invalidateQueriesSpy.mock.calls.map(([filters]) => filters)).toEqual(
-			[
-				{ queryKey: queryKeys.admin.exercises() },
-				{ queryKey: queryKeys.exercises.all },
-			],
-		);
-	});
-
-	it("propagates admin exercise update errors without invalidating caches", async () => {
-		const fetchMock = mockJsonError("Exercise already exists", { status: 409 });
-		vi.stubGlobal("fetch", fetchMock);
-		const { queryClient, wrapper } = createTestQueryWrapper();
-		const invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
-		const input = {
-			id: "exercise-1",
-			name: "Bench Press",
-			level: "expert" as const,
-			force: "push" as const,
-			mechanic: "compound" as const,
-			equipmentId: "equipment-1",
-			categoryId: "category-1",
-			primaryMuscleIds: ["muscle-1"],
-			secondaryMuscleIds: [],
-			instructions: ["Drive through the floor"],
-			imageUrls: ["/bench-press.jpg"],
-		};
-
-		const { result } = renderHook(() => useAdminUpdateExercise(), { wrapper });
-
-		await act(async () => {
-			await expect(result.current.mutateAsync(input)).rejects.toThrow(
-				"Exercise already exists",
-			);
-		});
-
-		await waitFor(() => {
-			expect(result.current.isError).toBe(true);
-		});
-
-		const request = getRequest(fetchMock);
-		expect(request.url.pathname).toBe("/api/admin/exercises/exercise-1");
-		expect(request.init).toEqual(
+		expect(fetchSpy).toHaveBeenCalledWith(
+			"/api/admin/users/user-1",
 			expect.objectContaining({
 				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					name: "Bench Press",
-					level: "expert",
-					force: "push",
-					mechanic: "compound",
-					equipmentId: "equipment-1",
-					categoryId: "category-1",
-					primaryMuscleIds: ["muscle-1"],
-					secondaryMuscleIds: [],
-					instructions: ["Drive through the floor"],
-					imageUrls: ["/bench-press.jpg"],
-				}),
 			}),
 		);
-		expect(result.current.error).toBeInstanceOf(Error);
-		expect(result.current.error?.message).toBe("Exercise already exists");
-		expect(invalidateQueriesSpy).not.toHaveBeenCalled();
+		const requestBody = JSON.parse(
+			(fetchSpy.mock.calls[0][1]?.body as string) ?? "{}",
+		) as { role: string };
+		expect(requestBody).toEqual({ role: "ADMIN" });
+		await waitFor(() => {
+			expect(
+				queryClient.getQueryState(queryKeys.admin.users())?.isInvalidated,
+			).toBe(true);
+		});
+	});
+
+	it("creates an exercise, returns the id payload, and invalidates admin and public exercise caches", async () => {
+		const queryClient = createQueryClient();
+		queryClient.setQueryData(queryKeys.admin.exercises(), []);
+		queryClient.setQueryData(queryKeys.exercises.all, []);
+		const { result } = renderHook(() => useAdminCreateExercise(), {
+			wrapper: createWrapper(queryClient),
+		});
+		const payload = {
+			name: "Barbell Row",
+			level: "intermediate" as const,
+			force: "pull" as const,
+			mechanic: "compound" as const,
+			equipmentId: "equip-1",
+			categoryId: "cat-1",
+			primaryMuscleIds: ["muscle-1"],
+			secondaryMuscleIds: ["muscle-2"],
+			instructions: ["Set the bar down", "Row to the torso"],
+			imageUrls: ["/api/uploads/row.png"],
+		};
+		const response = { id: "exercise-1" };
+		fetchSpy.mockResolvedValueOnce(Response.json(response));
+
+		await expect(result.current.mutateAsync(payload)).resolves.toEqual(
+			response,
+		);
+
+		expect(fetchSpy).toHaveBeenCalledWith(
+			"/api/admin/exercises",
+			expect.objectContaining({
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+			}),
+		);
+		const requestBody = JSON.parse(
+			(fetchSpy.mock.calls[0][1]?.body as string) ?? "{}",
+		) as typeof payload;
+		expect(requestBody).toEqual(payload);
+		await waitFor(() => {
+			expect(
+				queryClient.getQueryState(queryKeys.admin.exercises())?.isInvalidated,
+			).toBe(true);
+			expect(
+				queryClient.getQueryState(queryKeys.exercises.all)?.isInvalidated,
+			).toBe(true);
+		});
+	});
+
+	it("updates an exercise, returns success, and invalidates admin and public exercise caches", async () => {
+		const queryClient = createQueryClient();
+		queryClient.setQueryData(queryKeys.admin.exercises(), [
+			{ id: "exercise-1" },
+		]);
+		queryClient.setQueryData(queryKeys.exercises.all, [{ id: "exercise-1" }]);
+		const { result } = renderHook(() => useAdminUpdateExercise(), {
+			wrapper: createWrapper(queryClient),
+		});
+		const payload = {
+			id: "exercise-1",
+			name: "Updated Row",
+			level: "expert" as const,
+			force: "pull" as const,
+			mechanic: "compound" as const,
+			equipmentId: "equip-2",
+			categoryId: "cat-2",
+			primaryMuscleIds: ["muscle-3"],
+			secondaryMuscleIds: [],
+			instructions: ["Pull harder"],
+			imageUrls: ["/api/uploads/updated-row.png"],
+		};
+		const response = { success: true };
+		fetchSpy.mockResolvedValueOnce(Response.json(response));
+
+		await expect(result.current.mutateAsync(payload)).resolves.toEqual(
+			response,
+		);
+
+		expect(fetchSpy).toHaveBeenCalledWith(
+			"/api/admin/exercises/exercise-1",
+			expect.objectContaining({
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+			}),
+		);
+		const requestBody = JSON.parse(
+			(fetchSpy.mock.calls[0][1]?.body as string) ?? "{}",
+		) as Omit<typeof payload, "id">;
+		expect(requestBody).toEqual({
+			name: "Updated Row",
+			level: "expert",
+			force: "pull",
+			mechanic: "compound",
+			equipmentId: "equip-2",
+			categoryId: "cat-2",
+			primaryMuscleIds: ["muscle-3"],
+			secondaryMuscleIds: [],
+			instructions: ["Pull harder"],
+			imageUrls: ["/api/uploads/updated-row.png"],
+		});
+		await waitFor(() => {
+			expect(
+				queryClient.getQueryState(queryKeys.admin.exercises())?.isInvalidated,
+			).toBe(true);
+			expect(
+				queryClient.getQueryState(queryKeys.exercises.all)?.isInvalidated,
+			).toBe(true);
+		});
+	});
+
+	it("deletes an exercise and invalidates admin and public exercise caches", async () => {
+		const queryClient = createQueryClient();
+		queryClient.setQueryData(queryKeys.admin.exercises(), [
+			{ id: "exercise-1" },
+		]);
+		queryClient.setQueryData(queryKeys.exercises.all, [{ id: "exercise-1" }]);
+		const { result } = renderHook(() => useAdminDeleteExercise(), {
+			wrapper: createWrapper(queryClient),
+		});
+		const response = { success: true };
+		fetchSpy.mockResolvedValueOnce(Response.json(response));
+
+		await expect(result.current.mutateAsync("exercise-1")).resolves.toEqual(
+			response,
+		);
+
+		expect(fetchSpy).toHaveBeenCalledWith("/api/admin/exercises/exercise-1", {
+			method: "DELETE",
+		});
+		await waitFor(() => {
+			expect(
+				queryClient.getQueryState(queryKeys.admin.exercises())?.isInvalidated,
+			).toBe(true);
+			expect(
+				queryClient.getQueryState(queryKeys.exercises.all)?.isInvalidated,
+			).toBe(true);
+		});
+	});
+
+	it("creates, updates, and deletes lookups while invalidating admin and lookup caches", async () => {
+		const queryClient = createQueryClient();
+		queryClient.setQueryData(queryKeys.admin.all, []);
+		queryClient.setQueryData(queryKeys.lookups.all, []);
+
+		const createLookup = renderHook(() => useCreateLookup(), {
+			wrapper: createWrapper(queryClient),
+		});
+		const createdLookup = { id: "lookup-1" };
+		fetchSpy.mockResolvedValueOnce(Response.json(createdLookup));
+		await expect(
+			createLookup.result.current.mutateAsync({
+				type: "equipment",
+				name: "Trap Bar",
+			}),
+		).resolves.toEqual(createdLookup);
+		expect(fetchSpy).toHaveBeenCalledWith(
+			"/api/admin/lookups",
+			expect.objectContaining({
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+			}),
+		);
+		expect(
+			JSON.parse((fetchSpy.mock.calls[0][1]?.body as string) ?? "{}"),
+		).toEqual({
+			type: "equipment",
+			name: "Trap Bar",
+		});
+
+		const updateLookup = renderHook(() => useUpdateLookup(), {
+			wrapper: createWrapper(queryClient),
+		});
+		fetchSpy.mockResolvedValueOnce(Response.json({ success: true }));
+		await expect(
+			updateLookup.result.current.mutateAsync({
+				id: "lookup-1",
+				type: "equipment",
+				name: "Hex Bar",
+			}),
+		).resolves.toEqual({ success: true });
+		expect(fetchSpy).toHaveBeenCalledWith(
+			"/api/admin/lookups/lookup-1",
+			expect.objectContaining({
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+			}),
+		);
+		expect(
+			JSON.parse((fetchSpy.mock.calls[1][1]?.body as string) ?? "{}"),
+		).toEqual({
+			type: "equipment",
+			name: "Hex Bar",
+		});
+
+		const deleteLookup = renderHook(() => useDeleteLookup(), {
+			wrapper: createWrapper(queryClient),
+		});
+		fetchSpy.mockResolvedValueOnce(Response.json({ success: true }));
+		await expect(
+			deleteLookup.result.current.mutateAsync({
+				id: "lookup-1",
+				type: "equipment",
+			}),
+		).resolves.toEqual({ success: true });
+		expect(fetchSpy).toHaveBeenCalledWith(
+			"/api/admin/lookups/lookup-1?type=equipment",
+			{
+				method: "DELETE",
+			},
+		);
+
+		await waitFor(() => {
+			expect(
+				queryClient.getQueryState(queryKeys.admin.all)?.isInvalidated,
+			).toBe(true);
+			expect(
+				queryClient.getQueryState(queryKeys.lookups.all)?.isInvalidated,
+			).toBe(true);
+		});
+	});
+
+	it("uploads a file and returns the uploaded path", async () => {
+		const queryClient = createQueryClient();
+		const { result } = renderHook(() => useUploadFile(), {
+			wrapper: createWrapper(queryClient),
+		});
+		const file = new File(["image-bytes"], "photo.png", {
+			type: "image/png",
+		});
+		const response = { path: "/api/uploads/photo.png", filename: "photo.png" };
+		fetchSpy.mockResolvedValueOnce(Response.json(response));
+
+		await expect(result.current.mutateAsync(file)).resolves.toBe(
+			"/api/uploads/photo.png",
+		);
+
+		expect(fetchSpy).toHaveBeenCalledWith(
+			"/api/upload",
+			expect.objectContaining({
+				method: "POST",
+			}),
+		);
+		const body = fetchSpy.mock.calls[0][1]?.body;
+		expect(body).toBeInstanceOf(FormData);
+		expect((body as FormData).get("file")).toBe(file);
+	});
+
+	it("propagates upload errors from the server response", async () => {
+		const queryClient = createQueryClient();
+		const { result } = renderHook(() => useUploadFile(), {
+			wrapper: createWrapper(queryClient),
+		});
+		const file = new File(["broken"], "broken.png", { type: "image/png" });
+		fetchSpy.mockResolvedValueOnce(
+			Response.json({ error: "Upload quota exceeded" }, { status: 413 }),
+		);
+
+		await expect(result.current.mutateAsync(file)).rejects.toThrow(
+			"Upload quota exceeded",
+		);
 	});
 });
