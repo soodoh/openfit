@@ -37,7 +37,10 @@ export const Route = createFileRoute("/api/sets/reorder")({
 						if (!set) {
 							continue;
 						}
-						if (set.userId !== session.user.id) {
+						if (
+							set.userId !== session.user.id ||
+							set.setGroupId !== setGroupId
+						) {
 							return Response.json({ error: "Unauthorized" }, { status: 403 });
 						}
 						await db

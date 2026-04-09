@@ -314,10 +314,12 @@ describe("POST /api/sets/reorder", () => {
 			.mockResolvedValueOnce({
 				id: "set_1",
 				userId: "user_123",
+				setGroupId: "group_1",
 			})
 			.mockResolvedValueOnce({
 				id: "set_2",
 				userId: "user_999",
+				setGroupId: "group_1",
 			});
 
 		const response = await setHandlers.POST({
@@ -334,6 +336,34 @@ describe("POST /api/sets/reorder", () => {
 		expect(response.status).toBe(403);
 		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
 		expect(mocks.updateSet).toHaveBeenCalledTimes(1);
+	});
+
+	it("returns 403 when a reordered set belongs to a different set group", async () => {
+		mocks.findFirstWorkoutSetGroup.mockResolvedValue({
+			id: "group_1",
+			userId: "user_123",
+		});
+		mocks.findFirstWorkoutSet.mockResolvedValueOnce({
+			id: "set_1",
+			userId: "user_123",
+			setGroupId: "group_2",
+		});
+
+		const response = await setHandlers.POST({
+			request: new Request("http://localhost/api/sets/reorder", {
+				method: "POST",
+				body: JSON.stringify({
+					setGroupId: "group_1",
+					setIds: ["set_1"],
+				}),
+				headers: { "Content-Type": "application/json" },
+			}),
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.update).not.toHaveBeenCalled();
+		expect(mocks.updateSet).not.toHaveBeenCalled();
 	});
 
 	it("returns the auth response when authentication throws a Response", async () => {
