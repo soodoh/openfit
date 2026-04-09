@@ -174,6 +174,27 @@ describe("use-exercises queries", () => {
 		).toEqual(results);
 	});
 
+	it("keeps exercise search enabled even when the search term is empty", async () => {
+		const results = [exercise];
+		const fetchMock = mockJsonSuccess(results);
+		vi.stubGlobal("fetch", fetchMock);
+		const { wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useExerciseSearch("", undefined, 20), {
+			wrapper,
+		});
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(result.current.data).toEqual(results);
+		const request = getFetchRequest(fetchMock);
+		expect(request.url.pathname).toBe("/api/exercises/search");
+		expect(request.url.searchParams.get("q")).toBeNull();
+		expect(request.url.searchParams.get("limit")).toBe("20");
+	});
+
 	it("keeps previous search results visible while a new exercise search is loading", async () => {
 		const firstResults = [exercise];
 		const nextResults = createDeferred<Response>();

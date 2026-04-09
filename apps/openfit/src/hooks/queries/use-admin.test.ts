@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { queryKeys } from "@/lib/query-keys";
 import type {
 	AdminExerciseWithRelations,
+	AdminUserWithProfile,
 	LookupItem,
 	PaginatedResponse,
 } from "@/lib/types";
@@ -15,6 +16,7 @@ import {
 	useAdminLookupPaginated,
 	useAdminMuscleGroups,
 	useAdminRepetitionUnits,
+	useAdminUsersPaginated,
 	useAdminWeightUnits,
 } from "./use-admin";
 
@@ -103,6 +105,47 @@ describe("use-admin queries", () => {
 		expect(
 			queryClient.getQueryData(queryKeys.admin.exerciseList(params)),
 		).toEqual(response);
+	});
+
+	it("requests a paginated admin user list with search params", async () => {
+		const params = { page: 3, pageSize: 10, search: "coach" };
+		const response = {
+			items: [
+				{
+					id: "profile-1",
+					userId: "user-1",
+					email: "coach@example.com",
+					role: "ADMIN",
+				},
+			],
+			total: 1,
+			page: 3,
+			pageSize: 10,
+		} satisfies PaginatedResponse<AdminUserWithProfile>;
+		const fetchMock = mockJsonSuccess(response);
+		vi.stubGlobal("fetch", fetchMock);
+		const { queryClient, wrapper } = createTestQueryWrapper();
+
+		const { result } = renderHook(() => useAdminUsersPaginated(params), {
+			wrapper,
+		});
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+
+		expect(result.current.data).toEqual(response);
+		const request = getFetchRequest(fetchMock);
+		expect(request.url.pathname).toBe("/api/admin/users");
+		expect(request.url.searchParams.get("page")).toBe("3");
+		expect(request.url.searchParams.get("pageSize")).toBe("10");
+		expect(request.url.searchParams.get("search")).toBe("coach");
+		expect(request.init).toEqual(
+			expect.objectContaining({ signal: expect.any(AbortSignal) }),
+		);
+		expect(queryClient.getQueryData(queryKeys.admin.userList(params))).toEqual(
+			response,
+		);
 	});
 
 	it("keeps paginated exercise data cached under the current page key", async () => {
