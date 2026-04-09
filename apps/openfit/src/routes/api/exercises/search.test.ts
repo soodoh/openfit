@@ -140,6 +140,45 @@ describe("GET /api/exercises/search", () => {
 		]);
 	});
 
+	it("searches without filters when the query omits search text and equipment ids", async () => {
+		mocks.findManyExercises.mockResolvedValue([
+			{
+				id: "exercise_4",
+				name: "Air Squat",
+				equipmentId: null,
+				primaryMuscles: [],
+			},
+		]);
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/exercises/search"),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual([
+			{
+				id: "exercise_4",
+				name: "Air Squat",
+				equipmentId: null,
+				primaryMuscles: [],
+				imageUrl: "/images/exercise_4.jpg",
+				primaryMuscleIds: [],
+			},
+		]);
+		expect(mocks.like).not.toHaveBeenCalled();
+		expect(mocks.findManyExercises).toHaveBeenCalledWith({
+			where: undefined,
+			orderBy: {
+				type: "asc",
+				value: mocks.schema.exercises.name,
+			},
+			limit: 50,
+			with: {
+				primaryMuscles: true,
+			},
+		});
+	});
+
 	it("returns 500 when loading exercises throws an unexpected error", async () => {
 		mocks.findManyExercises.mockRejectedValueOnce(new Error("boom"));
 

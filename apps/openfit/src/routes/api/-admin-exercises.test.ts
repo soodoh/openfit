@@ -98,6 +98,8 @@ const handlers = AdminExercisesRoute.options.server?.handlers as {
 describe("GET /api/admin/exercises", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mocks.select.mockReset();
+		mocks.findManyExercises.mockReset();
 		mocks.requireAdmin.mockResolvedValue({ user: { id: "admin_123" } });
 	});
 
@@ -266,6 +268,102 @@ describe("GET /api/admin/exercises", () => {
 		expect(response.status).toBe(500);
 		await expect(response.json()).resolves.toEqual({
 			error: "Failed to fetch exercises",
+		});
+	});
+
+	it("uses default pagination and preserves null relations", async () => {
+		const totalQuery = createCountQuery([{ count: 1 }]);
+		const exercises = [
+			{
+				id: "exercise_2",
+				name: "Air Squat",
+				level: null,
+				force: null,
+				mechanic: null,
+				equipmentId: null,
+				categoryId: null,
+				primaryMuscles: [],
+				secondaryMuscles: [],
+				instructions: [],
+				images: [],
+				equipment: null,
+				category: null,
+			},
+		];
+		mocks.select.mockReturnValueOnce(totalQuery);
+		mocks.findManyExercises.mockResolvedValue(exercises);
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/admin/exercises"),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual({
+			items: [
+				{
+					id: "exercise_2",
+					name: "Air Squat",
+					level: null,
+					force: null,
+					mechanic: null,
+					equipmentId: null,
+					categoryId: null,
+					primaryMuscleIds: [],
+					secondaryMuscleIds: [],
+					instructions: [],
+					imageUrls: [],
+					equipment: null,
+					category: null,
+					primaryMuscles: [],
+					secondaryMuscles: [],
+				},
+			],
+			total: 1,
+			page: 1,
+			pageSize: 10,
+		});
+		expect(totalQuery.where).toHaveBeenCalledWith(undefined);
+		expect(mocks.like).not.toHaveBeenCalled();
+		expect(mocks.findManyExercises).toHaveBeenCalledWith({
+			with: {
+				equipment: true,
+				category: true,
+				primaryMuscles: {
+					with: {
+						muscleGroup: true,
+					},
+				},
+				secondaryMuscles: {
+					with: {
+						muscleGroup: true,
+					},
+				},
+				instructions: {
+					orderBy: [
+						{
+							type: "asc",
+							value: mocks.schema.exerciseInstructions.order,
+						},
+					],
+				},
+				images: {
+					orderBy: [
+						{
+							type: "asc",
+							value: mocks.schema.exerciseImages.order,
+						},
+					],
+				},
+			},
+			where: undefined,
+			orderBy: [
+				{
+					type: "asc",
+					value: mocks.schema.exercises.name,
+				},
+			],
+			limit: 10,
+			offset: 0,
 		});
 	});
 });

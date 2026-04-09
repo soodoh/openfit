@@ -163,6 +163,53 @@ describe("GET /api/exercises/similar", () => {
 		]);
 	});
 
+	it("matches by primary muscles without a search term or equipment filter", async () => {
+		mocks.findManyExercises.mockResolvedValue([
+			{
+				id: "exercise_5",
+				name: "Push Up",
+				equipmentId: null,
+				primaryMuscles: [{ muscleGroupId: "chest" }],
+			},
+			{
+				id: "exercise_6",
+				name: "Biceps Curl",
+				equipmentId: "dumbbell",
+				primaryMuscles: [{ muscleGroupId: "biceps" }],
+			},
+		]);
+
+		const response = await handlers.GET({
+			request: new Request(
+				"http://localhost/api/exercises/similar?primaryMuscleIds=chest",
+			),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toEqual([
+			{
+				id: "exercise_5",
+				name: "Push Up",
+				equipmentId: null,
+				primaryMuscles: [{ muscleGroupId: "chest" }],
+				imageUrl: "/images/exercise_5.jpg",
+				primaryMuscleIds: ["chest"],
+			},
+		]);
+		expect(mocks.like).not.toHaveBeenCalled();
+		expect(mocks.findManyExercises).toHaveBeenCalledWith({
+			where: undefined,
+			orderBy: {
+				type: "asc",
+				value: mocks.schema.exercises.name,
+			},
+			limit: 100,
+			with: {
+				primaryMuscles: true,
+			},
+		});
+	});
+
 	it("returns 500 when loading similar exercises throws an unexpected error", async () => {
 		mocks.findManyExercises.mockRejectedValueOnce(new Error("boom"));
 

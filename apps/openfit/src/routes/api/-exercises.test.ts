@@ -242,6 +242,92 @@ describe("GET /api/exercises", () => {
 			},
 		});
 	});
+
+	it("includes equipment, level, and category filters in the list query", async () => {
+		mocks.findManyExercises.mockResolvedValue([
+			{
+				id: "exercise_11",
+				name: "Cable Fly",
+				equipmentId: "cable",
+				primaryMuscles: [],
+			},
+		]);
+		mocks.withFirstExerciseImageUrls.mockResolvedValue([
+			{
+				id: "exercise_11",
+				name: "Cable Fly",
+				equipmentId: "cable",
+				primaryMuscles: [],
+				imageUrl: null,
+			},
+		]);
+
+		const response = await listHandlers.GET({
+			request: new Request(
+				"http://localhost/api/exercises?equipmentId=cable&level=beginner&categoryId=chest",
+			),
+		});
+
+		expect(response.status).toBe(200);
+		expect(mocks.findManyExercises).toHaveBeenCalledWith({
+			where: expect.objectContaining({
+				type: "and",
+				conditions: expect.arrayContaining([
+					{
+						type: "eq",
+						left: mocks.schema.exercises.equipmentId,
+						right: "cable",
+					},
+					{
+						type: "eq",
+						left: mocks.schema.exercises.level,
+						right: "beginner",
+					},
+					{
+						type: "eq",
+						left: mocks.schema.exercises.categoryId,
+						right: "chest",
+					},
+				]),
+			}),
+			orderBy: {
+				type: "asc",
+				value: mocks.schema.exercises.name,
+			},
+			limit: 21,
+			offset: 0,
+			with: {
+				equipment: true,
+				category: true,
+				primaryMuscles: {
+					with: {
+						muscleGroup: true,
+					},
+				},
+			},
+		});
+	});
+
+	it("returns 500 when post-query exercise hydration fails", async () => {
+		mocks.findManyExercises.mockResolvedValue([
+			{
+				id: "exercise_12",
+				name: "Bench Press",
+				equipmentId: "barbell",
+				primaryMuscles: [],
+			},
+		]);
+		mocks.withFirstExerciseImageUrls.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await listHandlers.GET({
+			request: new Request("http://localhost/api/exercises"),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to fetch exercises",
+		});
+	});
 });
 
 describe("GET /api/exercises/:id", () => {

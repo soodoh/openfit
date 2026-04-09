@@ -93,6 +93,20 @@ describe("GET /api/admin/users", () => {
 		expect(mocks.select).not.toHaveBeenCalled();
 	});
 
+	it("returns 500 when admin access throws unexpectedly", async () => {
+		mocks.requireAdmin.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await handlers.GET({
+			request: new Request("http://localhost/api/admin/users"),
+		});
+
+		expect(response.status).toBe(500);
+		await expect(response.json()).resolves.toEqual({
+			error: "Failed to fetch users",
+		});
+		expect(mocks.select).not.toHaveBeenCalled();
+	});
+
 	it("returns a paginated user list", async () => {
 		const totalQuery = createTotalQuery([{ count: 9 }]);
 		const itemsQuery = createItemsQuery([

@@ -106,6 +106,18 @@ describe("GET /api/dashboard/recent-sessions", () => {
 		expect(mocks.findManyWorkoutSessions).not.toHaveBeenCalled();
 	});
 
+	it("falls back to a generic 401 when authentication throws unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await recentHandlers.GET({
+			request: new Request("http://localhost/api/dashboard/recent-sessions"),
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.findManyWorkoutSessions).not.toHaveBeenCalled();
+	});
+
 	it("returns the recent session response shape with compatibility ids", async () => {
 		const startTime = new Date("2025-01-01T00:00:00.000Z");
 		const endTime = new Date("2025-01-01T01:00:00.000Z");

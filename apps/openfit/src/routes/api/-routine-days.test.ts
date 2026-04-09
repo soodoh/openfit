@@ -586,6 +586,20 @@ describe("GET /api/routine-days/:id", () => {
 			error: "Failed to fetch routine day",
 		});
 	});
+
+	it("returns a response thrown while loading a routine day", async () => {
+		mocks.requireOwnedRoutineDay.mockRejectedValueOnce(
+			Response.json({ error: "Conflict" }, { status: 409 }),
+		);
+
+		const response = await detailHandlers.GET({
+			request: new Request("http://localhost/api/routine-days/routine_day_123"),
+			params: { id: "routine_day_123" },
+		});
+
+		expect(response.status).toBe(409);
+		await expect(response.json()).resolves.toEqual({ error: "Conflict" });
+	});
 });
 
 describe("PATCH /api/routine-days/:id", () => {
@@ -649,6 +663,48 @@ describe("PATCH /api/routine-days/:id", () => {
 			}),
 		);
 		expect(mocks.update).not.toHaveBeenCalled();
+	});
+
+	it("returns the auth response when patch authentication throws a Response", async () => {
+		mocks.requireAuth.mockRejectedValueOnce(
+			Response.json({ error: "Forbidden" }, { status: 403 }),
+		);
+
+		const response = await detailHandlers.PATCH({
+			request: new Request(
+				"http://localhost/api/routine-days/routine_day_123",
+				{
+					method: "PATCH",
+					body: JSON.stringify({ description: "Updated" }),
+					headers: { "Content-Type": "application/json" },
+				},
+			),
+			params: { id: "routine_day_123" },
+		});
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+		expect(mocks.requireOwnedRoutineDay).not.toHaveBeenCalled();
+	});
+
+	it("falls back to a generic 401 when patch authentication throws unexpectedly", async () => {
+		mocks.requireAuth.mockRejectedValueOnce(new Error("boom"));
+
+		const response = await detailHandlers.PATCH({
+			request: new Request(
+				"http://localhost/api/routine-days/routine_day_123",
+				{
+					method: "PATCH",
+					body: JSON.stringify({ description: "Updated" }),
+					headers: { "Content-Type": "application/json" },
+				},
+			),
+			params: { id: "routine_day_123" },
+		});
+
+		expect(response.status).toBe(401);
+		await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+		expect(mocks.requireOwnedRoutineDay).not.toHaveBeenCalled();
 	});
 
 	it("returns 403 when updating another user's routine day", async () => {
