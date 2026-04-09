@@ -1,10 +1,23 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ReactNode } from "react";
+import {
+	cloneElement,
+	createContext,
+	isValidElement,
+	type ReactNode,
+	useContext,
+} from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WorkoutSessionWithData } from "@/lib/types";
 import { EditNotesPopover } from "./edit-notes-popover";
 
 const mockUpdateSession = vi.fn();
+
+type PopoverContextValue = {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+};
+
+const PopoverContext = createContext<PopoverContextValue | null>(null);
 
 vi.mock("@/hooks", () => ({
 	useUpdateSession: () => ({
@@ -13,11 +26,33 @@ vi.mock("@/hooks", () => ({
 }));
 
 vi.mock("@/components/ui/popover", () => ({
-	Popover: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-	PopoverTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,
-	PopoverContent: ({ children }: { children: ReactNode }) => (
-		<div>{children}</div>
+	Popover: ({
+		children,
+		open,
+		onOpenChange,
+	}: {
+		children: ReactNode;
+		open: boolean;
+		onOpenChange: (open: boolean) => void;
+	}) => (
+		<PopoverContext.Provider value={{ open, onOpenChange }}>
+			{children}
+		</PopoverContext.Provider>
 	),
+	PopoverTrigger: ({ children }: { children: ReactNode }) => {
+		const context = useContext(PopoverContext);
+		if (!context || !isValidElement(children)) {
+			return <>{children}</>;
+		}
+
+		return cloneElement(children, {
+			onClick: () => context.onOpenChange(true),
+		});
+	},
+	PopoverContent: ({ children }: { children: ReactNode }) => {
+		const context = useContext(PopoverContext);
+		return context?.open ? <div>{children}</div> : null;
+	},
 }));
 
 vi.mock("@/components/ui/button", () => ({
@@ -59,9 +94,8 @@ describe("EditNotesPopover", () => {
 	it("saves edited notes from the textarea", async () => {
 		render(<EditNotesPopover session={baseSession} />);
 
-		expect(screen.getByRole("button", { name: /notes/i })).toHaveTextContent(
-			"Original note",
-		);
+		fireEvent.click(screen.getByRole("button", { name: /notes/i }));
+		expect(screen.getByLabelText("Notes")).toHaveValue("Original note");
 
 		fireEvent.change(screen.getByLabelText("Notes"), {
 			target: { value: "Updated note" },
@@ -79,6 +113,25 @@ describe("EditNotesPopover", () => {
 	it("shows the empty state when the session has no notes", () => {
 		render(<EditNotesPopover session={{ ...baseSession, notes: null }} />);
 
-		expect(screen.getByText("—")).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: /notes/i })).toHaveTextContent(
+			"—",
+		);
+	});
+
+	it("resets the textarea when the popover is reopened", () => {
+		const { rerender } = render(<EditNotesPopover session={baseSession} />);
+
+		fireEvent.click(screen.getByRole("button", { name: /notes/i }));
+		fireEvent.change(screen.getByLabelText("Notes"), {
+			target: { value: "Temporary note" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+		rerender(
+			<EditNotesPopover session={{ ...baseSession, notes: "Fresh note" }} />,
+		);
+		fireEvent.click(screen.getByRole("button", { name: /notes/i }));
+
+		expect(screen.getByLabelText("Notes")).toHaveValue("Fresh note");
 	});
 });

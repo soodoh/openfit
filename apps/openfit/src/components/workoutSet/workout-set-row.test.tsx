@@ -205,4 +205,26 @@ describe("WorkoutSetRow", () => {
 		});
 		expect(startRestTimer).toHaveBeenCalledWith(75);
 	});
+
+	it("disables completed rows in current session view", () => {
+		render(
+			<WorkoutSetRow
+				view={ListView.CurrentSession}
+				set={buildSet({
+					completed: true,
+					repetitionUnit: { id: "seconds", name: "Seconds" },
+					repetitionUnitId: "seconds",
+				})}
+				setNum={1}
+				units={mockUnits}
+				startRestTimer={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByDisplayValue("8")).toBeDisabled();
+		expect(screen.getByDisplayValue("135")).toBeDisabled();
+		expect(
+			screen.getByRole("checkbox", { name: "Mark as Completed" }),
+		).toBeChecked();
+	});
 });

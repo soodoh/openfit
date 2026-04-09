@@ -186,6 +186,19 @@ describe("SessionDetailModal", () => {
 		expect(screen.getByText("Loading session...")).toBeInTheDocument();
 	});
 
+	it("shows the loading state when no session id is available", () => {
+		render(
+			<SessionDetailModal
+				sessionId={undefined}
+				units={mockUnits}
+				open
+				onClose={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByText("Loading session...")).toBeInTheDocument();
+	});
+
 	it("renders the active session details and confirms delete through the nested modal", () => {
 		const onClose = vi.fn();
 		mockUseSession.mockReturnValue({ data: session });
@@ -238,5 +251,27 @@ describe("SessionDetailModal", () => {
 		expect(screen.getByTestId("workout-list")).toHaveTextContent(
 			"ViewSession:session-1:2",
 		);
+	});
+
+	it("formats sessions without an end time as having no duration", () => {
+		mockUseSession.mockReturnValue({
+			data: {
+				...session,
+				endTime: null,
+			},
+		});
+
+		render(
+			<SessionDetailModal
+				sessionId="session-1"
+				units={mockUnits}
+				open
+				onClose={vi.fn()}
+			/>,
+		);
+
+		expect(
+			screen.getByRole("heading", { name: "Leg Day" }),
+		).toBeInTheDocument();
 	});
 });

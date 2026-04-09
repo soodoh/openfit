@@ -24,8 +24,20 @@ vi.mock("@/hooks", () => ({
 }));
 
 vi.mock("./edit-session-modal", () => ({
-	EditSessionModal: ({ open }: { open: boolean }) =>
-		open ? <div data-testid="edit-session-modal" /> : null,
+	EditSessionModal: ({
+		open,
+		onClose,
+	}: {
+		open: boolean;
+		onClose: () => void;
+	}) =>
+		open ? (
+			<div data-testid="edit-session-modal">
+				<button type="button" onClick={onClose}>
+					Close create session modal
+				</button>
+			</div>
+		) : null,
 }));
 
 vi.mock("@/components/ui/dialog", () => ({
@@ -110,6 +122,17 @@ describe("session controls", () => {
 
 		fireEvent.click(screen.getByRole("button", { name: "New Session" }));
 		expect(screen.getByTestId("edit-session-modal")).toBeInTheDocument();
+	});
+
+	it("closes the create session modal when the nested modal closes", () => {
+		render(<CreateSessionButton />);
+
+		fireEvent.click(screen.getByRole("button", { name: "New Session" }));
+		fireEvent.click(
+			screen.getByRole("button", { name: "Close create session modal" }),
+		);
+
+		expect(screen.queryByTestId("edit-session-modal")).not.toBeInTheDocument();
 	});
 
 	it("deletes a session after confirmation", async () => {

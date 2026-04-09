@@ -8,7 +8,7 @@ import {
 } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WorkoutSessionWithData } from "@/lib/types";
-import { EditRatingPopover } from "./edit-rating-popover";
+import { EditNamePopover } from "./edit-name-popover";
 
 const mockUpdateSession = vi.fn();
 
@@ -65,11 +65,34 @@ vi.mock("@/components/ui/button", () => ({
 	}) => <button {...props}>{children}</button>,
 }));
 
-vi.mock("@/components/ui/label", () => ({
-	Label: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+vi.mock("@/components/ui/input", () => ({
+	Input: ({
+		value,
+		onChange,
+		id,
+		placeholder,
+	}: {
+		value: string;
+		onChange: (event: { target: { value: string } }) => void;
+		id?: string;
+		placeholder?: string;
+	}) => (
+		<input
+			id={id}
+			value={value}
+			placeholder={placeholder}
+			onChange={(event) => onChange({ target: { value: event.target.value } })}
+		/>
+	),
 }));
 
-const baseSession = {
+vi.mock("@/components/ui/label", () => ({
+	Label: ({ children, htmlFor }: { children: ReactNode; htmlFor?: string }) => (
+		<label htmlFor={htmlFor}>{children}</label>
+	),
+}));
+
+const session = {
 	id: "session-1",
 	userId: "user-1",
 	name: "Upper Body",
@@ -83,59 +106,36 @@ const baseSession = {
 	setGroups: [],
 } satisfies WorkoutSessionWithData;
 
-describe("EditRatingPopover", () => {
+describe("EditNamePopover", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockUpdateSession.mockResolvedValue({});
 	});
 
-	it("saves a selected rating", async () => {
-		render(<EditRatingPopover session={baseSession} />);
+	it("reopens with the latest session name after closing the popover", async () => {
+		const { rerender } = render(<EditNamePopover session={session} />);
 
 		fireEvent.click(screen.getByRole("button"));
-		fireEvent.click(screen.getByRole("button", { name: "Set rating 4" }));
-		fireEvent.click(screen.getByRole("button", { name: "Save" }));
+		expect(screen.getByLabelText("Session Name")).toHaveValue("Upper Body");
 
-		await waitFor(() => {
-			expect(mockUpdateSession).toHaveBeenCalledWith({
-				id: "session-1",
-				impression: 4,
-			});
+		fireEvent.change(screen.getByLabelText("Session Name"), {
+			target: { value: "Updated Name" },
 		});
-	});
-
-	it("can clear an existing rating before saving", async () => {
-		render(<EditRatingPopover session={{ ...baseSession, impression: 5 }} />);
-
-		fireEvent.click(screen.getByRole("button"));
-		fireEvent.click(screen.getByRole("button", { name: "Clear rating" }));
-		fireEvent.click(screen.getByRole("button", { name: "Save" }));
-
-		await waitFor(() => {
-			expect(mockUpdateSession).toHaveBeenCalledWith({
-				id: "session-1",
-				impression: undefined,
-			});
-		});
-	});
-
-	it("reopens with the latest rating and clears hover state", () => {
-		const { rerender } = render(
-			<EditRatingPopover session={{ ...baseSession, impression: 2 }} />,
-		);
-
-		fireEvent.click(screen.getByRole("button"));
-		fireEvent.click(screen.getByRole("button", { name: "Set rating 5" }));
 		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		expect(screen.queryByLabelText("Session Name")).not.toBeInTheDocument();
 
-		rerender(<EditRatingPopover session={{ ...baseSession, impression: 4 }} />);
+		rerender(<EditNamePopover session={{ ...session, name: "Push Day" }} />);
 		fireEvent.click(screen.getByRole("button"));
 
-		expect(
-			screen.getByRole("button", { name: "Clear rating" }),
-		).toBeInTheDocument();
-		expect(
-			screen.getByRole("button", { name: "Set rating 4" }),
-		).toBeInTheDocument();
+		expect(screen.getByLabelText("Session Name")).toHaveValue("Push Day");
+
+		fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(mockUpdateSession).toHaveBeenCalledWith({
+				id: "session-1",
+				name: "Push Day",
+			});
+		});
 	});
 });

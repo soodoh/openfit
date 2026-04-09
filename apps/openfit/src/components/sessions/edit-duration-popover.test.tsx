@@ -1,10 +1,23 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ReactNode } from "react";
+import {
+	cloneElement,
+	createContext,
+	isValidElement,
+	type ReactNode,
+	useContext,
+} from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WorkoutSessionWithData } from "@/lib/types";
 import { EditDurationPopover } from "./edit-duration-popover";
 
 const mockUpdateSession = vi.fn();
+
+type PopoverContextValue = {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+};
+
+const PopoverContext = createContext<PopoverContextValue | null>(null);
 
 vi.mock("@/hooks", () => ({
 	useUpdateSession: () => ({
@@ -13,11 +26,33 @@ vi.mock("@/hooks", () => ({
 }));
 
 vi.mock("@/components/ui/popover", () => ({
-	Popover: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-	PopoverTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,
-	PopoverContent: ({ children }: { children: ReactNode }) => (
-		<div>{children}</div>
+	Popover: ({
+		children,
+		open,
+		onOpenChange,
+	}: {
+		children: ReactNode;
+		open: boolean;
+		onOpenChange: (open: boolean) => void;
+	}) => (
+		<PopoverContext.Provider value={{ open, onOpenChange }}>
+			{children}
+		</PopoverContext.Provider>
 	),
+	PopoverTrigger: ({ children }: { children: ReactNode }) => {
+		const context = useContext(PopoverContext);
+		if (!context || !isValidElement(children)) {
+			return <>{children}</>;
+		}
+
+		return cloneElement(children, {
+			onClick: () => context.onOpenChange(true),
+		});
+	},
+	PopoverContent: ({ children }: { children: ReactNode }) => {
+		const context = useContext(PopoverContext);
+		return context?.open ? <div>{children}</div> : null;
+	},
 }));
 
 vi.mock("@/components/ui/button", () => ({
@@ -103,6 +138,7 @@ describe("EditDurationPopover", () => {
 	it("rejects invalid dates before saving", async () => {
 		render(<EditDurationPopover session={session} formattedDuration="1h 0m" />);
 
+		fireEvent.click(screen.getByRole("button"));
 		fireEvent.click(
 			screen.getByRole("button", { name: "Set invalid Start Time" }),
 		);
@@ -120,6 +156,7 @@ describe("EditDurationPopover", () => {
 	it("rejects reversed start and end times before saving", async () => {
 		render(<EditDurationPopover session={session} formattedDuration="1h 0m" />);
 
+		fireEvent.click(screen.getByRole("button"));
 		fireEvent.click(
 			screen.getByRole("button", { name: "Set reversed Start Time" }),
 		);
@@ -137,6 +174,7 @@ describe("EditDurationPopover", () => {
 	it("submits the updated duration when the time range is valid", async () => {
 		render(<EditDurationPopover session={session} formattedDuration="1h 0m" />);
 
+		fireEvent.click(screen.getByRole("button"));
 		fireEvent.click(
 			screen.getByRole("button", { name: "Set valid Start Time" }),
 		);
@@ -150,5 +188,19 @@ describe("EditDurationPopover", () => {
 				endTime: new Date("2026-04-08T09:15:00.000Z").getTime(),
 			});
 		});
+	});
+
+	it("shows an error when saving fails", async () => {
+		mockUpdateSession.mockRejectedValueOnce(new Error("save failed"));
+		render(
+			<EditDurationPopover session={session} formattedDuration={undefined} />,
+		);
+
+		fireEvent.click(screen.getByRole("button"));
+		fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+		expect(
+			await screen.findByText("Failed to save. Please try again."),
+		).toBeInTheDocument();
 	});
 });

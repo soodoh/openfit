@@ -109,6 +109,31 @@ describe("EditSessionModal", () => {
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
+	it("submits create flow without a template and uses the default start date", async () => {
+		const onClose = vi.fn();
+		const defaultStartDate = new Date("2026-03-10T09:00:00.000Z");
+
+		render(
+			<EditSessionModal
+				open
+				onClose={onClose}
+				defaultStartDate={defaultStartDate}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Create Session" }));
+
+		await waitFor(() => {
+			expect(mockCreateSession).toHaveBeenCalledWith(
+				expect.objectContaining({
+					templateId: undefined,
+					startTime: defaultStartDate.getTime(),
+				}),
+			);
+		});
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
 	it("shows a validation error when end time is not after start time", async () => {
 		render(<EditSessionModal open onClose={vi.fn()} />);
 

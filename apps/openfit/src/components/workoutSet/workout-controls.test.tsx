@@ -320,6 +320,23 @@ describe("workout controls", () => {
 		vi.useRealTimers();
 	});
 
+	it("pauses the workout timer when it is already running", () => {
+		const onComplete = vi.fn().mockResolvedValue(undefined);
+
+		mockCountdown.isRunning = true;
+		mockCountdown.totalSeconds = 45;
+
+		render(<WorkoutTimer set={set} onComplete={onComplete} />);
+		fireEvent.click(
+			screen.getByRole("button", { name: "Toggle workout timer" }),
+		);
+		fireEvent.click(
+			screen.getByRole("button", { name: "Pause workout timer" }),
+		);
+
+		expect(mockCountdown.pause).toHaveBeenCalledTimes(1);
+	});
+
 	it("falls back to the set number for an unknown set type and updates the type selection", async () => {
 		render(
 			<SetTypeMenu

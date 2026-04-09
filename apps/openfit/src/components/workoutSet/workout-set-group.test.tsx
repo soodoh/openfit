@@ -287,4 +287,30 @@ describe("WorkoutSetGroup", () => {
 			});
 		});
 	});
+
+	it("hides exercise actions while reorder mode is active", () => {
+		const setGroup = buildSetGroup({
+			exercise: { id: "exercise-1", name: "Barbell Row", imageUrl: null },
+			completed: false,
+		});
+
+		render(
+			<WorkoutSetGroup
+				view={ListView.CurrentSession}
+				setGroup={setGroup}
+				isReorderActive
+				units={mockUnits}
+				startRestTimer={vi.fn()}
+			/>,
+		);
+
+		expect(
+			screen.queryByRole("button", {
+				name: "Replace with similar exercise",
+			}),
+		).not.toBeInTheDocument();
+		expect(
+			screen.queryByRole("button", { name: "View exercise details" }),
+		).not.toBeInTheDocument();
+	});
 });

@@ -15,8 +15,22 @@ vi.mock("@/hooks", () => ({
 vi.mock("@/components/ui/popover", () => ({
 	Popover: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 	PopoverTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,
-	PopoverContent: ({ children }: { children: ReactNode }) => (
-		<div>{children}</div>
+	PopoverContent: ({
+		children,
+		onWheel,
+		onTouchMove,
+	}: {
+		children: ReactNode;
+		onWheel?: (event: { stopPropagation: () => void }) => void;
+		onTouchMove?: (event: { stopPropagation: () => void }) => void;
+	}) => (
+		<div
+			data-testid="popover-content"
+			onWheel={() => onWheel?.({ stopPropagation: vi.fn() })}
+			onTouchMove={() => onTouchMove?.({ stopPropagation: vi.fn() })}
+		>
+			{children}
+		</div>
 	),
 }));
 
@@ -151,5 +165,32 @@ describe("SelectTemplate", () => {
 		);
 
 		expect(screen.getByText("No workouts found.")).toBeInTheDocument();
+	});
+
+	it("disables the picker when requested", () => {
+		render(
+			<SelectTemplate
+				value={undefined}
+				onChange={vi.fn()}
+				disabled
+				label="Start from a Routine"
+			/>,
+		);
+
+		expect(screen.getByRole("combobox")).toBeDisabled();
+	});
+
+	it("stops wheel and touchmove propagation on the popover content", () => {
+		render(
+			<SelectTemplate
+				value={undefined}
+				onChange={vi.fn()}
+				disabled={false}
+				label="Start from a Routine"
+			/>,
+		);
+
+		fireEvent.wheel(screen.getByTestId("popover-content"));
+		fireEvent.touchMove(screen.getByTestId("popover-content"));
 	});
 });
