@@ -1,8 +1,12 @@
 import { userEvent } from "@vitest/browser/context";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import type { RoutineWithDays, WorkoutSessionWithData } from "@/lib/types";
 import { RoutineOverviewTab } from "./routine-overview-tab";
+
+dayjs.extend(relativeTime);
 
 const mockNavigate = vi.fn();
 const mockCreateSession = vi.fn();
@@ -201,7 +205,7 @@ describe("RoutineOverviewTab", () => {
 		);
 
 		await userEvent.click(
-			screen.getByText("Pull Day").closest("button") as HTMLButtonElement,
+			screen.getByRole("button", { name: "Pull Day Mon Wed" }),
 		);
 		expect(onSelectDay).toHaveBeenCalledWith("day-1");
 

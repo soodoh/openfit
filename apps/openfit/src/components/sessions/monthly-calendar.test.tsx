@@ -148,16 +148,11 @@ describe("MonthlyCalendar", () => {
 
 		await expect.element(screen.getByText("Push A")).toBeInTheDocument();
 		await expect.element(screen.getByText("2h 30m")).toBeInTheDocument();
-		await expect
-			.element(
-				page.elementLocator(
-					screen
-						.getByText("Active Session")
-						.element()
-						.closest("button") as Element,
-				),
-			)
-			.toHaveClass("bg-primary");
+		const activeSessionButton = screen
+			.getByText("Active Session")
+			.element()
+			.closest("button") as HTMLElement;
+		expect(activeSessionButton).toHaveClass("bg-primary");
 
 		await userEvent.click(screen.getByRole("button", { name: "+2 more" }));
 

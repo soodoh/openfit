@@ -591,11 +591,13 @@ describe("admin tables", () => {
 		await expect
 			.element(screen.getByText("Discord").first())
 			.toBeInTheDocument();
-		expect(
-			[...document.querySelectorAll("span")].filter(
-				(el) => el.textContent?.trim() === "Configured",
-			).length,
-		).toBe(2);
+		await vi.waitFor(() => {
+			expect(
+				[...document.querySelectorAll("span")].filter(
+					(el) => el.textContent?.trim() === "Configured",
+				).length,
+			).toBe(2);
+		});
 		expect(
 			[...document.querySelectorAll("span")].filter(
 				(el) => el.textContent?.trim() === "Not configured",
@@ -605,11 +607,7 @@ describe("admin tables", () => {
 
 	it("uses a custom OIDC provider label when the environment provides one", async () => {
 		vi.stubEnv("VITE_AUTH_OIDC_PROVIDER_NAME", "Acme SSO");
-		vi.resetModules();
 
-		const { AuthProvidersTable: FreshAuthProvidersTable } = await import(
-			"./auth-providers-table"
-		);
 		const fetchMock = vi.fn().mockResolvedValue(
 			Response.json({
 				google: false,
@@ -620,7 +618,7 @@ describe("admin tables", () => {
 		);
 		vi.stubGlobal("fetch", fetchMock);
 
-		const screen = await render(<FreshAuthProvidersTable />);
+		const screen = await render(<AuthProvidersTable />);
 
 		await vi.waitFor(() => {
 			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
@@ -633,10 +631,11 @@ describe("admin tables", () => {
 				),
 			)
 			.toBeInTheDocument();
-		await expect.element(screen.getByText("Configured")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Configured").first())
+			.toBeInTheDocument();
 
 		vi.unstubAllEnvs();
-		vi.resetModules();
 	});
 
 	it("keeps auth providers visible when the status request fails", async () => {

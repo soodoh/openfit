@@ -27,8 +27,10 @@ describe("AppWrapper", () => {
 		await expect
 			.element(screen.getByTestId("app-child"))
 			.toHaveTextContent("app content");
-		await expect
-			.element(screen.getByTestId("app-child").element().closest(".min-h-dvh"))
-			.toBeInTheDocument();
+		const wrapper = screen
+			.getByTestId("app-child")
+			.element()
+			.closest(".min-h-dvh");
+		expect(wrapper).not.toBeNull();
 	});
 });

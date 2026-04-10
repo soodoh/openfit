@@ -105,13 +105,7 @@ describe("LoginForm redirects", () => {
 
 		await screen.getByLabelText("Email").fill("invalid");
 		await screen.getByLabelText("Password").fill("abc");
-		await userEvent.click(
-			(screen
-				.getByRole("button", { name: "Login" })
-				.closest("form")
-				?.querySelector('[type="submit"]') as HTMLElement) ??
-				screen.getByRole("button", { name: "Login" }),
-		);
+		await userEvent.click(screen.getByRole("button", { name: "Login" }));
 
 		await vi.waitFor(() => {
 			expect(mockSignInEmail).not.toHaveBeenCalled();
@@ -197,11 +191,8 @@ describe("LoginForm redirects", () => {
 
 	it("starts social OAuth sign-in when Google is enabled", async () => {
 		vi.stubEnv("VITE_AUTH_GOOGLE_ENABLED", "true");
-		vi.resetModules();
 
-		const { LoginForm: OAuthLoginForm } = await import("./login-form");
-
-		const screen = await render(<OAuthLoginForm />);
+		const screen = await render(<LoginForm />);
 
 		await userEvent.click(
 			screen.getByRole("button", { name: "Continue with Google" }),
@@ -211,32 +202,30 @@ describe("LoginForm redirects", () => {
 			provider: "google",
 			callbackURL: "/",
 		});
+
+		vi.unstubAllEnvs();
 	});
 
 	it("shows a social OAuth error when the provider flow throws", async () => {
 		vi.stubEnv("VITE_AUTH_GOOGLE_ENABLED", "true");
 		mockSignInSocial.mockRejectedValueOnce(new Error("oauth failed"));
-		vi.resetModules();
 
-		const { LoginForm: OAuthLoginForm } = await import("./login-form");
-
-		const screen = await render(<OAuthLoginForm />);
+		const screen = await render(<LoginForm />);
 
 		await userEvent.click(
 			screen.getByRole("button", { name: "Continue with Google" }),
 		);
 
 		await expect.element(screen.getByText("oauth failed")).toBeInTheDocument();
+
+		vi.unstubAllEnvs();
 	});
 
 	it("starts OIDC OAuth sign-in when the provider is enabled", async () => {
 		vi.stubEnv("VITE_AUTH_OIDC_ENABLED", "true");
 		vi.stubEnv("VITE_AUTH_OIDC_PROVIDER_NAME", "Acme SSO");
-		vi.resetModules();
 
-		const { LoginForm: OAuthLoginForm } = await import("./login-form");
-
-		const screen = await render(<OAuthLoginForm />);
+		const screen = await render(<LoginForm />);
 
 		await userEvent.click(
 			screen.getByRole("button", { name: "Continue with Acme SSO" }),
@@ -246,5 +235,7 @@ describe("LoginForm redirects", () => {
 			providerId: "oidc",
 			callbackURL: "/",
 		});
+
+		vi.unstubAllEnvs();
 	});
 });

@@ -378,7 +378,7 @@ describe("shared ui wrappers", () => {
 			/>,
 		);
 
-		await expect.element(screen.getByText("...")).toHaveCount(2);
+		expect(screen.getByText("...").elements()).toHaveLength(2);
 		await expect
 			.element(screen.getByRole("button", { name: "1" }))
 			.toBeInTheDocument();

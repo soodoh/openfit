@@ -224,11 +224,11 @@ describe("exercises route", () => {
 		});
 
 		await expect
-			.element(screen.getAllByRole("button", { name: "Clear filters" }).nth(0))
+			.element(screen.getByRole("button", { name: "Clear filters" }).nth(0))
 			.toBeInTheDocument();
 
 		await userEvent.click(
-			screen.getAllByRole("button", { name: "Clear filters" }).nth(0),
+			screen.getByRole("button", { name: "Clear filters" }).nth(0),
 		);
 
 		await vi.waitFor(() => {
