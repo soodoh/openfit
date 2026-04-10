@@ -286,7 +286,7 @@ describe("WorkoutSetGroup", () => {
 			.element(screen.getByRole("button", { name: "Add Set" }))
 			.toBeInTheDocument();
 
-		screen.rerender(
+		await screen.rerender(
 			<WorkoutSetGroup
 				view={ListView.CurrentSession}
 				setGroup={buildSetGroup({

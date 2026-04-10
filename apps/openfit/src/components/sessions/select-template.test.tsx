@@ -166,7 +166,7 @@ describe("SelectTemplate", () => {
 			data: [],
 			isLoading: false,
 		});
-		render(
+		await render(
 			<SelectTemplate
 				value={undefined}
 				onChange={vi.fn()}

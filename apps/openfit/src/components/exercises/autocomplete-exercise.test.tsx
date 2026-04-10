@@ -187,10 +187,10 @@ describe("AutocompleteExercise", () => {
 		const screen = await render(<ExerciseHarness />);
 
 		await expect
-			.element(screen.getAllByRole("button", { name: "Home Gym" })[0])
+			.element(screen.getByRole("button", { name: "Home Gym" }).nth(0))
 			.toBeInTheDocument();
 
-		const input = screen.getByPlaceholderText("Search exercises...");
+		const input = screen.getByPlaceholder("Search exercises...");
 		await userEvent.click(input);
 		await input.fill("b");
 
@@ -201,8 +201,8 @@ describe("AutocompleteExercise", () => {
 		await userEvent.keyboard("{Enter}");
 
 		await expect
-			.element(screen.getByDisplayValue("Bench Press"))
-			.toBeInTheDocument();
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("Bench Press");
 	});
 
 	it("keeps the selected exercise when Escape is pressed", async () => {
@@ -217,12 +217,12 @@ describe("AutocompleteExercise", () => {
 			/>,
 		);
 
-		const _input = screen.getByDisplayValue("Bench Press");
+		const _input = screen.getByPlaceholder("Search exercises...");
 		await userEvent.keyboard("{Escape}");
 
 		await expect
-			.element(screen.getByDisplayValue("Bench Press"))
-			.toBeInTheDocument();
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("Bench Press");
 	});
 
 	it("clears the selected exercise when Delete is pressed", async () => {
@@ -237,10 +237,12 @@ describe("AutocompleteExercise", () => {
 			/>,
 		);
 
-		await userEvent.click(screen.getByDisplayValue("Bench Press"));
+		await userEvent.click(screen.getByPlaceholder("Search exercises..."));
 		await userEvent.keyboard("{Delete}");
 
-		await expect.element(screen.getByDisplayValue("")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("");
 	});
 
 	it("falls back to All when no default gym is configured", async () => {
@@ -259,7 +261,7 @@ describe("AutocompleteExercise", () => {
 	it("opens when typing from a closed state and keeps the list from hijacking scroll", async () => {
 		const screen = await render(<ExerciseHarness />);
 
-		const input = screen.getByPlaceholderText("Search exercises...");
+		const input = screen.getByPlaceholder("Search exercises...");
 		await input.fill("b");
 
 		await expect
@@ -276,7 +278,7 @@ describe("AutocompleteExercise", () => {
 	it("selects an exercise by clicking the result and keeps scrolling isolated", async () => {
 		const screen = await render(<ExerciseHarness />);
 
-		const input = screen.getByPlaceholderText("Search exercises...");
+		const input = screen.getByPlaceholder("Search exercises...");
 		await userEvent.click(input);
 		await input.fill("b");
 
@@ -285,14 +287,14 @@ describe("AutocompleteExercise", () => {
 		);
 
 		await expect
-			.element(screen.getByDisplayValue("Bench Press"))
-			.toBeInTheDocument();
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("Bench Press");
 	});
 
 	it("keeps the popover open when interacting inside it and closes on input blur", async () => {
 		const screen = await render(<ExerciseHarness />);
 
-		const input = screen.getByPlaceholderText("Search exercises...");
+		const input = screen.getByPlaceholder("Search exercises...");
 		await userEvent.click(input);
 		await expect
 			.element(screen.getByTestId("popover"))
@@ -340,11 +342,13 @@ describe("AutocompleteExercise", () => {
 			/>,
 		);
 
-		const _input = screen.getByDisplayValue("Bench Press");
+		const input = screen.getByPlaceholder("Search exercises...");
 		await userEvent.click(input);
 		await userEvent.keyboard("b");
 
-		await expect.element(screen.getByDisplayValue("b")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("b");
 		expect(mockUseExerciseSearch).toHaveBeenLastCalledWith("b", [
 			"equipment-1",
 		]);
@@ -362,16 +366,18 @@ describe("AutocompleteExercise", () => {
 			/>,
 		);
 
-		await userEvent.click(screen.getByDisplayValue("Bench Press"));
+		await userEvent.click(screen.getByPlaceholder("Search exercises..."));
 		await userEvent.keyboard("{Backspace}");
 
-		await expect.element(screen.getByDisplayValue("")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("");
 	});
 
 	it("closes the popover when Escape is pressed without a selection", async () => {
 		const screen = await render(<ExerciseHarness />);
 
-		const input = screen.getByPlaceholderText("Search exercises...");
+		const input = screen.getByPlaceholder("Search exercises...");
 		await userEvent.click(input);
 		await expect
 			.element(screen.getByTestId("popover"))
@@ -387,14 +393,14 @@ describe("AutocompleteExercise", () => {
 	it("lets the first result be selected with Enter only when no exercise is selected", async () => {
 		const screen = await render(<ExerciseHarness />);
 
-		const input = screen.getByPlaceholderText("Search exercises...");
+		const input = screen.getByPlaceholder("Search exercises...");
 		await userEvent.click(input);
 		await input.fill("d");
 		await userEvent.keyboard("{Enter}");
 
 		await expect
-			.element(screen.getByDisplayValue("Bench Press"))
-			.toBeInTheDocument();
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("Bench Press");
 	});
 
 	it("renders exercise thumbnails and switches to all equipment from the menu", async () => {
@@ -404,7 +410,7 @@ describe("AutocompleteExercise", () => {
 			.element(screen.getByRole("img", { name: "Bench Press thumbnail" }))
 			.toBeInTheDocument();
 
-		await userEvent.click(screen.getByPlaceholderText("Search exercises..."));
+		await userEvent.click(screen.getByPlaceholder("Search exercises..."));
 		await userEvent.click(
 			screen.getByRole("button", { name: "All Equipment" }),
 		);
@@ -423,7 +429,7 @@ describe("AutocompleteExercise", () => {
 
 		const screen = await render(<ExerciseHarness />);
 
-		const input = screen.getByPlaceholderText("Search exercises...");
+		const input = screen.getByPlaceholder("Search exercises...");
 		await userEvent.click(input);
 		await input.fill("zzz");
 

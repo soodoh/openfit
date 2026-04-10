@@ -342,10 +342,10 @@ describe("admin tables", () => {
 			.element(screen.getByText("coach@example.com"))
 			.toBeInTheDocument();
 		await expect.element(screen.getByText("ADMIN")).toBeInTheDocument();
-		expect(screen.getAllByText("page 1 of 2")).toHaveLength(2);
+		await expect.element(screen.getByText("page 1 of 2")).toHaveCount(2);
 
 		await userEvent.click(
-			screen.getAllByRole("button", { name: "Prev page" })[0],
+			screen.getByRole("button", { name: "Prev page" }).nth(0),
 		);
 		expect(mockUseAdminUsersPaginated).toHaveBeenLastCalledWith({
 			page: 1,
@@ -353,7 +353,7 @@ describe("admin tables", () => {
 			search: undefined,
 		});
 
-		await screen.getByPlaceholderText("Search users...").fill("coach");
+		await screen.getByPlaceholder("Search users...").fill("coach");
 
 		expect(mockUseAdminUsersPaginated).toHaveBeenLastCalledWith({
 			page: 1,
@@ -362,7 +362,7 @@ describe("admin tables", () => {
 		});
 
 		await userEvent.click(
-			screen.getAllByRole("button", { name: "Next page" })[0],
+			screen.getByRole("button", { name: "Next page" }).nth(0),
 		);
 		expect(mockUseAdminUsersPaginated).toHaveBeenLastCalledWith({
 			page: 2,
@@ -371,7 +371,7 @@ describe("admin tables", () => {
 		});
 
 		await userEvent.click(
-			screen.getAllByRole("button", { name: "Page size 20" })[0],
+			screen.getByRole("button", { name: "Page size 20" }).nth(0),
 		);
 		expect(mockUseAdminUsersPaginated).toHaveBeenLastCalledWith({
 			page: 1,
@@ -415,7 +415,7 @@ describe("admin tables", () => {
 		mockUseAdminExercisesPaginated.mockReturnValue(exercisesSeed);
 		mockUseAdminLookupPaginated.mockReturnValue(lookupsSeed);
 
-		render(
+		await render(
 			<div>
 				<UserTable />
 				<ExerciseTable />
@@ -460,7 +460,7 @@ describe("admin tables", () => {
 		);
 
 		await userEvent.click(
-			screen.getAllByRole("button", { name: "Prev page" })[0],
+			screen.getByRole("button", { name: "Prev page" }).nth(0),
 		);
 		expect(mockUseAdminLookupPaginated).toHaveBeenLastCalledWith(
 			"equipment",
@@ -541,7 +541,7 @@ describe("admin tables", () => {
 		await expect.element(screen.getByText("Air Squat")).toBeInTheDocument();
 
 		await userEvent.click(
-			screen.getAllByRole("button", { name: "Prev page" })[0],
+			screen.getByRole("button", { name: "Prev page" }).nth(0),
 		);
 		expect(mockUseAdminExercisesPaginated).toHaveBeenLastCalledWith({
 			page: 1,
@@ -596,8 +596,8 @@ describe("admin tables", () => {
 		await expect.element(screen.getByText("Google")).toBeInTheDocument();
 		await expect.element(screen.getByText("GitHub")).toBeInTheDocument();
 		await expect.element(screen.getByText("Discord")).toBeInTheDocument();
-		expect(screen.getAllByText("Configured")).toHaveLength(2);
-		expect(screen.getAllByText("Not configured")).toHaveLength(2);
+		await expect.element(screen.getByText("Configured")).toHaveCount(2);
+		await expect.element(screen.getByText("Not configured")).toHaveCount(2);
 	});
 
 	it("uses a custom OIDC provider label when the environment provides one", async () => {
@@ -647,7 +647,7 @@ describe("admin tables", () => {
 		});
 
 		await expect.element(screen.getByText("Google")).toBeInTheDocument();
-		expect(screen.getAllByText("Not configured")).toHaveLength(4);
+		await expect.element(screen.getByText("Not configured")).toHaveCount(4);
 	});
 
 	it("ignores provider status updates after the component unmounts", async () => {
@@ -697,7 +697,7 @@ describe("admin tables", () => {
 			/>,
 		);
 
-		await screen.getByPlaceholderText("Search equipment...").fill("rope");
+		await screen.getByPlaceholder("Search equipment...").fill("rope");
 
 		await expect
 			.element(screen.getByText('No equipment found matching "rope"'))
@@ -718,7 +718,7 @@ describe("admin tables", () => {
 
 		const screen = await render(<ExerciseTable />);
 
-		await screen.getByPlaceholderText("Search exercises...").fill("rope");
+		await screen.getByPlaceholder("Search exercises...").fill("rope");
 
 		await expect
 			.element(screen.getByText('No exercises found matching "rope"'))
@@ -749,7 +749,7 @@ describe("admin tables", () => {
 
 		const screen = await render(<ExerciseTable />);
 
-		await screen.getByPlaceholderText("Search exercises...").fill("press");
+		await screen.getByPlaceholder("Search exercises...").fill("press");
 
 		expect(mockUseAdminExercisesPaginated).toHaveBeenLastCalledWith({
 			page: 1,
@@ -758,7 +758,7 @@ describe("admin tables", () => {
 		});
 
 		await userEvent.click(
-			screen.getAllByRole("button", { name: "Next page" })[0],
+			screen.getByRole("button", { name: "Next page" }).nth(0),
 		);
 
 		expect(mockUseAdminExercisesPaginated).toHaveBeenLastCalledWith({
@@ -768,7 +768,7 @@ describe("admin tables", () => {
 		});
 
 		await userEvent.click(
-			screen.getAllByRole("button", { name: "Page size 20" })[0],
+			screen.getByRole("button", { name: "Page size 20" }).nth(0),
 		);
 
 		expect(mockUseAdminExercisesPaginated).toHaveBeenLastCalledWith({

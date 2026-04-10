@@ -72,7 +72,7 @@ describe("Pagination", () => {
 		await expect
 			.element(screen.getByText("Showing 31-40 of 80"))
 			.toBeInTheDocument();
-		expect(screen.getAllByText("...")).toHaveLength(2);
+		await expect.element(screen.getByText("...")).toHaveCount(2);
 
 		await userEvent.click(screen.getByRole("button", { name: "3" }));
 		await userEvent.click(
@@ -101,7 +101,7 @@ describe("Pagination", () => {
 			/>,
 		);
 
-		expect(screen.getAllByText("...")).toHaveLength(1);
+		await expect.element(screen.getByText("...")).toHaveCount(1);
 	});
 
 	it("renders only a leading ellipsis near the end", async () => {
@@ -120,6 +120,6 @@ describe("Pagination", () => {
 			/>,
 		);
 
-		expect(screen.getAllByText("...")).toHaveLength(1);
+		await expect.element(screen.getByText("...")).toHaveCount(1);
 	});
 });

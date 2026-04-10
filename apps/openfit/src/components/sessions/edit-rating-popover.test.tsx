@@ -131,7 +131,7 @@ describe("EditRatingPopover", () => {
 		await userEvent.click(screen.getByRole("button", { name: "Set rating 5" }));
 		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
-		screen.rerender(
+		await screen.rerender(
 			<EditRatingPopover session={{ ...baseSession, impression: 4 }} />,
 		);
 		await userEvent.click(screen.getByRole("button"));

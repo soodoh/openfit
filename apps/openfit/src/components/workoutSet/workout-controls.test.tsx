@@ -183,9 +183,9 @@ describe("workout controls", () => {
 			/>,
 		);
 
-		await screen.getByPlaceholderText("8").fill("12");
-		await screen.getByPlaceholderText("135").fill("155");
-		await screen.getByPlaceholderText("1:30").fill("2:15");
+		await screen.getByPlaceholder("8").fill("12");
+		await screen.getByPlaceholder("135").fill("155");
+		await screen.getByPlaceholder("1:30").fill("2:15");
 		await userEvent.click(screen.getByRole("button", { name: "Reps" }));
 		await userEvent.click(screen.getByRole("button", { name: "lbs" }));
 		await userEvent.click(screen.getByRole("button", { name: "Update" }));

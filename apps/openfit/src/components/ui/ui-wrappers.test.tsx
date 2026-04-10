@@ -378,7 +378,7 @@ describe("shared ui wrappers", () => {
 			/>,
 		);
 
-		expect(screen.getAllByText("...")).toHaveLength(2);
+		await expect.element(screen.getByText("...")).toHaveCount(2);
 		await expect
 			.element(screen.getByRole("button", { name: "1" }))
 			.toBeInTheDocument();
@@ -514,9 +514,7 @@ describe("shared ui wrappers", () => {
 		await expect
 			.element(screen.getByText("Command contents"))
 			.toBeInTheDocument();
-		await expect
-			.element(screen.getByPlaceholderText("Search"))
-			.toBeInTheDocument();
+		await expect.element(screen.getByPlaceholder("Search")).toBeInTheDocument();
 		await expect.element(screen.getByText("Item")).toHaveClass("custom-item");
 		await expect.element(screen.getByText("⌘J")).toHaveClass("custom-shortcut");
 		await expect
@@ -544,7 +542,7 @@ describe("shared ui wrappers", () => {
 			.element(container.firstElementChild)
 			.toHaveClass("custom-command");
 		await expect
-			.element(screen.getByPlaceholderText("Search commands"))
+			.element(screen.getByPlaceholder("Search commands"))
 			.toBeInTheDocument();
 		await expect
 			.element(screen.getByText("Nothing found"))

@@ -61,7 +61,7 @@ describe("carousel wrappers", () => {
 			.element(screen.getByTestId("carousel-content"))
 			.toHaveClass("flex-col");
 		await expect
-			.element(screen.getAllByRole("group")[0])
+			.element(screen.getByRole("group").nth(0))
 			.toHaveAttribute("aria-roledescription", "slide");
 		await expect
 			.element(screen.getByRole("button", { name: "Previous slide" }))
@@ -109,7 +109,7 @@ describe("carousel wrappers", () => {
 			.element(screen.getByRole("button", { name: "Next slide" }))
 			.not.toHaveClass("rotate-90");
 		expect(
-			screen.queryByRole("button", { name: "Go to slide 1" }).query(),
+			screen.getByRole("button", { name: "Go to slide 1" }).query(),
 		).toBeNull();
 
 		await userEvent.keyboard("{ArrowRight}");

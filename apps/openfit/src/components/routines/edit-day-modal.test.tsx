@@ -142,7 +142,7 @@ describe("EditDayModal", () => {
 		await screen.getByLabelText("Day Name").fill("Changed name");
 		await userEvent.click(screen.getByRole("button", { name: "Set weekdays" }));
 
-		screen.rerender(
+		await screen.rerender(
 			<EditDayModal
 				open={false}
 				onClose={vi.fn()}
@@ -150,7 +150,7 @@ describe("EditDayModal", () => {
 				routineDay={routineDay}
 			/>,
 		);
-		screen.rerender(
+		await screen.rerender(
 			<EditDayModal
 				open
 				onClose={vi.fn()}

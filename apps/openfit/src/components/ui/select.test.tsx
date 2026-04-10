@@ -63,11 +63,7 @@ describe("Select", () => {
 		await expect.element(trigger).toHaveClass("trigger-custom");
 		await expect.element(screen.getByText("Pick exercise")).toBeInTheDocument();
 
-		await userEvent.pointer({
-			target: trigger.element(),
-			keys: "[MouseLeft]",
-			coords: { button: 0, pointerType: "mouse" },
-		});
+		await userEvent.click(trigger);
 
 		const listbox = screen.getByRole("listbox");
 		await expect.element(listbox.getByText("Main lifts")).toBeInTheDocument();
@@ -92,11 +88,7 @@ describe("Select", () => {
 		const screen = await render(<TestSelect position="item-aligned" />);
 
 		const trigger = screen.getByRole("combobox", { name: "Exercise" });
-		await userEvent.pointer({
-			target: trigger.element(),
-			keys: "[MouseLeft]",
-			coords: { button: 0, pointerType: "mouse" },
-		});
+		await userEvent.click(trigger);
 
 		const listbox = screen.getByRole("listbox");
 		await userEvent.click(listbox.getByRole("option", { name: "Squat" }));

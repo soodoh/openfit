@@ -71,7 +71,7 @@ describe("routines route", () => {
 			isFetchingNextPage: false,
 		});
 
-		render(<RoutinesRoute.options.component />);
+		await render(<RoutinesRoute.options.component />);
 
 		expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
 	});

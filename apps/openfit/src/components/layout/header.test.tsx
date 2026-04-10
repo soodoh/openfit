@@ -51,9 +51,15 @@ describe("Header", () => {
 		await expect
 			.element(screen.getByRole("link", { name: "OpenFit logo" }))
 			.toBeInTheDocument();
-		expect(screen.getAllByRole("link", { name: "Routines" })).toHaveLength(2);
-		expect(screen.getAllByRole("link", { name: "Exercises" })).toHaveLength(2);
-		expect(screen.getAllByRole("link", { name: "Logs" })).toHaveLength(2);
+		await expect
+			.element(screen.getByRole("link", { name: "Routines" }))
+			.toHaveCount(2);
+		await expect
+			.element(screen.getByRole("link", { name: "Exercises" }))
+			.toHaveCount(2);
+		await expect
+			.element(screen.getByRole("link", { name: "Logs" }))
+			.toHaveCount(2);
 		await expect
 			.element(screen.getByRole("button", { name: "Open navigation menu" }))
 			.toBeInTheDocument();

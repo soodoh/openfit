@@ -112,7 +112,7 @@ describe("RoutineModal", () => {
 
 		await expect.element(screen.getByText("Overview body")).toBeInTheDocument();
 		await expect
-			.element(screen.queryByText("Day tab day-1"))
+			.element(screen.getByText("Day tab day-1"))
 			.not.toBeInTheDocument();
 	});
 
@@ -129,7 +129,7 @@ describe("RoutineModal", () => {
 
 		await expect.element(screen.getByText("Day tab day-2")).toBeInTheDocument();
 		await expect
-			.element(screen.queryByText("Overview body"))
+			.element(screen.getByText("Overview body"))
 			.not.toBeInTheDocument();
 	});
 
@@ -189,7 +189,7 @@ describe("RoutineModal", () => {
 		await userEvent.click(screen.getByRole("button", { name: "Select day 2" }));
 		await expect.element(screen.getByText("Day tab day-2")).toBeInTheDocument();
 		await expect
-			.element(screen.queryByText("Overview body"))
+			.element(screen.getByText("Overview body"))
 			.not.toBeInTheDocument();
 	});
 
@@ -219,7 +219,7 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		screen.rerender(
+		await screen.rerender(
 			<RoutineModal
 				open={false}
 				onClose={vi.fn()}
@@ -227,7 +227,7 @@ describe("RoutineModal", () => {
 				currentSession={undefined}
 			/>,
 		);
-		screen.rerender(
+		await screen.rerender(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -238,7 +238,7 @@ describe("RoutineModal", () => {
 		);
 
 		await userEvent.click(screen.getByRole("button", { name: "Add day 3" }));
-		screen.rerender(
+		await screen.rerender(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -249,7 +249,7 @@ describe("RoutineModal", () => {
 		);
 		await expect.element(screen.getByText("Day tab day-3")).toBeInTheDocument();
 		await expect
-			.element(screen.queryByText("Overview body"))
+			.element(screen.getByText("Overview body"))
 			.not.toBeInTheDocument();
 	});
 
@@ -266,7 +266,7 @@ describe("RoutineModal", () => {
 
 		await expect.element(screen.getByText("Day tab day-1")).toBeInTheDocument();
 
-		screen.rerender(
+		await screen.rerender(
 			<RoutineModal
 				open={false}
 				onClose={vi.fn()}
@@ -275,7 +275,7 @@ describe("RoutineModal", () => {
 				initialTab="overview"
 			/>,
 		);
-		screen.rerender(
+		await screen.rerender(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -287,7 +287,7 @@ describe("RoutineModal", () => {
 
 		await expect.element(screen.getByText("Overview body")).toBeInTheDocument();
 		await expect
-			.element(screen.queryByText("Day tab day-1"))
+			.element(screen.getByText("Day tab day-1"))
 			.not.toBeInTheDocument();
 	});
 

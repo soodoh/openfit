@@ -127,7 +127,7 @@ describe("EditNamePopover", () => {
 			.element(screen.getByLabelText("Session Name"))
 			.not.toBeInTheDocument();
 
-		screen.rerender(
+		await screen.rerender(
 			<EditNamePopover session={{ ...session, name: "Push Day" }} />,
 		);
 		await userEvent.click(screen.getByRole("button"));

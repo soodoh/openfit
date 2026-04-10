@@ -55,9 +55,7 @@ describe("RoutineCard", () => {
 		await expect
 			.element(screen.getByText("Updated just now"))
 			.toBeInTheDocument();
-		await expect
-			.element(screen.queryByText("Pull Day"))
-			.not.toBeInTheDocument();
+		await expect.element(screen.getByText("Pull Day")).not.toBeInTheDocument();
 
 		await userEvent.click(screen.getByText("Strength Plan"));
 
@@ -67,7 +65,7 @@ describe("RoutineCard", () => {
 		await userEvent.click(
 			screen.getByRole("button", { name: "Close routine modal" }),
 		);
-		await expect.element(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		await expect.element(screen.getByRole("dialog")).not.toBeInTheDocument();
 	});
 
 	it("renders the routine description and plural day label", async () => {

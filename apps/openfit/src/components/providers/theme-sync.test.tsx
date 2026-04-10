@@ -31,7 +31,7 @@ describe("ThemeSync", () => {
 			data: { theme: "dark" },
 		});
 
-		render(<ThemeSync />);
+		await render(<ThemeSync />);
 
 		expect(mockSetTheme).toHaveBeenCalledWith("dark");
 	});
@@ -42,7 +42,7 @@ describe("ThemeSync", () => {
 			data: { theme: "light" },
 		});
 
-		render(<ThemeSync />);
+		await render(<ThemeSync />);
 
 		expect(mockSetTheme).not.toHaveBeenCalled();
 	});

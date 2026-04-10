@@ -40,7 +40,7 @@ describe("admin route", () => {
 	});
 
 	it("redirects anonymous users to sign in", async () => {
-		render(<AdminRoute.options.component />);
+		await render(<AdminRoute.options.component />);
 
 		await vi.waitFor(() => {
 			expect(mockNavigate).toHaveBeenCalledWith({ to: "/signin" });
@@ -68,7 +68,7 @@ describe("admin route", () => {
 		mockFetch.mockResolvedValue({ ok: true });
 		mockParseResponseJson.mockResolvedValue({ isAdmin: true });
 
-		render(<AdminRoute.options.component />);
+		await render(<AdminRoute.options.component />);
 
 		await vi.waitFor(() =>
 			expect(document.querySelector("[data-testid='admin-page']")).toBeTruthy(),
@@ -83,7 +83,7 @@ describe("admin route", () => {
 		mockFetch.mockResolvedValue({ ok: true });
 		mockParseResponseJson.mockResolvedValue({ isAdmin: false });
 
-		render(<AdminRoute.options.component />);
+		await render(<AdminRoute.options.component />);
 
 		await vi.waitFor(() => {
 			expect(mockNavigate).toHaveBeenCalledWith({ to: "/" });

@@ -102,7 +102,7 @@ describe("home route", () => {
 	it("shows a loader while auth is still pending", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: true });
 
-		render(<HomeRoute.options.component />);
+		await render(<HomeRoute.options.component />);
 
 		expect(document.querySelector(".animate-spin")).toBeInTheDocument();
 	});
@@ -169,7 +169,7 @@ describe("home route", () => {
 			isLoading: false,
 		});
 
-		render(<HomeRoute.options.component />);
+		await render(<HomeRoute.options.component />);
 
 		expect(document.querySelectorAll(".animate-pulse").length).toBeGreaterThan(
 			0,

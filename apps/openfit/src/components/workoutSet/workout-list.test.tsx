@@ -208,7 +208,7 @@ describe("WorkoutList", () => {
 			.toBeInTheDocument();
 
 		await userEvent.click(
-			screen.getAllByRole("button", { name: "Start rest" })[0],
+			screen.getByRole("button", { name: "Start rest" }).nth(0),
 		);
 
 		await vi.waitFor(() => {

@@ -322,7 +322,7 @@ describe("use-exercises queries", () => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
-		rerender({ term: "press" });
+		await rerender({ term: "press" });
 
 		await vi.waitFor(() => {
 			expect(result.current.isPlaceholderData).toBe(true);

@@ -161,9 +161,9 @@ describe("session controls", () => {
 			</div>,
 		);
 
-		await userEvent.click(screen.getAllByRole("button")[0]);
+		await userEvent.click(screen.getByRole("button").nth(0));
 		await screen.getByLabelText("Session Name").fill("Updated Name");
-		await userEvent.click(screen.getAllByRole("button", { name: "Save" })[0]);
+		await userEvent.click(screen.getByRole("button", { name: "Save" }).nth(0));
 
 		await vi.waitFor(() => {
 			expect(mockUpdateSession).toHaveBeenCalledWith({
@@ -179,7 +179,7 @@ describe("session controls", () => {
 			.element(screen.getByText("1 of 1 sets completed"))
 			.toBeInTheDocument();
 
-		screen.rerender(
+		await screen.rerender(
 			<ResumeSessionButton
 				session={{
 					...session,

@@ -78,7 +78,7 @@ describe("EquipmentSelector", () => {
 		await expect.element(screen.getByText("Barbell")).toBeInTheDocument();
 		await expect.element(screen.getByText("Kettlebell")).toBeInTheDocument();
 		await expect
-			.element(screen.getAllByText("2 equipment selected")[0])
+			.element(screen.getByText("2 equipment selected").nth(0))
 			.toBeInTheDocument();
 
 		await userEvent.click(

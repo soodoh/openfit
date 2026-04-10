@@ -117,12 +117,12 @@ describe("WorkoutSetRow", () => {
 			/>,
 		);
 
-		await screen.getByDisplayValue("8").fill("10");
+		await screen.getByRole("textbox", { name: "Reps" }).fill("10");
 		await userEvent.tab();
 
 		expect(mockUpdateSet).toHaveBeenCalledWith({ id: "set-1", reps: 10 });
 
-		await screen.getByDisplayValue("135").fill("155");
+		await screen.getByRole("textbox", { name: "Weight" }).fill("155");
 		await userEvent.tab();
 
 		expect(mockUpdateSet).toHaveBeenCalledWith({ id: "set-1", weight: 155 });
@@ -220,8 +220,12 @@ describe("WorkoutSetRow", () => {
 			/>,
 		);
 
-		await expect.element(screen.getByDisplayValue("8")).toBeDisabled();
-		await expect.element(screen.getByDisplayValue("135")).toBeDisabled();
+		await expect
+			.element(screen.getByRole("textbox", { name: "Reps" }))
+			.toBeDisabled();
+		await expect
+			.element(screen.getByRole("textbox", { name: "Weight" }))
+			.toBeDisabled();
 		await expect
 			.element(screen.getByRole("checkbox", { name: "Mark as Completed" }))
 			.toBeChecked();
@@ -244,7 +248,7 @@ describe("WorkoutSetRow", () => {
 			/>,
 		);
 
-		await screen.getByDisplayValue("8").fill("abc");
+		await screen.getByRole("textbox", { name: "Reps" }).fill("abc");
 		await userEvent.tab();
 		await userEvent.click(
 			screen.getByRole("checkbox", { name: "Mark as Completed" }),
@@ -299,7 +303,7 @@ describe("WorkoutSetRow", () => {
 			/>,
 		);
 
-		await expect.element(screen.getByText("reps")).toBeInTheDocument();
-		await expect.element(screen.getAllByText("lbs").nth(0)).toBeInTheDocument();
+		await expect.element(screen.getByText("reps").nth(0)).toBeInTheDocument();
+		await expect.element(screen.getByText("lbs").nth(0)).toBeInTheDocument();
 	});
 });

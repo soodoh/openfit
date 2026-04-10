@@ -54,7 +54,7 @@ describe("LoginForm redirects", () => {
 	it("redirects to home when already authenticated", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
 
-		render(<LoginForm />);
+		await render(<LoginForm />);
 
 		await vi.waitFor(() => {
 			expect(mockNavigate).toHaveBeenCalledWith({ to: "/", replace: true });

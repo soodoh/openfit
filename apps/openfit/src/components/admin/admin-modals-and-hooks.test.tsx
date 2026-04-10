@@ -112,7 +112,7 @@ describe("admin modals and form state", () => {
 			expect(onSubmit).toHaveBeenCalledWith("Kettlebell");
 		});
 
-		screen.rerender(
+		await screen.rerender(
 			<LookupFormModal
 				open
 				onClose={onClose}
@@ -239,7 +239,7 @@ describe("admin modals and form state", () => {
 
 		await expect.element(screen.getByText("Name")).not.toBeInTheDocument();
 
-		screen.rerender(
+		await screen.rerender(
 			<LookupFormModal
 				open
 				onClose={onClose}

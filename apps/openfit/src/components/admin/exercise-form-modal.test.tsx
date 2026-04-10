@@ -1,4 +1,4 @@
-import { userEvent } from "@vitest/browser/context";
+import { page, userEvent } from "@vitest/browser/context";
 import {
 	act,
 	createContext,
@@ -340,10 +340,13 @@ describe("ExerciseFormModal", () => {
 
 		await expect.element(screen.getByText("No preview")).toBeInTheDocument();
 
-		const input = screen.container.querySelector('input[type="file"]');
-		expect(input).toBeTruthy();
+		const fileInputEl = screen.container.querySelector('input[type="file"]');
+		expect(fileInputEl).toBeTruthy();
+		const fileInput = page.elementLocator(fileInputEl as Element);
+		await expect.element(fileInput).toBeInTheDocument();
 
-		await (input as HTMLInputElement).fill("");
+		// Simulate change event with no files selected
+		fileInputEl!.dispatchEvent(new Event("change", { bubbles: true }));
 
 		expect(mockAddFiles).not.toHaveBeenCalled();
 	});
@@ -423,18 +426,14 @@ describe("ExerciseFormModal", () => {
 			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
 		);
 
-		expect(
-			screen.getAllByPlaceholderText("Enter instruction step"),
-		).toHaveLength(2);
+		expect(screen.getByPlaceholder("Enter instruction step")).toHaveLength(2);
 
 		const removeButtons = screen.container.querySelectorAll("button.shrink-0");
 		expect(removeButtons).toHaveLength(2);
 
 		await userEvent.click(removeButtons[0] as HTMLButtonElement);
 
-		expect(
-			screen.getAllByPlaceholderText("Enter instruction step"),
-		).toHaveLength(1);
+		expect(screen.getByPlaceholder("Enter instruction step")).toHaveLength(1);
 	});
 
 	it("updates instruction text and opens the file picker", async () => {
@@ -460,16 +459,14 @@ describe("ExerciseFormModal", () => {
 		);
 
 		await screen
-			.getByPlaceholderText("Enter instruction step")
+			.getByPlaceholder("Enter instruction step")
 			.fill("Brace the core");
 		await expect
-			.element(screen.getByDisplayValue("Brace the core"))
-			.toBeInTheDocument();
+			.element(screen.getByPlaceholder("Enter instruction step"))
+			.toHaveValue("Brace the core");
 
 		await userEvent.click(screen.getByRole("button", { name: "Add Step" }));
-		expect(
-			screen.getAllByPlaceholderText("Enter instruction step"),
-		).toHaveLength(2);
+		expect(screen.getByPlaceholder("Enter instruction step")).toHaveLength(2);
 
 		await userEvent.click(screen.getByRole("button", { name: "Add Images" }));
 		expect(clickSpy).toHaveBeenCalledTimes(1);
@@ -664,10 +661,12 @@ describe("ExerciseFormModal", () => {
 			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
 		);
 		const file = new File(["image"], "extra.jpg", { type: "image/jpeg" });
-		const input = screen.container.querySelector('input[type="file"]');
+		const fileInputEl = screen.container.querySelector('input[type="file"]');
+		expect(fileInputEl).toBeTruthy();
+		const fileInput = page.elementLocator(fileInputEl as Element);
 
-		expect(input).toBeTruthy();
-		await userEvent.upload(input as HTMLInputElement, file);
+		await expect.element(fileInput).toBeInTheDocument();
+		await userEvent.upload(fileInput, file);
 
 		expect(mockAddFiles).toHaveBeenCalledWith([file]);
 	});
@@ -708,9 +707,7 @@ describe("ExerciseFormModal", () => {
 			latestFormState.removeInstruction(0);
 		});
 
-		expect(
-			screen.getAllByPlaceholderText("Enter instruction step"),
-		).toHaveLength(1);
+		expect(screen.getByPlaceholder("Enter instruction step")).toHaveLength(1);
 	});
 
 	it("fires the select and muscle chip callbacks through the rendered controls", async () => {
@@ -753,11 +750,11 @@ describe("ExerciseFormModal", () => {
 		expect(latestFormState?.mechanic).toBe("compound");
 
 		await userEvent.click(
-			screen.getAllByRole("button", { name: "Pectorals" })[0],
+			screen.getByRole("button", { name: "Pectorals" }).nth(0),
 		);
 		expect(latestFormState?.primaryMuscleIds).toEqual(["muscle-1"]);
 		await userEvent.click(
-			screen.getAllByRole("button", { name: "Pectorals" })[1],
+			screen.getByRole("button", { name: "Pectorals" }).nth(1),
 		);
 		expect(latestFormState?.primaryMuscleIds).toEqual([]);
 	});

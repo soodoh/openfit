@@ -35,7 +35,7 @@ describe("useExerciseFormState", () => {
 		expect(result.current.name).toBe("");
 		expect(result.current.instructions).toEqual([""]);
 
-		rerender({ open: true, exercise: mockExercise });
+		await rerender({ open: true, exercise: mockExercise });
 
 		expect(result.current.name).toBe("Bench Press");
 		expect(result.current.equipmentId).toBe("equipment-1");
@@ -116,7 +116,7 @@ describe("useExerciseFormState", () => {
 			result.current.setInstructions(["Warm up"]);
 		});
 
-		rerender({
+		await rerender({
 			open: true,
 			exercise: {
 				...mockExercise,

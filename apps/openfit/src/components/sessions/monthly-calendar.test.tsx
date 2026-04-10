@@ -1,4 +1,4 @@
-import { userEvent } from "@vitest/browser/context";
+import { page, userEvent } from "@vitest/browser/context";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
@@ -149,7 +149,14 @@ describe("MonthlyCalendar", () => {
 		await expect.element(screen.getByText("Push A")).toBeInTheDocument();
 		await expect.element(screen.getByText("2h 30m")).toBeInTheDocument();
 		await expect
-			.element(screen.getByText("Active Session").closest("button"))
+			.element(
+				page.elementLocator(
+					screen
+						.getByText("Active Session")
+						.element()
+						.closest("button") as Element,
+				),
+			)
 			.toHaveClass("bg-primary");
 
 		await userEvent.click(screen.getByRole("button", { name: "+2 more" }));

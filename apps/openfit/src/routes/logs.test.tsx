@@ -54,7 +54,7 @@ describe("logs route", () => {
 			isLoading: true,
 		});
 
-		render(<LogsRoute.options.component />);
+		await render(<LogsRoute.options.component />);
 
 		await vi.waitFor(() =>
 			expect(document.querySelector(".animate-spin")).toBeTruthy(),

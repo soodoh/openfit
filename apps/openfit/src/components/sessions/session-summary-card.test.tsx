@@ -112,12 +112,12 @@ describe("SessionSummaryCard", () => {
 			/>,
 		);
 
-		await userEvent.pointer([
-			{
-				target: screen.getByRole("button", { name: "Edit session menu" }),
-				keys: "[MouseLeft>]",
-			},
-		]);
+		// Fire pointerdown only (not a full click) to test stopPropagation
+		screen
+			.getByRole("button", { name: "Edit session menu" })
+			.nth(1)
+			.element()
+			.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
 		expect(onClick).not.toHaveBeenCalled();
 	});
 

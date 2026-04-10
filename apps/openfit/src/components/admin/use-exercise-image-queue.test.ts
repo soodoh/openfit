@@ -80,7 +80,7 @@ describe("useExerciseImageQueue", () => {
 			result.current.addFiles([file]);
 		});
 
-		rerender({ open: false });
+		await rerender({ open: false });
 
 		expect(revokeObjectURL).toHaveBeenCalledWith("blob:one");
 		expect(result.current.images).toEqual([]);

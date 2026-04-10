@@ -128,7 +128,7 @@ describe("EditNotesPopover", () => {
 		await screen.getByLabelText("Notes").fill("Temporary note");
 		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
-		screen.rerender(
+		await screen.rerender(
 			<EditNotesPopover session={{ ...baseSession, notes: "Fresh note" }} />,
 		);
 		await userEvent.click(screen.getByRole("button", { name: /notes/i }));

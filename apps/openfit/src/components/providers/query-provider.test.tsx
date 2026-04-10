@@ -76,7 +76,7 @@ describe("QueryProvider", () => {
 			</QueryProvider>,
 		);
 
-		rerender(
+		await rerender(
 			<QueryProvider>
 				<QueryClientConsumer onClient={onClient} />
 			</QueryProvider>,

@@ -71,18 +71,14 @@ describe("RoutineDayTab", () => {
 		);
 
 		await expect
-			.element(screen.getByDisplayValue("Pull Day"))
-			.toBeInTheDocument();
+			.element(screen.getByLabelText("Day Name"))
+			.toHaveValue("Pull Day");
 		await expect
 			.element(screen.getByTestId("workout-list"))
 			.toBeInTheDocument();
 
 		await screen.getByLabelText("Day Name").fill("Pull + Biceps");
-		await userEvent.click(screen.getByLabelText("Day Name"));
-		screen
-			.getByLabelText("Day Name")
-			.element()
-			.dispatchEvent(new Event("blur", { bubbles: true }));
+		await userEvent.tab();
 
 		await vi.waitFor(() => {
 			expect(mockUpdateRoutineDay).toHaveBeenCalledWith({

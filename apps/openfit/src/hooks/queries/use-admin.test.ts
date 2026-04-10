@@ -228,7 +228,7 @@ describe("use-admin queries", () => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
-		rerender({ params: secondParams });
+		await rerender({ params: secondParams });
 
 		await vi.waitFor(() => {
 			expect(result.current.isPlaceholderData).toBe(true);

@@ -258,7 +258,7 @@ describe("ProfileModal", () => {
 			isLoading: true,
 		});
 
-		render(<ProfileModal open onClose={vi.fn()} />);
+		await render(<ProfileModal open onClose={vi.fn()} />);
 
 		await vi.waitFor(() => {
 			expect(document.querySelector(".animate-spin")).not.toBeNull();

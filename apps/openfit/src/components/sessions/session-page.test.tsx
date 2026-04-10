@@ -1,3 +1,4 @@
+import { page } from "@vitest/browser/context";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
@@ -109,9 +110,13 @@ describe("SessionPage", () => {
 		await expect.element(screen.getByText("April 8, 2026")).toBeInTheDocument();
 		await expect.element(screen.getByText("2h 30m")).toBeInTheDocument();
 		await expect
-			.element(screen.getByText("Total Sets").parentElement())
+			.element(
+				page.elementLocator(
+					screen.getByText("Total Sets").element().parentElement as Element,
+				),
+			)
 			.toHaveTextContent("1");
-		expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+		await expect.element(screen.getByText("—").first()).toBeInTheDocument();
 		await expect
 			.element(screen.getByTestId("edit-session-menu"))
 			.toBeInTheDocument();
@@ -151,10 +156,18 @@ describe("SessionPage", () => {
 		);
 
 		await expect
-			.element(screen.getByText("Duration").parentElement())
+			.element(
+				page.elementLocator(
+					screen.getByText("Duration").element().parentElement as Element,
+				),
+			)
 			.toHaveTextContent("—");
 		await expect
-			.element(screen.getByText("Notes").parentElement())
+			.element(
+				page.elementLocator(
+					screen.getByText("Notes").element().parentElement as Element,
+				),
+			)
 			.toHaveTextContent("—");
 	});
 

@@ -65,7 +65,7 @@ describe("AddExerciseRow", () => {
 		await userEvent.click(
 			screen.getByRole("button", { name: "Select Exercise" }),
 		);
-		await screen.getByPlaceholderText("Sets").fill("4");
+		await screen.getByPlaceholder("Sets").fill("4");
 		await userEvent.click(screen.getByRole("button", { name: "Add" }));
 
 		await vi.waitFor(() => {
@@ -81,7 +81,7 @@ describe("AddExerciseRow", () => {
 		await expect
 			.element(screen.getByText("No exercise selected"))
 			.toBeInTheDocument();
-		await expect.element(screen.getByPlaceholderText("Sets")).toHaveValue(1);
+		await expect.element(screen.getByPlaceholder("Sets")).toHaveValue(1);
 	});
 
 	it("targets the session id when adding an exercise during a workout session", async () => {

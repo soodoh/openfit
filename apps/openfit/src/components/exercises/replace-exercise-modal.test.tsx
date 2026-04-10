@@ -184,7 +184,7 @@ describe("ReplaceExerciseModal", () => {
 		);
 
 		await expect
-			.element(screen.getAllByRole("button", { name: "Home Gym" })[0])
+			.element(screen.getByRole("button", { name: "Home Gym" }).nth(0))
 			.toBeInTheDocument();
 		expect(mockUseSimilarExercises).toHaveBeenCalledWith(
 			["chest"],
@@ -286,7 +286,7 @@ describe("ReplaceExerciseModal", () => {
 			});
 		});
 
-		screen.rerender(
+		await screen.rerender(
 			<ReplaceExerciseModal
 				open={false}
 				onClose={onClose}
@@ -298,7 +298,7 @@ describe("ReplaceExerciseModal", () => {
 				setGroupId="set-group-1"
 			/>,
 		);
-		screen.rerender(
+		await screen.rerender(
 			<ReplaceExerciseModal
 				open
 				onClose={onClose}
@@ -312,7 +312,7 @@ describe("ReplaceExerciseModal", () => {
 		);
 
 		await expect
-			.element(screen.getByPlaceholderText("Search exercises..."))
+			.element(screen.getByPlaceholder("Search exercises..."))
 			.toHaveValue("");
 		await expect
 			.element(screen.getByRole("button", { name: "Home Gym" }))

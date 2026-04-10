@@ -48,7 +48,7 @@ describe("CreateRoutine", () => {
 		await userEvent.click(screen.getByRole("button", { name: "New Routine" }));
 		await userEvent.click(screen.getByRole("button", { name: "Close modal" }));
 
-		await expect.element(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		await expect.element(screen.getByRole("dialog")).not.toBeInTheDocument();
 	});
 
 	it("uses the empty-state variant label and closes the modal", async () => {
@@ -59,6 +59,6 @@ describe("CreateRoutine", () => {
 		);
 		await userEvent.click(screen.getByRole("button", { name: "Close modal" }));
 
-		await expect.element(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		await expect.element(screen.getByRole("dialog")).not.toBeInTheDocument();
 	});
 });

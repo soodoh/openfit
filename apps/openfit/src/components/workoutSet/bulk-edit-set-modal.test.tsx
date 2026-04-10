@@ -156,7 +156,7 @@ describe("BulkEditSetModal", () => {
 			/>,
 		);
 
-		await screen.getByPlaceholderText("8").fill("10");
+		await screen.getByPlaceholder("8").fill("10");
 		await screen.getByLabelText("rest-timer").fill("1:30");
 		await userEvent.click(screen.getByRole("button", { name: "Reps" }));
 		await userEvent.click(screen.getByRole("button", { name: "lb" }));
@@ -205,7 +205,7 @@ describe("BulkEditSetModal", () => {
 			/>,
 		);
 
-		await screen.getByPlaceholderText("135").fill("150");
+		await screen.getByPlaceholder("135").fill("150");
 		await userEvent.click(screen.getByRole("button", { name: "lb" }));
 		await userEvent.click(screen.getByRole("button", { name: "Update" }));
 

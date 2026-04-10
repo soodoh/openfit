@@ -155,14 +155,14 @@ describe("EditRoutineModal", () => {
 
 		await screen.getByLabelText("Routine Name").fill("Edited value");
 
-		screen.rerender(
+		await screen.rerender(
 			<EditRoutineModal
 				open={false}
 				onClose={vi.fn()}
 				routine={firstRoutine}
 			/>,
 		);
-		screen.rerender(
+		await screen.rerender(
 			<EditRoutineModal open onClose={vi.fn()} routine={firstRoutine} />,
 		);
 
