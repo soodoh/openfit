@@ -112,6 +112,9 @@ describe("carousel wrappers", () => {
 			screen.getByRole("button", { name: "Go to slide 1" }).query(),
 		).toBeNull();
 
+		// Focus the carousel region so it receives keyboard events
+		const region = screen.getByRole("region").element() as HTMLElement;
+		region.focus();
 		await userEvent.keyboard("{ArrowRight}");
 		await userEvent.keyboard("{ArrowLeft}");
 		expect(mockScrollNext).toHaveBeenCalledTimes(1);

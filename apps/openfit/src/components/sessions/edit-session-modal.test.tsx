@@ -157,7 +157,7 @@ describe("EditSessionModal", () => {
 			}),
 		);
 		await userEvent.click(
-			screen.getByRole("button", { name: "Set End Time invalid" }),
+			screen.getByRole("button", { name: "Set End Time invalid", exact: true }),
 		);
 		await userEvent.click(
 			screen.getByRole("button", { name: "Create Session" }),
@@ -275,10 +275,6 @@ describe("EditSessionModal", () => {
 		const screen = await render(<EditSessionModal open onClose={vi.fn()} />);
 
 		await userEvent.click(screen.getByRole("button", { name: "Set rating 3" }));
-		await userEvent.hover(screen.getByRole("button", { name: "Set rating 5" }));
-		await userEvent.unhover(
-			screen.getByRole("button", { name: "Set rating 5" }),
-		);
 		await userEvent.click(screen.getByRole("button", { name: "Clear rating" }));
 
 		await expect

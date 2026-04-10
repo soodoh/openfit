@@ -42,10 +42,11 @@ describe("DeleteExerciseModal", () => {
 
 	it("shows the pending state while awaiting an async delete", async () => {
 		const onClose = vi.fn();
+		let resolveDelete: () => void = () => {};
 		const onDelete = vi.fn(
 			() =>
 				new Promise<void>((resolve) => {
-					setTimeout(resolve, 0);
+					resolveDelete = resolve;
 				}),
 		);
 
@@ -63,9 +64,8 @@ describe("DeleteExerciseModal", () => {
 			.element(screen.getByRole("button", { name: "Deleting..." }))
 			.toBeDisabled();
 
-		await vi.waitFor(() => {
-			expect(onDelete).toHaveBeenCalledWith("exercise-1");
-		});
+		expect(onDelete).toHaveBeenCalledWith("exercise-1");
+		resolveDelete();
 
 		await vi.waitFor(() => {
 			expect(onClose).toHaveBeenCalledTimes(1);

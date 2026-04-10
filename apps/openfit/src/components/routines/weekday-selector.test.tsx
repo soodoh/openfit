@@ -49,12 +49,13 @@ describe("WeekdaySelector", () => {
 			<WeekdaySelector selectedWeekdays={[0]} onChange={onChange} disabled />,
 		);
 
-		await userEvent.click(screen.getByRole("button", { name: "Sunday" }));
-
-		expect(onChange).not.toHaveBeenCalled();
 		await expect
 			.element(screen.getByRole("button", { name: "Sunday" }))
 			.toBeDisabled();
+		// Force-click the disabled button to verify onChange is still not called
+		await screen.getByRole("button", { name: "Sunday" }).click({ force: true });
+
+		expect(onChange).not.toHaveBeenCalled();
 	});
 
 	it("removes a selected weekday and hides the summary when none remain", async () => {

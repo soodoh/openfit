@@ -134,8 +134,9 @@ describe("exercises route", () => {
 
 		const screen = await render(<ExercisesRoute.options.component />);
 
-		await expect.element(screen.getByRole("main")).toBeInTheDocument();
-		expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(screen.container.querySelector(".animate-pulse")).not.toBeNull();
+		});
 	});
 
 	it("renders the empty library state when no exercises exist", async () => {

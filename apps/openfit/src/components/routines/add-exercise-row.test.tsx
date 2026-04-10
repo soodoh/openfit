@@ -110,12 +110,9 @@ describe("AddExerciseRow", () => {
 			<AddExerciseRow sessionOrDayId="day-1" isSession={false} />,
 		);
 
-		await userEvent.click(
-			(screen.container
-				.querySelector("form")
-				?.querySelector('[type="submit"]') as HTMLElement) ??
-				screen.getByRole("button", { name: "Add" }),
-		);
+		// Submit the form directly — clicking Add requires a selected exercise
+		const form = screen.container.querySelector("form") as HTMLFormElement;
+		form.requestSubmit();
 
 		expect(mockCreateSetGroup).not.toHaveBeenCalled();
 	});
