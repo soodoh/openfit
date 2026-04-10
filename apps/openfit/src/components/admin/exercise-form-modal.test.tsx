@@ -1,12 +1,13 @@
+import { page, userEvent } from "@vitest/browser/context";
 import {
 	act,
-	fireEvent,
-	render,
-	screen,
-	waitFor,
-} from "@testing-library/react";
-import { createContext, type ReactNode, useContext, useState } from "react";
+	createContext,
+	type ReactNode,
+	useContext,
+	useState,
+} from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { ExerciseFormModal } from "./exercise-form-modal";
 
 const mockCreateExercise = vi.fn();
@@ -309,20 +310,22 @@ describe("ExerciseFormModal", () => {
 		mockResetImages.mockClear();
 	});
 
-	it("shows a loading state while exercise metadata is still loading", () => {
+	it("shows a loading state while exercise metadata is still loading", async () => {
 		adminDataSeed = {
 			equipment: undefined as never,
 			categories: undefined as never,
 			muscleGroups: undefined as never,
 		};
 
-		render(<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />);
+		const screen = await render(
+			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
+		);
 
-		expect(screen.queryByLabelText("Name *")).not.toBeInTheDocument();
-		expect(screen.getByText("Add Exercise")).toBeInTheDocument();
+		await expect.element(screen.getByText("Name *")).not.toBeInTheDocument();
+		await expect.element(screen.getByText("Add Exercise")).toBeInTheDocument();
 	});
 
-	it("shows a no-preview placeholder for blank image entries and ignores empty file selections", () => {
+	it("shows a no-preview placeholder for blank image entries and ignores empty file selections", async () => {
 		imageSeed = [
 			{
 				type: "new",
@@ -331,30 +334,31 @@ describe("ExerciseFormModal", () => {
 			},
 		];
 
-		const { container } = render(
+		const screen = await render(
 			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
 		);
 
-		expect(screen.getByText("No preview")).toBeInTheDocument();
+		await expect.element(screen.getByText("No preview")).toBeInTheDocument();
 
-		const input = container.querySelector('input[type="file"]');
-		expect(input).toBeTruthy();
+		const fileInputEl = screen.container.querySelector('input[type="file"]');
+		expect(fileInputEl).toBeTruthy();
+		const fileInput = page.elementLocator(fileInputEl as Element);
+		await expect.element(fileInput).toBeInTheDocument();
 
-		fireEvent.change(input as HTMLInputElement, {
-			target: { files: null },
-		});
+		// Simulate change event with no files selected
+		fileInputEl!.dispatchEvent(new Event("change", { bubbles: true }));
 
 		expect(mockAddFiles).not.toHaveBeenCalled();
 	});
 
-	it("shows edit mode copy and a pending submit state", () => {
+	it("shows edit mode copy and a pending submit state", async () => {
 		formSeed = {
 			...formSeed,
 			isPending: true,
 			uploadProgress: "Uploading images (1/1)...",
 		};
 
-		render(
+		const screen = await render(
 			<ExerciseFormModal
 				open
 				onClose={vi.fn()}
@@ -374,12 +378,18 @@ describe("ExerciseFormModal", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Edit Exercise")).toBeInTheDocument();
-		expect(screen.getByText("Update exercise details")).toBeInTheDocument();
-		expect(
-			screen.getByRole("button", { name: "Uploading images (1/1)..." }),
-		).toBeDisabled();
-		expect(screen.getByText("Uploading images (1/1)...")).toBeInTheDocument();
+		await expect.element(screen.getByText("Edit Exercise")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Update exercise details"))
+			.toBeInTheDocument();
+		await expect
+			.element(
+				screen.getByRole("button", { name: "Uploading images (1/1)..." }),
+			)
+			.toBeDisabled();
+		await expect
+			.element(screen.getByText("Uploading images (1/1)..."))
+			.toBeInTheDocument();
 	});
 
 	it("shows validation errors before submitting", async () => {
@@ -391,13 +401,15 @@ describe("ExerciseFormModal", () => {
 		};
 		const onClose = vi.fn();
 
-		render(<ExerciseFormModal open onClose={onClose} exercise={undefined} />);
+		const screen = await render(
+			<ExerciseFormModal open onClose={onClose} exercise={undefined} />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+		await userEvent.click(screen.getByRole("button", { name: "Create" }));
 
-		expect(
-			await screen.findByText("Exercise name is required"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Exercise name is required"))
+			.toBeInTheDocument();
 		expect(mockCreateExercise).not.toHaveBeenCalled();
 		expect(mockUpdateExercise).not.toHaveBeenCalled();
 		expect(mockUploadFile).not.toHaveBeenCalled();
@@ -410,25 +422,21 @@ describe("ExerciseFormModal", () => {
 			instructions: ["Set up", "Drive up"],
 		};
 
-		const { container } = render(
+		const screen = await render(
 			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
 		);
 
-		expect(
-			screen.getAllByPlaceholderText("Enter instruction step"),
-		).toHaveLength(2);
+		expect(screen.getByPlaceholder("Enter instruction step")).toHaveLength(2);
 
-		const removeButtons = container.querySelectorAll("button.shrink-0");
+		const removeButtons = screen.container.querySelectorAll("button.shrink-0");
 		expect(removeButtons).toHaveLength(2);
 
-		fireEvent.click(removeButtons[0] as HTMLButtonElement);
+		await userEvent.click(removeButtons[0] as HTMLButtonElement);
 
-		expect(
-			await screen.findAllByPlaceholderText("Enter instruction step"),
-		).toHaveLength(1);
+		expect(screen.getByPlaceholder("Enter instruction step")).toHaveLength(1);
 	});
 
-	it("updates instruction text and opens the file picker", () => {
+	it("updates instruction text and opens the file picker", async () => {
 		const clickSpy = vi
 			.spyOn(HTMLInputElement.prototype, "click")
 			.mockImplementation(() => {});
@@ -446,19 +454,21 @@ describe("ExerciseFormModal", () => {
 			],
 		};
 
-		render(<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />);
+		const screen = await render(
+			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
+		);
 
-		fireEvent.change(screen.getByPlaceholderText("Enter instruction step"), {
-			target: { value: "Brace the core" },
-		});
-		expect(screen.getByDisplayValue("Brace the core")).toBeInTheDocument();
+		await screen
+			.getByPlaceholder("Enter instruction step")
+			.fill("Brace the core");
+		await expect
+			.element(screen.getByPlaceholder("Enter instruction step"))
+			.toHaveValue("Brace the core");
 
-		fireEvent.click(screen.getByRole("button", { name: "Add Step" }));
-		expect(
-			screen.getAllByPlaceholderText("Enter instruction step"),
-		).toHaveLength(2);
+		await userEvent.click(screen.getByRole("button", { name: "Add Step" }));
+		expect(screen.getByPlaceholder("Enter instruction step")).toHaveLength(2);
 
-		fireEvent.click(screen.getByRole("button", { name: "Add Images" }));
+		await userEvent.click(screen.getByRole("button", { name: "Add Images" }));
 		expect(clickSpy).toHaveBeenCalledTimes(1);
 
 		clickSpy.mockRestore();
@@ -473,11 +483,15 @@ describe("ExerciseFormModal", () => {
 		};
 		const onClose = vi.fn();
 
-		render(<ExerciseFormModal open onClose={onClose} exercise={undefined} />);
+		const screen = await render(
+			<ExerciseFormModal open onClose={onClose} exercise={undefined} />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+		await userEvent.click(screen.getByRole("button", { name: "Create" }));
 
-		expect(await screen.findByText("Category is required")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Category is required"))
+			.toBeInTheDocument();
 		expect(mockCreateExercise).not.toHaveBeenCalled();
 		expect(onClose).not.toHaveBeenCalled();
 	});
@@ -491,13 +505,15 @@ describe("ExerciseFormModal", () => {
 		};
 		const onClose = vi.fn();
 
-		render(<ExerciseFormModal open onClose={onClose} exercise={undefined} />);
+		const screen = await render(
+			<ExerciseFormModal open onClose={onClose} exercise={undefined} />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+		await userEvent.click(screen.getByRole("button", { name: "Create" }));
 
-		expect(
-			await screen.findByText("At least one primary muscle is required"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("At least one primary muscle is required"))
+			.toBeInTheDocument();
 		expect(mockCreateExercise).not.toHaveBeenCalled();
 		expect(mockUpdateExercise).not.toHaveBeenCalled();
 		expect(mockUploadFile).not.toHaveBeenCalled();
@@ -508,11 +524,13 @@ describe("ExerciseFormModal", () => {
 		imageSeed = [];
 		const onClose = vi.fn();
 
-		render(<ExerciseFormModal open onClose={onClose} exercise={undefined} />);
+		const screen = await render(
+			<ExerciseFormModal open onClose={onClose} exercise={undefined} />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+		await userEvent.click(screen.getByRole("button", { name: "Create" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockCreateExercise).toHaveBeenCalledWith({
 				name: "Bench Press",
 				equipmentId: "equipment-1",
@@ -532,7 +550,7 @@ describe("ExerciseFormModal", () => {
 	it("uploads new images and submits the update flow with cleaned instructions", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<ExerciseFormModal
 				open
 				onClose={onClose}
@@ -552,9 +570,9 @@ describe("ExerciseFormModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+		await userEvent.click(screen.getByRole("button", { name: "Save Changes" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUploadFile).toHaveBeenCalledTimes(1);
 		});
 		expect(mockUploadFile).toHaveBeenCalledWith(imageSeed[1].file);
@@ -579,7 +597,7 @@ describe("ExerciseFormModal", () => {
 		imageSeed = [];
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<ExerciseFormModal
 				open
 				onClose={onClose}
@@ -599,11 +617,11 @@ describe("ExerciseFormModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+		await userEvent.click(screen.getByRole("button", { name: "Save Changes" }));
 
-		expect(
-			await screen.findByText("Failed to update exercise"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Failed to update exercise"))
+			.toBeInTheDocument();
 		expect(mockUploadFile).not.toHaveBeenCalled();
 		expect(onClose).not.toHaveBeenCalled();
 	});
@@ -613,11 +631,13 @@ describe("ExerciseFormModal", () => {
 		imageSeed = [];
 		const onClose = vi.fn();
 
-		render(<ExerciseFormModal open onClose={onClose} exercise={undefined} />);
+		const screen = await render(
+			<ExerciseFormModal open onClose={onClose} exercise={undefined} />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+		await userEvent.click(screen.getByRole("button", { name: "Create" }));
 
-		expect(await screen.findByText("create failed")).toBeInTheDocument();
+		await expect.element(screen.getByText("create failed")).toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
@@ -625,46 +645,48 @@ describe("ExerciseFormModal", () => {
 		mockCreateExercise.mockRejectedValueOnce("create failed");
 		imageSeed = [];
 
-		render(<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />);
+		const screen = await render(
+			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+		await userEvent.click(screen.getByRole("button", { name: "Create" }));
 
-		expect(
-			await screen.findByText("Failed to create exercise"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Failed to create exercise"))
+			.toBeInTheDocument();
 	});
 
-	it("adds uploaded files through the image queue and clears the file input", () => {
-		const { container } = render(
+	it("adds uploaded files through the image queue and clears the file input", async () => {
+		const screen = await render(
 			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
 		);
 		const file = new File(["image"], "extra.jpg", { type: "image/jpeg" });
-		const input = container.querySelector('input[type="file"]');
+		const fileInputEl = screen.container.querySelector('input[type="file"]');
+		expect(fileInputEl).toBeTruthy();
+		const fileInput = page.elementLocator(fileInputEl as Element);
 
-		expect(input).toBeTruthy();
-		fireEvent.change(input as HTMLInputElement, {
-			target: { files: [file] },
-		});
+		await expect.element(fileInput).toBeInTheDocument();
+		await userEvent.upload(fileInput, file);
 
 		expect(mockAddFiles).toHaveBeenCalledWith([file]);
 	});
 
-	it("removes existing images from the queue", () => {
-		const { container } = render(
+	it("removes existing images from the queue", async () => {
+		const screen = await render(
 			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
 		);
 
-		const removeButtons = container.querySelectorAll(
+		const removeButtons = screen.container.querySelectorAll(
 			"button.absolute.top-1.right-1",
 		);
 
 		expect(removeButtons).toHaveLength(2);
-		fireEvent.click(removeButtons[0]);
+		await userEvent.click(removeButtons[0]);
 
 		expect(mockRemoveImage).toHaveBeenCalledWith(0);
 	});
 
-	it("exercises the hidden muscle and instruction helper branches", () => {
+	it("exercises the hidden muscle and instruction helper branches", async () => {
 		formSeed = {
 			...formSeed,
 			instructions: ["Set up"],
@@ -672,7 +694,9 @@ describe("ExerciseFormModal", () => {
 			secondaryMuscleIds: [],
 		};
 
-		render(<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />);
+		const screen = await render(
+			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
+		);
 
 		expect(latestFormState).toBeDefined();
 		act(() => {
@@ -683,12 +707,10 @@ describe("ExerciseFormModal", () => {
 			latestFormState.removeInstruction(0);
 		});
 
-		expect(
-			screen.getAllByPlaceholderText("Enter instruction step"),
-		).toHaveLength(1);
+		expect(screen.getByPlaceholder("Enter instruction step")).toHaveLength(1);
 	});
 
-	it("fires the select and muscle chip callbacks through the rendered controls", () => {
+	it("fires the select and muscle chip callbacks through the rendered controls", async () => {
 		adminDataSeed = {
 			equipment: [
 				{ id: "equipment-1", name: "Barbell" },
@@ -711,13 +733,15 @@ describe("ExerciseFormModal", () => {
 			secondaryMuscleIds: [],
 		};
 
-		render(<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />);
+		const screen = await render(
+			<ExerciseFormModal open onClose={vi.fn()} exercise={undefined} />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Chest" }));
-		fireEvent.click(screen.getByRole("button", { name: "Beginner" }));
-		fireEvent.click(screen.getByRole("button", { name: "Barbell" }));
-		fireEvent.click(screen.getByRole("button", { name: "Push" }));
-		fireEvent.click(screen.getByRole("button", { name: "Compound" }));
+		await userEvent.click(screen.getByRole("button", { name: "Chest" }));
+		await userEvent.click(screen.getByRole("button", { name: "Beginner" }));
+		await userEvent.click(screen.getByRole("button", { name: "Barbell" }));
+		await userEvent.click(screen.getByRole("button", { name: "Push" }));
+		await userEvent.click(screen.getByRole("button", { name: "Compound" }));
 
 		expect(latestFormState?.categoryId).toBe("category-1");
 		expect(latestFormState?.level).toBe("beginner");
@@ -725,9 +749,13 @@ describe("ExerciseFormModal", () => {
 		expect(latestFormState?.force).toBe("push");
 		expect(latestFormState?.mechanic).toBe("compound");
 
-		fireEvent.click(screen.getAllByRole("button", { name: "Pectorals" })[0]);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Pectorals" }).nth(0),
+		);
 		expect(latestFormState?.primaryMuscleIds).toEqual(["muscle-1"]);
-		fireEvent.click(screen.getAllByRole("button", { name: "Pectorals" })[1]);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Pectorals" }).nth(1),
+		);
 		expect(latestFormState?.primaryMuscleIds).toEqual([]);
 	});
 });

@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import {
 	Carousel,
 	CarouselContent,
@@ -40,8 +41,8 @@ describe("carousel wrappers", () => {
 		mockApi.scrollSnapList.mockReturnValue([0, 1, 2]);
 	});
 
-	it("renders vertical controls and delegates navigation to embla", () => {
-		render(
+	it("renders vertical controls and delegates navigation to embla", async () => {
+		const screen = await render(
 			<Carousel orientation="vertical">
 				<CarouselContent data-testid="carousel-content">
 					<CarouselItem>Slide 1</CarouselItem>
@@ -53,37 +54,41 @@ describe("carousel wrappers", () => {
 			</Carousel>,
 		);
 
-		expect(screen.getByRole("region")).toHaveAttribute(
-			"aria-roledescription",
-			"carousel",
-		);
-		expect(screen.getByTestId("carousel-content")).toHaveClass("flex-col");
-		expect(screen.getAllByRole("group")[0]).toHaveAttribute(
-			"aria-roledescription",
-			"slide",
-		);
-		expect(screen.getByRole("button", { name: "Previous slide" })).toHaveClass(
-			"rotate-90",
-		);
-		expect(screen.getByRole("button", { name: "Next slide" })).toHaveClass(
-			"rotate-90",
-		);
-		expect(screen.getByRole("button", { name: "Go to slide 2" })).toHaveClass(
-			"bg-primary",
-		);
+		await expect
+			.element(screen.getByRole("region"))
+			.toHaveAttribute("aria-roledescription", "carousel");
+		await expect
+			.element(screen.getByTestId("carousel-content"))
+			.toHaveClass("flex-col");
+		await expect
+			.element(screen.getByRole("group").nth(0))
+			.toHaveAttribute("aria-roledescription", "slide");
+		await expect
+			.element(screen.getByRole("button", { name: "Previous slide" }))
+			.toHaveClass("rotate-90");
+		await expect
+			.element(screen.getByRole("button", { name: "Next slide" }))
+			.toHaveClass("rotate-90");
+		await expect
+			.element(screen.getByRole("button", { name: "Go to slide 2" }))
+			.toHaveClass("bg-primary");
 
-		fireEvent.click(screen.getByRole("button", { name: "Previous slide" }));
-		fireEvent.click(screen.getByRole("button", { name: "Next slide" }));
-		fireEvent.click(screen.getByRole("button", { name: "Go to slide 3" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Previous slide" }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Next slide" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Go to slide 3" }),
+		);
 
 		expect(mockScrollPrev).toHaveBeenCalledTimes(1);
 		expect(mockScrollNext).toHaveBeenCalledTimes(1);
 		expect(mockScrollTo).toHaveBeenCalledWith(2);
 	});
 
-	it("renders the default horizontal layout, handles keyboard navigation, and cleans up listeners", () => {
+	it("renders the default horizontal layout, handles keyboard navigation, and cleans up listeners", async () => {
 		mockApi.scrollSnapList.mockReturnValue([0]);
-		const { unmount } = render(
+		const screen = await render(
 			<Carousel setApi={vi.fn()}>
 				<CarouselContent data-testid="carousel-content">
 					<CarouselItem>Slide 1</CarouselItem>
@@ -94,17 +99,29 @@ describe("carousel wrappers", () => {
 			</Carousel>,
 		);
 
-		expect(screen.getByTestId("carousel-content")).toHaveClass("-ml-4");
+		await expect
+			.element(screen.getByTestId("carousel-content"))
+			.toHaveClass("-ml-4");
+		await expect
+			.element(screen.getByRole("button", { name: "Previous slide" }))
+			.not.toHaveClass("rotate-90");
+		await expect
+			.element(screen.getByRole("button", { name: "Next slide" }))
+			.not.toHaveClass("rotate-90");
 		expect(
-			screen.getByRole("button", { name: "Previous slide" }),
-		).not.toHaveClass("rotate-90");
-		expect(screen.getByRole("button", { name: "Next slide" })).not.toHaveClass(
-			"rotate-90",
-		);
-		expect(screen.queryByRole("button", { name: "Go to slide 1" })).toBeNull();
+			screen.getByRole("button", { name: "Go to slide 1" }).query(),
+		).toBeNull();
 
-		fireEvent.keyDown(screen.getByRole("region"), { key: "ArrowRight" });
-		fireEvent.keyDown(screen.getByRole("region"), { key: "ArrowLeft" });
+		// Dispatch keyboard events directly on the region since onKeyDownCapture
+		// is attached to it; focus-based keyboard events don't reliably propagate
+		// in the vitest browser environment.
+		const region = screen.getByRole("region").element() as HTMLElement;
+		region.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
+		);
+		region.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }),
+		);
 		expect(mockScrollNext).toHaveBeenCalledTimes(1);
 		expect(mockScrollPrev).toHaveBeenCalledTimes(1);
 
@@ -114,19 +131,19 @@ describe("carousel wrappers", () => {
 		expect(selectHandler).toBeDefined();
 		expect(() => selectHandler?.(undefined)).not.toThrow();
 
-		unmount();
+		screen.unmount();
 
 		expect(mockApi.off).toHaveBeenCalledWith("reInit", expect.any(Function));
 		expect(mockApi.off).toHaveBeenCalledWith("select", expect.any(Function));
 	});
 
-	it("throws when useCarousel is called outside the provider", () => {
+	it("throws when useCarousel is called outside the provider", async () => {
 		function Consumer() {
 			useCarousel();
 			return null;
 		}
 
-		expect(() => render(<Consumer />)).toThrow(
+		await expect(render(<Consumer />)).rejects.toThrow(
 			"useCarousel must be used within a <Carousel />",
 		);
 	});

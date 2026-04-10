@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { SetGroupWithRelations, Units } from "@/lib/types";
 import { SetType } from "@/lib/types";
 import { BulkEditSetModal } from "./bulk-edit-set-modal";
@@ -146,7 +147,7 @@ describe("BulkEditSetModal", () => {
 	it("submits the parsed edits and closes on success", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<BulkEditSetModal
 				open
 				onClose={onClose}
@@ -155,17 +156,13 @@ describe("BulkEditSetModal", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByPlaceholderText("8"), {
-			target: { value: "10" },
-		});
-		fireEvent.change(screen.getByLabelText("rest-timer"), {
-			target: { value: "1:30" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Reps" }));
-		fireEvent.click(screen.getByRole("button", { name: "lb" }));
-		fireEvent.click(screen.getByRole("button", { name: "Update" }));
+		await screen.getByPlaceholder("8").fill("10");
+		await screen.getByLabelText("rest-timer").fill("1:30");
+		await userEvent.click(screen.getByRole("button", { name: "Reps" }));
+		await userEvent.click(screen.getByRole("button", { name: "lb" }));
+		await userEvent.click(screen.getByRole("button", { name: "Update" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockBulkEditSetGroup).toHaveBeenCalledWith({
 				id: "group-1",
 				reps: 10,
@@ -178,10 +175,10 @@ describe("BulkEditSetModal", () => {
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
-	it("cancels without mutating", () => {
+	it("cancels without mutating", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<BulkEditSetModal
 				open
 				onClose={onClose}
@@ -190,7 +187,7 @@ describe("BulkEditSetModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 		expect(mockBulkEditSetGroup).not.toHaveBeenCalled();
@@ -199,7 +196,7 @@ describe("BulkEditSetModal", () => {
 	it("submits empty reps and a parsed weight without changing the rest timer", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<BulkEditSetModal
 				open
 				onClose={onClose}
@@ -208,13 +205,11 @@ describe("BulkEditSetModal", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByPlaceholderText("135"), {
-			target: { value: "150" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "lb" }));
-		fireEvent.click(screen.getByRole("button", { name: "Update" }));
+		await screen.getByPlaceholder("135").fill("150");
+		await userEvent.click(screen.getByRole("button", { name: "lb" }));
+		await userEvent.click(screen.getByRole("button", { name: "Update" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockBulkEditSetGroup).toHaveBeenCalledWith({
 				id: "group-1",
 				reps: undefined,
@@ -230,7 +225,7 @@ describe("BulkEditSetModal", () => {
 	it("handles an empty set group shape without preset units", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<BulkEditSetModal
 				open
 				onClose={onClose}
@@ -242,9 +237,9 @@ describe("BulkEditSetModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Update" }));
+		await userEvent.click(screen.getByRole("button", { name: "Update" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockBulkEditSetGroup).toHaveBeenCalledWith({
 				id: "group-1",
 				reps: undefined,

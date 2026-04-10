@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderHook, waitFor } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import { queryKeys } from "@/lib/query-keys";
 import {
 	useBulkEditSetGroup,
@@ -50,7 +50,7 @@ describe("use-set-group-mutations", () => {
 		const queryClient = createQueryClient();
 		queryClient.setQueryData(queryKeys.sessions.all, []);
 		queryClient.setQueryData(queryKeys.routineDays.all, []);
-		const { result } = renderHook(() => useCreateSetGroup(), {
+		const { result } = await renderHook(() => useCreateSetGroup(), {
 			wrapper: createWrapper(queryClient),
 		});
 		const payload = {
@@ -83,7 +83,7 @@ describe("use-set-group-mutations", () => {
 		expect(
 			JSON.parse((fetchSpy.mock.calls[0][1]?.body as string) ?? "{}"),
 		).toEqual(payload);
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(
 				queryClient.getQueryState(queryKeys.sessions.all)?.isInvalidated,
 			).toBe(true);
@@ -99,7 +99,7 @@ describe("use-set-group-mutations", () => {
 		queryClient.setQueryData(queryKeys.routineDays.all, [
 			{ id: "set-group-1" },
 		]);
-		const { result } = renderHook(() => useUpdateSetGroup(), {
+		const { result } = await renderHook(() => useUpdateSetGroup(), {
 			wrapper: createWrapper(queryClient),
 		});
 		const payload = {
@@ -131,7 +131,7 @@ describe("use-set-group-mutations", () => {
 			type: "NORMAL",
 			comment: "Drop set",
 		});
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(
 				queryClient.getQueryState(queryKeys.sessions.all)?.isInvalidated,
 			).toBe(true);
@@ -147,7 +147,7 @@ describe("use-set-group-mutations", () => {
 		queryClient.setQueryData(queryKeys.routineDays.all, [
 			{ id: "set-group-1" },
 		]);
-		const { result } = renderHook(() => useDeleteSetGroup(), {
+		const { result } = await renderHook(() => useDeleteSetGroup(), {
 			wrapper: createWrapper(queryClient),
 		});
 		fetchSpy.mockResolvedValueOnce(Response.json({ success: true }));
@@ -159,7 +159,7 @@ describe("use-set-group-mutations", () => {
 		expect(fetchSpy).toHaveBeenCalledWith("/api/set-groups/set-group-1", {
 			method: "DELETE",
 		});
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(
 				queryClient.getQueryState(queryKeys.sessions.all)?.isInvalidated,
 			).toBe(true);
@@ -173,7 +173,7 @@ describe("use-set-group-mutations", () => {
 		const queryClient = createQueryClient();
 		queryClient.setQueryData(queryKeys.sessions.all, []);
 		queryClient.setQueryData(queryKeys.routineDays.all, []);
-		const { result } = renderHook(() => useReorderSetGroups(), {
+		const { result } = await renderHook(() => useReorderSetGroups(), {
 			wrapper: createWrapper(queryClient),
 		});
 		fetchSpy.mockResolvedValueOnce(Response.json({ success: true }));
@@ -192,7 +192,7 @@ describe("use-set-group-mutations", () => {
 		expect(
 			JSON.parse((fetchSpy.mock.calls[0][1]?.body as string) ?? "{}"),
 		).toEqual({ setGroupIds: ["a", "b", "c"] });
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(
 				queryClient.getQueryState(queryKeys.sessions.all)?.isInvalidated,
 			).toBe(true);
@@ -206,7 +206,7 @@ describe("use-set-group-mutations", () => {
 		const queryClient = createQueryClient();
 		queryClient.setQueryData(queryKeys.sessions.all, []);
 		queryClient.setQueryData(queryKeys.routineDays.all, []);
-		const { result } = renderHook(() => useReplaceExercise(), {
+		const { result } = await renderHook(() => useReplaceExercise(), {
 			wrapper: createWrapper(queryClient),
 		});
 		fetchSpy.mockResolvedValueOnce(Response.json({ success: true }));
@@ -228,7 +228,7 @@ describe("use-set-group-mutations", () => {
 		expect(
 			JSON.parse((fetchSpy.mock.calls[0][1]?.body as string) ?? "{}"),
 		).toEqual({ exerciseId: "exercise-2" });
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(
 				queryClient.getQueryState(queryKeys.sessions.all)?.isInvalidated,
 			).toBe(true);
@@ -242,7 +242,7 @@ describe("use-set-group-mutations", () => {
 		const queryClient = createQueryClient();
 		queryClient.setQueryData(queryKeys.sessions.all, []);
 		queryClient.setQueryData(queryKeys.routineDays.all, []);
-		const { result } = renderHook(() => useBulkEditSetGroup(), {
+		const { result } = await renderHook(() => useBulkEditSetGroup(), {
 			wrapper: createWrapper(queryClient),
 		});
 		const payload = {
@@ -275,7 +275,7 @@ describe("use-set-group-mutations", () => {
 			weightUnitId: "weight-1",
 			restTime: 90,
 		});
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(
 				queryClient.getQueryState(queryKeys.sessions.all)?.isInvalidated,
 			).toBe(true);
@@ -286,7 +286,7 @@ describe("use-set-group-mutations", () => {
 	});
 
 	it("propagates set-group errors from the server response", async () => {
-		const { result } = renderHook(() => useReorderSetGroups(), {
+		const { result } = await renderHook(() => useReorderSetGroups(), {
 			wrapper: createWrapper(createQueryClient()),
 		});
 		fetchSpy.mockResolvedValueOnce(

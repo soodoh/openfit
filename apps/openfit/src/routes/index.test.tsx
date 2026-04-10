@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import HomeRoute from "./index";
 
 const mockNavigate = vi.fn();
@@ -98,24 +99,26 @@ describe("home route", () => {
 		mockUseUnits.mockReturnValue({ data: undefined, isLoading: false });
 	});
 
-	it("shows a loader while auth is still pending", () => {
+	it("shows a loader while auth is still pending", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: true });
 
-		render(<HomeRoute.options.component />);
+		await render(<HomeRoute.options.component />);
 
 		expect(document.querySelector(".animate-spin")).toBeInTheDocument();
 	});
 
 	it("redirects anonymous users to sign in", async () => {
-		render(<HomeRoute.options.component />);
+		const screen = await render(<HomeRoute.options.component />);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockNavigate).toHaveBeenCalledWith({ to: "/signin" });
 		});
-		expect(screen.queryByText("Welcome back")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Welcome back"))
+			.not.toBeInTheDocument();
 	});
 
-	it("renders the empty recent activity state when there are no sessions", () => {
+	it("renders the empty recent activity state when there are no sessions", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
 		mockUseDashboardStats.mockReturnValue({
 			data: {
@@ -136,16 +139,18 @@ describe("home route", () => {
 			isLoading: false,
 		});
 
-		render(<HomeRoute.options.component />);
+		const screen = await render(<HomeRoute.options.component />);
 
-		expect(screen.getByText("Welcome back")).toBeInTheDocument();
-		expect(screen.getByText("No workouts yet")).toBeInTheDocument();
-		expect(
-			screen.queryByRole("link", { name: "View all" }),
-		).not.toBeInTheDocument();
+		await expect.element(screen.getByText("Welcome back")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("No workouts yet"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("link", { name: "View all" }))
+			.not.toBeInTheDocument();
 	});
 
-	it("renders the recent activity skeleton while session data is loading", () => {
+	it("renders the recent activity skeleton while session data is loading", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
 		mockUseDashboardStats.mockReturnValue({
 			data: undefined,
@@ -164,14 +169,14 @@ describe("home route", () => {
 			isLoading: false,
 		});
 
-		render(<HomeRoute.options.component />);
+		await render(<HomeRoute.options.component />);
 
 		expect(document.querySelectorAll(".animate-pulse").length).toBeGreaterThan(
 			0,
 		);
 	});
 
-	it("renders dashboard cards and opens session details for a recent session", () => {
+	it("renders dashboard cards and opens session details for a recent session", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
 		mockUseCurrentSession.mockReturnValue({
 			data: { id: "current-session-1" },
@@ -195,21 +200,20 @@ describe("home route", () => {
 			isLoading: false,
 		});
 
-		render(<HomeRoute.options.component />);
+		const screen = await render(<HomeRoute.options.component />);
 
-		expect(screen.getByTestId("resume-session-button")).toHaveTextContent(
-			"current-session-1",
-		);
-		expect(screen.getByText("Leg Day")).toBeInTheDocument();
-		expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute(
-			"href",
-			"/logs",
-		);
+		await expect
+			.element(screen.getByTestId("resume-session-button"))
+			.toHaveTextContent("current-session-1");
+		await expect.element(screen.getByText("Leg Day")).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("link", { name: "View all" }))
+			.toHaveAttribute("href", "/logs");
 
-		fireEvent.click(screen.getByRole("button", { name: "Leg Day" }));
+		await userEvent.click(screen.getByRole("button", { name: "Leg Day" }));
 
-		expect(screen.getByTestId("session-detail-modal")).toHaveTextContent(
-			"recent-session-1",
-		);
+		await expect
+			.element(screen.getByTestId("session-detail-modal"))
+			.toHaveTextContent("recent-session-1");
 	});
 });

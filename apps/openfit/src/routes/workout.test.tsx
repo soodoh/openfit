@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import WorkoutRoute from "./workout";
 
 const mockNavigate = vi.fn();
@@ -75,60 +76,76 @@ describe("workout route", () => {
 		});
 	});
 
-	it("shows a loading message while session data is pending", () => {
+	it("shows a loading message while session data is pending", async () => {
 		mockUseCurrentSession.mockReturnValue({ data: undefined, isLoading: true });
 
-		render(<WorkoutRoute.options.component />);
+		const screen = await render(<WorkoutRoute.options.component />);
 
-		expect(screen.getByText("Loading...")).toBeInTheDocument();
+		await expect.element(screen.getByText("Loading...")).toBeInTheDocument();
 	});
 
-	it("shows a loading message while units are pending", () => {
+	it("shows a loading message while units are pending", async () => {
 		mockUseUnits.mockReturnValue({ data: undefined, isLoading: true });
 
-		render(<WorkoutRoute.options.component />);
+		const screen = await render(<WorkoutRoute.options.component />);
 
-		expect(screen.getByText("Loading...")).toBeInTheDocument();
+		await expect.element(screen.getByText("Loading...")).toBeInTheDocument();
 	});
 
 	it("shows the empty workout state and opens the new-session modal", async () => {
-		render(<WorkoutRoute.options.component />);
+		const screen = await render(<WorkoutRoute.options.component />);
 
-		expect(screen.getByText("No Active Workout")).toBeInTheDocument();
-		expect(screen.getByText("Start New Workout")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("No Active Workout"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Start New Workout"))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Start New Workout" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Start New Workout" }),
+		);
 
-		expect(screen.getByTestId("edit-session-modal")).toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("edit-session-modal"))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Back to Dashboard" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Back to Dashboard" }),
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockNavigate).toHaveBeenCalledWith({ to: "/" });
 		});
 	});
 
-	it("closes the new-session modal when it requests to close", () => {
-		render(<WorkoutRoute.options.component />);
+	it("closes the new-session modal when it requests to close", async () => {
+		const screen = await render(<WorkoutRoute.options.component />);
 
-		fireEvent.click(screen.getByRole("button", { name: "Start New Workout" }));
-		expect(screen.getByTestId("edit-session-modal")).toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Start New Workout" }),
+		);
+		await expect
+			.element(screen.getByTestId("edit-session-modal"))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
+		await userEvent.click(screen.getByRole("button", { name: "Close modal" }));
 
-		expect(screen.queryByTestId("edit-session-modal")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("edit-session-modal"))
+			.not.toBeInTheDocument();
 	});
 
-	it("renders the current session page when a workout is active", () => {
+	it("renders the current session page when a workout is active", async () => {
 		mockUseCurrentSession.mockReturnValue({
 			data: { id: "session-1" },
 			isLoading: false,
 		});
 
-		render(<WorkoutRoute.options.component />);
+		const screen = await render(<WorkoutRoute.options.component />);
 
-		expect(screen.getByTestId("current-session-page")).toHaveTextContent(
-			"session-1",
-		);
+		await expect
+			.element(screen.getByTestId("current-session-page"))
+			.toHaveTextContent("session-1");
 	});
 });

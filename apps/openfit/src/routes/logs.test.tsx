@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import LogsRoute from "./logs";
 
 const mockUseCurrentSession = vi.fn();
@@ -48,25 +48,31 @@ describe("logs route", () => {
 		});
 	});
 
-	it("shows a loading skeleton while the session data is pending", () => {
+	it("shows a loading skeleton while the session data is pending", async () => {
 		mockUseSessionsByDateRange.mockReturnValue({
 			data: undefined,
 			isLoading: true,
 		});
 
-		render(<LogsRoute.options.component />);
+		await render(<LogsRoute.options.component />);
 
-		expect(document.querySelector(".animate-spin")).toBeInTheDocument();
+		await vi.waitFor(() =>
+			expect(document.querySelector(".animate-spin")).toBeTruthy(),
+		);
 	});
 
-	it("renders the empty state when there are no sessions in the current month", () => {
-		render(<LogsRoute.options.component />);
+	it("renders the empty state when there are no sessions in the current month", async () => {
+		const screen = await render(<LogsRoute.options.component />);
 
-		expect(screen.getByText("No workout logs yet")).toBeInTheDocument();
-		expect(screen.getByText("Create session")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("No workout logs yet"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Create session"))
+			.toBeInTheDocument();
 	});
 
-	it("renders the month summary and calendar when sessions exist", () => {
+	it("renders the month summary and calendar when sessions exist", async () => {
 		const currentSession = { id: "session-1" };
 		const sessions = [
 			{
@@ -81,13 +87,17 @@ describe("logs route", () => {
 			isLoading: false,
 		});
 
-		render(<LogsRoute.options.component />);
+		const screen = await render(<LogsRoute.options.component />);
 
-		expect(screen.getByTestId("resume-session-button")).toHaveTextContent(
-			"session-1",
-		);
-		expect(screen.getByText("Create session")).toBeInTheDocument();
-		expect(screen.getByTestId("monthly-calendar")).toBeInTheDocument();
-		expect(screen.getByText(/session in/i)).toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("resume-session-button"))
+			.toHaveTextContent("session-1");
+		await expect
+			.element(screen.getByText("Create session"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("monthly-calendar"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText(/session in/i)).toBeInTheDocument();
 	});
 });

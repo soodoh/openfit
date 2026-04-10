@@ -1,5 +1,5 @@
-import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import type { RoutineDayDetailDto, RoutineDaySearchDto } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
@@ -38,9 +38,11 @@ describe("use-routine-days queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutineDay(undefined), { wrapper });
+		const { result } = await renderHook(() => useRoutineDay(undefined), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.fetchStatus).toBe("idle");
 		});
 
@@ -127,9 +129,11 @@ describe("use-routine-days queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutineDay("day-1"), { wrapper });
+		const { result } = await renderHook(() => useRoutineDay("day-1"), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -162,9 +166,11 @@ describe("use-routine-days queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutineDay("day-2"), { wrapper });
+		const { result } = await renderHook(() => useRoutineDay("day-2"), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -180,11 +186,11 @@ describe("use-routine-days queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutineDay("missing-day"), {
+		const { result } = await renderHook(() => useRoutineDay("missing-day"), {
 			wrapper,
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 
@@ -203,9 +209,11 @@ describe("use-routine-days queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutineDay("day-1"), { wrapper });
+		const { result } = await renderHook(() => useRoutineDay("day-1"), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 
@@ -250,11 +258,11 @@ describe("use-routine-days queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutineDaySearch("push", 5), {
+		const { result } = await renderHook(() => useRoutineDaySearch("push", 5), {
 			wrapper,
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -277,11 +285,11 @@ describe("use-routine-days queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutineDaySearch("push"), {
+		const { result } = await renderHook(() => useRoutineDaySearch("push"), {
 			wrapper,
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 
@@ -324,23 +332,23 @@ describe("use-routine-days queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result: limited } = renderHook(
+		const { result: limited } = await renderHook(
 			() => useRoutineDaySearch("push", 1),
 			{
 				wrapper,
 			},
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(limited.current.isSuccess).toBe(true);
 		});
 
-		const { result: expanded } = renderHook(
+		const { result: expanded } = await renderHook(
 			() => useRoutineDaySearch("push", 2),
 			{ wrapper },
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(expanded.current.isSuccess).toBe(true);
 		});
 
@@ -363,9 +371,11 @@ describe("use-routine-days queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutineDaySearch(""), { wrapper });
+		const { result } = await renderHook(() => useRoutineDaySearch(""), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 

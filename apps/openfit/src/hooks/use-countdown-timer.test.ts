@@ -1,5 +1,6 @@
-import { act, renderHook } from "@testing-library/react";
+import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import { useCountdownTimer } from "./use-countdown-timer";
 
 describe("use-countdown-timer", () => {
@@ -13,7 +14,7 @@ describe("use-countdown-timer", () => {
 		vi.setSystemTime(new Date("2026-02-01T10:00:00.000Z"));
 		const onExpire = vi.fn();
 		const expiryTimestamp = new Date(Date.now() + 5000);
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useCountdownTimer({
 				expiryTimestamp,
 				autoStart: false,
@@ -52,7 +53,7 @@ describe("use-countdown-timer", () => {
 		vi.useFakeTimers();
 		vi.setSystemTime(new Date("2026-02-01T10:00:00.000Z"));
 		const onExpire = vi.fn();
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useCountdownTimer({
 				expiryTimestamp: new Date(Date.now() + 1000),
 				autoStart: true,
@@ -107,7 +108,7 @@ describe("use-countdown-timer", () => {
 		vi.setSystemTime(new Date("2026-02-01T10:00:00.000Z"));
 		const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
 		const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
-		const { result, unmount } = renderHook(() =>
+		const { result, unmount } = await renderHook(() =>
 			useCountdownTimer({
 				expiryTimestamp: new Date(Date.now() + 5000),
 				autoStart: false,
@@ -136,12 +137,12 @@ describe("use-countdown-timer", () => {
 		expect(clearIntervalSpy).toHaveBeenLastCalledWith(createdIntervalId);
 	});
 
-	it("stays stopped when initialized or restarted with an already expired timestamp", () => {
+	it("stays stopped when initialized or restarted with an already expired timestamp", async () => {
 		vi.useFakeTimers();
 		vi.setSystemTime(new Date("2026-02-01T10:00:00.000Z"));
 		const onExpire = vi.fn();
 
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useCountdownTimer({
 				expiryTimestamp: new Date(Date.now() - 1000),
 				autoStart: true,

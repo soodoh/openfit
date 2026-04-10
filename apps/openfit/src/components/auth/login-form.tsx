@@ -68,30 +68,33 @@ const PROVIDER_ICONS: Record<string, React.ReactNode> = {
 	),
 };
 // Check if OAuth providers are configured (based on env vars)
-const OAUTH_PROVIDERS = [
-	{
-		id: "google",
-		name: "Google",
-		enabled: Boolean(import.meta.env.VITE_AUTH_GOOGLE_ENABLED),
-	},
-	{
-		id: "github",
-		name: "GitHub",
-		enabled: Boolean(import.meta.env.VITE_AUTH_GITHUB_ENABLED),
-	},
-	{
-		id: "discord",
-		name: "Discord",
-		enabled: Boolean(import.meta.env.VITE_AUTH_DISCORD_ENABLED),
-	},
-	{
-		id: "oidc",
-		name: String(import.meta.env.VITE_AUTH_OIDC_PROVIDER_NAME ?? "SSO"),
-		enabled: Boolean(import.meta.env.VITE_AUTH_OIDC_ENABLED),
-	},
-].filter((p) => p.enabled);
+function getOAuthProviders() {
+	return [
+		{
+			id: "google",
+			name: "Google",
+			enabled: Boolean(import.meta.env.VITE_AUTH_GOOGLE_ENABLED),
+		},
+		{
+			id: "github",
+			name: "GitHub",
+			enabled: Boolean(import.meta.env.VITE_AUTH_GITHUB_ENABLED),
+		},
+		{
+			id: "discord",
+			name: "Discord",
+			enabled: Boolean(import.meta.env.VITE_AUTH_DISCORD_ENABLED),
+		},
+		{
+			id: "oidc",
+			name: String(import.meta.env.VITE_AUTH_OIDC_PROVIDER_NAME ?? "SSO"),
+			enabled: Boolean(import.meta.env.VITE_AUTH_OIDC_ENABLED),
+		},
+	].filter((p) => p.enabled);
+}
 export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 	const navigate = useNavigate();
+	const oauthProviders = getOAuthProviders();
 	const { isAuthenticated, isLoading: authLoading } = useAuth();
 	const [loading, setLoading] = useState(false);
 	const [oauthLoading, setOauthLoading] = useState<string | undefined>(
@@ -174,7 +177,7 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 			setOauthLoading(undefined);
 		}
 	};
-	const hasOAuthProviders = OAUTH_PROVIDERS.length > 0;
+	const hasOAuthProviders = oauthProviders.length > 0;
 	let submitLabel = "Loading...";
 	if (!loading) {
 		submitLabel = register ? "Register" : "Login";
@@ -183,13 +186,14 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 		<div className="mx-auto w-full px-4 sm:px-6 lg:px-8 max-w-(--breakpoint-sm) flex flex-1 flex-col items-center justify-center gap-4">
 			<form
 				className="flex w-full max-w-sm flex-col gap-4"
+				noValidate
 				onSubmit={handleSubmit}
 			>
 				{/* OAuth Providers */}
 				{hasOAuthProviders && (
 					<>
 						<div className="flex flex-col gap-2">
-							{OAUTH_PROVIDERS.map((provider) => {
+							{oauthProviders.map((provider) => {
 								const icon = PROVIDER_ICONS[provider.id] ?? (
 									<span className="h-5 w-5 flex items-center justify-center text-xs font-bold">
 										{provider.name.charAt(0)}

@@ -1,5 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { page } from "@vitest/browser/context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import AdminRoute from "./admin";
 
 const mockNavigate = vi.fn();
@@ -40,20 +41,23 @@ describe("admin route", () => {
 	});
 
 	it("redirects anonymous users to sign in", async () => {
-		render(<AdminRoute.options.component />);
+		await render(<AdminRoute.options.component />);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockNavigate).toHaveBeenCalledWith({ to: "/signin" });
 		});
 		expect(mockFetch).not.toHaveBeenCalled();
 	});
 
-	it("shows a loading spinner while auth is still loading", () => {
+	it("shows a loading spinner while auth is still loading", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: true });
 
-		render(<AdminRoute.options.component />);
+		const screen = await render(<AdminRoute.options.component />);
 
-		expect(document.querySelector(".animate-spin")).toBeInTheDocument();
+		// Loading spinner is shown; admin-page is not present
+		await vi.waitFor(() => {
+			expect(screen.container.querySelector(".animate-spin")).not.toBeNull();
+		});
 		expect(mockFetch).not.toHaveBeenCalled();
 	});
 
@@ -62,10 +66,11 @@ describe("admin route", () => {
 		mockFetch.mockResolvedValue({ ok: true });
 		mockParseResponseJson.mockResolvedValue({ isAdmin: true });
 
-		render(<AdminRoute.options.component />);
+		await render(<AdminRoute.options.component />);
 
-		expect(document.querySelector(".animate-spin")).toBeInTheDocument();
-		await screen.findByTestId("admin-page");
+		await vi.waitFor(() =>
+			expect(document.querySelector("[data-testid='admin-page']")).toBeTruthy(),
+		);
 
 		expect(mockFetch).toHaveBeenCalledWith("/api/admin/check");
 		expect(mockNavigate).not.toHaveBeenCalled();
@@ -76,11 +81,11 @@ describe("admin route", () => {
 		mockFetch.mockResolvedValue({ ok: true });
 		mockParseResponseJson.mockResolvedValue({ isAdmin: false });
 
-		render(<AdminRoute.options.component />);
+		await render(<AdminRoute.options.component />);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockNavigate).toHaveBeenCalledWith({ to: "/" });
 		});
-		expect(screen.queryByTestId("admin-page")).not.toBeInTheDocument();
+		expect(document.querySelector("[data-testid='admin-page']")).toBeNull();
 	});
 });

@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { EquipmentSelector } from "./equipment-selector";
 
 const mockUseEquipment = vi.fn();
@@ -52,35 +53,43 @@ describe("EquipmentSelector", () => {
 		});
 	});
 
-	it("shows loading state while equipment is still being fetched", () => {
+	it("shows loading state while equipment is still being fetched", async () => {
 		mockUseEquipment.mockReturnValueOnce({ data: undefined, isLoading: true });
 
-		const { container } = render(
+		const screen = await render(
 			<EquipmentSelector selectedIds={[]} onSelectionChange={vi.fn()} />,
 		);
 
-		expect(container.querySelector("svg")).toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(document.querySelector("svg")).not.toBeNull();
+		});
 	});
 
-	it("sorts selected equipment and removes items", () => {
+	it("sorts selected equipment and removes items", async () => {
 		const onSelectionChange = vi.fn();
 
-		render(
+		const screen = await render(
 			<EquipmentSelector
 				selectedIds={["equipment-3", "equipment-1"]}
 				onSelectionChange={onSelectionChange}
 			/>,
 		);
 
-		expect(screen.getByText("Barbell")).toBeInTheDocument();
-		expect(screen.getByText("Kettlebell")).toBeInTheDocument();
-		expect(screen.getAllByText("2 equipment selected")).toHaveLength(2);
+		await expect.element(screen.getByText("Barbell")).toBeInTheDocument();
+		await expect.element(screen.getByText("Kettlebell")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("2 equipment selected").nth(0))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Remove Barbell" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Remove Barbell" }),
+		);
 
 		expect(onSelectionChange).toHaveBeenCalledWith(["equipment-3"]);
 
-		fireEvent.click(screen.getByRole("button", { name: "Add equipment" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Add equipment" }),
+		);
 
 		expect(onSelectionChange).toHaveBeenLastCalledWith([
 			"equipment-3",

@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { GymMenu } from "./gym-menu";
 
 const mockSetDefaultGym = vi.fn();
@@ -89,7 +90,7 @@ describe("GymMenu", () => {
 	});
 
 	it("shows actions, opens the internal modals, and sets the default gym", async () => {
-		render(
+		const screen = await render(
 			<GymMenu
 				gym={{
 					id: "gym-1",
@@ -99,18 +100,24 @@ describe("GymMenu", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Set as Default" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Set as Default" }),
+		);
 		expect(mockSetDefaultGym).toHaveBeenCalledWith("gym-1");
 
-		fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-		expect(screen.getByText("Edit modal open")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+		await expect
+			.element(screen.getByText("Edit modal open"))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-		expect(screen.getByText("Delete modal for Home Gym")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+		await expect
+			.element(screen.getByText("Delete modal for Home Gym"))
+			.toBeInTheDocument();
 	});
 
-	it("hides the default action when the gym is already default", () => {
-		render(
+	it("hides the default action when the gym is already default", async () => {
+		const screen = await render(
 			<GymMenu
 				gym={{
 					id: "gym-1",
@@ -121,16 +128,16 @@ describe("GymMenu", () => {
 			/>,
 		);
 
-		expect(
-			screen.queryByRole("button", { name: "Set as Default" }),
-		).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Set as Default" }))
+			.not.toBeInTheDocument();
 	});
 
-	it("delegates edit and delete actions to external callbacks when provided", () => {
+	it("delegates edit and delete actions to external callbacks when provided", async () => {
 		const onEdit = vi.fn();
 		const onDelete = vi.fn();
 
-		render(
+		const screen = await render(
 			<GymMenu
 				gym={{
 					id: "gym-1",
@@ -142,19 +149,21 @@ describe("GymMenu", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+		await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+		await userEvent.click(screen.getByRole("button", { name: "Delete" }));
 
 		expect(onEdit).toHaveBeenCalledTimes(1);
 		expect(onDelete).toHaveBeenCalledTimes(1);
-		expect(screen.queryByText("Edit modal open")).not.toBeInTheDocument();
-		expect(
-			screen.queryByText("Delete modal for Home Gym"),
-		).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Edit modal open"))
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Delete modal for Home Gym"))
+			.not.toBeInTheDocument();
 	});
 
-	it("closes the internal modals when they request to close", () => {
-		render(
+	it("closes the internal modals when they request to close", async () => {
+		const screen = await render(
 			<GymMenu
 				gym={{
 					id: "gym-1",
@@ -164,16 +173,26 @@ describe("GymMenu", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-		expect(screen.getByText("Edit modal open")).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "Close edit modal" }));
-		expect(screen.queryByText("Edit modal open")).not.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+		await expect
+			.element(screen.getByText("Edit modal open"))
+			.toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close edit modal" }),
+		);
+		await expect
+			.element(screen.getByText("Edit modal open"))
+			.not.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-		expect(screen.getByText("Delete modal for Home Gym")).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "Close delete modal" }));
-		expect(
-			screen.queryByText("Delete modal for Home Gym"),
-		).not.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+		await expect
+			.element(screen.getByText("Delete modal for Home Gym"))
+			.toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close delete modal" }),
+		);
+		await expect
+			.element(screen.getByText("Delete modal for Home Gym"))
+			.not.toBeInTheDocument();
 	});
 });

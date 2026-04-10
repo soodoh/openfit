@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { AuthProvidersTable } from "./auth-providers-table";
 import { ExerciseTable } from "./exercise-table";
 import { LookupTable } from "./lookup-table";
@@ -334,23 +335,25 @@ describe("admin tables", () => {
 		mockPagination.mockClear();
 	});
 
-	it("filters and paginates users, then opens the user role modal", () => {
-		render(<UserTable />);
+	it("filters and paginates users, then opens the user role modal", async () => {
+		const screen = await render(<UserTable />);
 
-		expect(screen.getByText("coach@example.com")).toBeInTheDocument();
-		expect(screen.getByText("ADMIN")).toBeInTheDocument();
-		expect(screen.getAllByText("page 1 of 2")).toHaveLength(2);
+		await expect
+			.element(screen.getByText("coach@example.com"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("ADMIN")).toBeInTheDocument();
+		expect(screen.getByText("page 1 of 2").length).toBe(2);
 
-		fireEvent.click(screen.getAllByRole("button", { name: "Prev page" })[0]);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Prev page" }).nth(0),
+		);
 		expect(mockUseAdminUsersPaginated).toHaveBeenLastCalledWith({
 			page: 1,
 			pageSize: 10,
 			search: undefined,
 		});
 
-		fireEvent.change(screen.getByPlaceholderText("Search users..."), {
-			target: { value: "coach" },
-		});
+		await screen.getByPlaceholder("Search users...").fill("coach");
 
 		expect(mockUseAdminUsersPaginated).toHaveBeenLastCalledWith({
 			page: 1,
@@ -358,38 +361,41 @@ describe("admin tables", () => {
 			search: "coach",
 		});
 
-		fireEvent.click(screen.getAllByRole("button", { name: "Next page" })[0]);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Next page" }).nth(0),
+		);
 		expect(mockUseAdminUsersPaginated).toHaveBeenLastCalledWith({
 			page: 2,
 			pageSize: 10,
 			search: "coach",
 		});
 
-		fireEvent.click(screen.getAllByRole("button", { name: "Page size 20" })[0]);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Page size 20" }).nth(0),
+		);
 		expect(mockUseAdminUsersPaginated).toHaveBeenLastCalledWith({
 			page: 1,
 			pageSize: 20,
 			search: "coach",
 		});
 
-		fireEvent.click(
-			screen
-				.getByText("coach@example.com")
-				.closest("div")
-				?.parentElement?.parentElement?.querySelector(
-					"button",
-				) as HTMLButtonElement,
+		await userEvent.click(
+			screen.getByRole("button", {
+				name: "Edit role for coach@example.com",
+			}),
 		);
-		expect(
-			screen.getByText("Role modal: coach@example.com"),
-		).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "Close role modal" }));
-		expect(
-			screen.queryByText("Role modal: coach@example.com"),
-		).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Role modal: coach@example.com"))
+			.toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close role modal" }),
+		);
+		await expect
+			.element(screen.getByText("Role modal: coach@example.com"))
+			.not.toBeInTheDocument();
 	});
 
-	it("shows loading skeletons and empty states when tables have no data", () => {
+	it("shows loading skeletons and empty states when tables have no data", async () => {
 		usersSeed = {
 			data: undefined,
 			isLoading: true,
@@ -406,7 +412,7 @@ describe("admin tables", () => {
 		mockUseAdminExercisesPaginated.mockReturnValue(exercisesSeed);
 		mockUseAdminLookupPaginated.mockReturnValue(lookupsSeed);
 
-		render(
+		await render(
 			<div>
 				<UserTable />
 				<ExerciseTable />
@@ -418,9 +424,11 @@ describe("admin tables", () => {
 			</div>,
 		);
 
-		expect(document.querySelectorAll(".animate-pulse").length).toBeGreaterThan(
-			0,
-		);
+		await vi.waitFor(() => {
+			expect(
+				document.querySelectorAll(".animate-pulse").length,
+			).toBeGreaterThan(0);
+		});
 	});
 
 	it("creates, updates, and deletes lookups from the table controls", async () => {
@@ -440,7 +448,7 @@ describe("admin tables", () => {
 			isPending: false,
 		});
 
-		render(
+		const screen = await render(
 			<LookupTable
 				title="Equipment"
 				singularTitle="Equipment"
@@ -448,7 +456,9 @@ describe("admin tables", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getAllByRole("button", { name: "Prev page" })[0]);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Prev page" }).nth(0),
+		);
 		expect(mockUseAdminLookupPaginated).toHaveBeenLastCalledWith(
 			"equipment",
 			expect.objectContaining({
@@ -457,26 +467,34 @@ describe("admin tables", () => {
 			}),
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Add Equipment" }));
-		expect(screen.getByText("Create Equipment")).toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Add Equipment" }),
+		);
+		await expect
+			.element(screen.getByText("Create Equipment"))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Submit lookup form" }));
-		await waitFor(() => {
+		await userEvent.click(
+			screen.getByRole("button", { name: "Submit lookup form" }),
+		);
+		await vi.waitFor(() => {
 			expect(createLookupMutation).toHaveBeenCalledWith({
 				type: "equipment",
 				name: "Equipment created",
 			});
 		});
 
-		fireEvent.click(
-			screen
-				.getByText("Rope")
-				.parentElement?.querySelectorAll("button")[0] as HTMLButtonElement,
+		await userEvent.click(
+			screen.getByRole("button", { name: "Edit Equipment Rope" }),
 		);
-		expect(screen.getByText("Edit Equipment: Rope")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Edit Equipment: Rope"))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Submit lookup form" }));
-		await waitFor(() => {
+		await userEvent.click(
+			screen.getByRole("button", { name: "Submit lookup form" }),
+		);
+		await vi.waitFor(() => {
 			expect(updateLookupMutation).toHaveBeenCalledWith({
 				id: "lookup-1",
 				type: "equipment",
@@ -484,17 +502,17 @@ describe("admin tables", () => {
 			});
 		});
 
-		fireEvent.click(
-			screen
-				.getByText("Rope")
-				.parentElement?.querySelectorAll("button")[1] as HTMLButtonElement,
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete Equipment Rope" }),
 		);
-		expect(screen.getByText("Delete Equipment: Rope")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Delete Equipment: Rope"))
+			.toBeInTheDocument();
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Confirm delete lookup" }),
 		);
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(deleteLookupMutation).toHaveBeenCalledWith({
 				id: "lookup-1",
 				type: "equipment",
@@ -502,45 +520,47 @@ describe("admin tables", () => {
 		});
 	});
 
-	it("shows exercise details and forwards delete actions", () => {
+	it("shows exercise details and forwards delete actions", async () => {
 		const deleteExerciseMutation = vi.fn();
 		mockUseAdminDeleteExercise.mockReturnValue({
 			mutate: deleteExerciseMutation,
 		});
 
-		render(<ExerciseTable />);
+		const screen = await render(<ExerciseTable />);
 
-		expect(screen.getByText("Bench Press")).toBeInTheDocument();
-		expect(screen.getByText("Barbell")).toBeInTheDocument();
-		expect(screen.getByText("Pectorals")).toBeInTheDocument();
-		expect(screen.getByText("Air Squat")).toBeInTheDocument();
+		await expect.element(screen.getByText("Bench Press")).toBeInTheDocument();
+		await expect.element(screen.getByText("Barbell")).toBeInTheDocument();
+		await expect.element(screen.getByText("Pectorals")).toBeInTheDocument();
+		await expect.element(screen.getByText("Air Squat")).toBeInTheDocument();
 
-		fireEvent.click(screen.getAllByRole("button", { name: "Prev page" })[0]);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Prev page" }).nth(0),
+		);
 		expect(mockUseAdminExercisesPaginated).toHaveBeenLastCalledWith({
 			page: 1,
 			pageSize: 10,
 			search: undefined,
 		});
 
-		fireEvent.click(screen.getByRole("button", { name: "Add Exercise" }));
-		expect(screen.getByText("Create exercise")).toBeInTheDocument();
-		fireEvent.click(
+		await userEvent.click(screen.getByRole("button", { name: "Add Exercise" }));
+		await expect
+			.element(screen.getByText("Create exercise"))
+			.toBeInTheDocument();
+		await userEvent.click(
 			screen.getByRole("button", { name: "Close exercise form" }),
 		);
-		expect(screen.queryByText("Create exercise")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Create exercise"))
+			.not.toBeInTheDocument();
 
-		fireEvent.click(
-			screen
-				.getByText("Bench Press")
-				.parentElement?.parentElement?.parentElement?.querySelectorAll(
-					"button",
-				)[1] as HTMLButtonElement,
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete exercise Bench Press" }),
 		);
-		expect(
-			screen.getByText("Delete exercise: Bench Press"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Delete exercise: Bench Press"))
+			.toBeInTheDocument();
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Confirm delete exercise" }),
 		);
 		expect(deleteExerciseMutation).toHaveBeenCalledWith("exercise-1");
@@ -557,25 +577,37 @@ describe("admin tables", () => {
 		);
 		vi.stubGlobal("fetch", fetchMock);
 
-		render(<AuthProvidersTable />);
+		const screen = await render(<AuthProvidersTable />);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
-			expect(screen.getByText("Google")).toBeInTheDocument();
-			expect(screen.getByText("GitHub")).toBeInTheDocument();
-			expect(screen.getByText("Discord")).toBeInTheDocument();
-			expect(screen.getAllByText("Configured")).toHaveLength(2);
-			expect(screen.getAllByText("Not configured")).toHaveLength(2);
 		});
+		await expect
+			.element(screen.getByText("Google").first())
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("GitHub").first())
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Discord").first())
+			.toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(
+				[...document.querySelectorAll("span")].filter(
+					(el) => el.textContent?.trim() === "Configured",
+				).length,
+			).toBe(2);
+		});
+		expect(
+			[...document.querySelectorAll("span")].filter(
+				(el) => el.textContent?.trim() === "Not configured",
+			).length,
+		).toBe(2);
 	});
 
 	it("uses a custom OIDC provider label when the environment provides one", async () => {
 		vi.stubEnv("VITE_AUTH_OIDC_PROVIDER_NAME", "Acme SSO");
-		vi.resetModules();
 
-		const { AuthProvidersTable: FreshAuthProvidersTable } = await import(
-			"./auth-providers-table"
-		);
 		const fetchMock = vi.fn().mockResolvedValue(
 			Response.json({
 				google: false,
@@ -586,35 +618,44 @@ describe("admin tables", () => {
 		);
 		vi.stubGlobal("fetch", fetchMock);
 
-		render(<FreshAuthProvidersTable />);
+		const screen = await render(<AuthProvidersTable />);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
-			expect(screen.getByText("Acme SSO")).toBeInTheDocument();
-			expect(
+		});
+		await expect.element(screen.getByText("Acme SSO")).toBeInTheDocument();
+		await expect
+			.element(
 				screen.getByText(
 					"Requires: AUTH_OIDC_CLIENT_ID, AUTH_OIDC_CLIENT_SECRET, AUTH_OIDC_ISSUER",
 				),
-			).toBeInTheDocument();
-			expect(screen.getByText("Configured")).toBeInTheDocument();
-		});
+			)
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Configured").first())
+			.toBeInTheDocument();
 
 		vi.unstubAllEnvs();
-		vi.resetModules();
 	});
 
 	it("keeps auth providers visible when the status request fails", async () => {
 		const fetchMock = vi.fn().mockRejectedValueOnce(new Error("network down"));
 		vi.stubGlobal("fetch", fetchMock);
 
-		render(<AuthProvidersTable />);
+		const screen = await render(<AuthProvidersTable />);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
 		});
 
-		expect(screen.getByText("Google")).toBeInTheDocument();
-		expect(screen.getAllByText("Not configured")).toHaveLength(4);
+		await expect
+			.element(screen.getByText("Google").first())
+			.toBeInTheDocument();
+		expect(
+			[...document.querySelectorAll("span")].filter(
+				(el) => el.textContent?.trim() === "Not configured",
+			).length,
+		).toBe(4);
 	});
 
 	it("ignores provider status updates after the component unmounts", async () => {
@@ -627,7 +668,7 @@ describe("admin tables", () => {
 		);
 		vi.stubGlobal("fetch", fetchMock);
 
-		const { unmount } = render(<AuthProvidersTable />);
+		const { unmount } = await render(<AuthProvidersTable />);
 		unmount();
 
 		resolveResponse(
@@ -639,12 +680,12 @@ describe("admin tables", () => {
 			}),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
 		});
 	});
 
-	it("shows empty lookup results when the search returns no items", () => {
+	it("shows empty lookup results when the search returns no items", async () => {
 		lookupsSeed = {
 			data: {
 				items: [],
@@ -656,7 +697,7 @@ describe("admin tables", () => {
 		};
 		mockUseAdminLookupPaginated.mockReturnValue(lookupsSeed);
 
-		render(
+		const screen = await render(
 			<LookupTable
 				title="Equipment"
 				singularTitle="Equipment"
@@ -664,16 +705,14 @@ describe("admin tables", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByPlaceholderText("Search equipment..."), {
-			target: { value: "rope" },
-		});
+		await screen.getByPlaceholder("Search equipment...").fill("rope");
 
-		expect(
-			screen.getByText('No equipment found matching "rope"'),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText('No equipment found matching "rope"'))
+			.toBeInTheDocument();
 	});
 
-	it("shows empty exercise search results when no exercises match", () => {
+	it("shows empty exercise search results when no exercises match", async () => {
 		exercisesSeed = {
 			data: {
 				items: [],
@@ -685,18 +724,16 @@ describe("admin tables", () => {
 		};
 		mockUseAdminExercisesPaginated.mockReturnValue(exercisesSeed);
 
-		render(<ExerciseTable />);
+		const screen = await render(<ExerciseTable />);
 
-		fireEvent.change(screen.getByPlaceholderText("Search exercises..."), {
-			target: { value: "rope" },
-		});
+		await screen.getByPlaceholder("Search exercises...").fill("rope");
 
-		expect(
-			screen.getByText('No exercises found matching "rope"'),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText('No exercises found matching "rope"'))
+			.toBeInTheDocument();
 	});
 
-	it("updates exercise search and pagination controls", () => {
+	it("updates exercise search and pagination controls", async () => {
 		exercisesSeed = {
 			data: {
 				items: [
@@ -718,11 +755,9 @@ describe("admin tables", () => {
 		};
 		mockUseAdminExercisesPaginated.mockReturnValue(exercisesSeed);
 
-		render(<ExerciseTable />);
+		const screen = await render(<ExerciseTable />);
 
-		fireEvent.change(screen.getByPlaceholderText("Search exercises..."), {
-			target: { value: "press" },
-		});
+		await screen.getByPlaceholder("Search exercises...").fill("press");
 
 		expect(mockUseAdminExercisesPaginated).toHaveBeenLastCalledWith({
 			page: 1,
@@ -730,7 +765,9 @@ describe("admin tables", () => {
 			search: "press",
 		});
 
-		fireEvent.click(screen.getAllByRole("button", { name: "Next page" })[0]);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Next page" }).nth(0),
+		);
 
 		expect(mockUseAdminExercisesPaginated).toHaveBeenLastCalledWith({
 			page: 2,
@@ -738,7 +775,9 @@ describe("admin tables", () => {
 			search: "press",
 		});
 
-		fireEvent.click(screen.getAllByRole("button", { name: "Page size 20" })[0]);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Page size 20" }).nth(0),
+		);
 
 		expect(mockUseAdminExercisesPaginated).toHaveBeenLastCalledWith({
 			page: 1,

@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { GymCard } from "./gym-card";
 
 vi.mock("./gym-menu", () => ({
@@ -12,8 +12,8 @@ vi.mock("@/components/ui/badge", () => ({
 }));
 
 describe("GymCard", () => {
-	it("shows the default badge and equipment count", () => {
-		render(
+	it("shows the default badge and equipment count", async () => {
+		const screen = await render(
 			<GymCard
 				gym={{
 					id: "gym-1",
@@ -24,14 +24,16 @@ describe("GymCard", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Home Gym")).toBeInTheDocument();
-		expect(screen.getByText("Default")).toBeInTheDocument();
-		expect(screen.getByText("1 equipment item")).toBeInTheDocument();
-		expect(screen.getByText("Gym menu")).toBeInTheDocument();
+		await expect.element(screen.getByText("Home Gym")).toBeInTheDocument();
+		await expect.element(screen.getByText("Default")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("1 equipment item"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("Gym menu")).toBeInTheDocument();
 	});
 
-	it("uses the plural equipment label for non-default gyms", () => {
-		render(
+	it("uses the plural equipment label for non-default gyms", async () => {
+		const screen = await render(
 			<GymCard
 				gym={{
 					id: "gym-2",
@@ -41,8 +43,10 @@ describe("GymCard", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Garage Gym")).toBeInTheDocument();
-		expect(screen.getByText("2 equipment items")).toBeInTheDocument();
-		expect(screen.queryByText("Default")).not.toBeInTheDocument();
+		await expect.element(screen.getByText("Garage Gym")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("2 equipment items"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("Default")).not.toBeInTheDocument();
 	});
 });

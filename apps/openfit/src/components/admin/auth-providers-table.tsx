@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { parseResponseJson } from "@/lib/request-helpers";
 
 // Provider type info for display
-const PROVIDER_INFO: Record<
+function getProviderInfo(): Record<
 	string,
 	{
 		label: string;
@@ -15,28 +15,30 @@ const PROVIDER_INFO: Record<
 			issuer?: string;
 		};
 	}
-> = {
-	google: {
-		label: "Google",
-		envVars: { id: "AUTH_GOOGLE_ID", secret: "AUTH_GOOGLE_SECRET" },
-	},
-	github: {
-		label: "GitHub",
-		envVars: { id: "AUTH_GITHUB_ID", secret: "AUTH_GITHUB_SECRET" },
-	},
-	discord: {
-		label: "Discord",
-		envVars: { id: "AUTH_DISCORD_ID", secret: "AUTH_DISCORD_SECRET" },
-	},
-	oidc: {
-		label: String(import.meta.env.VITE_AUTH_OIDC_PROVIDER_NAME ?? "OIDC"),
-		envVars: {
-			id: "AUTH_OIDC_CLIENT_ID",
-			secret: "AUTH_OIDC_CLIENT_SECRET",
-			issuer: "AUTH_OIDC_ISSUER",
+> {
+	return {
+		google: {
+			label: "Google",
+			envVars: { id: "AUTH_GOOGLE_ID", secret: "AUTH_GOOGLE_SECRET" },
 		},
-	},
-};
+		github: {
+			label: "GitHub",
+			envVars: { id: "AUTH_GITHUB_ID", secret: "AUTH_GITHUB_SECRET" },
+		},
+		discord: {
+			label: "Discord",
+			envVars: { id: "AUTH_DISCORD_ID", secret: "AUTH_DISCORD_SECRET" },
+		},
+		oidc: {
+			label: String(import.meta.env.VITE_AUTH_OIDC_PROVIDER_NAME ?? "OIDC"),
+			envVars: {
+				id: "AUTH_OIDC_CLIENT_ID",
+				secret: "AUTH_OIDC_CLIENT_SECRET",
+				issuer: "AUTH_OIDC_ISSUER",
+			},
+		},
+	};
+}
 type ProviderStatus = {
 	google: boolean;
 	github: boolean;
@@ -67,7 +69,7 @@ export function AuthProvidersTable() {
 			isMounted = false;
 		};
 	}, []);
-	const providers = Object.entries(PROVIDER_INFO).map(([key, info]) => ({
+	const providers = Object.entries(getProviderInfo()).map(([key, info]) => ({
 		id: key,
 		displayName: info.label,
 		type: key,

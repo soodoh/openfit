@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { RoutineDay, Units, WorkoutSessionWithData } from "@/lib/types";
 import { RoutineDayTab } from "./routine-day-tab";
 
@@ -61,7 +62,7 @@ describe("RoutineDayTab", () => {
 	});
 
 	it("loads the day details, updates the schedule, and starts a workout", async () => {
-		render(
+		const screen = await render(
 			<RoutineDayTab
 				dayId="day-1"
 				currentSession={undefined}
@@ -69,38 +70,42 @@ describe("RoutineDayTab", () => {
 			/>,
 		);
 
-		expect(screen.getByDisplayValue("Pull Day")).toBeInTheDocument();
-		expect(screen.getByTestId("workout-list")).toBeInTheDocument();
+		await expect
+			.element(screen.getByLabelText("Day Name"))
+			.toHaveValue("Pull Day");
+		await expect
+			.element(screen.getByTestId("workout-list"))
+			.toBeInTheDocument();
 
-		fireEvent.change(screen.getByLabelText("Day Name"), {
-			target: { value: "Pull + Biceps" },
-		});
-		fireEvent.blur(screen.getByLabelText("Day Name"));
+		await screen.getByLabelText("Day Name").fill("Pull + Biceps");
+		await userEvent.tab();
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateRoutineDay).toHaveBeenCalledWith({
 				id: "day-1",
 				description: "Pull + Biceps",
 			});
 		});
 
-		fireEvent.click(screen.getByRole("button", { name: "Thursday" }));
-		await waitFor(() => {
+		await userEvent.click(screen.getByRole("button", { name: "Thursday" }));
+		await vi.waitFor(() => {
 			expect(mockUpdateRoutineDay).toHaveBeenCalledWith({
 				id: "day-1",
 				weekdays: [1, 3, 4],
 			});
 		});
 
-		fireEvent.click(screen.getByRole("button", { name: "Start Workout" }));
-		await waitFor(() => {
+		await userEvent.click(
+			screen.getByRole("button", { name: "Start Workout" }),
+		);
+		await vi.waitFor(() => {
 			expect(mockCreateSession).toHaveBeenCalledWith({ templateId: "day-1" });
 		});
 		expect(mockNavigate).toHaveBeenCalledWith({ to: "/workout" });
 	});
 
-	it("opens the delete modal from the footer action", () => {
-		render(
+	it("opens the delete modal from the footer action", async () => {
+		const screen = await render(
 			<RoutineDayTab
 				dayId="day-1"
 				currentSession={undefined}
@@ -108,15 +113,18 @@ describe("RoutineDayTab", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete Day" }));
-		expect(screen.getByRole("dialog")).toHaveTextContent("Delete Workout Day");
+		await userEvent.click(screen.getByRole("button", { name: "Delete Day" }));
+		await expect.element(screen.getByRole("dialog")).toBeInTheDocument();
+		expect(screen.getByRole("dialog").element().textContent).toContain(
+			"Delete Workout Day",
+		);
 	});
 
-	it("shows a loading spinner while the day or units are unavailable", () => {
+	it("shows a loading spinner while the day or units are unavailable", async () => {
 		mockRoutineDayValue = undefined;
 		mockUnitsValue = undefined;
 
-		const { container } = render(
+		const screen = await render(
 			<RoutineDayTab
 				dayId="day-1"
 				currentSession={undefined}
@@ -124,12 +132,18 @@ describe("RoutineDayTab", () => {
 			/>,
 		);
 
-		expect(container.querySelector("svg.animate-spin")).toBeInTheDocument();
-		expect(screen.queryByLabelText("Day Name")).not.toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(
+				screen.container.querySelector("svg.animate-spin"),
+			).toBeInTheDocument();
+		});
+		await expect
+			.element(screen.getByLabelText("Day Name"))
+			.not.toBeInTheDocument();
 	});
 
-	it("disables starting a workout when a current session exists", () => {
-		render(
+	it("disables starting a workout when a current session exists", async () => {
+		const screen = await render(
 			<RoutineDayTab
 				dayId="day-1"
 				currentSession={{ id: "session-1" } as WorkoutSessionWithData}
@@ -137,8 +151,8 @@ describe("RoutineDayTab", () => {
 			/>,
 		);
 
-		expect(
-			screen.getByRole("button", { name: "Start Workout" }),
-		).toBeDisabled();
+		await expect
+			.element(screen.getByRole("button", { name: "Start Workout" }))
+			.toBeDisabled();
 	});
 });

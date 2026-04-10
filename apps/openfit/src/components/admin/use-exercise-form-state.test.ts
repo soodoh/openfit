@@ -1,5 +1,6 @@
-import { act, renderHook } from "@testing-library/react";
+import { act } from "react";
 import { describe, expect, it } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import type { ExerciseWithRelations } from "@/hooks";
 import { useExerciseFormState } from "./use-exercise-form-state";
 
@@ -17,8 +18,8 @@ const mockExercise = {
 } as ExerciseWithRelations;
 
 describe("useExerciseFormState", () => {
-	it("resets the form when an exercise opens", () => {
-		const { result, rerender } = renderHook(
+	it("resets the form when an exercise opens", async () => {
+		const { result, rerender } = await renderHook(
 			({
 				open,
 				exercise,
@@ -34,15 +35,15 @@ describe("useExerciseFormState", () => {
 		expect(result.current.name).toBe("");
 		expect(result.current.instructions).toEqual([""]);
 
-		rerender({ open: true, exercise: mockExercise });
+		await rerender({ open: true, exercise: mockExercise });
 
 		expect(result.current.name).toBe("Bench Press");
 		expect(result.current.equipmentId).toBe("equipment-1");
 		expect(result.current.instructions).toEqual([""]);
 	});
 
-	it("manages instruction rows and muscle selection", () => {
-		const { result } = renderHook(() =>
+	it("manages instruction rows and muscle selection", async () => {
+		const { result } = await renderHook(() =>
 			useExerciseFormState({ open: true, exercise: mockExercise }),
 		);
 
@@ -73,8 +74,8 @@ describe("useExerciseFormState", () => {
 		expect(result.current.primaryMuscleIds).toEqual(["muscle-2"]);
 	});
 
-	it("keeps a single instruction row and moves a muscle into secondary selection", () => {
-		const { result } = renderHook(() =>
+	it("keeps a single instruction row and moves a muscle into secondary selection", async () => {
+		const { result } = await renderHook(() =>
 			useExerciseFormState({ open: true, exercise: undefined }),
 		);
 
@@ -96,8 +97,8 @@ describe("useExerciseFormState", () => {
 		expect(result.current.secondaryMuscleIds).toEqual([]);
 	});
 
-	it("resets the form when a different exercise opens and removes secondary muscles", () => {
-		const { result, rerender } = renderHook(
+	it("resets the form when a different exercise opens and removes secondary muscles", async () => {
+		const { result, rerender } = await renderHook(
 			({
 				open,
 				exercise,
@@ -115,7 +116,7 @@ describe("useExerciseFormState", () => {
 			result.current.setInstructions(["Warm up"]);
 		});
 
-		rerender({
+		await rerender({
 			open: true,
 			exercise: {
 				...mockExercise,

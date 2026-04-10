@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { RoleEnum } from "@/db/schema/user-data";
 import { DeleteExerciseModal } from "./delete-exercise-modal";
 import { DeleteLookupModal } from "./delete-lookup-modal";
@@ -93,7 +94,7 @@ describe("admin modals and form state", () => {
 	it("trims lookup names and resets the input when a different item opens", async () => {
 		const onSubmit = vi.fn().mockResolvedValue(undefined);
 		const onClose = vi.fn();
-		const { rerender } = render(
+		const screen = await render(
 			<LookupFormModal
 				open
 				onClose={onClose}
@@ -104,16 +105,14 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByLabelText("Name"), {
-			target: { value: "  Kettlebell  " },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+		await screen.getByLabelText("Name").fill("  Kettlebell  ");
+		await userEvent.click(screen.getByRole("button", { name: "Create" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(onSubmit).toHaveBeenCalledWith("Kettlebell");
 		});
 
-		rerender(
+		await screen.rerender(
 			<LookupFormModal
 				open
 				onClose={onClose}
@@ -124,14 +123,14 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		expect(screen.getByLabelText("Name")).toHaveValue("Barbell");
+		await expect.element(screen.getByLabelText("Name")).toHaveValue("Barbell");
 	});
 
 	it("shows lookup form edit text, pending state, and fallback errors", async () => {
 		const onSubmit = vi.fn().mockRejectedValue("lookup failed");
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<LookupFormModal
 				open
 				onClose={onClose}
@@ -142,11 +141,17 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Edit Equipment")).toBeInTheDocument();
-		expect(screen.getByText("Update the equipment name")).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled();
+		await expect
+			.element(screen.getByText("Edit Equipment"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Update the equipment name"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Saving..." }))
+			.toBeDisabled();
 
-		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
@@ -154,7 +159,7 @@ describe("admin modals and form state", () => {
 		const onSubmit = vi.fn().mockRejectedValue("lookup failed");
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<LookupFormModal
 				open
 				onClose={onClose}
@@ -165,14 +170,12 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByLabelText("Name"), {
-			target: { value: "Rope" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+		await screen.getByLabelText("Name").fill("Rope");
+		await userEvent.click(screen.getByRole("button", { name: "Create" }));
 
-		expect(
-			await screen.findByText("Failed to create equipment"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Failed to create equipment"))
+			.toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
@@ -180,7 +183,7 @@ describe("admin modals and form state", () => {
 		const onSubmit = vi.fn().mockRejectedValue(new Error("lookup failed"));
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<LookupFormModal
 				open
 				onClose={onClose}
@@ -191,20 +194,18 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByLabelText("Name"), {
-			target: { value: "Rope" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+		await screen.getByLabelText("Name").fill("Rope");
+		await userEvent.click(screen.getByRole("button", { name: "Create" }));
 
-		expect(await screen.findByText("lookup failed")).toBeInTheDocument();
+		await expect.element(screen.getByText("lookup failed")).toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
-	it("closes the lookup modal through the dialog open-change callback", () => {
+	it("closes the lookup modal through the dialog open-change callback", async () => {
 		const onSubmit = vi.fn().mockResolvedValue(undefined);
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<LookupFormModal
 				open
 				onClose={onClose}
@@ -215,17 +216,17 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Close via open change" }),
 		);
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
-	it("leaves a closed lookup modal untouched until it opens", () => {
+	it("leaves a closed lookup modal untouched until it opens", async () => {
 		const onSubmit = vi.fn().mockResolvedValue(undefined);
 		const onClose = vi.fn();
-		const { rerender } = render(
+		const screen = await render(
 			<LookupFormModal
 				open={false}
 				onClose={onClose}
@@ -236,9 +237,9 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		expect(screen.queryByLabelText("Name")).not.toBeInTheDocument();
+		await expect.element(screen.getByText("Name")).not.toBeInTheDocument();
 
-		rerender(
+		await screen.rerender(
 			<LookupFormModal
 				open
 				onClose={onClose}
@@ -249,14 +250,14 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		expect(screen.getByLabelText("Name")).toHaveValue("Barbell");
+		await expect.element(screen.getByLabelText("Name")).toHaveValue("Barbell");
 	});
 
-	it("validates lookup names before submitting", () => {
+	it("validates lookup names before submitting", async () => {
 		const onSubmit = vi.fn().mockResolvedValue(undefined);
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<LookupFormModal
 				open
 				onClose={onClose}
@@ -267,9 +268,11 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+		await userEvent.click(screen.getByRole("button", { name: "Create" }));
 
-		expect(screen.getByText("Equipment name is required")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Equipment name is required"))
+			.toBeInTheDocument();
 		expect(onSubmit).not.toHaveBeenCalled();
 		expect(onClose).not.toHaveBeenCalled();
 	});
@@ -277,7 +280,7 @@ describe("admin modals and form state", () => {
 	it("falls back to a generic lookup error for non-error rejections", async () => {
 		const onSubmit = vi.fn().mockRejectedValueOnce("lookup failed");
 
-		render(
+		const screen = await render(
 			<LookupFormModal
 				open
 				onClose={vi.fn()}
@@ -288,14 +291,12 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByLabelText("Name"), {
-			target: { value: "Rope" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+		await screen.getByLabelText("Name").fill("Rope");
+		await userEvent.click(screen.getByRole("button", { name: "Create" }));
 
-		expect(
-			await screen.findByText("Failed to create equipment"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Failed to create equipment"))
+			.toBeInTheDocument();
 	});
 
 	it("shows delete lookup errors while preserving the open state", async () => {
@@ -304,7 +305,7 @@ describe("admin modals and form state", () => {
 			.fn()
 			.mockRejectedValueOnce(new Error("lookup failed"));
 
-		render(
+		const screen = await render(
 			<DeleteLookupModal
 				item={{ id: "lookup-1", name: "Rope" }}
 				title="Equipment"
@@ -314,17 +315,19 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-		expect(await screen.findByText("lookup failed")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+		await expect.element(screen.getByText("lookup failed")).toBeInTheDocument();
 		expect(lookupClose).not.toHaveBeenCalled();
-		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close", exact: true }),
+		);
 		expect(lookupClose).toHaveBeenCalledTimes(1);
 	});
 
 	it("falls back to a generic delete lookup error for non-error rejections", async () => {
 		const lookupDelete = vi.fn().mockRejectedValueOnce("lookup failed");
 
-		render(
+		const screen = await render(
 			<DeleteLookupModal
 				item={{ id: "lookup-1", name: "Rope" }}
 				title="Equipment"
@@ -334,15 +337,15 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+		await userEvent.click(screen.getByRole("button", { name: "Delete" }));
 
-		expect(
-			await screen.findByText("Failed to delete equipment"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Failed to delete equipment"))
+			.toBeInTheDocument();
 	});
 
-	it("shows delete lookup pending state", () => {
-		render(
+	it("shows delete lookup pending state", async () => {
+		const screen = await render(
 			<DeleteLookupModal
 				item={{ id: "lookup-1", name: "Rope" }}
 				title="Equipment"
@@ -352,16 +355,18 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("button", { name: "Deleting..." })).toBeDisabled();
+		await expect
+			.element(screen.getByRole("button", { name: "Deleting..." }))
+			.toBeDisabled();
 	});
 
-	it("shows delete exercise errors while preserving the open state", () => {
+	it("shows delete exercise errors while preserving the open state", async () => {
 		const exerciseClose = vi.fn();
 		const exerciseDelete = vi.fn(() => {
 			throw new Error("exercise failed");
 		});
 
-		render(
+		const screen = await render(
 			<DeleteExerciseModal
 				exercise={{ id: "exercise-1", name: "Bench Press" }}
 				onClose={exerciseClose}
@@ -369,20 +374,24 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-		expect(screen.getByText("exercise failed")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+		await expect
+			.element(screen.getByText("exercise failed"))
+			.toBeInTheDocument();
 		expect(exerciseClose).not.toHaveBeenCalled();
-		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close", exact: true }),
+		);
 		expect(exerciseClose).toHaveBeenCalledTimes(1);
 	});
 
-	it("falls back to a generic exercise delete error for non-error throws", () => {
+	it("falls back to a generic exercise delete error for non-error throws", async () => {
 		const exerciseClose = vi.fn();
 		const exerciseDelete = vi.fn(() => {
 			throw "exercise failed";
 		});
 
-		render(
+		const screen = await render(
 			<DeleteExerciseModal
 				exercise={{ id: "exercise-1", name: "Bench Press" }}
 				onClose={exerciseClose}
@@ -390,15 +399,17 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-		expect(screen.getByText("Failed to delete exercise")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+		await expect
+			.element(screen.getByText("Failed to delete exercise"))
+			.toBeInTheDocument();
 		expect(exerciseClose).not.toHaveBeenCalled();
 	});
 
-	it("keeps the user role selection guard from accepting invalid values", () => {
+	it("keeps the user role selection guard from accepting invalid values", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<UserRoleModal
 				user={{
 					id: "user-1",
@@ -412,16 +423,18 @@ describe("admin modals and form state", () => {
 
 		selectOnValueChange?.("SUPERADMIN");
 
-		expect(screen.getByRole("button", { name: "Save Changes" })).toBeDisabled();
-		expect(
-			screen.getByText("Users can only manage their own data"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Save Changes" }))
+			.toBeDisabled();
+		await expect
+			.element(screen.getByText("Users can only manage their own data"))
+			.toBeInTheDocument();
 	});
 
-	it("keeps the user role save button disabled until the role changes", () => {
+	it("keeps the user role save button disabled until the role changes", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<UserRoleModal
 				user={{
 					id: "user-1",
@@ -433,19 +446,21 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		expect(
-			screen.getByText("Admins can manage all global data and users"),
-		).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Save Changes" })).toBeDisabled();
+		await expect
+			.element(screen.getByText("Admins can manage all global data and users"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Save Changes" }))
+			.toBeDisabled();
 
-		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
 	it("changes the user role, submits the update, and closes on success", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<UserRoleModal
 				user={{
 					id: "user-1",
@@ -457,19 +472,23 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		expect(
-			screen.getByText("Users can only manage their own data"),
-		).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Save Changes" })).toBeDisabled();
+		await expect
+			.element(screen.getByText("Users can only manage their own data"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Save Changes" }))
+			.toBeDisabled();
 
-		fireEvent.click(screen.getByRole("button", { name: "Admin" }));
-		expect(
-			screen.getByText("Admins can manage all global data and users"),
-		).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Save Changes" })).toBeEnabled();
+		await userEvent.click(screen.getByRole("button", { name: "Admin" }));
+		await expect
+			.element(screen.getByText("Admins can manage all global data and users"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Save Changes" }))
+			.toBeEnabled();
 
-		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
-		await waitFor(() => {
+		await userEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+		await vi.waitFor(() => {
 			expect(mockUpdateUserRole).toHaveBeenCalledWith({
 				id: "user-1",
 				role: RoleEnum.ADMIN,
@@ -482,7 +501,7 @@ describe("admin modals and form state", () => {
 		mockUpdateUserRole.mockRejectedValueOnce(new Error("role failed"));
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<UserRoleModal
 				user={{
 					id: "user-1",
@@ -494,12 +513,12 @@ describe("admin modals and form state", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Admin" }));
-		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+		await userEvent.click(screen.getByRole("button", { name: "Admin" }));
+		await userEvent.click(screen.getByRole("button", { name: "Save Changes" }));
 
-		expect(await screen.findByText("role failed")).toBeInTheDocument();
+		await expect.element(screen.getByText("role failed")).toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
-		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 });

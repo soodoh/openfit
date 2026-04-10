@@ -1,4 +1,5 @@
 import react from "@vitejs/plugin-react";
+import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -6,31 +7,71 @@ export default defineConfig({
 	resolve: {
 		tsconfigPaths: true,
 	},
+	optimizeDeps: {
+		include: ["dayjs", "dayjs/plugin/duration", "dayjs/plugin/relativeTime"],
+	},
 	test: {
 		globals: true,
-		environment: "jsdom",
-		setupFiles: ["./vitest.setup.ts"],
-		include: [
-			"src/*.test.{ts,tsx}",
-			"src/lib/**/*.test.{ts,tsx}",
-			"src/components/**/*.test.{ts,tsx}",
-			"src/hooks/**/*.test.{ts,tsx}",
-			"src/routes/**/*.test.{ts,tsx}",
-		],
-		exclude: ["node_modules", ".output"],
 		coverage: {
-			provider: "v8",
-			reporter: ["text", "html", "json-summary"],
+			provider: "custom",
+			customProviderModule: "vitest-monocart-coverage",
+			reporter: [["raw", {}]],
 			all: true,
 			include: ["src/**/*.{ts,tsx}"],
 			exclude: [
 				"src/**/*.test.{ts,tsx}",
 				"src/routeTree.gen.ts",
-				// These modules do not contain executable runtime logic under V8 coverage.
 				"src/hooks.ts",
 				"src/lib/api-types.ts",
 				"db/schema/**",
 			],
 		},
+		projects: [
+			{
+				resolve: {
+					tsconfigPaths: true,
+				},
+				test: {
+					name: "unit-node",
+					environment: "node",
+					include: ["src/lib/**/*.test.ts", "src/routes/api/**/*.test.ts"],
+					exclude: [
+						"node_modules",
+						".output",
+						"src/lib/use-exercise-lookups.test.ts",
+					],
+				},
+			},
+			{
+				resolve: {
+					tsconfigPaths: true,
+				},
+				test: {
+					name: "unit-browser",
+					setupFiles: ["./vitest.setup.ts"],
+					include: [
+						"src/*.test.{ts,tsx}",
+						"src/components/**/*.test.{ts,tsx}",
+						"src/hooks/**/*.test.{ts,tsx}",
+						"src/routes/**/*.test.{ts,tsx}",
+						"src/lib/use-exercise-lookups.test.ts",
+					],
+					exclude: [
+						"node_modules",
+						".output",
+						// API route tests are pure server logic - run in node project
+						"src/routes/api/**/*.test.ts",
+					],
+					browser: {
+						enabled: true,
+						provider: playwright({
+							launchOptions: { channel: "chrome" },
+						}),
+						headless: true,
+						instances: [{ browser: "chromium" }],
+					},
+				},
+			},
+		],
 	},
 });

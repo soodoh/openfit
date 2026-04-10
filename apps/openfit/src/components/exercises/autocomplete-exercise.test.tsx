@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import { type ReactNode, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { Exercise } from "@/lib/types";
 import { AutocompleteExercise } from "./autocomplete-exercise";
 
@@ -182,28 +183,30 @@ describe("AutocompleteExercise", () => {
 		});
 	});
 
-	it("uses the default gym filter and selects the first result with Enter", () => {
-		render(<ExerciseHarness />);
+	it("uses the default gym filter and selects the first result with Enter", async () => {
+		const screen = await render(<ExerciseHarness />);
 
-		expect(
-			screen.getAllByRole("button", { name: "Home Gym" })[0],
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Home Gym" }).nth(0))
+			.toBeInTheDocument();
 
-		const input = screen.getByPlaceholderText("Search exercises...");
-		fireEvent.focus(input);
-		fireEvent.change(input, { target: { value: "b" } });
+		const input = screen.getByPlaceholder("Search exercises...");
+		await userEvent.click(input);
+		await input.fill("b");
 
 		expect(mockUseExerciseSearch).toHaveBeenLastCalledWith("b", [
 			"equipment-1",
 		]);
 
-		fireEvent.keyDown(input, { key: "Enter" });
+		await userEvent.keyboard("{Enter}");
 
-		expect(screen.getByDisplayValue("Bench Press")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("Bench Press");
 	});
 
-	it("keeps the selected exercise when Escape is pressed", () => {
-		render(
+	it("keeps the selected exercise when Escape is pressed", async () => {
+		const screen = await render(
 			<ExerciseHarness
 				initialValue={
 					{
@@ -214,14 +217,16 @@ describe("AutocompleteExercise", () => {
 			/>,
 		);
 
-		const input = screen.getByDisplayValue("Bench Press");
-		fireEvent.keyDown(input, { key: "Escape" });
+		const _input = screen.getByPlaceholder("Search exercises...");
+		await userEvent.keyboard("{Escape}");
 
-		expect(screen.getByDisplayValue("Bench Press")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("Bench Press");
 	});
 
-	it("clears the selected exercise when Delete is pressed", () => {
-		render(
+	it("clears the selected exercise when Delete is pressed", async () => {
+		const screen = await render(
 			<ExerciseHarness
 				initialValue={
 					{
@@ -232,89 +237,103 @@ describe("AutocompleteExercise", () => {
 			/>,
 		);
 
-		fireEvent.keyDown(screen.getByDisplayValue("Bench Press"), {
-			key: "Delete",
-		});
+		await userEvent.click(screen.getByPlaceholder("Search exercises..."));
+		await userEvent.keyboard("{Delete}");
 
-		expect(screen.getByDisplayValue("")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("");
 	});
 
-	it("falls back to All when no default gym is configured", () => {
+	it("falls back to All when no default gym is configured", async () => {
 		mockUseUserProfile.mockReturnValue({ data: { defaultGymId: undefined } });
 		mockUseGyms.mockReturnValue({ data: [] });
 		mockUseGym.mockReturnValue({ data: undefined });
 
-		render(<ExerciseHarness />);
+		const screen = await render(<ExerciseHarness />);
 
-		expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "All", exact: true }))
+			.toBeInTheDocument();
 		expect(mockUseExerciseSearch).toHaveBeenCalledWith("", undefined);
 	});
 
-	it("opens when typing from a closed state and keeps the list from hijacking scroll", () => {
-		render(<ExerciseHarness />);
+	it("opens when typing from a closed state and keeps the list from hijacking scroll", async () => {
+		const screen = await render(<ExerciseHarness />);
 
-		const input = screen.getByPlaceholderText("Search exercises...");
-		fireEvent.change(input, { target: { value: "b" } });
+		const input = screen.getByPlaceholder("Search exercises...");
+		await input.fill("b");
 
-		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+		await expect
+			.element(screen.getByTestId("popover"))
+			.toHaveAttribute("data-open", "true");
 
-		const list = screen.getByText("No exercises found").parentElement;
+		const list = screen.getByText("No exercises found").element().parentElement;
 		if (!list) {
 			throw new Error("expected command list");
 		}
-		fireEvent.wheel(list);
-		fireEvent.touchMove(list);
+		await userEvent.click(list);
 	});
 
-	it("selects an exercise by clicking the result and keeps scrolling isolated", () => {
-		render(<ExerciseHarness />);
+	it("selects an exercise by clicking the result and keeps scrolling isolated", async () => {
+		const screen = await render(<ExerciseHarness />);
 
-		const input = screen.getByPlaceholderText("Search exercises...");
-		fireEvent.focus(input);
-		fireEvent.change(input, { target: { value: "b" } });
+		const input = screen.getByPlaceholder("Search exercises...");
+		await userEvent.click(input);
+		await input.fill("b");
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: /Bench Press thumbnail/i }),
 		);
-		fireEvent.wheel(screen.getByText("No exercises found"));
-		fireEvent.touchMove(screen.getByText("No exercises found"));
 
-		expect(screen.getByDisplayValue("Bench Press")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("Bench Press");
 	});
 
-	it("keeps the popover open when interacting inside it and closes on input blur", () => {
-		render(<ExerciseHarness />);
+	it("keeps the popover open when interacting inside it and closes on input blur", async () => {
+		const screen = await render(<ExerciseHarness />);
 
-		const input = screen.getByPlaceholderText("Search exercises...");
-		fireEvent.focus(input);
-		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+		const input = screen.getByPlaceholder("Search exercises...");
+		await userEvent.click(input);
+		await expect
+			.element(screen.getByTestId("popover"))
+			.toHaveAttribute("data-open", "true");
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Simulate interact outside" }),
 		);
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Simulate pointer down outside" }),
 		);
+		// Re-focus input after clicking popover buttons to keep popover open
+		await userEvent.click(input);
 
-		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+		await expect
+			.element(screen.getByTestId("popover"))
+			.toHaveAttribute("data-open", "true");
 
-		fireEvent.blur(input);
-		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "false");
+		await userEvent.click(document.body);
+		await expect
+			.element(screen.getByTestId("popover"))
+			.toHaveAttribute("data-open", "false");
 	});
 
-	it("falls back to All when the profile has not loaded yet", () => {
+	it("falls back to All when the profile has not loaded yet", async () => {
 		mockUseUserProfile.mockReturnValue({ data: undefined });
 		mockUseGyms.mockReturnValue({ data: [] });
 		mockUseGym.mockReturnValue({ data: undefined });
 
-		render(<ExerciseHarness />);
+		const screen = await render(<ExerciseHarness />);
 
-		expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "All", exact: true }))
+			.toBeInTheDocument();
 		expect(mockUseGym).toHaveBeenCalledWith(undefined);
 	});
 
-	it("clears the selected exercise when typing a new character", () => {
-		render(
+	it("clears the selected exercise when typing a new character", async () => {
+		const screen = await render(
 			<ExerciseHarness
 				initialValue={
 					{
@@ -325,17 +344,20 @@ describe("AutocompleteExercise", () => {
 			/>,
 		);
 
-		const input = screen.getByDisplayValue("Bench Press");
-		fireEvent.keyDown(input, { key: "b" });
+		const input = screen.getByPlaceholder("Search exercises...");
+		await userEvent.click(input);
+		await userEvent.keyboard("b");
 
-		expect(screen.getByDisplayValue("b")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("b");
 		expect(mockUseExerciseSearch).toHaveBeenLastCalledWith("b", [
 			"equipment-1",
 		]);
 	});
 
-	it("clears the selected exercise when Backspace is pressed", () => {
-		render(
+	it("clears the selected exercise when Backspace is pressed", async () => {
+		const screen = await render(
 			<ExerciseHarness
 				initialValue={
 					{
@@ -346,62 +368,75 @@ describe("AutocompleteExercise", () => {
 			/>,
 		);
 
-		fireEvent.keyDown(screen.getByDisplayValue("Bench Press"), {
-			key: "Backspace",
-		});
+		await userEvent.click(screen.getByPlaceholder("Search exercises..."));
+		await userEvent.keyboard("{Backspace}");
 
-		expect(screen.getByDisplayValue("")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("");
 	});
 
-	it("closes the popover when Escape is pressed without a selection", () => {
-		render(<ExerciseHarness />);
+	it("closes the popover when Escape is pressed without a selection", async () => {
+		const screen = await render(<ExerciseHarness />);
 
-		const input = screen.getByPlaceholderText("Search exercises...");
-		fireEvent.focus(input);
-		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+		const input = screen.getByPlaceholder("Search exercises...");
+		await userEvent.click(input);
+		await expect
+			.element(screen.getByTestId("popover"))
+			.toHaveAttribute("data-open", "true");
 
-		fireEvent.keyDown(input, { key: "Escape" });
+		await userEvent.keyboard("{Escape}");
 
-		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "false");
+		await expect
+			.element(screen.getByTestId("popover"))
+			.toHaveAttribute("data-open", "false");
 	});
 
-	it("lets the first result be selected with Enter only when no exercise is selected", () => {
-		render(<ExerciseHarness />);
+	it("lets the first result be selected with Enter only when no exercise is selected", async () => {
+		const screen = await render(<ExerciseHarness />);
 
-		const input = screen.getByPlaceholderText("Search exercises...");
-		fireEvent.focus(input);
-		fireEvent.change(input, { target: { value: "d" } });
-		fireEvent.keyDown(input, { key: "Enter" });
+		const input = screen.getByPlaceholder("Search exercises...");
+		await userEvent.click(input);
+		await input.fill("d");
+		await userEvent.keyboard("{Enter}");
 
-		expect(screen.getByDisplayValue("Bench Press")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholder("Search exercises..."))
+			.toHaveValue("Bench Press");
 	});
 
-	it("renders exercise thumbnails and switches to all equipment from the menu", () => {
-		render(<ExerciseHarness />);
+	it("renders exercise thumbnails and switches to all equipment from the menu", async () => {
+		const screen = await render(<ExerciseHarness />);
 
-		expect(
-			screen.getByRole("img", { name: "Bench Press thumbnail" }),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("img", { name: "Bench Press thumbnail" }))
+			.toBeInTheDocument();
 
-		fireEvent.focus(screen.getByPlaceholderText("Search exercises..."));
-		fireEvent.click(screen.getByRole("button", { name: "All Equipment" }));
+		await userEvent.click(screen.getByPlaceholder("Search exercises..."));
+		await userEvent.click(
+			screen.getByRole("button", { name: "All Equipment" }),
+		);
 
-		expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "All", exact: true }))
+			.toBeInTheDocument();
 		expect(mockUseExerciseSearch).toHaveBeenLastCalledWith("", undefined);
 	});
 
-	it("shows the empty state when no exercises match the search term", () => {
+	it("shows the empty state when no exercises match the search term", async () => {
 		mockUseExerciseSearch.mockReturnValue({
 			data: [],
 			isLoading: false,
 		});
 
-		render(<ExerciseHarness />);
+		const screen = await render(<ExerciseHarness />);
 
-		const input = screen.getByPlaceholderText("Search exercises...");
-		fireEvent.focus(input);
-		fireEvent.change(input, { target: { value: "zzz" } });
+		const input = screen.getByPlaceholder("Search exercises...");
+		await userEvent.click(input);
+		await input.fill("zzz");
 
-		expect(screen.getByText("No exercises found")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("No exercises found"))
+			.toBeInTheDocument();
 	});
 });

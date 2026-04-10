@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { Pagination } from "./pagination";
 
 vi.mock("./select", () => ({
@@ -20,8 +21,8 @@ vi.mock("./select", () => ({
 }));
 
 describe("Pagination", () => {
-	it("shows the no-results state and disables navigation on a single page", () => {
-		render(
+	it("shows the no-results state and disables navigation on a single page", async () => {
+		const screen = await render(
 			<Pagination
 				currentPage={1}
 				totalPages={1}
@@ -36,20 +37,24 @@ describe("Pagination", () => {
 			/>,
 		);
 
-		expect(screen.getByText("No results")).toBeInTheDocument();
-		expect(
-			screen.getByRole("button", { name: "Previous page" }),
-		).toBeDisabled();
-		expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
-		expect(screen.getByRole("button", { name: "1" })).toBeDisabled();
+		await expect.element(screen.getByText("No results")).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Previous page" }))
+			.toBeDisabled();
+		await expect
+			.element(screen.getByRole("button", { name: "Next page" }))
+			.toBeDisabled();
+		await expect
+			.element(screen.getByRole("button", { name: "1", exact: true }))
+			.toBeDisabled();
 	});
 
-	it("renders ellipses around middle pages and delegates navigation", () => {
+	it("renders ellipses around middle pages and delegates navigation", async () => {
 		const onPageChange = vi.fn();
 		const onPrevPage = vi.fn();
 		const onNextPage = vi.fn();
 
-		render(
+		const screen = await render(
 			<Pagination
 				currentPage={4}
 				totalPages={8}
@@ -64,20 +69,24 @@ describe("Pagination", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Showing 31-40 of 80")).toBeInTheDocument();
-		expect(screen.getAllByText("...")).toHaveLength(2);
+		await expect
+			.element(screen.getByText("Showing 31-40 of 80"))
+			.toBeInTheDocument();
+		expect(screen.getByText("...").elements()).toHaveLength(2);
 
-		fireEvent.click(screen.getByRole("button", { name: "3" }));
-		fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
-		fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+		await userEvent.click(screen.getByRole("button", { name: "3" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Previous page" }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Next page" }));
 
 		expect(onPageChange).toHaveBeenCalledWith(3);
 		expect(onPrevPage).toHaveBeenCalledTimes(1);
 		expect(onNextPage).toHaveBeenCalledTimes(1);
 	});
 
-	it("renders only a trailing ellipsis near the beginning", () => {
-		render(
+	it("renders only a trailing ellipsis near the beginning", async () => {
+		const screen = await render(
 			<Pagination
 				currentPage={2}
 				totalPages={8}
@@ -92,11 +101,11 @@ describe("Pagination", () => {
 			/>,
 		);
 
-		expect(screen.getAllByText("...")).toHaveLength(1);
+		expect(screen.getByText("...").elements()).toHaveLength(1);
 	});
 
-	it("renders only a leading ellipsis near the end", () => {
-		render(
+	it("renders only a leading ellipsis near the end", async () => {
+		const screen = await render(
 			<Pagination
 				currentPage={7}
 				totalPages={8}
@@ -111,6 +120,6 @@ describe("Pagination", () => {
 			/>,
 		);
 
-		expect(screen.getAllByText("...")).toHaveLength(1);
+		expect(screen.getByText("...").elements()).toHaveLength(1);
 	});
 });

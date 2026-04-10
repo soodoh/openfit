@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import {
 	cloneElement,
 	createContext,
@@ -7,6 +7,7 @@ import {
 	useContext,
 } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { WorkoutSessionWithData } from "@/lib/types";
 import { EditRatingPopover } from "./edit-rating-popover";
 
@@ -90,13 +91,13 @@ describe("EditRatingPopover", () => {
 	});
 
 	it("saves a selected rating", async () => {
-		render(<EditRatingPopover session={baseSession} />);
+		const screen = await render(<EditRatingPopover session={baseSession} />);
 
-		fireEvent.click(screen.getByRole("button"));
-		fireEvent.click(screen.getByRole("button", { name: "Set rating 4" }));
-		fireEvent.click(screen.getByRole("button", { name: "Save" }));
+		await userEvent.click(screen.getByRole("button"));
+		await userEvent.click(screen.getByRole("button", { name: "Set rating 4" }));
+		await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateSession).toHaveBeenCalledWith({
 				id: "session-1",
 				impression: 4,
@@ -105,13 +106,15 @@ describe("EditRatingPopover", () => {
 	});
 
 	it("can clear an existing rating before saving", async () => {
-		render(<EditRatingPopover session={{ ...baseSession, impression: 5 }} />);
+		const screen = await render(
+			<EditRatingPopover session={{ ...baseSession, impression: 5 }} />,
+		);
 
-		fireEvent.click(screen.getByRole("button"));
-		fireEvent.click(screen.getByRole("button", { name: "Clear rating" }));
-		fireEvent.click(screen.getByRole("button", { name: "Save" }));
+		await userEvent.click(screen.getByRole("button"));
+		await userEvent.click(screen.getByRole("button", { name: "Clear rating" }));
+		await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateSession).toHaveBeenCalledWith({
 				id: "session-1",
 				impression: undefined,
@@ -119,52 +122,56 @@ describe("EditRatingPopover", () => {
 		});
 	});
 
-	it("reopens with the latest rating and clears hover state", () => {
-		const { rerender } = render(
+	it("reopens with the latest rating and clears hover state", async () => {
+		const screen = await render(
 			<EditRatingPopover session={{ ...baseSession, impression: 2 }} />,
 		);
 
-		fireEvent.click(screen.getByRole("button"));
-		fireEvent.click(screen.getByRole("button", { name: "Set rating 5" }));
-		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await userEvent.click(screen.getByRole("button"));
+		await userEvent.click(screen.getByRole("button", { name: "Set rating 5" }));
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
-		rerender(<EditRatingPopover session={{ ...baseSession, impression: 4 }} />);
-		fireEvent.click(screen.getByRole("button"));
+		await screen.rerender(
+			<EditRatingPopover session={{ ...baseSession, impression: 4 }} />,
+		);
+		await userEvent.click(screen.getByRole("button"));
 
-		expect(
-			screen.getByRole("button", { name: "Clear rating" }),
-		).toBeInTheDocument();
-		expect(
-			screen.getByRole("button", { name: "Set rating 4" }),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Clear rating" }))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Set rating 4" }))
+			.toBeInTheDocument();
 	});
 
-	it("closes the popover from cancel and restores the trigger state on reopen", () => {
-		render(<EditRatingPopover session={{ ...baseSession, impression: 3 }} />);
+	it("closes the popover from cancel and restores the trigger state on reopen", async () => {
+		const screen = await render(
+			<EditRatingPopover session={{ ...baseSession, impression: 3 }} />,
+		);
 
-		fireEvent.click(screen.getByRole("button"));
-		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await userEvent.click(screen.getByRole("button"));
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
-		expect(
-			screen.queryByRole("button", { name: "Save" }),
-		).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Save" }))
+			.not.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button"));
-		expect(
-			screen.getByRole("button", { name: "Clear rating" }),
-		).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button"));
+		await expect
+			.element(screen.getByRole("button", { name: "Clear rating" }))
+			.toBeInTheDocument();
 	});
 
-	it("updates the hover preview when moving across stars", () => {
-		render(
+	it("updates the hover preview when moving across stars", async () => {
+		const screen = await render(
 			<EditRatingPopover session={{ ...baseSession, impression: null }} />,
 		);
 
-		fireEvent.click(screen.getByRole("button"));
+		await userEvent.click(screen.getByRole("button"));
 		const starButton = screen.getByRole("button", { name: "Set rating 2" });
-		fireEvent.mouseEnter(starButton);
-		fireEvent.mouseLeave(starButton);
+		await userEvent.hover(starButton);
+		await userEvent.unhover(starButton);
 
-		expect(starButton).toBeInTheDocument();
+		await expect.element(starButton).toBeInTheDocument();
 	});
 });

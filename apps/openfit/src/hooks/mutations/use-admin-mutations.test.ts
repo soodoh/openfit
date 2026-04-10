@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderHook, waitFor } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import { queryKeys } from "@/lib/query-keys";
 import {
 	useAdminCreateExercise,
@@ -53,7 +53,7 @@ describe("use-admin-mutations", () => {
 		queryClient.setQueryData(queryKeys.admin.users(), [
 			{ id: "user-1", role: "USER" },
 		]);
-		const { result } = renderHook(() => useUpdateUserRole(), {
+		const { result } = await renderHook(() => useUpdateUserRole(), {
 			wrapper: createWrapper(queryClient),
 		});
 		const response = {
@@ -78,7 +78,7 @@ describe("use-admin-mutations", () => {
 			(fetchSpy.mock.calls[0][1]?.body as string) ?? "{}",
 		) as { role: string };
 		expect(requestBody).toEqual({ role: "ADMIN" });
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(
 				queryClient.getQueryState(queryKeys.admin.users())?.isInvalidated,
 			).toBe(true);
@@ -89,7 +89,7 @@ describe("use-admin-mutations", () => {
 		const queryClient = createQueryClient();
 		queryClient.setQueryData(queryKeys.admin.exercises(), []);
 		queryClient.setQueryData(queryKeys.exercises.all, []);
-		const { result } = renderHook(() => useAdminCreateExercise(), {
+		const { result } = await renderHook(() => useAdminCreateExercise(), {
 			wrapper: createWrapper(queryClient),
 		});
 		const payload = {
@@ -122,7 +122,7 @@ describe("use-admin-mutations", () => {
 			(fetchSpy.mock.calls[0][1]?.body as string) ?? "{}",
 		) as typeof payload;
 		expect(requestBody).toEqual(payload);
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(
 				queryClient.getQueryState(queryKeys.admin.exercises())?.isInvalidated,
 			).toBe(true);
@@ -138,7 +138,7 @@ describe("use-admin-mutations", () => {
 			{ id: "exercise-1" },
 		]);
 		queryClient.setQueryData(queryKeys.exercises.all, [{ id: "exercise-1" }]);
-		const { result } = renderHook(() => useAdminUpdateExercise(), {
+		const { result } = await renderHook(() => useAdminUpdateExercise(), {
 			wrapper: createWrapper(queryClient),
 		});
 		const payload = {
@@ -183,7 +183,7 @@ describe("use-admin-mutations", () => {
 			instructions: ["Pull harder"],
 			imageUrls: ["/api/uploads/updated-row.png"],
 		});
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(
 				queryClient.getQueryState(queryKeys.admin.exercises())?.isInvalidated,
 			).toBe(true);
@@ -199,7 +199,7 @@ describe("use-admin-mutations", () => {
 			{ id: "exercise-1" },
 		]);
 		queryClient.setQueryData(queryKeys.exercises.all, [{ id: "exercise-1" }]);
-		const { result } = renderHook(() => useAdminDeleteExercise(), {
+		const { result } = await renderHook(() => useAdminDeleteExercise(), {
 			wrapper: createWrapper(queryClient),
 		});
 		const response = { success: true };
@@ -212,7 +212,7 @@ describe("use-admin-mutations", () => {
 		expect(fetchSpy).toHaveBeenCalledWith("/api/admin/exercises/exercise-1", {
 			method: "DELETE",
 		});
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(
 				queryClient.getQueryState(queryKeys.admin.exercises())?.isInvalidated,
 			).toBe(true);
@@ -227,7 +227,7 @@ describe("use-admin-mutations", () => {
 		queryClient.setQueryData(queryKeys.admin.all, []);
 		queryClient.setQueryData(queryKeys.lookups.all, []);
 
-		const createLookup = renderHook(() => useCreateLookup(), {
+		const createLookup = await renderHook(() => useCreateLookup(), {
 			wrapper: createWrapper(queryClient),
 		});
 		const createdLookup = { id: "lookup-1" };
@@ -252,7 +252,7 @@ describe("use-admin-mutations", () => {
 			name: "Trap Bar",
 		});
 
-		const updateLookup = renderHook(() => useUpdateLookup(), {
+		const updateLookup = await renderHook(() => useUpdateLookup(), {
 			wrapper: createWrapper(queryClient),
 		});
 		fetchSpy.mockResolvedValueOnce(Response.json({ success: true }));
@@ -277,7 +277,7 @@ describe("use-admin-mutations", () => {
 			name: "Hex Bar",
 		});
 
-		const deleteLookup = renderHook(() => useDeleteLookup(), {
+		const deleteLookup = await renderHook(() => useDeleteLookup(), {
 			wrapper: createWrapper(queryClient),
 		});
 		fetchSpy.mockResolvedValueOnce(Response.json({ success: true }));
@@ -294,7 +294,7 @@ describe("use-admin-mutations", () => {
 			},
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(
 				queryClient.getQueryState(queryKeys.admin.all)?.isInvalidated,
 			).toBe(true);
@@ -306,7 +306,7 @@ describe("use-admin-mutations", () => {
 
 	it("uploads a file and returns the uploaded path", async () => {
 		const queryClient = createQueryClient();
-		const { result } = renderHook(() => useUploadFile(), {
+		const { result } = await renderHook(() => useUploadFile(), {
 			wrapper: createWrapper(queryClient),
 		});
 		const file = new File(["image-bytes"], "photo.png", {
@@ -332,7 +332,7 @@ describe("use-admin-mutations", () => {
 
 	it("propagates upload errors from the server response", async () => {
 		const queryClient = createQueryClient();
-		const { result } = renderHook(() => useUploadFile(), {
+		const { result } = await renderHook(() => useUploadFile(), {
 			wrapper: createWrapper(queryClient),
 		});
 		const file = new File(["broken"], "broken.png", { type: "image/png" });

@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { ExerciseDetailModal } from "./exercise-detail-modal";
 
 const mockUseExercise = vi.fn();
@@ -98,10 +98,10 @@ describe("ExerciseDetailModal", () => {
 		});
 	});
 
-	it("renders the fetched exercise details and closes from the footer button", () => {
+	it("renders the fetched exercise details and closes from the footer button", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<ExerciseDetailModal
 				exercise={{
 					id: "exercise-1",
@@ -114,27 +114,35 @@ describe("ExerciseDetailModal", () => {
 		);
 
 		expect(mockUseExercise).toHaveBeenCalledWith("exercise-1");
-		expect(
-			screen.getByRole("heading", { name: "Bench Press" }),
-		).toBeInTheDocument();
-		expect(screen.getByText("Compound Movement")).toBeInTheDocument();
-		expect(screen.getByAltText("Bench Press - image 1")).toBeInTheDocument();
-		expect(screen.getByText("Level")).toBeInTheDocument();
-		expect(screen.getByText("Equipment")).toBeInTheDocument();
-		expect(screen.getByText("Force")).toBeInTheDocument();
-		expect(screen.getByText("Mechanic")).toBeInTheDocument();
-		expect(screen.getByText("Primary Muscles")).toBeInTheDocument();
-		expect(screen.getByText("Secondary Muscles")).toBeInTheDocument();
-		expect(screen.getByText("Instructions")).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("heading", { name: "Bench Press" }))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Compound Movement"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByAltText("Bench Press - image 1"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("Level")).toBeInTheDocument();
+		await expect.element(screen.getByText("Equipment")).toBeInTheDocument();
+		await expect.element(screen.getByText("Force")).toBeInTheDocument();
+		await expect.element(screen.getByText("Mechanic")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Primary Muscles"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Secondary Muscles"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("Instructions")).toBeInTheDocument();
 
-		screen.getByRole("button", { name: "Close" }).click();
+		await screen.getByRole("button", { name: "Close" }).click();
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
-	it("falls back to the prop image when the fetched exercise has not loaded yet", () => {
+	it("falls back to the prop image when the fetched exercise has not loaded yet", async () => {
 		mockUseExercise.mockReturnValue({ data: undefined });
 
-		render(
+		const screen = await render(
 			<ExerciseDetailModal
 				exercise={{
 					id: "exercise-1",
@@ -147,9 +155,11 @@ describe("ExerciseDetailModal", () => {
 		);
 
 		expect(mockUseExercise).toHaveBeenCalledWith("exercise-1");
-		expect(
-			screen.getByRole("img", { name: "Bench Press" }),
-		).toBeInTheDocument();
-		expect(screen.queryByText("Instructions")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("img", { name: "Bench Press" }))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Instructions"))
+			.not.toBeInTheDocument();
 	});
 });

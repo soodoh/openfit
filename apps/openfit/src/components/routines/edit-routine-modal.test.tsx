@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { Routine } from "@/lib/types";
 import { EditRoutineModal } from "./edit-routine-modal";
 
@@ -52,17 +53,15 @@ describe("EditRoutineModal", () => {
 	it("creates a routine and closes the dialog on success", async () => {
 		const onClose = vi.fn();
 
-		render(<EditRoutineModal open onClose={onClose} />);
+		const screen = await render(<EditRoutineModal open onClose={onClose} />);
 
-		fireEvent.change(screen.getByLabelText("Routine Name"), {
-			target: { value: "Push Pull Legs" },
-		});
-		fireEvent.change(screen.getByLabelText(/Description/), {
-			target: { value: "Three day split" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Create Routine" }));
+		await screen.getByLabelText("Routine Name").fill("Push Pull Legs");
+		await screen.getByLabelText(/Description/).fill("Three day split");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create Routine" }),
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockCreateRoutine).toHaveBeenCalledWith({
 				name: "Push Pull Legs",
 				description: "Three day split",
@@ -74,14 +73,14 @@ describe("EditRoutineModal", () => {
 	it("omits the description when the textarea is left blank", async () => {
 		const onClose = vi.fn();
 
-		render(<EditRoutineModal open onClose={onClose} />);
+		const screen = await render(<EditRoutineModal open onClose={onClose} />);
 
-		fireEvent.change(screen.getByLabelText("Routine Name"), {
-			target: { value: "Minimal Routine" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Create Routine" }));
+		await screen.getByLabelText("Routine Name").fill("Minimal Routine");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create Routine" }),
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockCreateRoutine).toHaveBeenCalledWith({
 				name: "Minimal Routine",
 				description: undefined,
@@ -93,15 +92,17 @@ describe("EditRoutineModal", () => {
 	it("shows a save error when the mutation fails", async () => {
 		mockCreateRoutine.mockRejectedValueOnce(new Error("boom"));
 
-		render(<EditRoutineModal open onClose={vi.fn()} />);
+		const screen = await render(<EditRoutineModal open onClose={vi.fn()} />);
 
-		fireEvent.change(screen.getByLabelText("Routine Name"), {
-			target: { value: "Push Pull Legs" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Create Routine" }));
+		await screen.getByLabelText("Routine Name").fill("Push Pull Legs");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create Routine" }),
+		);
 
-		await waitFor(() => {
-			expect(screen.getByText("Failed to save routine")).toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(
+				screen.getByText("Failed to save routine").element(),
+			).toBeInTheDocument();
 		});
 	});
 
@@ -117,17 +118,17 @@ describe("EditRoutineModal", () => {
 			routineDays: [],
 		} as Routine;
 
-		render(<EditRoutineModal open onClose={onClose} routine={routine} />);
+		const screen = await render(
+			<EditRoutineModal open onClose={onClose} routine={routine} />,
+		);
 
-		expect(
-			screen.getByRole("button", { name: "Save Changes" }),
-		).toBeInTheDocument();
-		fireEvent.change(screen.getByLabelText("Routine Name"), {
-			target: { value: "Upper Lower 2" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+		await expect
+			.element(screen.getByRole("button", { name: "Save Changes" }))
+			.toBeInTheDocument();
+		await screen.getByLabelText("Routine Name").fill("Upper Lower 2");
+		await userEvent.click(screen.getByRole("button", { name: "Save Changes" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateRoutine).toHaveBeenCalledWith({
 				id: "routine-1",
 				name: "Upper Lower 2",
@@ -148,39 +149,41 @@ describe("EditRoutineModal", () => {
 			routineDays: [],
 		} as Routine;
 
-		const { rerender } = render(
+		const screen = await render(
 			<EditRoutineModal open onClose={vi.fn()} routine={firstRoutine} />,
 		);
 
-		fireEvent.change(screen.getByLabelText("Routine Name"), {
-			target: { value: "Edited value" },
-		});
+		await screen.getByLabelText("Routine Name").fill("Edited value");
 
-		rerender(
+		await screen.rerender(
 			<EditRoutineModal
 				open={false}
 				onClose={vi.fn()}
 				routine={firstRoutine}
 			/>,
 		);
-		rerender(
+		await screen.rerender(
 			<EditRoutineModal open onClose={vi.fn()} routine={firstRoutine} />,
 		);
 
-		await waitFor(() => {
-			expect(screen.getByLabelText("Routine Name")).toHaveValue("Upper Lower");
-			expect(screen.getByLabelText(/Description/)).toHaveValue(
+		await vi.waitFor(() => {
+			expect(screen.getByLabelText("Routine Name").element()).toHaveValue(
+				"Upper Lower",
+			);
+			expect(screen.getByLabelText(/Description/).element()).toHaveValue(
 				"Existing description",
 			);
 		});
 	});
 
-	it("closes from the dialog close button", () => {
+	it("closes from the dialog close button", async () => {
 		const onClose = vi.fn();
 
-		render(<EditRoutineModal open onClose={onClose} />);
+		const screen = await render(<EditRoutineModal open onClose={onClose} />);
 
-		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close", exact: true }),
+		);
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import {
 	cloneElement,
 	createContext,
@@ -7,6 +7,7 @@ import {
 	useContext,
 } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { WorkoutSessionWithData } from "@/lib/types";
 import { EditNamePopover } from "./edit-name-popover";
 
@@ -113,25 +114,31 @@ describe("EditNamePopover", () => {
 	});
 
 	it("reopens with the latest session name after closing the popover", async () => {
-		const { rerender } = render(<EditNamePopover session={session} />);
+		const screen = await render(<EditNamePopover session={session} />);
 
-		fireEvent.click(screen.getByRole("button"));
-		expect(screen.getByLabelText("Session Name")).toHaveValue("Upper Body");
+		await userEvent.click(screen.getByRole("button"));
+		await expect
+			.element(screen.getByLabelText("Session Name"))
+			.toHaveValue("Upper Body");
 
-		fireEvent.change(screen.getByLabelText("Session Name"), {
-			target: { value: "Updated Name" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-		expect(screen.queryByLabelText("Session Name")).not.toBeInTheDocument();
+		await screen.getByLabelText("Session Name").fill("Updated Name");
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await expect
+			.element(screen.getByLabelText("Session Name"))
+			.not.toBeInTheDocument();
 
-		rerender(<EditNamePopover session={{ ...session, name: "Push Day" }} />);
-		fireEvent.click(screen.getByRole("button"));
+		await screen.rerender(
+			<EditNamePopover session={{ ...session, name: "Push Day" }} />,
+		);
+		await userEvent.click(screen.getByRole("button"));
 
-		expect(screen.getByLabelText("Session Name")).toHaveValue("Push Day");
+		await expect
+			.element(screen.getByLabelText("Session Name"))
+			.toHaveValue("Push Day");
 
-		fireEvent.click(screen.getByRole("button", { name: "Save" }));
+		await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateSession).toHaveBeenCalledWith({
 				id: "session-1",
 				name: "Push Day",

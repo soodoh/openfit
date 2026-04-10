@@ -204,10 +204,10 @@ export function ExerciseFormModal({
 	};
 	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const files = e.target.files;
-		if (!files) {
+		if (!files || files.length === 0) {
 			return;
 		}
-		addFiles(files);
+		addFiles(Array.from(files));
 		// Reset file input
 		if (fileInputRef.current) {
 			fileInputRef.current.value = "";

@@ -1,5 +1,6 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import type { MutationSuccessResult, RoutineDto } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
@@ -49,13 +50,13 @@ describe("use-routine-mutations", () => {
 			description: "Rotating strength split",
 		};
 
-		const { result } = renderHook(() => useCreateRoutine(), { wrapper });
+		const { result } = await renderHook(() => useCreateRoutine(), { wrapper });
 
 		await act(async () => {
 			await result.current.mutateAsync(input);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -84,13 +85,13 @@ describe("use-routine-mutations", () => {
 			description: "Added direct arm work",
 		};
 
-		const { result } = renderHook(() => useUpdateRoutine(), { wrapper });
+		const { result } = await renderHook(() => useUpdateRoutine(), { wrapper });
 
 		await act(async () => {
 			await result.current.mutateAsync(input);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -121,13 +122,13 @@ describe("use-routine-mutations", () => {
 		const { queryClient, wrapper } = createTestQueryWrapper();
 		const invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
 
-		const { result } = renderHook(() => useDeleteRoutine(), { wrapper });
+		const { result } = await renderHook(() => useDeleteRoutine(), { wrapper });
 
 		await act(async () => {
 			await result.current.mutateAsync("routine-1");
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -156,7 +157,7 @@ describe("use-routine-mutations", () => {
 			description: "Rotating strength split",
 		};
 
-		const { result } = renderHook(() => useUpdateRoutine(), { wrapper });
+		const { result } = await renderHook(() => useUpdateRoutine(), { wrapper });
 
 		await act(async () => {
 			await expect(result.current.mutateAsync(input)).rejects.toThrow(
@@ -164,7 +165,7 @@ describe("use-routine-mutations", () => {
 			);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 

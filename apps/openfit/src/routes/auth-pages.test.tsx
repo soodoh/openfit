@@ -1,6 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import RegisterRoute from "./register";
 import SignInRoute from "./signin";
 
@@ -20,20 +19,20 @@ vi.mock("@/components/auth/login-form", () => ({
 	),
 }));
 
-function renderRouteComponent(component: () => ReactNode) {
-	render(component());
-}
-
 describe("auth pages", () => {
-	it("renders the sign-in form without the register flag", () => {
-		renderRouteComponent(SignInRoute.options.component);
+	it("renders the sign-in form without the register flag", async () => {
+		const screen = await render(SignInRoute.options.component());
 
-		expect(screen.getByTestId("login-form")).toHaveTextContent("signin");
+		await expect
+			.element(screen.getByTestId("login-form"))
+			.toHaveTextContent("signin");
 	});
 
-	it("renders the registration form with the register flag", () => {
-		renderRouteComponent(RegisterRoute.options.component);
+	it("renders the registration form with the register flag", async () => {
+		const screen = await render(RegisterRoute.options.component());
 
-		expect(screen.getByTestId("login-form")).toHaveTextContent("register");
+		await expect
+			.element(screen.getByTestId("login-form"))
+			.toHaveTextContent("register");
 	});
 });

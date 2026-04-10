@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import RoutinesRoute from "./routines";
 
 const mockFetchNextPage = vi.fn();
@@ -62,7 +62,7 @@ describe("routines route", () => {
 		});
 	});
 
-	it("shows a skeleton while routines are loading", () => {
+	it("shows a skeleton while routines are loading", async () => {
 		mockUseRoutines.mockReturnValue({
 			data: undefined,
 			isLoading: true,
@@ -71,18 +71,20 @@ describe("routines route", () => {
 			isFetchingNextPage: false,
 		});
 
-		render(<RoutinesRoute.options.component />);
+		await render(<RoutinesRoute.options.component />);
 
 		expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
 	});
 
-	it("renders the empty state when there are no routines", () => {
-		render(<RoutinesRoute.options.component />);
+	it("renders the empty state when there are no routines", async () => {
+		const screen = await render(<RoutinesRoute.options.component />);
 
-		expect(screen.getByText("No routines yet")).toBeInTheDocument();
-		expect(
-			screen.getByText(/Create your first workout routine/i),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("No routines yet"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText(/Create your first workout routine/i))
+			.toBeInTheDocument();
 	});
 
 	it("fetches the next page when the sentinel enters view and renders routines", async () => {
@@ -107,19 +109,23 @@ describe("routines route", () => {
 			isFetchingNextPage: false,
 		});
 
-		render(<RoutinesRoute.options.component />);
+		const screen = await render(<RoutinesRoute.options.component />);
 
-		expect(screen.getByText("Create routine")).toBeInTheDocument();
-		expect(screen.getByText("Push Day")).toBeInTheDocument();
-		expect(screen.getByText("Pull Day")).toBeInTheDocument();
-		expect(screen.getByText("2 routines total")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Create routine"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("Push Day")).toBeInTheDocument();
+		await expect.element(screen.getByText("Pull Day")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("2 routines total"))
+			.toBeInTheDocument();
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockFetchNextPage).toHaveBeenCalledTimes(1);
 		});
 	});
 
-	it("shows the search empty state without paging when no routines match", () => {
+	it("shows the search empty state without paging when no routines match", async () => {
 		mockUseRoutines.mockImplementation((args: { search?: string }) => {
 			if (args.search) {
 				return {
@@ -146,14 +152,16 @@ describe("routines route", () => {
 			};
 		});
 
-		render(<RoutinesRoute.options.component />);
+		const screen = await render(<RoutinesRoute.options.component />);
 
-		fireEvent.change(screen.getByLabelText("Search routines"), {
-			target: { value: "missing" },
-		});
+		await screen.getByLabelText("Search routines").fill("missing");
 
-		expect(screen.getByText("No routines found")).toBeInTheDocument();
-		expect(screen.getByText('No routines match "missing"')).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("No routines found"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText('No routines match "missing"'))
+			.toBeInTheDocument();
 		expect(mockFetchNextPage).not.toHaveBeenCalled();
 	});
 });

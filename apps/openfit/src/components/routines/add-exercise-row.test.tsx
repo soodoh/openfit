@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { AddExerciseRow } from "./add-exercise-row";
 
 const mockCreateSetGroup = vi.fn();
@@ -53,17 +54,21 @@ describe("AddExerciseRow", () => {
 	});
 
 	it("submits the selected exercise with the configured set count and resets the form", async () => {
-		render(<AddExerciseRow sessionOrDayId="day-1" isSession={false} />);
+		const screen = await render(
+			<AddExerciseRow sessionOrDayId="day-1" isSession={false} />,
+		);
 
-		expect(screen.getByRole("button", { name: "Add" })).toBeDisabled();
+		await expect
+			.element(screen.getByRole("button", { name: "Add" }))
+			.toBeDisabled();
 
-		fireEvent.click(screen.getByRole("button", { name: "Select Exercise" }));
-		fireEvent.change(screen.getByPlaceholderText("Sets"), {
-			target: { value: "4" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Add" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Select Exercise" }),
+		);
+		await screen.getByPlaceholder("Sets").fill("4");
+		await userEvent.click(screen.getByRole("button", { name: "Add" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockCreateSetGroup).toHaveBeenCalledWith({
 				sessionId: undefined,
 				routineDayId: "day-1",
@@ -73,17 +78,23 @@ describe("AddExerciseRow", () => {
 			});
 		});
 
-		expect(screen.getByText("No exercise selected")).toBeInTheDocument();
-		expect(screen.getByPlaceholderText("Sets")).toHaveValue(1);
+		await expect
+			.element(screen.getByText("No exercise selected"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByPlaceholder("Sets")).toHaveValue(1);
 	});
 
 	it("targets the session id when adding an exercise during a workout session", async () => {
-		render(<AddExerciseRow sessionOrDayId="session-1" isSession />);
+		const screen = await render(
+			<AddExerciseRow sessionOrDayId="session-1" isSession />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Select Exercise" }));
-		fireEvent.click(screen.getByRole("button", { name: "Add" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Select Exercise" }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Add" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockCreateSetGroup).toHaveBeenCalledWith({
 				sessionId: "session-1",
 				routineDayId: undefined,
@@ -94,12 +105,14 @@ describe("AddExerciseRow", () => {
 		});
 	});
 
-	it("does not submit when no exercise has been selected", () => {
-		const { container } = render(
+	it("does not submit when no exercise has been selected", async () => {
+		const screen = await render(
 			<AddExerciseRow sessionOrDayId="day-1" isSession={false} />,
 		);
 
-		fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+		// Submit the form directly — clicking Add requires a selected exercise
+		const form = screen.container.querySelector("form") as HTMLFormElement;
+		form.requestSubmit();
 
 		expect(mockCreateSetGroup).not.toHaveBeenCalled();
 	});

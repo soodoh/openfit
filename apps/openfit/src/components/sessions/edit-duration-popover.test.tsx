@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import {
 	cloneElement,
 	createContext,
@@ -7,6 +7,7 @@ import {
 	useContext,
 } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { WorkoutSessionWithData } from "@/lib/types";
 import { EditDurationPopover } from "./edit-duration-popover";
 
@@ -136,52 +137,60 @@ describe("EditDurationPopover", () => {
 	});
 
 	it("rejects invalid dates before saving", async () => {
-		render(<EditDurationPopover session={session} formattedDuration="1h 0m" />);
+		const screen = await render(
+			<EditDurationPopover session={session} formattedDuration="1h 0m" />,
+		);
 
-		fireEvent.click(screen.getByRole("button"));
-		fireEvent.click(
+		await userEvent.click(screen.getByRole("button"));
+		await userEvent.click(
 			screen.getByRole("button", { name: "Set invalid Start Time" }),
 		);
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Set invalid End Time" }),
 		);
-		fireEvent.click(screen.getByRole("button", { name: "Save" }));
+		await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-		expect(
-			await screen.findByText("Please enter valid dates"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Please enter valid dates"))
+			.toBeVisible();
 		expect(mockUpdateSession).not.toHaveBeenCalled();
 	});
 
 	it("rejects reversed start and end times before saving", async () => {
-		render(<EditDurationPopover session={session} formattedDuration="1h 0m" />);
+		const screen = await render(
+			<EditDurationPopover session={session} formattedDuration="1h 0m" />,
+		);
 
-		fireEvent.click(screen.getByRole("button"));
-		fireEvent.click(
+		await userEvent.click(screen.getByRole("button"));
+		await userEvent.click(
 			screen.getByRole("button", { name: "Set reversed Start Time" }),
 		);
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Set reversed End Time" }),
 		);
-		fireEvent.click(screen.getByRole("button", { name: "Save" }));
+		await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-		expect(
-			await screen.findByText("End time must be after start time"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("End time must be after start time"))
+			.toBeVisible();
 		expect(mockUpdateSession).not.toHaveBeenCalled();
 	});
 
 	it("submits the updated duration when the time range is valid", async () => {
-		render(<EditDurationPopover session={session} formattedDuration="1h 0m" />);
+		const screen = await render(
+			<EditDurationPopover session={session} formattedDuration="1h 0m" />,
+		);
 
-		fireEvent.click(screen.getByRole("button"));
-		fireEvent.click(
+		await userEvent.click(screen.getByRole("button"));
+		await userEvent.click(
 			screen.getByRole("button", { name: "Set valid Start Time" }),
 		);
-		fireEvent.click(screen.getByRole("button", { name: "Set valid End Time" }));
-		fireEvent.click(screen.getByRole("button", { name: "Save" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Set valid End Time" }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateSession).toHaveBeenCalledWith({
 				id: "session-1",
 				startTime: new Date("2026-04-08T08:00:00.000Z").getTime(),
@@ -192,30 +201,36 @@ describe("EditDurationPopover", () => {
 
 	it("shows an error when saving fails", async () => {
 		mockUpdateSession.mockRejectedValueOnce(new Error("save failed"));
-		render(
+		const screen = await render(
 			<EditDurationPopover session={session} formattedDuration={undefined} />,
 		);
 
-		fireEvent.click(screen.getByRole("button"));
-		fireEvent.click(screen.getByRole("button", { name: "Save" }));
+		await userEvent.click(screen.getByRole("button"));
+		await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-		expect(
-			await screen.findByText("Failed to save. Please try again."),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Failed to save. Please try again."))
+			.toBeVisible();
 	});
 
-	it("closes the popover from cancel and can reopen it", () => {
-		render(<EditDurationPopover session={session} formattedDuration="1h 0m" />);
+	it("closes the popover from cancel and can reopen it", async () => {
+		const screen = await render(
+			<EditDurationPopover session={session} formattedDuration="1h 0m" />,
+		);
 
-		fireEvent.click(screen.getByRole("button"));
-		expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button"));
+		await expect
+			.element(screen.getByRole("button", { name: "Save" }))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-		expect(
-			screen.queryByRole("button", { name: "Save" }),
-		).not.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await expect
+			.element(screen.getByRole("button", { name: "Save" }))
+			.not.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button"));
-		expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button"));
+		await expect
+			.element(screen.getByRole("button", { name: "Save" }))
+			.toBeInTheDocument();
 	});
 });

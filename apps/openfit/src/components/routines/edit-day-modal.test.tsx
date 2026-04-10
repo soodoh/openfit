@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { RoutineDay } from "@/lib/types";
 import { EditDayModal } from "./edit-day-modal";
 
@@ -59,7 +60,7 @@ describe("EditDayModal", () => {
 		const onClose = vi.fn();
 		const onSuccess = vi.fn();
 
-		render(
+		const screen = await render(
 			<EditDayModal
 				open
 				onClose={onClose}
@@ -68,13 +69,11 @@ describe("EditDayModal", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByLabelText("Day Name"), {
-			target: { value: "Pull Day" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Set weekdays" }));
-		fireEvent.click(screen.getByRole("button", { name: "Add Day" }));
+		await screen.getByLabelText("Day Name").fill("Pull Day");
+		await userEvent.click(screen.getByRole("button", { name: "Set weekdays" }));
+		await userEvent.click(screen.getByRole("button", { name: "Add Day" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockCreateRoutineDay).toHaveBeenCalledWith({
 				routineId: "routine-1",
 				description: "Pull Day",
@@ -97,7 +96,7 @@ describe("EditDayModal", () => {
 			weekdays: [2, 4],
 		} as RoutineDay;
 
-		render(
+		const screen = await render(
 			<EditDayModal
 				open
 				onClose={onClose}
@@ -106,13 +105,11 @@ describe("EditDayModal", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Save Changes")).toBeInTheDocument();
-		fireEvent.change(screen.getByLabelText("Day Name"), {
-			target: { value: "Push + Shoulders" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+		await expect.element(screen.getByText("Save Changes")).toBeInTheDocument();
+		await screen.getByLabelText("Day Name").fill("Push + Shoulders");
+		await userEvent.click(screen.getByRole("button", { name: "Save Changes" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateRoutineDay).toHaveBeenCalledWith({
 				id: "day-1",
 				description: "Push + Shoulders",
@@ -133,7 +130,7 @@ describe("EditDayModal", () => {
 			weekdays: [2, 4],
 		} as RoutineDay;
 
-		const { rerender } = render(
+		const screen = await render(
 			<EditDayModal
 				open
 				onClose={vi.fn()}
@@ -142,12 +139,10 @@ describe("EditDayModal", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByLabelText("Day Name"), {
-			target: { value: "Changed name" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Set weekdays" }));
+		await screen.getByLabelText("Day Name").fill("Changed name");
+		await userEvent.click(screen.getByRole("button", { name: "Set weekdays" }));
 
-		rerender(
+		await screen.rerender(
 			<EditDayModal
 				open={false}
 				onClose={vi.fn()}
@@ -155,7 +150,7 @@ describe("EditDayModal", () => {
 				routineDay={routineDay}
 			/>,
 		);
-		rerender(
+		await screen.rerender(
 			<EditDayModal
 				open
 				onClose={vi.fn()}
@@ -164,18 +159,24 @@ describe("EditDayModal", () => {
 			/>,
 		);
 
-		await waitFor(() => {
-			expect(screen.getByLabelText("Day Name")).toHaveValue("Push Day");
-			expect(screen.getByText("Selected 2,4")).toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(screen.getByLabelText("Day Name").element()).toHaveValue(
+				"Push Day",
+			);
 		});
+		await expect.element(screen.getByText("Selected 2,4")).toBeInTheDocument();
 	});
 
-	it("closes from the dialog close button", () => {
+	it("closes from the dialog close button", async () => {
 		const onClose = vi.fn();
 
-		render(<EditDayModal open onClose={onClose} routineId="routine-1" />);
+		const screen = await render(
+			<EditDayModal open onClose={onClose} routineId="routine-1" />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close", exact: true }),
+		);
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});

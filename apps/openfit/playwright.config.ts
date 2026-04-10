@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 // Load environment variables from .env.local
 dotenv.config({ path: path.resolve(import.meta.dirname, ".env.local") });
 
+const collectCoverage = process.env.COLLECT_COVERAGE === "true";
+
 const e2eBaseUrl = process.env.E2E_BASE_URL ?? "http://127.0.0.1:3100";
 process.env.VITE_APP_URL = e2eBaseUrl;
 process.env.BETTER_AUTH_BASE_URL = e2eBaseUrl;
@@ -34,6 +36,20 @@ export default defineConfig({
 		["html", { outputFolder: "playwright-report" }],
 		["list"],
 		...(process.env.CI ? [["github"] as const] : []),
+		...(collectCoverage
+			? [
+					[
+						"monocart-reporter",
+						{
+							name: "OpenFit E2E Coverage",
+							outputFile: "coverage/e2e/report.html",
+							coverage: {
+								reports: [["raw", { outputDir: "coverage/e2e/raw" }]],
+							},
+						},
+					] as const,
+				]
+			: []),
 	],
 
 	// Shared settings for all projects

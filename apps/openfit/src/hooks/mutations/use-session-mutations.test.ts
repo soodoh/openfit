@@ -1,5 +1,6 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import type { MutationSuccessResult, SessionResult } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { mockJsonSuccess } from "@/test/fetch";
@@ -56,13 +57,13 @@ describe("use-session-mutations", () => {
 			templateId: "template-1",
 		};
 
-		const { result } = renderHook(() => useCreateSession(), { wrapper });
+		const { result } = await renderHook(() => useCreateSession(), { wrapper });
 
 		await act(async () => {
 			await result.current.mutateAsync(input);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -93,13 +94,13 @@ describe("use-session-mutations", () => {
 			endTime: 1706785200000,
 		};
 
-		const { result } = renderHook(() => useUpdateSession(), { wrapper });
+		const { result } = await renderHook(() => useUpdateSession(), { wrapper });
 
 		await act(async () => {
 			await result.current.mutateAsync(input);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -133,13 +134,13 @@ describe("use-session-mutations", () => {
 		const { queryClient, wrapper } = createTestQueryWrapper();
 		const invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
 
-		const { result } = renderHook(() => useDeleteSession(), { wrapper });
+		const { result } = await renderHook(() => useDeleteSession(), { wrapper });
 
 		await act(async () => {
 			await result.current.mutateAsync("session-1");
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 

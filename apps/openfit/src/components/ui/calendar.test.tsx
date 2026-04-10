@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { Calendar, CalendarDayButton } from "./calendar";
 
 type WrapperProps = Record<string, unknown>;
@@ -80,8 +80,8 @@ describe("calendar wrappers", () => {
 		vi.clearAllMocks();
 	});
 
-	it("focuses the day button when the focused modifier is set", () => {
-		render(
+	it("focuses the day button when the focused modifier is set", async () => {
+		const screen = await render(
 			<CalendarDayButton
 				day={{ date: new Date(2026, 3, 1) } as CalendarDayButtonProps["day"]}
 				modifiers={
@@ -100,29 +100,42 @@ describe("calendar wrappers", () => {
 		);
 
 		const button = screen.getByRole("button", { name: "Selected day" });
-		expect(button).toHaveFocus();
-		expect(button).toHaveAttribute("data-selected-single", "true");
-		expect(button).toHaveAttribute(
-			"data-day",
-			new Date(2026, 3, 1).toLocaleDateString(),
-		);
+		await expect.element(button).toHaveFocus();
+		await expect
+			.element(button)
+			.toHaveAttribute("data-selected-single", "true");
+		await expect
+			.element(button)
+			.toHaveAttribute("data-day", new Date(2026, 3, 1).toLocaleDateString());
 	});
 
-	it("configures day picker classes and custom components", () => {
-		render(<Calendar captionLayout="dropdown" className="custom-calendar" />);
-
-		expect(screen.getByTestId("day-picker")).toHaveClass("custom-calendar");
-		expect(screen.getByTestId("calendar-root")).toHaveAttribute(
-			"data-slot",
-			"calendar",
+	it("configures day picker classes and custom components", async () => {
+		const screen = await render(
+			<Calendar captionLayout="dropdown" className="custom-calendar" />,
 		);
-		expect(screen.getByTestId("calendar-root")).toHaveClass("w-fit");
-		expect(screen.getByTestId("formatted-month")).toHaveTextContent("Apr");
-		expect(screen.getByTestId("caption-layout")).toHaveTextContent("dropdown");
-		expect(screen.getByText("1")).toHaveAttribute("data-range-start", "false");
-		expect(screen.getByLabelText("Selected day")).toHaveFocus();
+
+		await expect
+			.element(screen.getByTestId("day-picker"))
+			.toHaveClass("custom-calendar");
+		await expect
+			.element(screen.getByTestId("calendar-root"))
+			.toHaveAttribute("data-slot", "calendar");
+		await expect
+			.element(screen.getByTestId("calendar-root"))
+			.toHaveClass("w-fit");
+		await expect
+			.element(screen.getByTestId("formatted-month"))
+			.toHaveTextContent("Apr");
+		await expect
+			.element(screen.getByTestId("caption-layout"))
+			.toHaveTextContent("dropdown");
+		await expect
+			.element(screen.getByText("1", { exact: true }))
+			.toHaveAttribute("data-range-start", "false");
+		await expect.element(screen.getByLabelText("Selected day")).toHaveFocus();
 		expect(
-			screen.getByTestId("calendar-chevrons").querySelectorAll("svg").length,
+			screen.getByTestId("calendar-chevrons").element().querySelectorAll("svg")
+				.length,
 		).toBe(3);
 	});
 });

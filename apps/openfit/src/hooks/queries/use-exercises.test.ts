@@ -1,5 +1,5 @@
-import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import { queryKeys } from "@/lib/query-keys";
 import type { ExerciseWithImageUrl } from "@/lib/types";
 import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
@@ -69,9 +69,11 @@ describe("use-exercises queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useExercise(undefined), { wrapper });
+		const { result } = await renderHook(() => useExercise(undefined), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.fetchStatus).toBe("idle");
 		});
 
@@ -88,11 +90,11 @@ describe("use-exercises queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useExercise("missing-exercise"), {
+		const { result } = await renderHook(() => useExercise("missing-exercise"), {
 			wrapper,
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -116,9 +118,11 @@ describe("use-exercises queries", () => {
 			primaryMuscleId: "muscle-1",
 		};
 
-		const { result } = renderHook(() => useExercises(filters), { wrapper });
+		const { result } = await renderHook(() => useExercises(filters), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -151,9 +155,9 @@ describe("use-exercises queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useExercises(), { wrapper });
+		const { result } = await renderHook(() => useExercises(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -172,7 +176,7 @@ describe("use-exercises queries", () => {
 		).toBeDefined();
 	});
 
-	it("builds exercise query strings with a cursor and singular equipment filter", () => {
+	it("builds exercise query strings with a cursor and singular equipment filter", async () => {
 		const queryString = buildExerciseQueryString(
 			{ equipmentId: "equipment-1" },
 			"cursor-2",
@@ -185,7 +189,7 @@ describe("use-exercises queries", () => {
 		expect(params.get("limit")).toBe("20");
 	});
 
-	it("omits the limit parameter when none is provided", () => {
+	it("omits the limit parameter when none is provided", async () => {
 		const queryString = buildExerciseQueryString(
 			{ equipmentId: "equipment-1" },
 			undefined,
@@ -215,9 +219,9 @@ describe("use-exercises queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useExercises(), { wrapper });
+		const { result } = await renderHook(() => useExercises(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -225,7 +229,7 @@ describe("use-exercises queries", () => {
 
 		await result.current.fetchNextPage();
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.data?.pages).toHaveLength(2);
 		});
 
@@ -245,12 +249,12 @@ describe("use-exercises queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(
+		const { result } = await renderHook(
 			() => useExerciseSearch("bench", ["equipment-1"], 5),
 			{ wrapper },
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -278,11 +282,14 @@ describe("use-exercises queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useExerciseSearch("", undefined, 20), {
-			wrapper,
-		});
+		const { result } = await renderHook(
+			() => useExerciseSearch("", undefined, 20),
+			{
+				wrapper,
+			},
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -303,7 +310,7 @@ describe("use-exercises queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result, rerender } = renderHook(
+		const { result, rerender } = await renderHook(
 			({ term }) => useExerciseSearch(term, ["equipment-1"], 5),
 			{
 				initialProps: { term: "bench" },
@@ -311,13 +318,13 @@ describe("use-exercises queries", () => {
 			},
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
-		rerender({ term: "press" });
+		await rerender({ term: "press" });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isPlaceholderData).toBe(true);
 		});
 
@@ -334,7 +341,7 @@ describe("use-exercises queries", () => {
 
 		nextResults.resolve(Response.json([exercise]));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isPlaceholderData).toBe(false);
 			expect(result.current.data).toEqual([exercise]);
 		});
@@ -345,11 +352,11 @@ describe("use-exercises queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useSimilarExercises(undefined), {
+		const { result } = await renderHook(() => useSimilarExercises(undefined), {
 			wrapper,
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.fetchStatus).toBe("idle");
 		});
 
@@ -363,7 +370,7 @@ describe("use-exercises queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(
+		const { result } = await renderHook(
 			() =>
 				useSimilarExercises(["muscle-1", "muscle-2"], {
 					search: "press",
@@ -374,7 +381,7 @@ describe("use-exercises queries", () => {
 			{ wrapper },
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -399,11 +406,14 @@ describe("use-exercises queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useSimilarExercises(["muscle-1"]), {
-			wrapper,
-		});
+		const { result } = await renderHook(
+			() => useSimilarExercises(["muscle-1"]),
+			{
+				wrapper,
+			},
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -424,9 +434,11 @@ describe("use-exercises queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useExercise("exercise-1"), { wrapper });
+		const { result } = await renderHook(() => useExercise("exercise-1"), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 

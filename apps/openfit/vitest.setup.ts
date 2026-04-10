@@ -1,8 +1,3 @@
-import "@testing-library/jest-dom/vitest";
-import { mkdirSync } from "node:fs";
-
-mkdirSync("./coverage/.tmp", { recursive: true });
-const coverageTmpKeepalive = setInterval(() => {
-	mkdirSync("./coverage/.tmp", { recursive: true });
-}, 100);
-coverageTmpKeepalive.unref();
+// Browser-mode setup for unit-browser project.
+// jest-dom matchers replaced by Playwright-compatible expect.element() assertions.
+// coverage/.tmp keepalive hack removed — monocart manages coverage directories.

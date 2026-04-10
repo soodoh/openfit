@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import { createContext, type ReactNode, useContext } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import ExercisesRoute from "./exercises";
 
 const mockFetchNextPage = vi.fn();
@@ -122,7 +123,7 @@ describe("exercises route", () => {
 		}));
 	});
 
-	it("shows a loading skeleton while exercises are pending", () => {
+	it("shows a loading skeleton while exercises are pending", async () => {
 		mockUseExercises.mockReturnValue({
 			data: undefined,
 			isLoading: true,
@@ -131,20 +132,26 @@ describe("exercises route", () => {
 			isFetchingNextPage: false,
 		});
 
-		render(<ExercisesRoute.options.component />);
+		const screen = await render(<ExercisesRoute.options.component />);
 
-		expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(screen.container.querySelector(".animate-pulse")).not.toBeNull();
+		});
 	});
 
-	it("renders the empty library state when no exercises exist", () => {
-		render(<ExercisesRoute.options.component />);
+	it("renders the empty library state when no exercises exist", async () => {
+		const screen = await render(<ExercisesRoute.options.component />);
 
-		expect(screen.getByText("No exercises available")).toBeInTheDocument();
-		expect(
-			screen.getByText(
-				"Exercise library is empty. Contact your administrator to seed the exercise database.",
-			),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("No exercises available"))
+			.toBeInTheDocument();
+		await expect
+			.element(
+				screen.getByText(
+					"Exercise library is empty. Contact your administrator to seed the exercise database.",
+				),
+			)
+			.toBeInTheDocument();
 	});
 
 	it("renders exercises and fetches the next page when the sentinel is visible", async () => {
@@ -166,33 +173,35 @@ describe("exercises route", () => {
 		});
 		mockUseInView.mockReturnValue({ ref: vi.fn(), inView: true });
 
-		render(<ExercisesRoute.options.component />);
+		const screen = await render(<ExercisesRoute.options.component />);
 
-		expect(screen.getByText("2 exercises total")).toBeInTheDocument();
-		expect(screen.getByText("Barbell Row")).toBeInTheDocument();
-		expect(screen.getByText("Bench Press")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("2 exercises total"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("Barbell Row")).toBeInTheDocument();
+		await expect.element(screen.getByText("Bench Press")).toBeInTheDocument();
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockFetchNextPage).toHaveBeenCalledTimes(1);
 		});
 	});
 
-	it("shows search results empty state when the search input has no matches", () => {
+	it("shows search results empty state when the search input has no matches", async () => {
 		mockUseExerciseSearch.mockImplementation((search: string) => ({
 			data: search ? [] : [],
 			isLoading: false,
 		}));
 
-		render(<ExercisesRoute.options.component />);
+		const screen = await render(<ExercisesRoute.options.component />);
 
-		fireEvent.change(screen.getByLabelText("Search exercises"), {
-			target: { value: "missing" },
-		});
+		await screen.getByLabelText("Search exercises").fill("missing");
 
-		expect(screen.getByText("No exercises found")).toBeInTheDocument();
-		expect(
-			screen.getByText('No exercises match "missing"'),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("No exercises found"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText('No exercises match "missing"'))
+			.toBeInTheDocument();
 		expect(mockFetchNextPage).not.toHaveBeenCalled();
 	});
 
@@ -205,25 +214,25 @@ describe("exercises route", () => {
 			isFetchingNextPage: false,
 		});
 
-		render(<ExercisesRoute.options.component />);
+		const screen = await render(<ExercisesRoute.options.component />);
 
-		fireEvent.click(screen.getByRole("button", { name: "Beginner" }));
+		await userEvent.click(screen.getByRole("button", { name: "Beginner" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUseExercises).toHaveBeenLastCalledWith(
 				expect.objectContaining({ level: "beginner" }),
 			);
 		});
 
-		expect(
-			screen.getAllByRole("button", { name: "Clear filters" })[0],
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Clear filters" }).nth(0))
+			.toBeInTheDocument();
 
-		fireEvent.click(
-			screen.getAllByRole("button", { name: "Clear filters" })[0],
+		await userEvent.click(
+			screen.getByRole("button", { name: "Clear filters" }).nth(0),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUseExercises).toHaveBeenLastCalledWith(
 				expect.objectContaining({
 					equipmentId: undefined,

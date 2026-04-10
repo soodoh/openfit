@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { Units, WorkoutSessionWithData } from "@/lib/types";
 import { SessionDetailModal } from "./session-detail-modal";
 
@@ -194,8 +195,8 @@ describe("SessionDetailModal", () => {
 		mockUseSession.mockReturnValue({ data: undefined });
 	});
 
-	it("shows the loading state until the full session is available", () => {
-		render(
+	it("shows the loading state until the full session is available", async () => {
+		const screen = await render(
 			<SessionDetailModal
 				sessionId="session-1"
 				units={mockUnits}
@@ -204,11 +205,13 @@ describe("SessionDetailModal", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Loading session...")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Loading session..."))
+			.toBeInTheDocument();
 	});
 
-	it("shows the loading state when no session id is available", () => {
-		render(
+	it("shows the loading state when no session id is available", async () => {
+		const screen = await render(
 			<SessionDetailModal
 				sessionId={undefined}
 				units={mockUnits}
@@ -217,14 +220,16 @@ describe("SessionDetailModal", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Loading session...")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Loading session..."))
+			.toBeInTheDocument();
 	});
 
-	it("renders the active session details and confirms delete through the nested modal", () => {
+	it("renders the active session details and confirms delete through the nested modal", async () => {
 		const onClose = vi.fn();
 		mockUseSession.mockReturnValue({ data: session });
 
-		render(
+		const screen = await render(
 			<SessionDetailModal
 				sessionId="session-1"
 				units={mockUnits}
@@ -234,29 +239,37 @@ describe("SessionDetailModal", () => {
 			/>,
 		);
 
-		expect(
-			screen.getByRole("heading", { name: "Leg Day" }),
-		).toBeInTheDocument();
-		expect(screen.getByText("In Progress")).toBeInTheDocument();
-		expect(screen.getByText("2 exercises • 2 sets")).toBeInTheDocument();
-		expect(
-			screen.getByRole("link", { name: "Continue Workout" }),
-		).toHaveAttribute("href", "/workout");
-		expect(screen.getByTestId("workout-list")).toHaveTextContent(
-			"CurrentSession:session-1:2",
+		await expect
+			.element(screen.getByRole("heading", { name: "Leg Day" }))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("In Progress")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("2 exercises • 2 sets"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("link", { name: "Continue Workout" }))
+			.toHaveAttribute("href", "/workout");
+		await expect
+			.element(screen.getByTestId("workout-list"))
+			.toHaveTextContent("CurrentSession:session-1:2");
+
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete Session" }),
 		);
+		await expect
+			.element(screen.getByTestId("delete-session-modal"))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete Session" }));
-		expect(screen.getByTestId("delete-session-modal")).toBeInTheDocument();
-
-		fireEvent.click(screen.getByRole("button", { name: "Confirm delete" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Confirm delete" }),
+		);
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
-	it("renders an inactive session without the continue workout action", () => {
+	it("renders an inactive session without the continue workout action", async () => {
 		mockUseSession.mockReturnValue({ data: session });
 
-		render(
+		const screen = await render(
 			<SessionDetailModal
 				sessionId="session-1"
 				units={mockUnits}
@@ -265,20 +278,22 @@ describe("SessionDetailModal", () => {
 			/>,
 		);
 
-		expect(screen.queryByText("In Progress")).not.toBeInTheDocument();
-		expect(
-			screen.queryByRole("link", { name: "Continue Workout" }),
-		).not.toBeInTheDocument();
-		expect(screen.getByTestId("workout-list")).toHaveTextContent(
-			"ViewSession:session-1:2",
-		);
+		await expect
+			.element(screen.getByText("In Progress"))
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("link", { name: "Continue Workout" }))
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("workout-list"))
+			.toHaveTextContent("ViewSession:session-1:2");
 	});
 
-	it("closes the dialog when the dialog control requests it", () => {
+	it("closes the dialog when the dialog control requests it", async () => {
 		const onClose = vi.fn();
 		mockUseSession.mockReturnValue({ data: session });
 
-		render(
+		const screen = await render(
 			<SessionDetailModal
 				sessionId="session-1"
 				units={mockUnits}
@@ -287,11 +302,11 @@ describe("SessionDetailModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+		await userEvent.click(screen.getByRole("button", { name: "Close dialog" }));
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
-	it("formats short sessions and singular workout stats", () => {
+	it("formats short sessions and singular workout stats", async () => {
 		mockUseSession.mockReturnValue({
 			data: {
 				...session,
@@ -306,7 +321,7 @@ describe("SessionDetailModal", () => {
 			},
 		});
 
-		render(
+		const screen = await render(
 			<SessionDetailModal
 				sessionId="session-1"
 				units={mockUnits}
@@ -315,11 +330,13 @@ describe("SessionDetailModal", () => {
 			/>,
 		);
 
-		expect(screen.getByText("45 min")).toBeInTheDocument();
-		expect(screen.getByText("1 exercise • 1 set")).toBeInTheDocument();
+		await expect.element(screen.getByText("45 min")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("1 exercise • 1 set"))
+			.toBeInTheDocument();
 	});
 
-	it("formats sessions without an end time as having no duration", () => {
+	it("formats sessions without an end time as having no duration", async () => {
 		mockUseSession.mockReturnValue({
 			data: {
 				...session,
@@ -327,7 +344,7 @@ describe("SessionDetailModal", () => {
 			},
 		});
 
-		render(
+		const screen = await render(
 			<SessionDetailModal
 				sessionId="session-1"
 				units={mockUnits}
@@ -336,8 +353,8 @@ describe("SessionDetailModal", () => {
 			/>,
 		);
 
-		expect(
-			screen.getByRole("heading", { name: "Leg Day" }),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("heading", { name: "Leg Day" }))
+			.toBeInTheDocument();
 	});
 });

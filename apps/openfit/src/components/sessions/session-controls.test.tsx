@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { WorkoutSessionWithData } from "@/lib/types";
 import { CreateSessionButton } from "./create-session";
 import { DeleteSessionModal } from "./delete-session-modal";
@@ -117,50 +118,54 @@ describe("session controls", () => {
 		mockUpdateSession.mockResolvedValue({});
 	});
 
-	it("opens the create session modal", () => {
-		render(<CreateSessionButton />);
+	it("opens the create session modal", async () => {
+		const screen = await render(<CreateSessionButton />);
 
-		fireEvent.click(screen.getByRole("button", { name: "New Session" }));
-		expect(screen.getByTestId("edit-session-modal")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "New Session" }));
+		await expect
+			.element(screen.getByTestId("edit-session-modal"))
+			.toBeInTheDocument();
 	});
 
-	it("closes the create session modal when the nested modal closes", () => {
-		render(<CreateSessionButton />);
+	it("closes the create session modal when the nested modal closes", async () => {
+		const screen = await render(<CreateSessionButton />);
 
-		fireEvent.click(screen.getByRole("button", { name: "New Session" }));
-		fireEvent.click(
+		await userEvent.click(screen.getByRole("button", { name: "New Session" }));
+		await userEvent.click(
 			screen.getByRole("button", { name: "Close create session modal" }),
 		);
 
-		expect(screen.queryByTestId("edit-session-modal")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("edit-session-modal"))
+			.not.toBeInTheDocument();
 	});
 
 	it("deletes a session after confirmation", async () => {
 		const onClose = vi.fn();
 
-		render(<DeleteSessionModal open onClose={onClose} sessionId="session-1" />);
-		fireEvent.click(screen.getByRole("button", { name: "Yes" }));
+		const screen = await render(
+			<DeleteSessionModal open onClose={onClose} sessionId="session-1" />,
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Yes" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockDeleteSession).toHaveBeenCalledWith("session-1");
 		});
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
 	it("updates the session name", async () => {
-		render(
+		const screen = await render(
 			<div>
 				<EditNamePopover session={session} />
 			</div>,
 		);
 
-		fireEvent.click(screen.getAllByRole("button")[0]);
-		fireEvent.change(screen.getByLabelText("Session Name"), {
-			target: { value: "Updated Name" },
-		});
-		fireEvent.click(screen.getAllByRole("button", { name: "Save" })[0]);
+		await userEvent.click(screen.getByRole("button").nth(0));
+		await screen.getByLabelText("Session Name").fill("Updated Name");
+		await userEvent.click(screen.getByRole("button", { name: "Save" }).nth(0));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateSession).toHaveBeenCalledWith({
 				id: "session-1",
 				name: "Updated Name",
@@ -168,11 +173,13 @@ describe("session controls", () => {
 		});
 	});
 
-	it("shows set count only when sets exist in resume session button", () => {
-		const { rerender } = render(<ResumeSessionButton session={session} />);
-		expect(screen.getByText("1 of 1 sets completed")).toBeInTheDocument();
+	it("shows set count only when sets exist in resume session button", async () => {
+		const screen = await render(<ResumeSessionButton session={session} />);
+		await expect
+			.element(screen.getByText("1 of 1 sets completed"))
+			.toBeInTheDocument();
 
-		rerender(
+		await screen.rerender(
 			<ResumeSessionButton
 				session={{
 					...session,
@@ -181,6 +188,8 @@ describe("session controls", () => {
 			/>,
 		);
 
-		expect(screen.queryByText(/sets completed/)).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText(/sets completed/))
+			.not.toBeInTheDocument();
 	});
 });

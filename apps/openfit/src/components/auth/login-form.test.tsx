@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { LoginForm } from "./login-form";
 
 const mockNavigate = vi.fn();
@@ -53,25 +54,21 @@ describe("LoginForm redirects", () => {
 	it("redirects to home when already authenticated", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
 
-		render(<LoginForm />);
+		await render(<LoginForm />);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockNavigate).toHaveBeenCalledWith({ to: "/", replace: true });
 		});
 	});
 
 	it("refreshes session and redirects after email login", async () => {
-		render(<LoginForm />);
+		const screen = await render(<LoginForm />);
 
-		fireEvent.change(screen.getByLabelText("Email"), {
-			target: { value: "person@example.com" },
-		});
-		fireEvent.change(screen.getByLabelText("Password"), {
-			target: { value: "Password1!" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Login" }));
+		await screen.getByLabelText("Email").fill("person@example.com");
+		await screen.getByLabelText("Password").fill("Password1!");
+		await userEvent.click(screen.getByRole("button", { name: "Login" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockSignInEmail).toHaveBeenCalledWith({
 				email: "person@example.com",
 				password: "Password1!",
@@ -87,44 +84,36 @@ describe("LoginForm redirects", () => {
 			error: { message: "missing" },
 		});
 
-		render(<LoginForm />);
+		const screen = await render(<LoginForm />);
 
-		fireEvent.change(screen.getByLabelText("Email"), {
-			target: { value: "person@example.com" },
-		});
-		fireEvent.change(screen.getByLabelText("Password"), {
-			target: { value: "Password1!" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Login" }));
+		await screen.getByLabelText("Email").fill("person@example.com");
+		await screen.getByLabelText("Password").fill("Password1!");
+		await userEvent.click(screen.getByRole("button", { name: "Login" }));
 
-		await waitFor(() => {
-			expect(
+		await vi.waitFor(() => {
+			expect(mockNavigate).not.toHaveBeenCalled();
+		});
+		await expect
+			.element(
 				screen.getByText("Authentication succeeded but session was not ready"),
-			).toBeInTheDocument();
-		});
-		expect(mockNavigate).not.toHaveBeenCalled();
+			)
+			.toBeInTheDocument();
 	});
 
 	it("shows validation errors and blocks submission when the form is invalid", async () => {
-		render(<LoginForm />);
+		const screen = await render(<LoginForm />);
 
-		fireEvent.change(screen.getByLabelText("Email"), {
-			target: { value: "invalid" },
-		});
-		fireEvent.change(screen.getByLabelText("Password"), {
-			target: { value: "abc" },
-		});
-		fireEvent.submit(
-			screen.getByRole("button", { name: "Login" }).closest("form"),
-		);
+		await screen.getByLabelText("Email").fill("invalid");
+		await screen.getByLabelText("Password").fill("abc");
+		await userEvent.click(screen.getByRole("button", { name: "Login" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockSignInEmail).not.toHaveBeenCalled();
 		});
-		expect(screen.getByText("Invalid email")).toBeInTheDocument();
-		expect(
-			screen.getByText("Be at least 8 characters long"),
-		).toBeInTheDocument();
+		await expect.element(screen.getByText("Invalid email")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Be at least 8 characters long"))
+			.toBeInTheDocument();
 		expect(mockSignInEmail).not.toHaveBeenCalled();
 		expect(mockGetSession).not.toHaveBeenCalled();
 	});
@@ -134,35 +123,29 @@ describe("LoginForm redirects", () => {
 			error: { message: "Invalid email or password" },
 		});
 
-		render(<LoginForm />);
+		const screen = await render(<LoginForm />);
 
-		fireEvent.change(screen.getByLabelText("Email"), {
-			target: { value: "person@example.com" },
-		});
-		fireEvent.change(screen.getByLabelText("Password"), {
-			target: { value: "Password1!" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Login" }));
+		await screen.getByLabelText("Email").fill("person@example.com");
+		await screen.getByLabelText("Password").fill("Password1!");
+		await userEvent.click(screen.getByRole("button", { name: "Login" }));
 
-		await waitFor(() => {
-			expect(screen.getByText("Invalid email or password")).toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(mockGetSession).not.toHaveBeenCalled();
 		});
-		expect(mockGetSession).not.toHaveBeenCalled();
+		await expect
+			.element(screen.getByText("Invalid email or password"))
+			.toBeInTheDocument();
 		expect(mockNavigate).not.toHaveBeenCalled();
 	});
 
 	it("registers a new account when register mode is enabled", async () => {
-		render(<LoginForm register />);
+		const screen = await render(<LoginForm register />);
 
-		fireEvent.change(screen.getByLabelText("Email"), {
-			target: { value: "newperson@example.com" },
-		});
-		fireEvent.change(screen.getByLabelText("Password"), {
-			target: { value: "Password1!" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Register" }));
+		await screen.getByLabelText("Email").fill("newperson@example.com");
+		await screen.getByLabelText("Password").fill("Password1!");
+		await userEvent.click(screen.getByRole("button", { name: "Register" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockSignUpEmail).toHaveBeenCalledWith({
 				email: "newperson@example.com",
 				password: "Password1!",
@@ -176,19 +159,15 @@ describe("LoginForm redirects", () => {
 	it("shows the fallback error when sign-in throws a non-Error", async () => {
 		mockSignInEmail.mockRejectedValueOnce("boom");
 
-		render(<LoginForm />);
+		const screen = await render(<LoginForm />);
 
-		fireEvent.change(screen.getByLabelText("Email"), {
-			target: { value: "person@example.com" },
-		});
-		fireEvent.change(screen.getByLabelText("Password"), {
-			target: { value: "Password1!" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Login" }));
+		await screen.getByLabelText("Email").fill("person@example.com");
+		await screen.getByLabelText("Password").fill("Password1!");
+		await userEvent.click(screen.getByRole("button", { name: "Login" }));
 
-		expect(
-			await screen.findByText("Authentication failed"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Authentication failed"))
+			.toBeInTheDocument();
 		expect(mockGetSession).not.toHaveBeenCalled();
 	});
 
@@ -197,30 +176,25 @@ describe("LoginForm redirects", () => {
 			error: { message: "Registration failed" },
 		});
 
-		render(<LoginForm register />);
+		const screen = await render(<LoginForm register />);
 
-		fireEvent.change(screen.getByLabelText("Email"), {
-			target: { value: "newperson@example.com" },
-		});
-		fireEvent.change(screen.getByLabelText("Password"), {
-			target: { value: "Password1!" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Register" }));
+		await screen.getByLabelText("Email").fill("newperson@example.com");
+		await screen.getByLabelText("Password").fill("Password1!");
+		await userEvent.click(screen.getByRole("button", { name: "Register" }));
 
-		expect(await screen.findByText("Registration failed")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Registration failed"))
+			.toBeInTheDocument();
 		expect(mockGetSession).not.toHaveBeenCalled();
 		expect(mockNavigate).not.toHaveBeenCalled();
 	});
 
 	it("starts social OAuth sign-in when Google is enabled", async () => {
 		vi.stubEnv("VITE_AUTH_GOOGLE_ENABLED", "true");
-		vi.resetModules();
 
-		const { LoginForm: OAuthLoginForm } = await import("./login-form");
+		const screen = await render(<LoginForm />);
 
-		render(<OAuthLoginForm />);
-
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Continue with Google" }),
 		);
 
@@ -228,34 +202,32 @@ describe("LoginForm redirects", () => {
 			provider: "google",
 			callbackURL: "/",
 		});
+
+		vi.unstubAllEnvs();
 	});
 
 	it("shows a social OAuth error when the provider flow throws", async () => {
 		vi.stubEnv("VITE_AUTH_GOOGLE_ENABLED", "true");
 		mockSignInSocial.mockRejectedValueOnce(new Error("oauth failed"));
-		vi.resetModules();
 
-		const { LoginForm: OAuthLoginForm } = await import("./login-form");
+		const screen = await render(<LoginForm />);
 
-		render(<OAuthLoginForm />);
-
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Continue with Google" }),
 		);
 
-		expect(await screen.findByText("oauth failed")).toBeInTheDocument();
+		await expect.element(screen.getByText("oauth failed")).toBeInTheDocument();
+
+		vi.unstubAllEnvs();
 	});
 
 	it("starts OIDC OAuth sign-in when the provider is enabled", async () => {
 		vi.stubEnv("VITE_AUTH_OIDC_ENABLED", "true");
 		vi.stubEnv("VITE_AUTH_OIDC_PROVIDER_NAME", "Acme SSO");
-		vi.resetModules();
 
-		const { LoginForm: OAuthLoginForm } = await import("./login-form");
+		const screen = await render(<LoginForm />);
 
-		render(<OAuthLoginForm />);
-
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Continue with Acme SSO" }),
 		);
 
@@ -263,5 +235,7 @@ describe("LoginForm redirects", () => {
 			providerId: "oidc",
 			callbackURL: "/",
 		});
+
+		vi.unstubAllEnvs();
 	});
 });

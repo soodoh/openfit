@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { SharedEntitiesView } from "./shared-entities-view";
 
 const mockLookupTable = vi.fn(
@@ -21,10 +21,14 @@ vi.mock("./lookup-table", () => ({
 }));
 
 describe("SharedEntitiesView", () => {
-	it("renders the exercise tab by default and swaps lookup tabs when selected", () => {
-		render(<SharedEntitiesView />);
+	it("renders the exercise tab by default and swaps lookup tabs when selected", async () => {
+		const screen = await render(<SharedEntitiesView />);
 
-		expect(screen.getByText("Exercises body")).toBeInTheDocument();
-		expect(screen.getByRole("tab", { name: "Equipment" })).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Exercises body"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("tab", { name: "Equipment" }))
+			.toBeInTheDocument();
 	});
 });

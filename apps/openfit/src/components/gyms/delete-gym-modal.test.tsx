@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { DeleteGymModal } from "./delete-gym-modal";
 
 const mockDeleteGym = vi.fn();
@@ -54,8 +55,8 @@ describe("DeleteGymModal", () => {
 		mockDeleteGym.mockResolvedValue(undefined);
 	});
 
-	it("shows the last-gym warning instead of a destructive action", () => {
-		render(
+	it("shows the last-gym warning instead of a destructive action", async () => {
+		const screen = await render(
 			<DeleteGymModal
 				gym={{ id: "gym-1", name: "Home Gym", equipmentIds: [] }}
 				isLastGym
@@ -63,15 +64,19 @@ describe("DeleteGymModal", () => {
 			/>,
 		);
 
-		expect(
-			screen.getByText(
-				"You cannot delete your only gym. Create another gym first.",
-			),
-		).toBeInTheDocument();
-		expect(
-			screen.queryByRole("button", { name: "Delete Gym" }),
-		).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
+		await expect
+			.element(
+				screen.getByText(
+					"You cannot delete your only gym. Create another gym first.",
+				),
+			)
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Delete Gym" }))
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Close" }))
+			.toBeInTheDocument();
 	});
 
 	it("maps delete failures to a user-friendly error", async () => {
@@ -80,22 +85,24 @@ describe("DeleteGymModal", () => {
 		);
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<DeleteGymModal
 				gym={{ id: "gym-1", name: "Home Gym", equipmentIds: [] }}
 				onClose={onClose}
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete Gym" }));
+		await userEvent.click(screen.getByRole("button", { name: "Delete Gym" }));
 
-		expect(
-			await screen.findByText(
-				"You cannot delete your only gym. Create another gym first.",
-			),
-		).toBeInTheDocument();
+		await expect
+			.element(
+				screen.getByText(
+					"You cannot delete your only gym. Create another gym first.",
+				),
+			)
+			.toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
-		fireEvent.click(screen.getByRole("button", { name: "Close" }));
+		await userEvent.click(screen.getByRole("button", { name: "Close" }));
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 });
