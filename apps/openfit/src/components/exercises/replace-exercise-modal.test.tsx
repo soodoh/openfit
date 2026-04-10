@@ -240,7 +240,7 @@ describe("ReplaceExerciseModal", () => {
 		);
 
 		await expect
-			.element(screen.getByRole("button", { name: "All" }))
+			.element(screen.getByRole("button", { name: "All", exact: true }))
 			.toBeInTheDocument();
 		expect(mockUseSimilarExercises).toHaveBeenCalledWith(
 			["chest"],

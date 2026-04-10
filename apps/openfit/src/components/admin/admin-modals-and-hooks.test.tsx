@@ -318,7 +318,9 @@ describe("admin modals and form state", () => {
 		await userEvent.click(screen.getByRole("button", { name: "Delete" }));
 		await expect.element(screen.getByText("lookup failed")).toBeInTheDocument();
 		expect(lookupClose).not.toHaveBeenCalled();
-		await userEvent.click(screen.getByRole("button", { name: "Close" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close", exact: true }),
+		);
 		expect(lookupClose).toHaveBeenCalledTimes(1);
 	});
 
@@ -377,7 +379,9 @@ describe("admin modals and form state", () => {
 			.element(screen.getByText("exercise failed"))
 			.toBeInTheDocument();
 		expect(exerciseClose).not.toHaveBeenCalled();
-		await userEvent.click(screen.getByRole("button", { name: "Close" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close", exact: true }),
+		);
 		expect(exerciseClose).toHaveBeenCalledTimes(1);
 	});
 

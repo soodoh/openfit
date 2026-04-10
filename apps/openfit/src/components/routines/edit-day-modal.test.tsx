@@ -174,7 +174,9 @@ describe("EditDayModal", () => {
 			<EditDayModal open onClose={onClose} routineId="routine-1" />,
 		);
 
-		await userEvent.click(screen.getByRole("button", { name: "Close" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close", exact: true }),
+		);
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});

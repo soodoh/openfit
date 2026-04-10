@@ -1,6 +1,6 @@
 import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import { ExerciseCard } from "./exercise-card";
 

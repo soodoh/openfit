@@ -253,7 +253,7 @@ describe("AutocompleteExercise", () => {
 		const screen = await render(<ExerciseHarness />);
 
 		await expect
-			.element(screen.getByRole("button", { name: "All" }))
+			.element(screen.getByRole("button", { name: "All", exact: true }))
 			.toBeInTheDocument();
 		expect(mockUseExerciseSearch).toHaveBeenCalledWith("", undefined);
 	});
@@ -325,7 +325,7 @@ describe("AutocompleteExercise", () => {
 		const screen = await render(<ExerciseHarness />);
 
 		await expect
-			.element(screen.getByRole("button", { name: "All" }))
+			.element(screen.getByRole("button", { name: "All", exact: true }))
 			.toBeInTheDocument();
 		expect(mockUseGym).toHaveBeenCalledWith(undefined);
 	});
@@ -416,7 +416,7 @@ describe("AutocompleteExercise", () => {
 		);
 
 		await expect
-			.element(screen.getByRole("button", { name: "All" }))
+			.element(screen.getByRole("button", { name: "All", exact: true }))
 			.toBeInTheDocument();
 		expect(mockUseExerciseSearch).toHaveBeenLastCalledWith("", undefined);
 	});

@@ -181,7 +181,9 @@ describe("EditRoutineModal", () => {
 
 		const screen = await render(<EditRoutineModal open onClose={onClose} />);
 
-		await userEvent.click(screen.getByRole("button", { name: "Close" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close", exact: true }),
+		);
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});

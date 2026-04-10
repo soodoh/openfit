@@ -143,7 +143,9 @@ describe("EditSessionMenu", () => {
 				name: "Edit actions for workout session session-1",
 			}),
 		);
-		await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Edit", exact: true }),
+		);
 
 		await expect
 			.element(screen.getByTestId("edit-session-modal"))
@@ -174,7 +176,9 @@ describe("EditSessionMenu", () => {
 				name: "Edit actions for workout session session-1",
 			}),
 		);
-		await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Edit", exact: true }),
+		);
 		await expect
 			.element(screen.getByTestId("edit-session-modal"))
 			.toBeInTheDocument();

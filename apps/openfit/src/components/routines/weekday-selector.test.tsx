@@ -38,13 +38,7 @@ describe("WeekdaySelector", () => {
 
 		expect(onChange).toHaveBeenCalledWith([1, 3, 5]);
 		await expect
-			.element(
-				screen.getByText(
-					(_, element) =>
-						element?.tagName.toLowerCase() === "p" &&
-						element.textContent?.includes("Wednesday, Monday") === true,
-				),
-			)
+			.element(screen.getByText(/Wednesday, Monday/))
 			.toBeInTheDocument();
 	});
 
