@@ -493,7 +493,7 @@ describe("shared ui wrappers", () => {
 			.element(screen.getByText("Sub content"))
 			.toHaveClass("custom-sub-content");
 		await expect
-			.element(screen.getByText("Content"))
+			.element(screen.getByText("Content", { exact: true }))
 			.toHaveClass("custom-content");
 		expect(container.querySelectorAll("svg").length).toBeGreaterThan(0);
 	});

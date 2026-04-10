@@ -151,7 +151,10 @@ describe("EditSessionModal", () => {
 		const screen = await render(<EditSessionModal open onClose={vi.fn()} />);
 
 		await userEvent.click(
-			screen.getByRole("button", { name: "Set Start Time invalid" }),
+			screen.getByRole("button", {
+				name: "Set Start Time invalid",
+				exact: true,
+			}),
 		);
 		await userEvent.click(
 			screen.getByRole("button", { name: "Set End Time invalid" }),

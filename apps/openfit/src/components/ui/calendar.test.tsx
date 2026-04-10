@@ -130,7 +130,7 @@ describe("calendar wrappers", () => {
 			.element(screen.getByTestId("caption-layout"))
 			.toHaveTextContent("dropdown");
 		await expect
-			.element(screen.getByText("1"))
+			.element(screen.getByText("1", { exact: true }))
 			.toHaveAttribute("data-range-start", "false");
 		await expect.element(screen.getByLabelText("Selected day")).toHaveFocus();
 		expect(

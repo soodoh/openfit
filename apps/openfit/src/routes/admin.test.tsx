@@ -55,11 +55,9 @@ describe("admin route", () => {
 		const screen = await render(<AdminRoute.options.component />);
 
 		// Loading spinner is shown; admin-page is not present
-		await expect
-			.element(
-				page.elementLocator(document.querySelector(".animate-spin") as Element),
-			)
-			.toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(screen.container.querySelector(".animate-spin")).not.toBeNull();
+		});
 		expect(mockFetch).not.toHaveBeenCalled();
 	});
 
