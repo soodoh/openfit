@@ -354,7 +354,7 @@ describe("shared ui wrappers", () => {
 		);
 
 		await expect
-			.element(screen.getByRole("button", { name: "1" }))
+			.element(screen.getByRole("button", { name: "1", exact: true }))
 			.toBeInTheDocument();
 		await expect
 			.element(screen.getByRole("button", { name: "4" }))
@@ -380,7 +380,7 @@ describe("shared ui wrappers", () => {
 
 		expect(screen.getByText("...").elements()).toHaveLength(2);
 		await expect
-			.element(screen.getByRole("button", { name: "1" }))
+			.element(screen.getByRole("button", { name: "1", exact: true }))
 			.toBeInTheDocument();
 		await expect
 			.element(screen.getByRole("button", { name: "8" }))
