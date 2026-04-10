@@ -1,4 +1,3 @@
-import { page } from "@vitest/browser/context";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { act } from "react";
@@ -20,20 +19,18 @@ describe("CurrentDuration", () => {
 
 	it("renders the elapsed time and updates on interval", async () => {
 		const startTime = new Date("2026-04-08T10:57:57.000Z");
-		const { unmount } = await render(<CurrentDuration startTime={startTime} />);
+		const screen = await render(<CurrentDuration startTime={startTime} />);
 
-		await expect.element(page.locator("text=Duration")).toBeInTheDocument();
-		await expect
-			.element(page.locator("p.text-base"))
-			.toHaveTextContent("1:02:03");
+		await expect.element(screen.getByText("Duration")).toBeInTheDocument();
+		const valueEl = screen.container.querySelector("p.text-base");
+		expect(valueEl?.textContent).toBe("1:02:03");
 
 		act(() => {
 			vi.advanceTimersByTime(1000);
 		});
 
-		await expect
-			.element(page.locator("p.text-base"))
-			.toHaveTextContent("1:02:04");
-		unmount();
+		const updatedValue = screen.container.querySelector("p.text-base");
+		expect(updatedValue?.textContent).toBe("1:02:04");
+		await screen.unmount();
 	});
 });

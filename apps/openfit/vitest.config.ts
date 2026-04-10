@@ -7,6 +7,9 @@ export default defineConfig({
 	resolve: {
 		tsconfigPaths: true,
 	},
+	optimizeDeps: {
+		include: ["dayjs", "dayjs/plugin/duration"],
+	},
 	test: {
 		globals: true,
 		coverage: {
