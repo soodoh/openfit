@@ -1,5 +1,6 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import type { GymDto, MutationSuccessResult } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
@@ -44,13 +45,13 @@ describe("use-gym-mutations", () => {
 			equipmentIds: ["equipment-1", "equipment-2"],
 		};
 
-		const { result } = renderHook(() => useCreateGym(), { wrapper });
+		const { result } = await renderHook(() => useCreateGym(), { wrapper });
 
 		await act(async () => {
 			await result.current.mutateAsync(input);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -79,13 +80,13 @@ describe("use-gym-mutations", () => {
 			equipmentIds: ["equipment-3"],
 		};
 
-		const { result } = renderHook(() => useUpdateGym(), { wrapper });
+		const { result } = await renderHook(() => useUpdateGym(), { wrapper });
 
 		await act(async () => {
 			await result.current.mutateAsync(input);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -116,13 +117,13 @@ describe("use-gym-mutations", () => {
 		const { queryClient, wrapper } = createTestQueryWrapper();
 		const invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
 
-		const { result } = renderHook(() => useDeleteGym(), { wrapper });
+		const { result } = await renderHook(() => useDeleteGym(), { wrapper });
 
 		await act(async () => {
 			await result.current.mutateAsync("gym-1");
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -149,7 +150,7 @@ describe("use-gym-mutations", () => {
 			equipmentIds: ["equipment-1"],
 		};
 
-		const { result } = renderHook(() => useUpdateGym(), { wrapper });
+		const { result } = await renderHook(() => useUpdateGym(), { wrapper });
 
 		await act(async () => {
 			await expect(result.current.mutateAsync(input)).rejects.toThrow(
@@ -157,7 +158,7 @@ describe("use-gym-mutations", () => {
 			);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 

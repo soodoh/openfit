@@ -1,5 +1,5 @@
-import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import { queryKeys } from "@/lib/query-keys";
 import type {
 	WorkoutSessionSummary,
@@ -66,11 +66,14 @@ describe("use-sessions queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useSessionsByDateRange(100, 200), {
-			wrapper,
-		});
+		const { result } = await renderHook(
+			() => useSessionsByDateRange(100, 200),
+			{
+				wrapper,
+			},
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -88,11 +91,14 @@ describe("use-sessions queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useSessionsByDateRange(100, 200), {
-			wrapper,
-		});
+		const { result } = await renderHook(
+			() => useSessionsByDateRange(100, 200),
+			{
+				wrapper,
+			},
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 
@@ -106,9 +112,9 @@ describe("use-sessions queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useSessions(), { wrapper });
+		const { result } = await renderHook(() => useSessions(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 
@@ -121,9 +127,11 @@ describe("use-sessions queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useSession(undefined), { wrapper });
+		const { result } = await renderHook(() => useSession(undefined), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.fetchStatus).toBe("idle");
 		});
 
@@ -140,11 +148,11 @@ describe("use-sessions queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useSession("missing-session"), {
+		const { result } = await renderHook(() => useSession("missing-session"), {
 			wrapper,
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -159,9 +167,11 @@ describe("use-sessions queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useSession("session-1"), { wrapper });
+		const { result } = await renderHook(() => useSession("session-1"), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -178,9 +188,9 @@ describe("use-sessions queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useSessions(), { wrapper });
+		const { result } = await renderHook(() => useSessions(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -193,9 +203,9 @@ describe("use-sessions queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useCurrentSession(), { wrapper });
+		const { result } = await renderHook(() => useCurrentSession(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -215,9 +225,9 @@ describe("use-sessions queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useCurrentSession(), { wrapper });
+		const { result } = await renderHook(() => useCurrentSession(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -230,9 +240,9 @@ describe("use-sessions queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useCurrentSession(), { wrapper });
+		const { result } = await renderHook(() => useCurrentSession(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 

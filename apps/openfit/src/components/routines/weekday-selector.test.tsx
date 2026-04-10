@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { WeekdaySelector } from "./weekday-selector";
 
 function WeekdaySelectorHarness({
@@ -19,57 +20,65 @@ function WeekdaySelectorHarness({
 }
 
 describe("WeekdaySelector", () => {
-	it("toggles weekdays in sorted order", () => {
+	it("toggles weekdays in sorted order", async () => {
 		const onChange = vi.fn();
 
-		render(<WeekdaySelector selectedWeekdays={[3, 1]} onChange={onChange} />);
-
-		expect(screen.getByRole("button", { name: "Monday" })).toHaveAttribute(
-			"aria-pressed",
-			"true",
-		);
-		expect(screen.getByRole("button", { name: "Wednesday" })).toHaveAttribute(
-			"aria-pressed",
-			"true",
+		const screen = await render(
+			<WeekdaySelector selectedWeekdays={[3, 1]} onChange={onChange} />,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Friday" }));
+		await expect
+			.element(screen.getByRole("button", { name: "Monday" }))
+			.toHaveAttribute("aria-pressed", "true");
+		await expect
+			.element(screen.getByRole("button", { name: "Wednesday" }))
+			.toHaveAttribute("aria-pressed", "true");
+
+		await userEvent.click(screen.getByRole("button", { name: "Friday" }));
 
 		expect(onChange).toHaveBeenCalledWith([1, 3, 5]);
-		expect(
-			screen.getByText(
-				(_, element) =>
-					element?.tagName.toLowerCase() === "p" &&
-					element.textContent?.includes("Wednesday, Monday") === true,
-			),
-		).toBeInTheDocument();
+		await expect
+			.element(
+				screen.getByText(
+					(_, element) =>
+						element?.tagName.toLowerCase() === "p" &&
+						element.textContent?.includes("Wednesday, Monday") === true,
+				),
+			)
+			.toBeInTheDocument();
 	});
 
-	it("does not change weekdays when disabled", () => {
+	it("does not change weekdays when disabled", async () => {
 		const onChange = vi.fn();
 
-		render(
+		const screen = await render(
 			<WeekdaySelector selectedWeekdays={[0]} onChange={onChange} disabled />,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Sunday" }));
+		await userEvent.click(screen.getByRole("button", { name: "Sunday" }));
 
 		expect(onChange).not.toHaveBeenCalled();
-		expect(screen.getByRole("button", { name: "Sunday" })).toBeDisabled();
+		await expect
+			.element(screen.getByRole("button", { name: "Sunday" }))
+			.toBeDisabled();
 	});
 
-	it("removes a selected weekday and hides the summary when none remain", () => {
-		render(<WeekdaySelectorHarness initialWeekdays={[1]} />);
+	it("removes a selected weekday and hides the summary when none remain", async () => {
+		const screen = await render(
+			<WeekdaySelectorHarness initialWeekdays={[1]} />,
+		);
 
-		expect(screen.getByText(/Selected:/)).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "Monday" }));
+		await expect.element(screen.getByText(/Selected:/)).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Monday" }));
 
-		expect(screen.queryByText(/Selected:/)).not.toBeInTheDocument();
+		await expect.element(screen.getByText(/Selected:/)).not.toBeInTheDocument();
 	});
 
-	it("does not render a summary before any weekday is selected", () => {
-		render(<WeekdaySelector selectedWeekdays={[]} onChange={vi.fn()} />);
+	it("does not render a summary before any weekday is selected", async () => {
+		const screen = await render(
+			<WeekdaySelector selectedWeekdays={[]} onChange={vi.fn()} />,
+		);
 
-		expect(screen.queryByText(/Selected:/)).not.toBeInTheDocument();
+		await expect.element(screen.getByText(/Selected:/)).not.toBeInTheDocument();
 	});
 });

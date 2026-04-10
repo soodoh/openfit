@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { Units, WorkoutSessionWithData } from "@/lib/types";
 import { CurrentSessionPage } from "./current-session-page";
 
@@ -52,20 +53,26 @@ describe("CurrentSessionPage end session confirmation", () => {
 		mockMutateAsync.mockResolvedValue({});
 	});
 
-	it("opens a confirmation dialog and does nothing when canceled", () => {
-		render(<CurrentSessionPage session={mockSession} units={mockUnits} />);
-		fireEvent.click(screen.getByRole("button", { name: "End Session" }));
-		expect(screen.getByText("End Session?")).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "No" }));
+	it("opens a confirmation dialog and does nothing when canceled", async () => {
+		const screen = await render(
+			<CurrentSessionPage session={mockSession} units={mockUnits} />,
+		);
+		await userEvent.click(screen.getByRole("button", { name: "End Session" }));
+		await expect.element(screen.getByText("End Session?")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "No" }));
 		expect(mockMutateAsync).not.toHaveBeenCalled();
 		expect(mockNavigate).not.toHaveBeenCalled();
 	});
 
 	it("ends the session and navigates to logs after confirmation", async () => {
-		render(<CurrentSessionPage session={mockSession} units={mockUnits} />);
-		fireEvent.click(screen.getByRole("button", { name: "End Session" }));
-		fireEvent.click(screen.getByRole("button", { name: "Yes, End Session" }));
-		await waitFor(() => {
+		const screen = await render(
+			<CurrentSessionPage session={mockSession} units={mockUnits} />,
+		);
+		await userEvent.click(screen.getByRole("button", { name: "End Session" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Yes, End Session" }),
+		);
+		await vi.waitFor(() => {
 			expect(mockMutateAsync).toHaveBeenCalledTimes(1);
 		});
 		const [payload] = mockMutateAsync.mock.calls[0];
@@ -74,7 +81,7 @@ describe("CurrentSessionPage end session confirmation", () => {
 		expect(mockNavigate).toHaveBeenCalledWith({ to: "/logs" });
 	});
 
-	it("renders fallback title, notes, and computed progress stats", () => {
+	it("renders fallback title, notes, and computed progress stats", async () => {
 		const sessionWithProgress = {
 			...mockSession,
 			name: "",
@@ -145,15 +152,17 @@ describe("CurrentSessionPage end session confirmation", () => {
 			],
 		} satisfies WorkoutSessionWithData;
 
-		render(
+		const screen = await render(
 			<CurrentSessionPage session={sessionWithProgress} units={mockUnits} />,
 		);
 
-		expect(
-			screen.getByRole("heading", { name: "Workout Session" }),
-		).toBeInTheDocument();
-		expect(screen.getByText("Keep elbows tucked")).toBeInTheDocument();
-		expect(screen.getByText("33%")).toBeInTheDocument();
-		expect(screen.getByText("1 / 3 sets")).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("heading", { name: "Workout Session" }))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Keep elbows tucked"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("33%")).toBeInTheDocument();
+		await expect.element(screen.getByText("1 / 3 sets")).toBeInTheDocument();
 	});
 });

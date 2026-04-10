@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { ReplaceExerciseModal } from "./replace-exercise-modal";
 
 const mockReplaceExercise = vi.fn();
@@ -169,7 +170,7 @@ describe("ReplaceExerciseModal", () => {
 	it("defaults to the profile gym, allows switching filters, and replaces the selected exercise", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<ReplaceExerciseModal
 				open
 				onClose={onClose}
@@ -182,9 +183,9 @@ describe("ReplaceExerciseModal", () => {
 			/>,
 		);
 
-		expect(
-			screen.getAllByRole("button", { name: "Home Gym" })[0],
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getAllByRole("button", { name: "Home Gym" })[0])
+			.toBeInTheDocument();
 		expect(mockUseSimilarExercises).toHaveBeenCalledWith(
 			["chest"],
 			expect.objectContaining({
@@ -193,9 +194,11 @@ describe("ReplaceExerciseModal", () => {
 			}),
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "All Equipment" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "All Equipment" }),
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUseSimilarExercises).toHaveBeenLastCalledWith(
 				["chest"],
 				expect.objectContaining({
@@ -204,10 +207,12 @@ describe("ReplaceExerciseModal", () => {
 			);
 		});
 
-		fireEvent.click(screen.getByRole("button", { name: /Incline Press/i }));
-		fireEvent.click(screen.getByRole("button", { name: "Replace" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: /Incline Press/i }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Replace" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockReplaceExercise).toHaveBeenCalledWith({
 				id: "set-group-1",
 				exerciseId: "exercise-2",
@@ -216,12 +221,12 @@ describe("ReplaceExerciseModal", () => {
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
-	it("falls back to All when the user has no default gym", () => {
+	it("falls back to All when the user has no default gym", async () => {
 		mockUseUserProfile.mockReturnValue({ data: { defaultGymId: undefined } });
 		mockUseGyms.mockReturnValue({ data: [] });
 		mockUseGym.mockReturnValue({ data: undefined });
 
-		render(
+		const screen = await render(
 			<ReplaceExerciseModal
 				open
 				onClose={vi.fn()}
@@ -234,7 +239,9 @@ describe("ReplaceExerciseModal", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "All" }))
+			.toBeInTheDocument();
 		expect(mockUseSimilarExercises).toHaveBeenCalledWith(
 			["chest"],
 			expect.objectContaining({
@@ -247,7 +254,7 @@ describe("ReplaceExerciseModal", () => {
 	it("resets search state on reopen and keeps replace disabled until a selection is made", async () => {
 		const onClose = vi.fn();
 
-		const { rerender } = render(
+		const screen = await render(
 			<ReplaceExerciseModal
 				open
 				onClose={onClose}
@@ -260,20 +267,26 @@ describe("ReplaceExerciseModal", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("button", { name: "Replace" })).toBeDisabled();
+		await expect
+			.element(screen.getByRole("button", { name: "Replace" }))
+			.toBeDisabled();
 
-		fireEvent.click(screen.getByRole("button", { name: /Incline Press/i }));
-		expect(screen.getByRole("button", { name: "Replace" })).not.toBeDisabled();
+		await userEvent.click(
+			screen.getByRole("button", { name: /Incline Press/i }),
+		);
+		await expect
+			.element(screen.getByRole("button", { name: "Replace" }))
+			.not.toBeDisabled();
 
-		fireEvent.click(screen.getByRole("button", { name: "Replace" }));
-		await waitFor(() => {
+		await userEvent.click(screen.getByRole("button", { name: "Replace" }));
+		await vi.waitFor(() => {
 			expect(mockReplaceExercise).toHaveBeenCalledWith({
 				id: "set-group-1",
 				exerciseId: "exercise-2",
 			});
 		});
 
-		rerender(
+		screen.rerender(
 			<ReplaceExerciseModal
 				open={false}
 				onClose={onClose}
@@ -285,7 +298,7 @@ describe("ReplaceExerciseModal", () => {
 				setGroupId="set-group-1"
 			/>,
 		);
-		rerender(
+		screen.rerender(
 			<ReplaceExerciseModal
 				open
 				onClose={onClose}
@@ -298,11 +311,15 @@ describe("ReplaceExerciseModal", () => {
 			/>,
 		);
 
-		expect(screen.getByPlaceholderText("Search exercises...")).toHaveValue("");
-		expect(
-			screen.getByRole("button", { name: "Home Gym" }),
-		).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Replace" })).toBeDisabled();
+		await expect
+			.element(screen.getByPlaceholderText("Search exercises..."))
+			.toHaveValue("");
+		await expect
+			.element(screen.getByRole("button", { name: "Home Gym" }))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Replace" }))
+			.toBeDisabled();
 	});
 
 	it("shows the selected exercise thumbnail and disables the action while replacing", async () => {
@@ -314,7 +331,7 @@ describe("ReplaceExerciseModal", () => {
 				}),
 		);
 
-		render(
+		const screen = await render(
 			<ReplaceExerciseModal
 				open
 				onClose={vi.fn()}
@@ -327,28 +344,32 @@ describe("ReplaceExerciseModal", () => {
 			/>,
 		);
 
-		expect(
-			screen.getByRole("img", { name: "Incline Press thumbnail" }),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("img", { name: "Incline Press thumbnail" }))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: /Incline Press/i }));
-		fireEvent.click(screen.getByRole("button", { name: "Replace" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: /Incline Press/i }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Replace" }));
 
-		expect(screen.getByRole("button", { name: "Replace" })).toBeDisabled();
+		await expect
+			.element(screen.getByRole("button", { name: "Replace" }))
+			.toBeDisabled();
 
 		resolveReplace?.();
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(
-				screen.getByRole("button", { name: "Replace" }),
-			).not.toBeDisabled();
+				screen.getByRole("button", { name: "Replace" }).element().disabled,
+			).toBe(false);
 		});
 	});
 
 	it("switches gym filters and closes through the dialog control", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<ReplaceExerciseModal
 				open
 				onClose={onClose}
@@ -361,9 +382,11 @@ describe("ReplaceExerciseModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "All Equipment" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "All Equipment" }),
+		);
 		const homeGymButton = screen.getByRole("button", { name: "Home Gym" });
-		fireEvent.click(homeGymButton);
+		await userEvent.click(homeGymButton);
 
 		expect(mockUseSimilarExercises).toHaveBeenLastCalledWith(
 			["chest"],
@@ -372,7 +395,7 @@ describe("ReplaceExerciseModal", () => {
 			}),
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+		await userEvent.click(screen.getByRole("button", { name: "Close dialog" }));
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});

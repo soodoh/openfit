@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { Units, WorkoutSessionWithData } from "@/lib/types";
 import { SessionPage } from "./session-page";
 
@@ -95,26 +95,33 @@ describe("SessionPage", () => {
 		vi.clearAllMocks();
 	});
 
-	it("renders the session summary, duration, and workout list", () => {
-		render(<SessionPage session={session} units={units} />);
-
-		expect(screen.getByRole("link", { name: "Back to Logs" })).toHaveAttribute(
-			"href",
-			"/logs",
+	it("renders the session summary, duration, and workout list", async () => {
+		const screen = await render(
+			<SessionPage session={session} units={units} />,
 		);
-		expect(
-			screen.getByRole("heading", { name: "Upper Body" }),
-		).toBeInTheDocument();
-		expect(screen.getByText("April 8, 2026")).toBeInTheDocument();
-		expect(screen.getByText("2h 30m")).toBeInTheDocument();
-		expect(screen.getByText("Total Sets").parentElement).toHaveTextContent("1");
+
+		await expect
+			.element(screen.getByRole("link", { name: "Back to Logs" }))
+			.toHaveAttribute("href", "/logs");
+		await expect
+			.element(screen.getByRole("heading", { name: "Upper Body" }))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("April 8, 2026")).toBeInTheDocument();
+		await expect.element(screen.getByText("2h 30m")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Total Sets").parentElement())
+			.toHaveTextContent("1");
 		expect(screen.getAllByText("—").length).toBeGreaterThan(0);
-		expect(screen.getByTestId("edit-session-menu")).toBeInTheDocument();
-		expect(screen.getByTestId("workout-list")).toHaveTextContent("session-1:1");
+		await expect
+			.element(screen.getByTestId("edit-session-menu"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("workout-list"))
+			.toHaveTextContent("session-1:1");
 	});
 
-	it("renders notes and rating details when they are present", () => {
-		render(
+	it("renders notes and rating details when they are present", async () => {
+		const screen = await render(
 			<SessionPage
 				session={{
 					...session,
@@ -126,12 +133,12 @@ describe("SessionPage", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Felt strong")).toBeInTheDocument();
-		expect(screen.getByText("Rating")).toBeInTheDocument();
+		await expect.element(screen.getByText("Felt strong")).toBeInTheDocument();
+		await expect.element(screen.getByText("Rating")).toBeInTheDocument();
 	});
 
-	it("shows a dash when the session has no end time", () => {
-		render(
+	it("shows a dash when the session has no end time", async () => {
+		const screen = await render(
 			<SessionPage
 				session={{
 					...session,
@@ -143,12 +150,16 @@ describe("SessionPage", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Duration").parentElement).toHaveTextContent("—");
-		expect(screen.getByText("Notes").parentElement).toHaveTextContent("—");
+		await expect
+			.element(screen.getByText("Duration").parentElement())
+			.toHaveTextContent("—");
+		await expect
+			.element(screen.getByText("Notes").parentElement())
+			.toHaveTextContent("—");
 	});
 
-	it("formats shorter sessions in minutes", () => {
-		render(
+	it("formats shorter sessions in minutes", async () => {
+		const screen = await render(
 			<SessionPage
 				session={{
 					...session,
@@ -158,6 +169,6 @@ describe("SessionPage", () => {
 			/>,
 		);
 
-		expect(screen.getByText("15 min")).toBeInTheDocument();
+		await expect.element(screen.getByText("15 min")).toBeInTheDocument();
 	});
 });

@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type {
 	SetGroupWithRelations,
 	SetWithRelations,
@@ -173,7 +174,7 @@ describe("workout controls", () => {
 	it("bulk edits reps, weight, units, and rest time", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<BulkEditSetModal
 				open
 				onClose={onClose}
@@ -182,20 +183,14 @@ describe("workout controls", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByPlaceholderText("8"), {
-			target: { value: "12" },
-		});
-		fireEvent.change(screen.getByPlaceholderText("135"), {
-			target: { value: "155" },
-		});
-		fireEvent.change(screen.getByPlaceholderText("1:30"), {
-			target: { value: "2:15" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Reps" }));
-		fireEvent.click(screen.getByRole("button", { name: "lbs" }));
-		fireEvent.click(screen.getByRole("button", { name: "Update" }));
+		await screen.getByPlaceholderText("8").fill("12");
+		await screen.getByPlaceholderText("135").fill("155");
+		await screen.getByPlaceholderText("1:30").fill("2:15");
+		await userEvent.click(screen.getByRole("button", { name: "Reps" }));
+		await userEvent.click(screen.getByRole("button", { name: "lbs" }));
+		await userEvent.click(screen.getByRole("button", { name: "Update" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockBulkEditSetGroup).toHaveBeenCalledWith({
 				id: "group-1",
 				reps: 12,
@@ -211,7 +206,7 @@ describe("workout controls", () => {
 	it("leaves bulk-edit fields unchanged when the inputs are blank", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<BulkEditSetModal
 				open
 				onClose={onClose}
@@ -220,9 +215,9 @@ describe("workout controls", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Update" }));
+		await userEvent.click(screen.getByRole("button", { name: "Update" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockBulkEditSetGroup).toHaveBeenCalledWith({
 				id: "group-1",
 				reps: undefined,
@@ -238,7 +233,7 @@ describe("workout controls", () => {
 	it("clears a set comment when the textarea is emptied", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<EditSetCommentModal
 				open
 				onClose={onClose}
@@ -246,12 +241,10 @@ describe("workout controls", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByLabelText("Comment"), {
-			target: { value: "" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Update" }));
+		await screen.getByLabelText("Comment").fill("");
+		await userEvent.click(screen.getByRole("button", { name: "Update" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateSetGroup).toHaveBeenCalledWith({
 				id: "group-1",
 				comment: undefined,
@@ -263,19 +256,23 @@ describe("workout controls", () => {
 	it("opens the workout timer and completes the set", async () => {
 		const onComplete = vi.fn().mockResolvedValue(undefined);
 
-		render(<WorkoutTimer set={set} onComplete={onComplete} />);
-		fireEvent.click(
+		const screen = await render(
+			<WorkoutTimer set={set} onComplete={onComplete} />,
+		);
+		await userEvent.click(
 			screen.getByRole("button", { name: "Toggle workout timer" }),
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Mark as Completed" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Mark as Completed" }),
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(onComplete).toHaveBeenCalledTimes(1);
 		});
 	});
 
-	it("adjusts the workout timer controls", () => {
+	it("adjusts the workout timer controls", async () => {
 		const onComplete = vi.fn().mockResolvedValue(undefined);
 
 		vi.useFakeTimers();
@@ -283,21 +280,23 @@ describe("workout controls", () => {
 		mockCountdown.isRunning = false;
 		mockCountdown.totalSeconds = 45;
 
-		render(<WorkoutTimer set={set} onComplete={onComplete} />);
-		fireEvent.click(
+		const screen = await render(
+			<WorkoutTimer set={set} onComplete={onComplete} />,
+		);
+		await userEvent.click(
 			screen.getByRole("button", { name: "Toggle workout timer" }),
 		);
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", {
 				name: "Decrease workout timer by 10 seconds",
 			}),
 		);
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", {
 				name: "Increase workout timer by 10 seconds",
 			}),
 		);
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Start workout timer" }),
 		);
 
@@ -320,17 +319,19 @@ describe("workout controls", () => {
 		vi.useRealTimers();
 	});
 
-	it("pauses the workout timer when it is already running", () => {
+	it("pauses the workout timer when it is already running", async () => {
 		const onComplete = vi.fn().mockResolvedValue(undefined);
 
 		mockCountdown.isRunning = true;
 		mockCountdown.totalSeconds = 45;
 
-		render(<WorkoutTimer set={set} onComplete={onComplete} />);
-		fireEvent.click(
+		const screen = await render(
+			<WorkoutTimer set={set} onComplete={onComplete} />,
+		);
+		await userEvent.click(
 			screen.getByRole("button", { name: "Toggle workout timer" }),
 		);
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Pause workout timer" }),
 		);
 
@@ -338,7 +339,7 @@ describe("workout controls", () => {
 	});
 
 	it("falls back to the set number for an unknown set type and updates the type selection", async () => {
-		render(
+		const screen = await render(
 			<SetTypeMenu
 				set={{
 					...set,
@@ -348,10 +349,10 @@ describe("workout controls", () => {
 			/>,
 		);
 
-		expect(screen.getByText("3")).toBeInTheDocument();
-		fireEvent.click(screen.getByText("Dropset"));
+		await expect.element(screen.getByText("3")).toBeInTheDocument();
+		await userEvent.click(screen.getByText("Dropset"));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateSet).toHaveBeenCalledWith({
 				id: "set-1",
 				type: SetType.DROPSET,

@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { RoutineWithDays, WorkoutSessionWithData } from "@/lib/types";
 import { RoutineOverviewTab } from "./routine-overview-tab";
 
@@ -156,8 +157,8 @@ describe("RoutineOverviewTab", () => {
 		mockDeleteRoutineDay.mockResolvedValue({});
 	});
 
-	it("opens the routine-level modals from the footer actions", () => {
-		render(
+	it("opens the routine-level modals from the footer actions", async () => {
+		const screen = await render(
 			<RoutineOverviewTab
 				routine={buildRoutine([])}
 				currentSession={undefined}
@@ -165,15 +166,22 @@ describe("RoutineOverviewTab", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-		expect(screen.getByRole("dialog")).toHaveTextContent("Edit Routine Modal");
-		fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
-		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+		await expect.element(screen.getByRole("dialog")).toBeInTheDocument();
+		expect(screen.getByRole("dialog").element().textContent).toContain(
+			"Edit Routine Modal",
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Close modal" }));
+		await expect.element(screen.getByRole("dialog")).not.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete Routine" }));
-		expect(screen.getByText("Delete Routine Modal")).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
-		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete Routine" }),
+		);
+		await expect
+			.element(screen.getByText("Delete Routine Modal"))
+			.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Close modal" }));
+		await expect.element(screen.getByRole("dialog")).not.toBeInTheDocument();
 	});
 
 	it("starts a day workout, selects a day, and opens the day delete modal", async () => {
@@ -190,7 +198,7 @@ describe("RoutineOverviewTab", () => {
 			},
 		]);
 
-		render(
+		const screen = await render(
 			<RoutineOverviewTab
 				routine={routine}
 				currentSession={undefined}
@@ -198,23 +206,26 @@ describe("RoutineOverviewTab", () => {
 			/>,
 		);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByText("Pull Day").closest("button") as HTMLButtonElement,
 		);
 		expect(onSelectDay).toHaveBeenCalledWith("day-1");
 
-		fireEvent.click(screen.getByRole("button", { name: "Start" }));
-		await waitFor(() => {
+		await userEvent.click(screen.getByRole("button", { name: "Start" }));
+		await vi.waitFor(() => {
 			expect(mockCreateSession).toHaveBeenCalledWith({ templateId: "day-1" });
 		});
 		expect(mockNavigate).toHaveBeenCalledWith({ to: "/workout" });
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Delete workout day Pull Day" }),
 		);
-		expect(screen.getByRole("dialog")).toHaveTextContent("Delete Day Modal");
-		fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
-		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		await expect.element(screen.getByRole("dialog")).toBeInTheDocument();
+		expect(screen.getByRole("dialog").element().textContent).toContain(
+			"Delete Day Modal",
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Close modal" }));
+		await expect.element(screen.getByRole("dialog")).not.toBeInTheDocument();
 	});
 
 	it("does not navigate when starting a workout does not return a session id", async () => {
@@ -232,7 +243,7 @@ describe("RoutineOverviewTab", () => {
 			},
 		]);
 
-		render(
+		const screen = await render(
 			<RoutineOverviewTab
 				routine={routine}
 				currentSession={undefined}
@@ -240,16 +251,16 @@ describe("RoutineOverviewTab", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Start" }));
+		await userEvent.click(screen.getByRole("button", { name: "Start" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockCreateSession).toHaveBeenCalledWith({ templateId: "day-1" });
 		});
 		expect(mockNavigate).not.toHaveBeenCalled();
 	});
 
-	it("opens the add-day modal from the empty state", () => {
-		render(
+	it("opens the add-day modal from the empty state", async () => {
+		const screen = await render(
 			<RoutineOverviewTab
 				routine={buildRoutine([])}
 				currentSession={undefined}
@@ -257,11 +268,16 @@ describe("RoutineOverviewTab", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Add Workout Day" }));
-		expect(screen.getByRole("dialog")).toHaveTextContent("Add Day Modal");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Add Workout Day" }),
+		);
+		await expect.element(screen.getByRole("dialog")).toBeInTheDocument();
+		expect(screen.getByRole("dialog").element().textContent).toContain(
+			"Add Day Modal",
+		);
 	});
 
-	it("opens the add-day modal from the footer when the routine already has days", () => {
+	it("opens the add-day modal from the footer when the routine already has days", async () => {
 		const routine = buildRoutine([
 			{
 				id: "day-1",
@@ -274,7 +290,7 @@ describe("RoutineOverviewTab", () => {
 			},
 		]);
 
-		render(
+		const screen = await render(
 			<RoutineOverviewTab
 				routine={routine}
 				currentSession={undefined}
@@ -282,16 +298,19 @@ describe("RoutineOverviewTab", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Add Day" }));
-		expect(screen.getByRole("dialog")).toHaveTextContent("Add Day Modal");
-		fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
-		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Add Day" }));
+		await expect.element(screen.getByRole("dialog")).toBeInTheDocument();
+		expect(screen.getByRole("dialog").element().textContent).toContain(
+			"Add Day Modal",
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Close modal" }));
+		await expect.element(screen.getByRole("dialog")).not.toBeInTheDocument();
 	});
 
-	it("propagates the added day id from the modal", () => {
+	it("propagates the added day id from the modal", async () => {
 		const onDayAdded = vi.fn();
 
-		render(
+		const screen = await render(
 			<RoutineOverviewTab
 				routine={buildRoutine([])}
 				currentSession={undefined}
@@ -300,13 +319,17 @@ describe("RoutineOverviewTab", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Add Workout Day" }));
-		fireEvent.click(screen.getByRole("button", { name: "Confirm Add Day" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Add Workout Day" }),
+		);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Confirm Add Day" }),
+		);
 
 		expect(onDayAdded).toHaveBeenCalledWith("day-3");
 	});
 
-	it("disables the day start action while a session is already active", () => {
+	it("disables the day start action while a session is already active", async () => {
 		const routine = buildRoutine([
 			{
 				id: "day-1",
@@ -319,7 +342,7 @@ describe("RoutineOverviewTab", () => {
 			},
 		]);
 
-		render(
+		const screen = await render(
 			<RoutineOverviewTab
 				routine={routine}
 				currentSession={{ id: "session-1" } as WorkoutSessionWithData}
@@ -327,6 +350,8 @@ describe("RoutineOverviewTab", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("button", { name: "Start" })).toBeDisabled();
+		await expect
+			.element(screen.getByRole("button", { name: "Start" }))
+			.toBeDisabled();
 	});
 });

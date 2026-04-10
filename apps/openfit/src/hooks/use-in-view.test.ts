@@ -1,5 +1,6 @@
-import { act, renderHook } from "@testing-library/react";
+import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import { useInView } from "./use-in-view";
 
 class MockIntersectionObserver {
@@ -75,8 +76,8 @@ describe("use-in-view", () => {
 		expect(globalThis.IntersectionObserver).toBe(originalIntersectionObserver);
 	});
 
-	it("creates an observer for a node and updates inView from observer entries", () => {
-		const { result } = renderHook(() =>
+	it("creates an observer for a node and updates inView from observer entries", async () => {
+		const { result } = await renderHook(() =>
 			useInView({
 				rootMargin: "16px",
 				threshold: 0.25,
@@ -108,8 +109,8 @@ describe("use-in-view", () => {
 		expect(result.current.inView).toBe(false);
 	});
 
-	it("disconnects on ref changes and resets inView when ref receives null", () => {
-		const { result } = renderHook(() => useInView());
+	it("disconnects on ref changes and resets inView when ref receives null", async () => {
+		const { result } = await renderHook(() => useInView());
 		const firstNode = document.createElement("div");
 		const secondNode = document.createElement("div");
 

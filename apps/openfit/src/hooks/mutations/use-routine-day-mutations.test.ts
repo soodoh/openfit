@@ -1,5 +1,6 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import type { MutationSuccessResult, RoutineDayDto } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
@@ -50,13 +51,15 @@ describe("use-routine-day-mutations", () => {
 			weekdays: [1, 3, 5],
 		};
 
-		const { result } = renderHook(() => useCreateRoutineDay(), { wrapper });
+		const { result } = await renderHook(() => useCreateRoutineDay(), {
+			wrapper,
+		});
 
 		await act(async () => {
 			await result.current.mutateAsync(input);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -88,13 +91,15 @@ describe("use-routine-day-mutations", () => {
 			weekdays: [1, 4],
 		};
 
-		const { result } = renderHook(() => useUpdateRoutineDay(), { wrapper });
+		const { result } = await renderHook(() => useUpdateRoutineDay(), {
+			wrapper,
+		});
 
 		await act(async () => {
 			await result.current.mutateAsync(input);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -127,7 +132,9 @@ describe("use-routine-day-mutations", () => {
 		const { queryClient, wrapper } = createTestQueryWrapper();
 		const invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
 
-		const { result } = renderHook(() => useUpdateRoutineDay(), { wrapper });
+		const { result } = await renderHook(() => useUpdateRoutineDay(), {
+			wrapper,
+		});
 
 		await act(async () => {
 			await result.current.mutateAsync({
@@ -136,7 +143,7 @@ describe("use-routine-day-mutations", () => {
 			});
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -152,13 +159,15 @@ describe("use-routine-day-mutations", () => {
 		const { queryClient, wrapper } = createTestQueryWrapper();
 		const invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
 
-		const { result } = renderHook(() => useDeleteRoutineDay(), { wrapper });
+		const { result } = await renderHook(() => useDeleteRoutineDay(), {
+			wrapper,
+		});
 
 		await act(async () => {
 			await result.current.mutateAsync("routine-day-1");
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -190,7 +199,9 @@ describe("use-routine-day-mutations", () => {
 			weekdays: [1],
 		};
 
-		const { result } = renderHook(() => useCreateRoutineDay(), { wrapper });
+		const { result } = await renderHook(() => useCreateRoutineDay(), {
+			wrapper,
+		});
 
 		await act(async () => {
 			await expect(result.current.mutateAsync(input)).rejects.toThrow(
@@ -198,7 +209,7 @@ describe("use-routine-day-mutations", () => {
 			);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 

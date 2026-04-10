@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { ThemeProvider } from "./theme-provider";
 
 const mockNextThemesProvider = vi.fn(
@@ -19,8 +19,8 @@ describe("ThemeProvider", () => {
 		mockNextThemesProvider.mockClear();
 	});
 
-	it("renders children and forwards props to next-themes provider", () => {
-		render(
+	it("renders children and forwards props to next-themes provider", async () => {
+		const screen = await render(
 			<ThemeProvider
 				attribute="class"
 				defaultTheme="system"
@@ -31,8 +31,10 @@ describe("ThemeProvider", () => {
 			</ThemeProvider>,
 		);
 
-		expect(screen.getByTestId("next-themes-provider")).toBeInTheDocument();
-		expect(screen.getByText("Theme child")).toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("next-themes-provider"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("Theme child")).toBeInTheDocument();
 		expect(mockNextThemesProvider).toHaveBeenCalledTimes(1);
 
 		const forwardedProps = mockNextThemesProvider.mock.calls[0]?.[0];

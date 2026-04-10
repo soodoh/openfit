@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { SetWithRelations, Units } from "@/lib/types";
 import { ListView, SetType } from "@/lib/types";
 import { WorkoutSetRow } from "./workout-set-row";
@@ -105,8 +106,8 @@ describe("WorkoutSetRow", () => {
 		mockDeleteSet.mockClear();
 	});
 
-	it("updates reps, weights, and unit selectors before deleting the set", () => {
-		render(
+	it("updates reps, weights, and unit selectors before deleting the set", async () => {
+		const screen = await render(
 			<WorkoutSetRow
 				view={ListView.EditTemplate}
 				set={buildSet()}
@@ -116,46 +117,42 @@ describe("WorkoutSetRow", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByDisplayValue("8"), {
-			target: { value: "10" },
-		});
-		fireEvent.blur(screen.getByDisplayValue("10"));
+		await screen.getByDisplayValue("8").fill("10");
+		await userEvent.tab();
 
 		expect(mockUpdateSet).toHaveBeenCalledWith({ id: "set-1", reps: 10 });
 
-		fireEvent.change(screen.getByDisplayValue("135"), {
-			target: { value: "155" },
-		});
-		fireEvent.blur(screen.getByDisplayValue("155"));
+		await screen.getByDisplayValue("135").fill("155");
+		await userEvent.tab();
 
 		expect(mockUpdateSet).toHaveBeenCalledWith({ id: "set-1", weight: 155 });
 
-		fireEvent.click(screen.getByText("Dropset"));
+		await userEvent.click(screen.getByText("Dropset"));
 		expect(mockUpdateSet).toHaveBeenCalledWith({
 			id: "set-1",
 			type: SetType.DROPSET,
 		});
 
-		fireEvent.click(screen.getByText("Seconds"));
+		await userEvent.click(screen.getByText("Seconds"));
 		expect(mockUpdateSet).toHaveBeenCalledWith({
 			id: "set-1",
 			repetitionUnitId: "seconds",
 		});
 
-		fireEvent.click(screen.getByText("kg"));
+		await userEvent.click(screen.getByText("kg"));
 		expect(mockUpdateSet).toHaveBeenCalledWith({
 			id: "set-1",
 			weightUnitId: "kg",
 		});
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete set" }));
+		await userEvent.click(screen.getByRole("button", { name: "Delete set" }));
 		expect(mockDeleteSet).toHaveBeenCalledWith("set-1");
 	});
 
 	it("marks timed sets complete and starts rest timer in current session", async () => {
 		const startRestTimer = vi.fn();
 
-		render(
+		const screen = await render(
 			<WorkoutSetRow
 				view={ListView.CurrentSession}
 				set={buildSet({
@@ -168,9 +165,11 @@ describe("WorkoutSetRow", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Complete timer" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Complete timer" }),
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateSet).toHaveBeenCalledWith({
 				id: "set-1",
 				completed: true,
@@ -182,7 +181,7 @@ describe("WorkoutSetRow", () => {
 	it("marks non-timed sets complete with the checkbox branch", async () => {
 		const startRestTimer = vi.fn();
 
-		render(
+		const screen = await render(
 			<WorkoutSetRow
 				view={ListView.CurrentSession}
 				set={buildSet({
@@ -195,7 +194,7 @@ describe("WorkoutSetRow", () => {
 			/>,
 		);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("checkbox", { name: "Mark as Completed" }),
 		);
 
@@ -206,8 +205,8 @@ describe("WorkoutSetRow", () => {
 		expect(startRestTimer).toHaveBeenCalledWith(75);
 	});
 
-	it("disables completed rows in current session view", () => {
-		render(
+	it("disables completed rows in current session view", async () => {
+		const screen = await render(
 			<WorkoutSetRow
 				view={ListView.CurrentSession}
 				set={buildSet({
@@ -221,17 +220,17 @@ describe("WorkoutSetRow", () => {
 			/>,
 		);
 
-		expect(screen.getByDisplayValue("8")).toBeDisabled();
-		expect(screen.getByDisplayValue("135")).toBeDisabled();
-		expect(
-			screen.getByRole("checkbox", { name: "Mark as Completed" }),
-		).toBeChecked();
+		await expect.element(screen.getByDisplayValue("8")).toBeDisabled();
+		await expect.element(screen.getByDisplayValue("135")).toBeDisabled();
+		await expect
+			.element(screen.getByRole("checkbox", { name: "Mark as Completed" }))
+			.toBeChecked();
 	});
 
-	it("treats non-numeric inputs as zero and skips the rest timer when there is no rest", () => {
+	it("treats non-numeric inputs as zero and skips the rest timer when there is no rest", async () => {
 		const startRestTimer = vi.fn();
 
-		render(
+		const screen = await render(
 			<WorkoutSetRow
 				view={ListView.CurrentSession}
 				set={buildSet({
@@ -245,11 +244,9 @@ describe("WorkoutSetRow", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByDisplayValue("8"), {
-			target: { value: "abc" },
-		});
-		fireEvent.blur(screen.getByDisplayValue("abc"));
-		fireEvent.click(
+		await screen.getByDisplayValue("8").fill("abc");
+		await userEvent.tab();
+		await userEvent.click(
 			screen.getByRole("checkbox", { name: "Mark as Completed" }),
 		);
 
@@ -257,10 +254,10 @@ describe("WorkoutSetRow", () => {
 		expect(startRestTimer).not.toHaveBeenCalled();
 	});
 
-	it("can uncheck a completed current-session set without starting rest", () => {
+	it("can uncheck a completed current-session set without starting rest", async () => {
 		const startRestTimer = vi.fn();
 
-		render(
+		const screen = await render(
 			<WorkoutSetRow
 				view={ListView.CurrentSession}
 				set={buildSet({
@@ -275,7 +272,7 @@ describe("WorkoutSetRow", () => {
 			/>,
 		);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("checkbox", { name: "Mark as Completed" }),
 		);
 
@@ -286,8 +283,8 @@ describe("WorkoutSetRow", () => {
 		expect(startRestTimer).not.toHaveBeenCalled();
 	});
 
-	it("falls back to default unit labels when set units are missing", () => {
-		render(
+	it("falls back to default unit labels when set units are missing", async () => {
+		const screen = await render(
 			<WorkoutSetRow
 				view={ListView.EditTemplate}
 				set={buildSet({
@@ -302,7 +299,7 @@ describe("WorkoutSetRow", () => {
 			/>,
 		);
 
-		expect(screen.getByText("reps")).toBeInTheDocument();
-		expect(screen.getAllByText("lbs")).toHaveLength(2);
+		await expect.element(screen.getByText("reps")).toBeInTheDocument();
+		await expect.element(screen.getAllByText("lbs").nth(0)).toBeInTheDocument();
 	});
 });

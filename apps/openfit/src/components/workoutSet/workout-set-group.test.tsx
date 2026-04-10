@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { SetGroupWithRelations, Units } from "@/lib/types";
 import { ListView, SetType } from "@/lib/types";
 import { WorkoutSetGroup } from "./workout-set-group";
@@ -194,10 +195,10 @@ describe("WorkoutSetGroup", () => {
 		mockDeleteSetGroup.mockResolvedValue({});
 	});
 
-	it("shows unknown exercise branch and does not add a set without an exercise", () => {
+	it("shows unknown exercise branch and does not add a set without an exercise", async () => {
 		const setGroup = buildSetGroup({ exercise: null, completed: false });
 
-		render(
+		const screen = await render(
 			<WorkoutSetGroup
 				view={ListView.CurrentSession}
 				setGroup={setGroup}
@@ -207,12 +208,16 @@ describe("WorkoutSetGroup", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Unknown exercise")).toBeInTheDocument();
-		expect(
-			screen.queryByRole("button", { name: "Replace with similar exercise" }),
-		).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Unknown exercise"))
+			.toBeInTheDocument();
+		await expect
+			.element(
+				screen.getByRole("button", { name: "Replace with similar exercise" }),
+			)
+			.not.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Add Set" }));
+		await userEvent.click(screen.getByRole("button", { name: "Add Set" }));
 		expect(mockCreateSet).not.toHaveBeenCalled();
 	});
 
@@ -223,7 +228,7 @@ describe("WorkoutSetGroup", () => {
 			comment: "Squeeze at the top",
 		});
 
-		render(
+		const screen = await render(
 			<WorkoutSetGroup
 				view={ListView.CurrentSession}
 				setGroup={setGroup}
@@ -233,34 +238,38 @@ describe("WorkoutSetGroup", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Add Set" }));
-		await waitFor(() => {
+		await userEvent.click(screen.getByRole("button", { name: "Add Set" }));
+		await vi.waitFor(() => {
 			expect(mockCreateSet).toHaveBeenCalledWith({
 				setGroupId: "group-1",
 				exerciseId: "exercise-1",
 			});
 		});
 
-		fireEvent.click(screen.getByRole("button", { name: "Bulk edit sets" }));
-		expect(
-			screen.getByRole("heading", { name: "Bulk Update Sets" }),
-		).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Bulk edit sets" }),
+		);
+		await expect
+			.element(screen.getByRole("heading", { name: "Bulk Update Sets" }))
+			.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
-		fireEvent.click(screen.getByRole("button", { name: "Add comment" }));
-		expect(
-			screen.getByRole("heading", { name: "Update Set Comment" }),
-		).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await userEvent.click(screen.getByRole("button", { name: "Add comment" }));
+		await expect
+			.element(screen.getByRole("heading", { name: "Update Set Comment" }))
+			.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete exercise" }));
-		expect(
-			screen.getByRole("heading", { name: "Delete Exercise" }),
-		).toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete exercise" }),
+		);
+		await expect
+			.element(screen.getByRole("heading", { name: "Delete Exercise" }))
+			.toBeInTheDocument();
 	});
 
 	it("auto-collapses when all sets become completed in current-session view", async () => {
-		const { rerender } = render(
+		const screen = await render(
 			<WorkoutSetGroup
 				view={ListView.CurrentSession}
 				setGroup={buildSetGroup({
@@ -273,9 +282,11 @@ describe("WorkoutSetGroup", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("button", { name: "Add Set" })).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Add Set" }))
+			.toBeInTheDocument();
 
-		rerender(
+		screen.rerender(
 			<WorkoutSetGroup
 				view={ListView.CurrentSession}
 				setGroup={buildSetGroup({
@@ -288,11 +299,9 @@ describe("WorkoutSetGroup", () => {
 			/>,
 		);
 
-		await waitFor(() => {
-			expect(
-				screen.queryByRole("button", { name: "Add Set" }),
-			).not.toBeInTheDocument();
-		});
+		await expect
+			.element(screen.getByRole("button", { name: "Add Set" }))
+			.not.toBeInTheDocument();
 	});
 
 	it("wires drag-end sorting to reorder-set mutation with new set order", async () => {
@@ -302,7 +311,7 @@ describe("WorkoutSetGroup", () => {
 			setIds: ["set-1", "set-2"],
 		});
 
-		render(
+		const screen = await render(
 			<WorkoutSetGroup
 				view={ListView.CurrentSession}
 				setGroup={setGroup}
@@ -312,9 +321,11 @@ describe("WorkoutSetGroup", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Trigger drag end" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Trigger drag end" }),
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockReorderSets).toHaveBeenCalledWith({
 				setGroupId: "group-1",
 				setIds: ["set-2", "set-1"],
@@ -322,13 +333,13 @@ describe("WorkoutSetGroup", () => {
 		});
 	});
 
-	it("hides exercise actions while reorder mode is active", () => {
+	it("hides exercise actions while reorder mode is active", async () => {
 		const setGroup = buildSetGroup({
 			exercise: { id: "exercise-1", name: "Barbell Row", imageUrl: null },
 			completed: false,
 		});
 
-		render(
+		const screen = await render(
 			<WorkoutSetGroup
 				view={ListView.CurrentSession}
 				setGroup={setGroup}
@@ -338,23 +349,25 @@ describe("WorkoutSetGroup", () => {
 			/>,
 		);
 
-		expect(
-			screen.queryByRole("button", {
-				name: "Replace with similar exercise",
-			}),
-		).not.toBeInTheDocument();
-		expect(
-			screen.queryByRole("button", { name: "View exercise details" }),
-		).not.toBeInTheDocument();
+		await expect
+			.element(
+				screen.getByRole("button", {
+					name: "Replace with similar exercise",
+				}),
+			)
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "View exercise details" }))
+			.not.toBeInTheDocument();
 	});
 
-	it("opens and closes the exercise detail and replace modals", () => {
+	it("opens and closes the exercise detail and replace modals", async () => {
 		const setGroup = buildSetGroup({
 			exercise: { id: "exercise-1", name: "Barbell Row", imageUrl: null },
 			completed: false,
 		});
 
-		render(
+		const screen = await render(
 			<WorkoutSetGroup
 				view={ListView.CurrentSession}
 				setGroup={setGroup}
@@ -364,28 +377,38 @@ describe("WorkoutSetGroup", () => {
 			/>,
 		);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "View exercise details" }),
 		);
-		expect(screen.getByText("exercise-detail-open")).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "Close detail" }));
-		expect(screen.queryByText("exercise-detail-open")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("exercise-detail-open"))
+			.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Close detail" }));
+		await expect
+			.element(screen.getByText("exercise-detail-open"))
+			.not.toBeInTheDocument();
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Replace with similar exercise" }),
 		);
-		expect(screen.getByText("replace-exercise-open")).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "Close replace" }));
-		expect(screen.queryByText("replace-exercise-open")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("replace-exercise-open"))
+			.toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close replace" }),
+		);
+		await expect
+			.element(screen.getByText("replace-exercise-open"))
+			.not.toBeInTheDocument();
 	});
 
-	it("toggles the group open state and closes the delete modal", () => {
+	it("toggles the group open state and closes the delete modal", async () => {
 		const setGroup = buildSetGroup({
 			exercise: { id: "exercise-1", name: "Barbell Row", imageUrl: null },
 			completed: false,
 		});
 
-		render(
+		const screen = await render(
 			<WorkoutSetGroup
 				view={ListView.CurrentSession}
 				setGroup={setGroup}
@@ -395,24 +418,30 @@ describe("WorkoutSetGroup", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("button", { name: "Add Set" })).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Add Set" }))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByText("Barbell Row"));
-		expect(
-			screen.queryByRole("button", { name: "Add Set" }),
-		).not.toBeInTheDocument();
+		await userEvent.click(screen.getByText("Barbell Row"));
+		await expect
+			.element(screen.getByRole("button", { name: "Add Set" }))
+			.not.toBeInTheDocument();
 
-		fireEvent.click(screen.getByText("Barbell Row"));
-		expect(screen.getByRole("button", { name: "Add Set" })).toBeInTheDocument();
+		await userEvent.click(screen.getByText("Barbell Row"));
+		await expect
+			.element(screen.getByRole("button", { name: "Add Set" }))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete exercise" }));
-		expect(
-			screen.getByRole("heading", { name: "Delete Exercise" }),
-		).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "No" }));
-		expect(
-			screen.queryByRole("heading", { name: "Delete Exercise" }),
-		).not.toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete exercise" }),
+		);
+		await expect
+			.element(screen.getByRole("heading", { name: "Delete Exercise" }))
+			.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "No" }));
+		await expect
+			.element(screen.getByRole("heading", { name: "Delete Exercise" }))
+			.not.toBeInTheDocument();
 	});
 
 	it("ignores drag end events that do not change order and shows the singular set label", async () => {
@@ -422,7 +451,7 @@ describe("WorkoutSetGroup", () => {
 			setIds: ["set-1"],
 		});
 
-		render(
+		const screen = await render(
 			<WorkoutSetGroup
 				view={ListView.CurrentSession}
 				setGroup={setGroup}
@@ -432,12 +461,12 @@ describe("WorkoutSetGroup", () => {
 			/>,
 		);
 
-		expect(screen.getByText("1 set")).toBeInTheDocument();
+		await expect.element(screen.getByText("1 set")).toBeInTheDocument();
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Trigger noop drag end" }),
 		);
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockReorderSets).not.toHaveBeenCalled();
 		});
 	});

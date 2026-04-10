@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { Gym, Units, UserProfile } from "@/lib/types";
 import { ProfileModal } from "./profile-modal";
 
@@ -173,63 +174,81 @@ describe("ProfileModal", () => {
 		mockUpdateGym.mockResolvedValue({});
 	});
 
-	it("resets the gym draft when switching away from the equipment tab", () => {
-		render(<ProfileModal open onClose={vi.fn()} />);
+	it("resets the gym draft when switching away from the equipment tab", async () => {
+		const screen = await render(<ProfileModal open onClose={vi.fn()} />);
 
-		fireEvent.mouseDown(screen.getByRole("tab", { name: "Equipment" }));
-		fireEvent.click(screen.getByRole("button", { name: "Edit Home Gym" }));
+		await userEvent.click(screen.getByRole("tab", { name: "Equipment" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Edit Home Gym" }),
+		);
 
 		const gymNameInput = screen.getByLabelText("Gym Name");
-		expect(gymNameInput).toHaveValue("Home Gym");
-		expect(screen.getByText("Selected equipment: rack")).toBeInTheDocument();
+		await expect.element(gymNameInput).toHaveValue("Home Gym");
+		await expect
+			.element(screen.getByText("Selected equipment: rack"))
+			.toBeInTheDocument();
 
-		fireEvent.change(gymNameInput, { target: { value: "Changed Gym Name" } });
-		fireEvent.click(screen.getByRole("button", { name: "Choose bench" }));
+		await gymNameInput.fill("Changed Gym Name");
+		await userEvent.click(screen.getByRole("button", { name: "Choose bench" }));
 
-		expect(screen.getByLabelText("Gym Name")).toHaveValue("Changed Gym Name");
-		expect(screen.getByText("Selected equipment: bench")).toBeInTheDocument();
+		await expect
+			.element(screen.getByLabelText("Gym Name"))
+			.toHaveValue("Changed Gym Name");
+		await expect
+			.element(screen.getByText("Selected equipment: bench"))
+			.toBeInTheDocument();
 
-		fireEvent.mouseDown(screen.getByRole("tab", { name: "Settings" }));
-		fireEvent.mouseDown(screen.getByRole("tab", { name: "Equipment" }));
+		await userEvent.click(screen.getByRole("tab", { name: "Settings" }));
+		await userEvent.click(screen.getByRole("tab", { name: "Equipment" }));
 
-		expect(screen.queryByLabelText("Gym Name")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByLabelText("Gym Name"))
+			.not.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Add Gym" }));
+		await userEvent.click(screen.getByRole("button", { name: "Add Gym" }));
 
-		expect(
-			screen.getByRole("heading", { name: "Add New Gym" }),
-		).toBeInTheDocument();
-		expect(screen.getByLabelText("Gym Name")).toHaveValue("");
-		expect(screen.getByText("Selected equipment: none")).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("heading", { name: "Add New Gym" }))
+			.toBeInTheDocument();
+		await expect.element(screen.getByLabelText("Gym Name")).toHaveValue("");
+		await expect
+			.element(screen.getByText("Selected equipment: none"))
+			.toBeInTheDocument();
 	});
 
-	it("shows empty gym state and opens add form from first gym CTA", () => {
+	it("shows empty gym state and opens add form from first gym CTA", async () => {
 		mockGyms = [];
 		mockUseGyms.mockReturnValue({
 			data: mockGyms,
 			isLoading: false,
 		});
 
-		render(<ProfileModal open onClose={vi.fn()} />);
+		const screen = await render(<ProfileModal open onClose={vi.fn()} />);
 
-		fireEvent.mouseDown(screen.getByRole("tab", { name: "Equipment" }));
+		await userEvent.click(screen.getByRole("tab", { name: "Equipment" }));
 
-		expect(screen.getByText("No gyms created yet")).toBeInTheDocument();
-		expect(
-			screen.getByText(
-				/create a gym to filter exercises by available equipment/i,
-			),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("No gyms created yet"))
+			.toBeInTheDocument();
+		await expect
+			.element(
+				screen.getByText(
+					/create a gym to filter exercises by available equipment/i,
+				),
+			)
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Add Your First Gym" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Add Your First Gym" }),
+		);
 
-		expect(
-			screen.getByRole("heading", { name: "Add New Gym" }),
-		).toBeInTheDocument();
-		expect(screen.getByLabelText("Gym Name")).toHaveValue("");
+		await expect
+			.element(screen.getByRole("heading", { name: "Add New Gym" }))
+			.toBeInTheDocument();
+		await expect.element(screen.getByLabelText("Gym Name")).toHaveValue("");
 	});
 
-	it("shows a loading indicator while the settings data is still loading", () => {
+	it("shows a loading indicator while the settings data is still loading", async () => {
 		mockUseUserProfile.mockReturnValue({
 			data: undefined,
 			isLoading: true,
@@ -241,45 +260,59 @@ describe("ProfileModal", () => {
 
 		render(<ProfileModal open onClose={vi.fn()} />);
 
-		expect(document.querySelector(".animate-spin")).toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(document.querySelector(".animate-spin")).not.toBeNull();
+		});
 	});
 
-	it("shows a loading indicator for gym data on the equipment tab", () => {
+	it("shows a loading indicator for gym data on the equipment tab", async () => {
 		mockUseGyms.mockReturnValue({
 			data: undefined,
 			isLoading: true,
 		});
 
-		render(<ProfileModal open onClose={vi.fn()} />);
+		const screen = await render(<ProfileModal open onClose={vi.fn()} />);
 
-		fireEvent.mouseDown(screen.getByRole("tab", { name: "Equipment" }));
+		await userEvent.click(screen.getByRole("tab", { name: "Equipment" }));
 
-		expect(document.querySelector(".animate-spin")).toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(document.querySelector(".animate-spin")).not.toBeNull();
+		});
 	});
 
-	it("opens the delete gym modal from the gym list", () => {
-		render(<ProfileModal open onClose={vi.fn()} />);
+	it("opens the delete gym modal from the gym list", async () => {
+		const screen = await render(<ProfileModal open onClose={vi.fn()} />);
 
-		fireEvent.mouseDown(screen.getByRole("tab", { name: "Equipment" }));
-		fireEvent.click(screen.getByRole("button", { name: "Delete Home Gym" }));
+		await userEvent.click(screen.getByRole("tab", { name: "Equipment" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete Home Gym" }),
+		);
 
-		expect(screen.getByText("Delete modal for Home Gym")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Delete modal for Home Gym"))
+			.toBeInTheDocument();
 	});
 
-	it("closes through the dialog and delete modal controls", () => {
+	it("closes through the dialog and delete modal controls", async () => {
 		const onClose = vi.fn();
 
-		render(<ProfileModal open onClose={onClose} />);
+		const screen = await render(<ProfileModal open onClose={onClose} />);
 
-		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+		await userEvent.click(screen.getByRole("button", { name: "Close dialog" }));
 		expect(onClose).toHaveBeenCalledTimes(1);
 
-		fireEvent.mouseDown(screen.getByRole("tab", { name: "Equipment" }));
-		fireEvent.click(screen.getByRole("button", { name: "Delete Home Gym" }));
-		expect(screen.getByText("Delete modal for Home Gym")).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "Close delete modal" }));
-		expect(
-			screen.queryByText("Delete modal for Home Gym"),
-		).not.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("tab", { name: "Equipment" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete Home Gym" }),
+		);
+		await expect
+			.element(screen.getByText("Delete modal for Home Gym"))
+			.toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close delete modal" }),
+		);
+		await expect
+			.element(screen.getByText("Delete modal for Home Gym"))
+			.not.toBeInTheDocument();
 	});
 });

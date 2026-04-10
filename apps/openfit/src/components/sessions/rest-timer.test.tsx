@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { RestTimer } from "./rest-timer";
 
 dayjs.extend(duration);
@@ -39,7 +40,7 @@ describe("RestTimer", () => {
 		vi.useRealTimers();
 	});
 
-	it("renders a finite progress ring when the timer length is zero", () => {
+	it("renders a finite progress ring when the timer length is zero", async () => {
 		const timer = {
 			isRunning: false,
 			totalSeconds: 0,
@@ -48,7 +49,7 @@ describe("RestTimer", () => {
 			restart: vi.fn(),
 		};
 
-		const { container } = render(
+		const { container } = await render(
 			<RestTimer
 				open
 				setOpen={vi.fn()}
@@ -63,7 +64,7 @@ describe("RestTimer", () => {
 		expect(progressCircle?.getAttribute("stroke-dashoffset")).not.toBe("NaN");
 	});
 
-	it("can reset and skip the timer from the dialog controls", () => {
+	it("can reset and skip the timer from the dialog controls", async () => {
 		const setOpen = vi.fn();
 		const setTotalSeconds = vi.fn();
 		const restart = vi.fn();
@@ -75,7 +76,7 @@ describe("RestTimer", () => {
 			restart,
 		};
 
-		render(
+		const screen = await render(
 			<RestTimer
 				open
 				setOpen={setOpen}
@@ -85,8 +86,12 @@ describe("RestTimer", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Reset rest timer" }));
-		fireEvent.click(screen.getByRole("button", { name: "Skip rest timer" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Reset rest timer" }),
+		);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Skip rest timer" }),
+		);
 
 		expect(restart).toHaveBeenNthCalledWith(
 			1,
@@ -97,7 +102,7 @@ describe("RestTimer", () => {
 		expect(setTotalSeconds).not.toHaveBeenCalled();
 	});
 
-	it("can adjust the timer and start it from the dialog controls", () => {
+	it("can adjust the timer and start it from the dialog controls", async () => {
 		const timer = {
 			isRunning: false,
 			totalSeconds: 40,
@@ -106,7 +111,7 @@ describe("RestTimer", () => {
 			restart: vi.fn(),
 		};
 
-		render(
+		const screen = await render(
 			<RestTimer
 				open
 				setOpen={vi.fn()}
@@ -116,13 +121,15 @@ describe("RestTimer", () => {
 			/>,
 		);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Decrease rest timer by 10 seconds" }),
 		);
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Increase rest timer by 10 seconds" }),
 		);
-		fireEvent.click(screen.getByRole("button", { name: "Start rest timer" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Start rest timer" }),
+		);
 
 		expect(timer.restart).toHaveBeenNthCalledWith(
 			1,
@@ -137,7 +144,7 @@ describe("RestTimer", () => {
 		expect(timer.start).toHaveBeenCalledTimes(1);
 	});
 
-	it("pauses the timer when it is already running", () => {
+	it("pauses the timer when it is already running", async () => {
 		const timer = {
 			isRunning: true,
 			totalSeconds: 40,
@@ -146,7 +153,7 @@ describe("RestTimer", () => {
 			restart: vi.fn(),
 		};
 
-		render(
+		const screen = await render(
 			<RestTimer
 				open
 				setOpen={vi.fn()}
@@ -156,7 +163,9 @@ describe("RestTimer", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Pause rest timer" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Pause rest timer" }),
+		);
 
 		expect(timer.pause).toHaveBeenCalledTimes(1);
 		expect(timer.start).not.toHaveBeenCalled();

@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { AuthProvider, useAuth } from "./auth-provider";
 
 const mockUseSession = vi.fn();
@@ -29,38 +29,38 @@ describe("AuthProvider", () => {
 		mockUseSession.mockReset();
 	});
 
-	it("provides authenticated state when a session is present", () => {
+	it("provides authenticated state when a session is present", async () => {
 		mockUseSession.mockReturnValue({
 			data: { id: "session-1" },
 			isPending: false,
 		});
 
-		render(
+		const screen = await render(
 			<AuthProvider>
 				<AuthConsumer />
 			</AuthProvider>,
 		);
 
-		expect(screen.getByTestId("auth-state")).toHaveTextContent(
-			"authenticated-ready",
-		);
+		await expect
+			.element(screen.getByTestId("auth-state"))
+			.toHaveTextContent("authenticated-ready");
 		expect(mockUseSession).toHaveBeenCalledTimes(1);
 	});
 
-	it("exposes a loading state while the session query is pending", () => {
+	it("exposes a loading state while the session query is pending", async () => {
 		mockUseSession.mockReturnValue({
 			data: undefined,
 			isPending: true,
 		});
 
-		render(
+		const screen = await render(
 			<AuthProvider>
 				<AuthConsumer />
 			</AuthProvider>,
 		);
 
-		expect(screen.getByTestId("auth-state")).toHaveTextContent(
-			"anonymous-loading",
-		);
+		await expect
+			.element(screen.getByTestId("auth-state"))
+			.toHaveTextContent("anonymous-loading");
 	});
 });

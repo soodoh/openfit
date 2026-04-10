@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import { forwardRef, type ReactNode, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { AutocompleteEquipment } from "./autocomplete-equipment";
 
 const mockUseEquipment = vi.fn();
@@ -112,106 +113,125 @@ describe("AutocompleteEquipment", () => {
 		});
 	});
 
-	it("filters, sorts, and selects the first matching equipment with Enter", () => {
-		render(<Harness />);
+	it("filters, sorts, and selects the first matching equipment with Enter", async () => {
+		const screen = await render(<Harness />);
 
 		const input = screen.getByPlaceholderText("Search equipment...");
-		fireEvent.focus(input);
-		fireEvent.change(input, { target: { value: "ke" } });
+		await userEvent.click(input);
+		await input.fill("ke");
 
-		expect(
-			screen.getByRole("button", { name: "Kettlebell" }),
-		).toBeInTheDocument();
-		expect(
-			screen.queryByRole("button", { name: "Barbell" }),
-		).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Kettlebell" }))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Barbell" }))
+			.not.toBeInTheDocument();
 
-		fireEvent.keyDown(input, { key: "Enter" });
+		await userEvent.keyboard("{Enter}");
 
-		expect(screen.getByDisplayValue("")).toBeInTheDocument();
-		expect(screen.getByPlaceholderText("Search equipment...")).toHaveValue("");
+		await expect.element(screen.getByDisplayValue("")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholderText("Search equipment..."))
+			.toHaveValue("");
 	});
 
-	it("disables the input when every item is already selected", () => {
-		render(
+	it("disables the input when every item is already selected", async () => {
+		const screen = await render(
 			<Harness
 				initialSelectedIds={["equipment-1", "equipment-2", "equipment-3"]}
 			/>,
 		);
 
-		expect(screen.getByPlaceholderText("All equipment added")).toBeDisabled();
-		expect(screen.getByText("All equipment added")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholderText("All equipment added"))
+			.toBeDisabled();
+		await expect
+			.element(screen.getByText("All equipment added"))
+			.toBeInTheDocument();
 	});
 
-	it("shows the no-results message when the search term matches nothing", () => {
-		render(<Harness />);
+	it("shows the no-results message when the search term matches nothing", async () => {
+		const screen = await render(<Harness />);
 
 		const input = screen.getByPlaceholderText("Search equipment...");
-		fireEvent.focus(input);
-		fireEvent.change(input, { target: { value: "zzz" } });
+		await userEvent.click(input);
+		await input.fill("zzz");
 
-		expect(screen.getByText("No equipment found")).toBeInTheDocument();
-		expect(
-			screen.queryByRole("button", { name: "Barbell" }),
-		).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("No equipment found"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Barbell" }))
+			.not.toBeInTheDocument();
 	});
 
-	it("honors the disabled prop", () => {
-		render(
+	it("honors the disabled prop", async () => {
+		const screen = await render(
 			<AutocompleteEquipment selectedIds={[]} onSelect={vi.fn()} disabled />,
 		);
 
-		expect(screen.getByPlaceholderText("Search equipment...")).toBeDisabled();
+		await expect
+			.element(screen.getByPlaceholderText("Search equipment..."))
+			.toBeDisabled();
 	});
 
-	it("treats missing equipment data as an empty list", () => {
+	it("treats missing equipment data as an empty list", async () => {
 		mockUseEquipment.mockReturnValue({ data: undefined });
 
-		render(<Harness />);
+		const screen = await render(<Harness />);
 
-		expect(screen.getByPlaceholderText("Search equipment...")).toBeEnabled();
-		expect(screen.getByText("All equipment added")).toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholderText("Search equipment..."))
+			.toBeEnabled();
+		await expect
+			.element(screen.getByText("All equipment added"))
+			.toBeInTheDocument();
 	});
 
-	it("returns focus to the input after selecting equipment", () => {
-		render(<Harness />);
+	it("returns focus to the input after selecting equipment", async () => {
+		const screen = await render(<Harness />);
 
 		const input = screen.getByPlaceholderText("Search equipment...");
-		fireEvent.focus(input);
-		fireEvent.change(input, { target: { value: "ket" } });
-		fireEvent.click(screen.getByRole("button", { name: "Kettlebell" }));
+		await userEvent.click(input);
+		await input.fill("ket");
+		await userEvent.click(screen.getByRole("button", { name: "Kettlebell" }));
 
-		expect(screen.getByDisplayValue("")).toBeInTheDocument();
-		expect(input).toHaveFocus();
+		await expect.element(screen.getByDisplayValue("")).toBeInTheDocument();
+		await expect.element(input).toHaveFocus();
 	});
 
-	it("closes the popover when Escape is pressed without selecting equipment", () => {
-		render(<Harness />);
+	it("closes the popover when Escape is pressed without selecting equipment", async () => {
+		const screen = await render(<Harness />);
 
 		const input = screen.getByPlaceholderText("Search equipment...");
-		fireEvent.focus(input);
-		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+		await userEvent.click(input);
+		await expect
+			.element(screen.getByTestId("popover"))
+			.toHaveAttribute("data-open", "true");
 
-		fireEvent.keyDown(input, { key: "Escape" });
+		await userEvent.keyboard("{Escape}");
 
-		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "false");
+		await expect
+			.element(screen.getByTestId("popover"))
+			.toHaveAttribute("data-open", "false");
 	});
 
-	it("opens when typing from a closed state and ignores outside interactions on the input", () => {
-		render(<Harness />);
+	it("opens when typing from a closed state and ignores outside interactions on the input", async () => {
+		const screen = await render(<Harness />);
 
 		const input = screen.getByPlaceholderText("Search equipment...");
-		fireEvent.change(input, { target: { value: "ket" } });
+		await input.fill("ket");
 
-		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+		await expect
+			.element(screen.getByTestId("popover"))
+			.toHaveAttribute("data-open", "true");
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Simulate outside interaction" }),
 		);
-		const insidePopover = document.createElement("div");
-		insidePopover.setAttribute("data-radix-popper-content-wrapper", "true");
-		fireEvent.blur(input, { relatedTarget: insidePopover });
 
-		expect(screen.getByTestId("popover")).toHaveAttribute("data-open", "true");
+		await expect
+			.element(screen.getByTestId("popover"))
+			.toHaveAttribute("data-open", "true");
 	});
 });

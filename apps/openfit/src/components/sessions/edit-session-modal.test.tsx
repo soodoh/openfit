@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type {
 	RoutineDayWithRoutine,
 	WorkoutSessionWithData,
@@ -88,7 +89,7 @@ describe("EditSessionModal", () => {
 	it("prefills name from template and submits create flow", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<EditSessionModal
 				open
 				onClose={onClose}
@@ -96,14 +97,18 @@ describe("EditSessionModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Choose template" }));
-		expect(screen.getByLabelText("Session Name")).toHaveValue(
-			"Template Legs Day",
+		await userEvent.click(
+			screen.getByRole("button", { name: "Choose template" }),
+		);
+		await expect
+			.element(screen.getByLabelText("Session Name"))
+			.toHaveValue("Template Legs Day");
+
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create Session" }),
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Create Session" }));
-
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockCreateSession).toHaveBeenCalledTimes(1);
 		});
 		expect(mockCreateSession).toHaveBeenCalledWith(
@@ -119,7 +124,7 @@ describe("EditSessionModal", () => {
 		const onClose = vi.fn();
 		const defaultStartDate = new Date("2026-03-10T09:00:00.000Z");
 
-		render(
+		const screen = await render(
 			<EditSessionModal
 				open
 				onClose={onClose}
@@ -127,9 +132,11 @@ describe("EditSessionModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Create Session" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create Session" }),
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockCreateSession).toHaveBeenCalledWith(
 				expect.objectContaining({
 					templateId: undefined,
@@ -141,19 +148,21 @@ describe("EditSessionModal", () => {
 	});
 
 	it("shows a validation error when end time is not after start time", async () => {
-		render(<EditSessionModal open onClose={vi.fn()} />);
+		const screen = await render(<EditSessionModal open onClose={vi.fn()} />);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Set Start Time invalid" }),
 		);
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Set End Time invalid" }),
 		);
-		fireEvent.click(screen.getByRole("button", { name: "Create Session" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create Session" }),
+		);
 
-		expect(
-			await screen.findByText("End time must be after start time"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("End time must be after start time"))
+			.toBeVisible();
 		expect(mockCreateSession).not.toHaveBeenCalled();
 	});
 
@@ -161,32 +170,37 @@ describe("EditSessionModal", () => {
 		mockCreateSession.mockRejectedValueOnce(new Error("save failed"));
 		const onClose = vi.fn();
 
-		render(<EditSessionModal open onClose={onClose} />);
+		const screen = await render(<EditSessionModal open onClose={onClose} />);
 
-		fireEvent.click(screen.getByRole("button", { name: "Create Session" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create Session" }),
+		);
 
-		await waitFor(() => {
-			expect(
-				screen.getByText("Failed to save session. Please try again."),
-			).toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(mockCreateSession).toHaveBeenCalled();
 		});
+		await expect
+			.element(screen.getByText("Failed to save session. Please try again."))
+			.toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
 	it("shows a validation error when a date picker returns an invalid date", async () => {
-		render(<EditSessionModal open onClose={vi.fn()} />);
+		const screen = await render(<EditSessionModal open onClose={vi.fn()} />);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Set Start Time invalid date" }),
 		);
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Set End Time invalid date" }),
 		);
-		fireEvent.click(screen.getByRole("button", { name: "Create Session" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create Session" }),
+		);
 
-		expect(
-			await screen.findByText("Please enter valid dates"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Please enter valid dates"))
+			.toBeVisible();
 	});
 
 	it("submits update flow when editing an existing session", async () => {
@@ -205,14 +219,14 @@ describe("EditSessionModal", () => {
 			setGroups: [],
 		};
 
-		render(<EditSessionModal open onClose={onClose} session={session} />);
+		const screen = await render(
+			<EditSessionModal open onClose={onClose} session={session} />,
+		);
 
-		fireEvent.change(screen.getByLabelText("Session Name"), {
-			target: { value: "Updated Name" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+		await screen.getByLabelText("Session Name").fill("Updated Name");
+		await userEvent.click(screen.getByRole("button", { name: "Save Changes" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateSession).toHaveBeenCalledTimes(1);
 		});
 		expect(mockUpdateSession).toHaveBeenCalledWith(
@@ -242,26 +256,30 @@ describe("EditSessionModal", () => {
 			setGroups: [],
 		};
 
-		render(<EditSessionModal open onClose={onClose} session={session} />);
+		const screen = await render(
+			<EditSessionModal open onClose={onClose} session={session} />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+		await userEvent.click(screen.getByRole("button", { name: "Save Changes" }));
 
-		expect(
-			await screen.findByText("Failed to save session. Please try again."),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Failed to save session. Please try again."))
+			.toBeVisible();
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
-	it("tracks rating hover and clears the selected rating in create mode", () => {
-		render(<EditSessionModal open onClose={vi.fn()} />);
+	it("tracks rating hover and clears the selected rating in create mode", async () => {
+		const screen = await render(<EditSessionModal open onClose={vi.fn()} />);
 
-		fireEvent.click(screen.getByRole("button", { name: "Set rating 3" }));
-		fireEvent.mouseEnter(screen.getByRole("button", { name: "Set rating 5" }));
-		fireEvent.mouseLeave(screen.getByRole("button", { name: "Set rating 5" }));
-		fireEvent.click(screen.getByRole("button", { name: "Clear rating" }));
+		await userEvent.click(screen.getByRole("button", { name: "Set rating 3" }));
+		await userEvent.hover(screen.getByRole("button", { name: "Set rating 5" }));
+		await userEvent.unhover(
+			screen.getByRole("button", { name: "Set rating 5" }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Clear rating" }));
 
-		expect(
-			screen.getByRole("button", { name: "Create Session" }),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Create Session" }))
+			.toBeInTheDocument();
 	});
 });

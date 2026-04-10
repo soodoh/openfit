@@ -1,5 +1,5 @@
-import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import { queryKeys } from "@/lib/query-keys";
 import type { Units } from "@/lib/types";
 import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
@@ -55,9 +55,9 @@ describe("use-lookups queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => hook(), { wrapper });
+		const { result } = await renderHook(() => hook(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -75,9 +75,9 @@ describe("use-lookups queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useUnits(), { wrapper });
+		const { result } = await renderHook(() => useUnits(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -90,9 +90,9 @@ describe("use-lookups queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useCategories(), { wrapper });
+		const { result } = await renderHook(() => useCategories(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 

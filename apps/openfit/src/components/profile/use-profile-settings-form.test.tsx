@@ -1,5 +1,6 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import { ThemeEnum } from "@/db/schema/user-data";
 import type { Gym, Units, UserProfile } from "@/lib/types";
 import { useProfileSettingsForm } from "./use-profile-settings-form";
@@ -89,11 +90,11 @@ describe("useProfileSettingsForm", () => {
 
 	it("hydrates default selections and falls back to system theme", async () => {
 		const onClose = vi.fn();
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useProfileSettingsForm({ open: true, onClose }),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.defaultRepUnitId).toBe("rep-default");
 			expect(result.current.defaultWeightUnitId).toBe("weight-default");
 			expect(result.current.selectedTheme).toBe(ThemeEnum.system);
@@ -104,11 +105,11 @@ describe("useProfileSettingsForm", () => {
 
 	it("saves profile settings and closes the modal", async () => {
 		const onClose = vi.fn();
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useProfileSettingsForm({ open: true, onClose }),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.defaultRepUnitId).toBe("rep-default");
 		});
 
@@ -134,11 +135,11 @@ describe("useProfileSettingsForm", () => {
 	});
 
 	it("creates a gym and resets the draft after submit", async () => {
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useProfileSettingsForm({ open: true, onClose: vi.fn() }),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.defaultRepUnitId).toBe("rep-default");
 		});
 
@@ -164,11 +165,11 @@ describe("useProfileSettingsForm", () => {
 	});
 
 	it("updates an existing gym when editing", async () => {
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useProfileSettingsForm({ open: true, onClose: vi.fn() }),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.defaultRepUnitId).toBe("rep-default");
 		});
 
@@ -193,11 +194,11 @@ describe("useProfileSettingsForm", () => {
 
 	it("uses the fallback update error message for non-Error failures", async () => {
 		mockUpdateGym.mockRejectedValueOnce("boom");
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useProfileSettingsForm({ open: true, onClose: vi.fn() }),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.defaultRepUnitId).toBe("rep-default");
 		});
 
@@ -239,19 +240,19 @@ describe("useProfileSettingsForm", () => {
 			isLoading: false,
 		});
 
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useProfileSettingsForm({ open: true, onClose: vi.fn() }),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.defaultRepUnitId).toBe("rep-first");
 			expect(result.current.defaultWeightUnitId).toBe("weight-first");
 		});
 	});
 
-	it("rejects invalid theme and tab values", () => {
+	it("rejects invalid theme and tab values", async () => {
 		const onClose = vi.fn();
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useProfileSettingsForm({ open: true, onClose }),
 		);
 
@@ -266,11 +267,11 @@ describe("useProfileSettingsForm", () => {
 
 	it("requires both units before saving settings", async () => {
 		const onClose = vi.fn();
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useProfileSettingsForm({ open: true, onClose }),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.defaultRepUnitId).toBe("rep-default");
 		});
 
@@ -292,11 +293,11 @@ describe("useProfileSettingsForm", () => {
 	it("surfaces profile save failures", async () => {
 		mockUpdateProfile.mockRejectedValueOnce(new Error("save failed"));
 		const onClose = vi.fn();
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useProfileSettingsForm({ open: true, onClose }),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.defaultRepUnitId).toBe("rep-default");
 		});
 
@@ -311,11 +312,11 @@ describe("useProfileSettingsForm", () => {
 	});
 
 	it("validates gym drafts before creating", async () => {
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useProfileSettingsForm({ open: true, onClose: vi.fn() }),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.defaultRepUnitId).toBe("rep-default");
 		});
 
@@ -335,11 +336,11 @@ describe("useProfileSettingsForm", () => {
 
 	it("uses the fallback create error message for non-Error failures", async () => {
 		mockCreateGym.mockRejectedValueOnce("boom");
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useProfileSettingsForm({ open: true, onClose: vi.fn() }),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.defaultRepUnitId).toBe("rep-default");
 		});
 

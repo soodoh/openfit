@@ -1,5 +1,5 @@
-import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import { queryKeys } from "@/lib/query-keys";
 import type { DashboardRecentSession, DashboardStats } from "@/lib/types";
 import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
@@ -40,9 +40,9 @@ describe("use-dashboard queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useDashboardStats(), { wrapper });
+		const { result } = await renderHook(() => useDashboardStats(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -85,9 +85,9 @@ describe("use-dashboard queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRecentSessions(), { wrapper });
+		const { result } = await renderHook(() => useRecentSessions(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -105,9 +105,9 @@ describe("use-dashboard queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useDashboardStats(), { wrapper });
+		const { result } = await renderHook(() => useDashboardStats(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 

@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { DateTimePicker } from "./date-time-picker";
 
 const mockCalendar = vi.fn();
@@ -38,9 +39,9 @@ describe("DateTimePicker", () => {
 		);
 	});
 
-	it("formats the selected date and updates the time", () => {
+	it("formats the selected date and updates the time", async () => {
 		const onChange = vi.fn();
-		render(
+		const screen = await render(
 			<DateTimePicker
 				label="Workout date"
 				value={new Date(2026, 3, 1, 8, 30)}
@@ -48,14 +49,12 @@ describe("DateTimePicker", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Workout date")).toBeInTheDocument();
-		expect(
-			screen.getByRole("button", { name: /Apr 1, 8:30 AM/i }),
-		).toBeInTheDocument();
+		await expect.element(screen.getByText("Workout date")).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: /Apr 1, 8:30 AM/i }))
+			.toBeInTheDocument();
 
-		fireEvent.change(screen.getByDisplayValue("08:30"), {
-			target: { value: "09:45" },
-		});
+		await screen.getByDisplayValue("08:30").fill("09:45");
 
 		expect(onChange).toHaveBeenCalled();
 		const updatedDate = onChange.mock.calls.at(-1)?.[0] as Date;
@@ -63,11 +62,11 @@ describe("DateTimePicker", () => {
 		expect(updatedDate.getMinutes()).toBe(45);
 	});
 
-	it("selects and clears dates through the calendar popover", () => {
+	it("selects and clears dates through the calendar popover", async () => {
 		const onChange = vi.fn();
-		render(<DateTimePicker onChange={onChange} />);
+		const screen = await render(<DateTimePicker onChange={onChange} />);
 
-		fireEvent.click(screen.getByRole("button", { name: "Pick date" }));
+		await userEvent.click(screen.getByRole("button", { name: "Pick date" }));
 
 		const selectedDate = onChange.mock.calls.at(-1)?.[0] as Date;
 		expect(selectedDate.getFullYear()).toBe(2026);
@@ -76,20 +75,24 @@ describe("DateTimePicker", () => {
 		expect(selectedDate.getHours()).toBe(0);
 		expect(selectedDate.getMinutes()).toBe(0);
 
-		fireEvent.click(screen.getByRole("button", { name: "Clear date" }));
+		await userEvent.click(screen.getByRole("button", { name: "Clear date" }));
 		expect(onChange).toHaveBeenCalledWith(undefined);
 	});
 
-	it("does not emit a time-only change before a date is selected", () => {
+	it("does not emit a time-only change before a date is selected", async () => {
 		const onChange = vi.fn();
-		render(<DateTimePicker disabled onChange={onChange} />);
+		const screen = await render(
+			<DateTimePicker disabled onChange={onChange} />,
+		);
 
-		expect(screen.queryByText("Workout date")).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Pick a date" })).toBeDisabled();
+		await expect
+			.element(screen.getByText("Workout date"))
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Pick a date" }))
+			.toBeDisabled();
 
-		fireEvent.change(screen.getByDisplayValue("00:00"), {
-			target: { value: "07:15" },
-		});
+		await screen.getByDisplayValue("00:00").fill("07:15");
 
 		expect(onChange).not.toHaveBeenCalled();
 	});

@@ -1,107 +1,111 @@
-import { render, screen } from "@testing-library/react";
+import { page } from "@vitest/browser/context";
 import { describe, expect, it } from "vitest";
+import { render } from "vitest-browser-react";
 import { ProgressCircle } from "./progress-circle";
 
 describe("ProgressCircle", () => {
 	describe("rendering", () => {
-		it("renders with default props", () => {
-			const { container } = render(<ProgressCircle value={50} />);
-			const svg = container.querySelector("svg");
-			expect(svg).toBeInTheDocument();
+		it("renders with default props", async () => {
+			render(<ProgressCircle value={50} />);
+			await expect.element(page.locator("svg")).toBeInTheDocument();
 		});
 
-		it("renders children when provided", () => {
+		it("renders children when provided", async () => {
 			render(
 				<ProgressCircle value={75}>
 					<span data-testid="child">75%</span>
 				</ProgressCircle>,
 			);
-			expect(screen.getByTestId("child")).toBeInTheDocument();
-			expect(screen.getByText("75%")).toBeInTheDocument();
+			await expect
+				.element(page.locator("[data-testid='child']"))
+				.toBeInTheDocument();
+			await expect.element(page.locator("text=75%")).toBeInTheDocument();
 		});
 
-		it("renders two circles (background and progress)", () => {
-			const { container } = render(<ProgressCircle value={50} />);
-			const circles = container.querySelectorAll("circle");
+		it("renders two circles (background and progress)", async () => {
+			render(<ProgressCircle value={50} />);
+			const svgEl = await page.locator("svg").element();
+			const circles = svgEl.querySelectorAll("circle");
 			expect(circles).toHaveLength(2);
 		});
 	});
 	describe("dimensions", () => {
-		it("uses default size of 100", () => {
-			const { container } = render(<ProgressCircle value={50} />);
-			const wrapper = container.firstChild as HTMLElement;
-			expect(wrapper).toHaveStyle({ width: "100px", height: "100px" });
+		it("uses default size of 100", async () => {
+			render(<ProgressCircle value={50} />);
+			const wrapper = await page.locator("div").first().element();
+			expect(wrapper.getAttribute("style")).toMatch(/width:\s*100px/);
+			expect(wrapper.getAttribute("style")).toMatch(/height:\s*100px/);
 		});
 
-		it("applies custom size", () => {
-			const { container } = render(<ProgressCircle value={50} size={200} />);
-			const wrapper = container.firstChild as HTMLElement;
-			expect(wrapper).toHaveStyle({ width: "200px", height: "200px" });
+		it("applies custom size", async () => {
+			render(<ProgressCircle value={50} size={200} />);
+			const wrapper = await page.locator("div").first().element();
+			expect(wrapper.getAttribute("style")).toMatch(/width:\s*200px/);
+			expect(wrapper.getAttribute("style")).toMatch(/height:\s*200px/);
 		});
 
-		it("applies custom className", () => {
-			const { container } = render(
-				<ProgressCircle value={50} className="custom-class" />,
-			);
-			const wrapper = container.firstChild as HTMLElement;
-			expect(wrapper).toHaveClass("custom-class");
+		it("applies custom className", async () => {
+			render(<ProgressCircle value={50} className="custom-class" />);
+			await expect.element(page.locator(".custom-class")).toBeInTheDocument();
 		});
 	});
 	describe("SVG calculations", () => {
-		it("calculates correct radius based on size and strokeWidth", () => {
+		it("calculates correct radius based on size and strokeWidth", async () => {
 			const size = 100;
 			const strokeWidth = 4;
 			const expectedRadius = (size - strokeWidth) / 2;
-			const { container } = render(
+			render(
 				<ProgressCircle value={50} size={size} strokeWidth={strokeWidth} />,
 			);
-			const circle = container.querySelector("circle");
-			expect(circle).toHaveAttribute("r", String(expectedRadius));
+			const svgEl = await page.locator("svg").element();
+			const circle = svgEl.querySelector("circle");
+			expect(circle?.getAttribute("r")).toBe(String(expectedRadius));
 		});
 
-		it("calculates correct center coordinates", () => {
+		it("calculates correct center coordinates", async () => {
 			const size = 100;
-			const { container } = render(<ProgressCircle value={50} size={size} />);
-			const circle = container.querySelector("circle");
-			expect(circle).toHaveAttribute("cx", String(size / 2));
-			expect(circle).toHaveAttribute("cy", String(size / 2));
+			render(<ProgressCircle value={50} size={size} />);
+			const svgEl = await page.locator("svg").element();
+			const circle = svgEl.querySelector("circle");
+			expect(circle?.getAttribute("cx")).toBe(String(size / 2));
+			expect(circle?.getAttribute("cy")).toBe(String(size / 2));
 		});
 
-		it("applies correct strokeWidth", () => {
+		it("applies correct strokeWidth", async () => {
 			const strokeWidth = 8;
-			const { container } = render(
-				<ProgressCircle value={50} strokeWidth={strokeWidth} />,
-			);
-			const circles = container.querySelectorAll("circle");
+			render(<ProgressCircle value={50} strokeWidth={strokeWidth} />);
+			const svgEl = await page.locator("svg").element();
+			const circles = svgEl.querySelectorAll("circle");
 			for (const circle of circles) {
-				expect(circle).toHaveAttribute("stroke-width", String(strokeWidth));
+				expect(circle.getAttribute("stroke-width")).toBe(String(strokeWidth));
 			}
 		});
 	});
 	describe("progress values", () => {
-		it("handles 0% progress", () => {
-			const { container } = render(<ProgressCircle value={0} />);
-			const progressCircle = container.querySelectorAll("circle")[1];
+		it("handles 0% progress", async () => {
+			render(<ProgressCircle value={0} />);
 			const circumference = 48 * 2 * Math.PI; // radius = (100 - 4) / 2 = 48
-			expect(progressCircle).toHaveAttribute(
-				"stroke-dashoffset",
+			const svgEl = await page.locator("svg").element();
+			const progressCircle = svgEl.querySelectorAll("circle")[1];
+			expect(progressCircle?.getAttribute("stroke-dashoffset")).toBe(
 				String(circumference),
 			);
 		});
 
-		it("handles 100% progress", () => {
-			const { container } = render(<ProgressCircle value={100} />);
-			const progressCircle = container.querySelectorAll("circle")[1];
-			expect(progressCircle).toHaveAttribute("stroke-dashoffset", "0");
+		it("handles 100% progress", async () => {
+			render(<ProgressCircle value={100} />);
+			const svgEl = await page.locator("svg").element();
+			const progressCircle = svgEl.querySelectorAll("circle")[1];
+			expect(progressCircle?.getAttribute("stroke-dashoffset")).toBe("0");
 		});
 
-		it("handles 50% progress", () => {
-			const { container } = render(<ProgressCircle value={50} />);
-			const progressCircle = container.querySelectorAll("circle")[1];
+		it("handles 50% progress", async () => {
+			render(<ProgressCircle value={50} />);
 			const circumference = 48 * 2 * Math.PI;
 			const expectedOffset = circumference - 0.5 * circumference;
-			expect(progressCircle).toHaveAttribute(
-				"stroke-dashoffset",
+			const svgEl = await page.locator("svg").element();
+			const progressCircle = svgEl.querySelectorAll("circle")[1];
+			expect(progressCircle?.getAttribute("stroke-dashoffset")).toBe(
 				String(expectedOffset),
 			);
 		});

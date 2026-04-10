@@ -1,5 +1,6 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import type { CursorPage, RoutineQueryDto } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
@@ -134,9 +135,11 @@ describe("use-routines queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutine(undefined), { wrapper });
+		const { result } = await renderHook(() => useRoutine(undefined), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.fetchStatus).toBe("idle");
 		});
 
@@ -150,9 +153,11 @@ describe("use-routines queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutine("routine-1"), { wrapper });
+		const { result } = await renderHook(() => useRoutine("routine-1"), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -186,11 +191,11 @@ describe("use-routines queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutine("missing-routine"), {
+		const { result } = await renderHook(() => useRoutine("missing-routine"), {
 			wrapper,
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 
@@ -205,9 +210,11 @@ describe("use-routines queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutine("routine-1"), { wrapper });
+		const { result } = await renderHook(() => useRoutine("routine-1"), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 
@@ -239,9 +246,11 @@ describe("use-routines queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutines(filters), { wrapper });
+		const { result } = await renderHook(() => useRoutines(filters), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -261,7 +270,7 @@ describe("use-routines queries", () => {
 			await result.current.fetchNextPage();
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.data?.pages).toHaveLength(2);
 		});
 
@@ -283,9 +292,9 @@ describe("use-routines queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutines(), { wrapper });
+		const { result } = await renderHook(() => useRoutines(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -303,9 +312,9 @@ describe("use-routines queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutines(), { wrapper });
+		const { result } = await renderHook(() => useRoutines(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 
@@ -327,9 +336,11 @@ describe("use-routines queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useRoutineSearch("core"), { wrapper });
+		const { result } = await renderHook(() => useRoutineSearch("core"), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 

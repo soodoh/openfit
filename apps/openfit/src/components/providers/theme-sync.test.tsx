@@ -1,5 +1,5 @@
-import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { ThemeSync } from "./theme-sync";
 
 const mockSetTheme = vi.fn();
@@ -25,7 +25,7 @@ describe("ThemeSync", () => {
 		vi.clearAllMocks();
 	});
 
-	it("syncs the stored theme when the user is authenticated", () => {
+	it("syncs the stored theme when the user is authenticated", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
 		mockUseUserProfile.mockReturnValue({
 			data: { theme: "dark" },
@@ -36,7 +36,7 @@ describe("ThemeSync", () => {
 		expect(mockSetTheme).toHaveBeenCalledWith("dark");
 	});
 
-	it("does not sync a theme when the user is anonymous", () => {
+	it("does not sync a theme when the user is anonymous", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
 		mockUseUserProfile.mockReturnValue({
 			data: { theme: "light" },

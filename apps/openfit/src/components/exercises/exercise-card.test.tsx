@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { ExerciseCard } from "./exercise-card";
 
 const mockGetCategoryName = vi.fn();
@@ -53,8 +54,8 @@ describe("ExerciseCard", () => {
 		]);
 	});
 
-	it("renders summary details and opens the detail modal when clicked", () => {
-		render(
+	it("renders summary details and opens the detail modal when clicked", async () => {
+		const screen = await render(
 			<ExerciseCard
 				exercise={{
 					id: "exercise-1",
@@ -68,24 +69,26 @@ describe("ExerciseCard", () => {
 			/>,
 		);
 
-		expect(
-			screen.getByRole("img", { name: "Bench Press" }),
-		).toBeInTheDocument();
-		expect(screen.getByText("Body Weight")).toBeInTheDocument();
-		expect(screen.getByText("Barbell")).toBeInTheDocument();
-		expect(screen.getByText("Intermediate")).toBeInTheDocument();
-		expect(screen.getByText("+1")).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("img", { name: "Bench Press" }))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("Body Weight")).toBeInTheDocument();
+		await expect.element(screen.getByText("Barbell")).toBeInTheDocument();
+		await expect.element(screen.getByText("Intermediate")).toBeInTheDocument();
+		await expect.element(screen.getByText("+1")).toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: /Bench Press/i }));
+		await userEvent.click(screen.getByRole("button", { name: /Bench Press/i }));
 
-		expect(screen.getByText("exercise detail open")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("exercise detail open"))
+			.toBeInTheDocument();
 	});
 
-	it("renders the fallback icon and omits secondary metadata when the exercise is minimal", () => {
+	it("renders the fallback icon and omits secondary metadata when the exercise is minimal", async () => {
 		mockGetEquipmentName.mockReturnValue(undefined);
 		mockGetMuscleGroupNames.mockReturnValue([]);
 
-		render(
+		const screen = await render(
 			<ExerciseCard
 				exercise={{
 					id: "exercise-2",
@@ -96,14 +99,16 @@ describe("ExerciseCard", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Push Up")).toBeInTheDocument();
-		expect(screen.getByText("Body Weight")).toBeInTheDocument();
-		expect(screen.queryByText("Barbell")).not.toBeInTheDocument();
-		expect(screen.queryByText("Intermediate")).not.toBeInTheDocument();
+		await expect.element(screen.getByText("Push Up")).toBeInTheDocument();
+		await expect.element(screen.getByText("Body Weight")).toBeInTheDocument();
+		await expect.element(screen.getByText("Barbell")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Intermediate"))
+			.not.toBeInTheDocument();
 	});
 
-	it("closes the detail modal when the modal requests to close", () => {
-		render(
+	it("closes the detail modal when the modal requests to close", async () => {
+		const screen = await render(
 			<ExerciseCard
 				exercise={{
 					id: "exercise-3",
@@ -114,9 +119,13 @@ describe("ExerciseCard", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: /Incline Press/i }));
-		fireEvent.click(screen.getByRole("button", { name: "Close detail" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: /Incline Press/i }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Close detail" }));
 
-		expect(screen.queryByText("exercise detail open")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("exercise detail open"))
+			.not.toBeInTheDocument();
 	});
 });

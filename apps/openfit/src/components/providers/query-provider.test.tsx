@@ -1,8 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
+import { render } from "vitest-browser-react";
 import { QueryProvider } from "./query-provider";
 
 let devtoolsInitialIsOpen: boolean | undefined;
@@ -33,10 +33,10 @@ describe("QueryProvider", () => {
 		devtoolsInitialIsOpen = undefined;
 	});
 
-	it("renders children and configures query client defaults", () => {
+	it("renders children and configures query client defaults", async () => {
 		let capturedClient: QueryClient | undefined;
 
-		render(
+		const screen = await render(
 			<QueryProvider>
 				<QueryClientConsumer
 					onClient={(queryClient) => {
@@ -46,8 +46,12 @@ describe("QueryProvider", () => {
 			</QueryProvider>,
 		);
 
-		expect(screen.getByText("query client consumer")).toBeInTheDocument();
-		expect(screen.getByTestId("react-query-devtools")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("query client consumer"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("react-query-devtools"))
+			.toBeInTheDocument();
 		expect(devtoolsInitialIsOpen).toBe(false);
 		expect(capturedClient).toBeDefined();
 		expect(capturedClient?.getDefaultOptions().queries?.staleTime).toBe(
@@ -60,13 +64,13 @@ describe("QueryProvider", () => {
 		expect(capturedClient?.getDefaultOptions().mutations?.retry).toBe(1);
 	});
 
-	it("keeps the same query client instance across rerenders", () => {
+	it("keeps the same query client instance across rerenders", async () => {
 		const seenClients = new Set<QueryClient>();
 		const onClient = (queryClient: QueryClient) => {
 			seenClients.add(queryClient);
 		};
 
-		const { rerender } = render(
+		const { rerender } = await render(
 			<QueryProvider>
 				<QueryClientConsumer onClient={onClient} />
 			</QueryProvider>,

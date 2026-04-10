@@ -18,8 +18,13 @@ type CoverageSummary = {
 	[filePath: string]: CoverageEntry | undefined;
 };
 
+const mode = process.argv.includes("--mode")
+	? process.argv[process.argv.indexOf("--mode") + 1]
+	: "merged";
+
+const summaryDir = mode === "unit" ? "coverage/unit" : "coverage/merged";
 const summaryPath = new URL(
-	"../coverage/coverage-summary.json",
+	`../${summaryDir}/coverage-summary.json`,
 	import.meta.url,
 );
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -32,11 +37,10 @@ try {
 	throw error;
 }
 
-const thresholds = {
-	package: 95,
-	source: 85,
-	highRisk: 95,
-} as const;
+const thresholds =
+	mode === "unit"
+		? { package: 80, source: 80, highRisk: 85 }
+		: { package: 95, source: 95, highRisk: 95 };
 
 const metricNames = ["statements", "branches", "functions", "lines"] as const;
 
@@ -94,11 +98,11 @@ for (const [filePath, metrics] of Object.entries(summary)) {
 }
 
 if (failures.length > 0) {
-	console.error("Coverage audit failed:");
+	console.error(`Coverage audit failed (mode: ${mode}):`);
 	for (const failure of failures) {
 		console.error(`- ${failure}`);
 	}
 	process.exit(1);
 }
 
-console.log("Coverage audit passed.");
+console.log(`Coverage audit passed (mode: ${mode}).`);

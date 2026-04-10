@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { SetGroupWithRelations, Units } from "@/lib/types";
 import { ListView, SetType } from "@/lib/types";
 import { WorkoutList } from "./workout-list";
@@ -154,8 +155,8 @@ describe("WorkoutList", () => {
 		mockTimerRestart.mockClear();
 	});
 
-	it("shows the empty state when there are no set groups", () => {
-		render(
+	it("shows the empty state when there are no set groups", async () => {
+		const screen = await render(
 			<WorkoutList
 				view={ListView.EditTemplate}
 				setGroups={[]}
@@ -164,13 +165,19 @@ describe("WorkoutList", () => {
 			/>,
 		);
 
-		expect(screen.getByText("No exercises yet")).toBeInTheDocument();
-		expect(screen.getByTestId("add-exercise-row")).toHaveTextContent("false");
-		expect(screen.queryByTestId("rest-timer")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("No exercises yet"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("add-exercise-row"))
+			.toHaveTextContent("false");
+		await expect
+			.element(screen.getByTestId("rest-timer"))
+			.not.toBeInTheDocument();
 	});
 
 	it("toggles reorder mode, starts the rest timer, and reorders groups", async () => {
-		render(
+		const screen = await render(
 			<WorkoutList
 				view={ListView.CurrentSession}
 				setGroups={[buildSetGroup("group-1"), buildSetGroup("group-2")]}
@@ -179,25 +186,43 @@ describe("WorkoutList", () => {
 			/>,
 		);
 
-		expect(screen.getByTestId("add-exercise-row")).toHaveTextContent("true");
-		expect(screen.getByText("group-group-1-false")).toBeInTheDocument();
-		expect(screen.getByText("group-group-2-false")).toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("add-exercise-row"))
+			.toHaveTextContent("true");
+		await expect
+			.element(screen.getByText("group-group-1-false"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("group-group-2-false"))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("switch", { name: "Reorder exercises" }));
+		await userEvent.click(
+			screen.getByRole("switch", { name: "Reorder exercises" }),
+		);
 
-		expect(screen.getByText("group-group-1-true")).toBeInTheDocument();
-		expect(screen.getByText("group-group-2-true")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("group-group-1-true"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("group-group-2-true"))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getAllByRole("button", { name: "Start rest" })[0]);
+		await userEvent.click(
+			screen.getAllByRole("button", { name: "Start rest" })[0],
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockTimerRestart).toHaveBeenCalled();
 		});
-		expect(screen.getByTestId("rest-timer")).toHaveTextContent("75");
+		await expect
+			.element(screen.getByTestId("rest-timer"))
+			.toHaveTextContent("75");
 
-		fireEvent.click(screen.getByRole("button", { name: "Trigger reorder" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Trigger reorder" }),
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockReorderSetGroups).toHaveBeenCalledWith({
 				setGroupIds: ["group-2", "group-1"],
 			});
@@ -205,7 +230,7 @@ describe("WorkoutList", () => {
 	});
 
 	it("ignores drag events that do not move a set group", async () => {
-		render(
+		const screen = await render(
 			<WorkoutList
 				view={ListView.EditTemplate}
 				setGroups={[buildSetGroup("group-1"), buildSetGroup("group-2")]}
@@ -214,11 +239,11 @@ describe("WorkoutList", () => {
 			/>,
 		);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Trigger noop reorder" }),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockReorderSetGroups).not.toHaveBeenCalled();
 		});
 	});

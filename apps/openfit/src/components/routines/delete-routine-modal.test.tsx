@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { DeleteRoutineModal } from "./delete-routine-modal";
 
 const mockDeleteRoutine = vi.fn();
@@ -63,58 +64,72 @@ describe("DeleteRoutineModal", () => {
 
 		const onClose = vi.fn();
 
-		render(<DeleteRoutineModal open onClose={onClose} routineId="routine-1" />);
+		const screen = await render(
+			<DeleteRoutineModal open onClose={onClose} routineId="routine-1" />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete Routine" }));
-		expect(screen.getByRole("button", { name: "Deleting..." })).toBeDisabled();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete Routine" }),
+		);
+		await expect
+			.element(screen.getByRole("button", { name: "Deleting..." }))
+			.toBeDisabled();
 
 		if (!resolveDelete) {
 			throw new Error("delete resolver was not created");
 		}
 		resolveDelete();
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockDeleteRoutine).toHaveBeenCalledWith("routine-1");
 			expect(onClose).toHaveBeenCalledTimes(1);
 		});
 	});
 
-	it("cancels from the footer action", () => {
+	it("cancels from the footer action", async () => {
 		const onClose = vi.fn();
 
-		render(<DeleteRoutineModal open onClose={onClose} routineId="routine-1" />);
+		const screen = await render(
+			<DeleteRoutineModal open onClose={onClose} routineId="routine-1" />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
-	it("closes from the dialog close button", () => {
+	it("closes from the dialog close button", async () => {
 		const onClose = vi.fn();
 
-		render(<DeleteRoutineModal open onClose={onClose} routineId="routine-1" />);
+		const screen = await render(
+			<DeleteRoutineModal open onClose={onClose} routineId="routine-1" />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+		await userEvent.click(screen.getByRole("button", { name: "Close dialog" }));
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
-	it("keeps the dialog open when the open flag stays true", () => {
+	it("keeps the dialog open when the open flag stays true", async () => {
 		const onClose = vi.fn();
 
-		render(<DeleteRoutineModal open onClose={onClose} routineId="routine-1" />);
+		const screen = await render(
+			<DeleteRoutineModal open onClose={onClose} routineId="routine-1" />,
+		);
 
-		expect(
-			screen.getByRole("button", { name: "Delete Routine" }),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Delete Routine" }))
+			.toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
-	it("does not close when the dialog reports staying open", () => {
+	it("does not close when the dialog reports staying open", async () => {
 		const onClose = vi.fn();
 
-		render(<DeleteRoutineModal open onClose={onClose} routineId="routine-1" />);
+		const screen = await render(
+			<DeleteRoutineModal open onClose={onClose} routineId="routine-1" />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Stay open" }));
+		await userEvent.click(screen.getByRole("button", { name: "Stay open" }));
 		expect(onClose).not.toHaveBeenCalled();
 	});
 });

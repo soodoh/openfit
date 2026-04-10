@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type {
 	Units,
 	WorkoutSessionSummary,
@@ -106,7 +107,7 @@ describe("MonthlyCalendar", () => {
 		});
 	});
 
-	it("renders sessions, highlights the current session, and opens real session details via +N more", () => {
+	it("renders sessions, highlights the current session, and opens real session details via +N more", async () => {
 		const sessions: WorkoutSessionSummary[] = [
 			{
 				id: "session-0",
@@ -135,7 +136,7 @@ describe("MonthlyCalendar", () => {
 			setGroups: [],
 		};
 
-		render(
+		const screen = await render(
 			<MonthlyCalendar
 				currentMonth={dayjs("2026-04-01")}
 				sessions={sessions}
@@ -145,26 +146,26 @@ describe("MonthlyCalendar", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Push A")).toBeInTheDocument();
-		expect(screen.getByText("2h 30m")).toBeInTheDocument();
-		expect(screen.getByText("Active Session").closest("button")).toHaveClass(
-			"bg-primary",
-		);
+		await expect.element(screen.getByText("Push A")).toBeInTheDocument();
+		await expect.element(screen.getByText("2h 30m")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Active Session").closest("button"))
+			.toHaveClass("bg-primary");
 
-		fireEvent.click(screen.getByRole("button", { name: "+2 more" }));
+		await userEvent.click(screen.getByRole("button", { name: "+2 more" }));
 
-		expect(
-			screen.getByRole("heading", { name: "Hidden Session" }),
-		).toBeInTheDocument();
-		expect(
-			screen.getByRole("button", { name: "Delete Session" }),
-		).toBeVisible();
+		await expect
+			.element(screen.getByRole("heading", { name: "Hidden Session" }))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Delete Session" }))
+			.toBeVisible();
 	});
 
-	it("calls month navigation callbacks for previous, next, and today", () => {
+	it("calls month navigation callbacks for previous, next, and today", async () => {
 		const onMonthChange = vi.fn();
 
-		render(
+		const screen = await render(
 			<MonthlyCalendar
 				currentMonth={dayjs("2026-04-01")}
 				sessions={[]}
@@ -173,9 +174,11 @@ describe("MonthlyCalendar", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Previous month" }));
-		fireEvent.click(screen.getByRole("button", { name: "Next month" }));
-		fireEvent.click(screen.getByRole("button", { name: "Today" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Previous month" }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Next month" }));
+		await userEvent.click(screen.getByRole("button", { name: "Today" }));
 
 		expect(onMonthChange).toHaveBeenCalledTimes(3);
 		expect(onMonthChange.mock.calls[0][0].format("YYYY-MM")).toBe("2026-03");
@@ -183,8 +186,8 @@ describe("MonthlyCalendar", () => {
 		expect(onMonthChange.mock.calls[2][0].isSame(dayjs(), "day")).toBe(true);
 	});
 
-	it("opens real create-session modal with the clicked date at 9 AM", () => {
-		render(
+	it("opens real create-session modal with the clicked date at 9 AM", async () => {
+		const screen = await render(
 			<MonthlyCalendar
 				currentMonth={dayjs("2026-04-01")}
 				sessions={[]}
@@ -193,20 +196,22 @@ describe("MonthlyCalendar", () => {
 			/>,
 		);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", {
 				name: "Create session on April 15, 2026",
 			}),
 		);
 
-		expect(screen.getByRole("heading", { name: "New Session" })).toBeVisible();
-		expect(
-			screen.getByText("Start Time value: 2026-4-15 9"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("heading", { name: "New Session" }))
+			.toBeVisible();
+		await expect
+			.element(screen.getByText("Start Time value: 2026-4-15 9"))
+			.toBeInTheDocument();
 	});
 
-	it("renders minute-only durations for shorter sessions", () => {
-		render(
+	it("renders minute-only durations for shorter sessions", async () => {
+		const screen = await render(
 			<MonthlyCalendar
 				currentMonth={dayjs("2026-04-01")}
 				sessions={[
@@ -224,11 +229,11 @@ describe("MonthlyCalendar", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Short Session")).toBeInTheDocument();
-		expect(screen.getByText("45m")).toBeInTheDocument();
+		await expect.element(screen.getByText("Short Session")).toBeInTheDocument();
+		await expect.element(screen.getByText("45m")).toBeInTheDocument();
 	});
 
-	it("opens the session detail modal when a visible session card is clicked", () => {
+	it("opens the session detail modal when a visible session card is clicked", async () => {
 		mockSessionData["session-6"] = {
 			id: "session-6",
 			userId: "user-1",
@@ -243,7 +248,7 @@ describe("MonthlyCalendar", () => {
 			setGroups: [],
 		};
 
-		render(
+		const screen = await render(
 			<MonthlyCalendar
 				currentMonth={dayjs("2026-04-01")}
 				sessions={[
@@ -261,12 +266,12 @@ describe("MonthlyCalendar", () => {
 			/>,
 		);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Visible Session 30m" }),
 		);
 
-		expect(
-			screen.getByRole("heading", { name: "Visible Session" }),
-		).toBeVisible();
+		await expect
+			.element(screen.getByRole("heading", { name: "Visible Session" }))
+			.toBeVisible();
 	});
 });

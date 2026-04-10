@@ -1,5 +1,5 @@
-import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import { queryKeys } from "@/lib/query-keys";
 import type {
 	AdminExerciseWithRelations,
@@ -85,11 +85,14 @@ describe("use-admin queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useAdminExercisesPaginated(params), {
-			wrapper,
-		});
+		const { result } = await renderHook(
+			() => useAdminExercisesPaginated(params),
+			{
+				wrapper,
+			},
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -126,11 +129,11 @@ describe("use-admin queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useAdminUsersPaginated(params), {
+		const { result } = await renderHook(() => useAdminUsersPaginated(params), {
 			wrapper,
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -154,11 +157,11 @@ describe("use-admin queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useAdminUsersPaginated(params), {
+		const { result } = await renderHook(() => useAdminUsersPaginated(params), {
 			wrapper,
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 
@@ -180,11 +183,14 @@ describe("use-admin queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useAdminExercisesPaginated(params), {
-			wrapper,
-		});
+		const { result } = await renderHook(
+			() => useAdminExercisesPaginated(params),
+			{
+				wrapper,
+			},
+		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -210,7 +216,7 @@ describe("use-admin queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result, rerender } = renderHook(
+		const { result, rerender } = await renderHook(
 			({ params }) => useAdminExercisesPaginated(params),
 			{
 				initialProps: { params: firstParams },
@@ -218,13 +224,13 @@ describe("use-admin queries", () => {
 			},
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
 		rerender({ params: secondParams });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isPlaceholderData).toBe(true);
 		});
 
@@ -243,7 +249,7 @@ describe("use-admin queries", () => {
 			} satisfies PaginatedResponse<AdminExerciseWithRelations>),
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isPlaceholderData).toBe(false);
 			expect(result.current.data?.page).toBe(2);
 		});
@@ -261,12 +267,12 @@ describe("use-admin queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(
+		const { result } = await renderHook(
 			() => useAdminLookupPaginated("equipment", params),
 			{ wrapper },
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -294,12 +300,12 @@ describe("use-admin queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(
+		const { result } = await renderHook(
 			() => useAdminLookupPaginated("customType", params),
 			{ wrapper },
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -329,12 +335,12 @@ describe("use-admin queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(
+		const { result } = await renderHook(
 			() => useAdminLookupPaginated("equipment", params),
 			{ wrapper },
 		);
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -389,9 +395,9 @@ describe("use-admin queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => hook(), { wrapper });
+		const { result } = await renderHook(() => hook(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -408,9 +414,9 @@ describe("use-admin queries", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useAdminEquipment(), { wrapper });
+		const { result } = await renderHook(() => useAdminEquipment(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 

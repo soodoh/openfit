@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import {
 	cloneElement,
 	createContext,
@@ -7,6 +7,7 @@ import {
 	useContext,
 } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { WorkoutSessionWithData } from "@/lib/types";
 import { EditSessionMenu } from "./edit-session-menu";
 
@@ -134,64 +135,78 @@ describe("EditSessionMenu", () => {
 		vi.clearAllMocks();
 	});
 
-	it("opens the edit modal and closes the menu when Edit is selected", () => {
-		render(<EditSessionMenu session={session} />);
+	it("opens the edit modal and closes the menu when Edit is selected", async () => {
+		const screen = await render(<EditSessionMenu session={session} />);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", {
 				name: "Edit actions for workout session session-1",
 			}),
 		);
-		fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+		await userEvent.click(screen.getByRole("button", { name: "Edit" }));
 
-		expect(screen.getByTestId("edit-session-modal")).toBeInTheDocument();
-		expect(screen.queryByText("Delete")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("edit-session-modal"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("Delete")).not.toBeInTheDocument();
 	});
 
-	it("opens the delete modal when Delete is selected", () => {
-		render(<EditSessionMenu session={session} />);
+	it("opens the delete modal when Delete is selected", async () => {
+		const screen = await render(<EditSessionMenu session={session} />);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", {
 				name: "Edit actions for workout session session-1",
 			}),
 		);
-		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+		await userEvent.click(screen.getByRole("button", { name: "Delete" }));
 
-		expect(screen.getByTestId("delete-session-modal")).toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("delete-session-modal"))
+			.toBeInTheDocument();
 	});
 
-	it("closes the edit modal when the modal requests to close", () => {
-		render(<EditSessionMenu session={session} />);
+	it("closes the edit modal when the modal requests to close", async () => {
+		const screen = await render(<EditSessionMenu session={session} />);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", {
 				name: "Edit actions for workout session session-1",
 			}),
 		);
-		fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-		expect(screen.getByTestId("edit-session-modal")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+		await expect
+			.element(screen.getByTestId("edit-session-modal"))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Close edit modal" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Close edit modal" }),
+		);
 
-		expect(screen.queryByTestId("edit-session-modal")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("edit-session-modal"))
+			.not.toBeInTheDocument();
 	});
 
-	it("closes the delete modal when the modal requests to close", () => {
-		render(<EditSessionMenu session={session} />);
+	it("closes the delete modal when the modal requests to close", async () => {
+		const screen = await render(<EditSessionMenu session={session} />);
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", {
 				name: "Edit actions for workout session session-1",
 			}),
 		);
-		fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-		expect(screen.getByTestId("delete-session-modal")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+		await expect
+			.element(screen.getByTestId("delete-session-modal"))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Confirm delete" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Confirm delete" }),
+		);
 
-		expect(
-			screen.queryByTestId("delete-session-modal"),
-		).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("delete-session-modal"))
+			.not.toBeInTheDocument();
 	});
 });

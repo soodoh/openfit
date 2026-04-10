@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { GymFormModal } from "./gym-form-modal";
 
 const mockCreateGym = vi.fn();
@@ -116,31 +117,29 @@ describe("GymFormModal", () => {
 	});
 
 	it("shows validation errors before a submit can proceed", async () => {
-		render(<GymFormModal open onClose={vi.fn()} />);
+		const screen = await render(<GymFormModal open onClose={vi.fn()} />);
 
-		fireEvent.change(screen.getByLabelText("Gym Name"), {
-			target: { value: "Home Gym" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Save Gym" }));
+		await screen.getByLabelText("Gym Name").fill("Home Gym");
+		await userEvent.click(screen.getByRole("button", { name: "Save Gym" }));
 
-		expect(
-			await screen.findByText("Select at least one piece of equipment"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Select at least one piece of equipment"))
+			.toBeInTheDocument();
 		expect(mockCreateGym).not.toHaveBeenCalled();
 	});
 
 	it("submits the create flow and closes the modal", async () => {
 		const onClose = vi.fn();
 
-		render(<GymFormModal open onClose={onClose} />);
+		const screen = await render(<GymFormModal open onClose={onClose} />);
 
-		fireEvent.change(screen.getByLabelText("Gym Name"), {
-			target: { value: "Garage Gym" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Select equipment" }));
-		fireEvent.click(screen.getByRole("button", { name: "Save Gym" }));
+		await screen.getByLabelText("Gym Name").fill("Garage Gym");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Select equipment" }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Save Gym" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockCreateGym).toHaveBeenCalledWith({
 				name: "Garage Gym",
 				equipmentIds: ["equipment-1"],
@@ -153,7 +152,7 @@ describe("GymFormModal", () => {
 		mockUpdateGym.mockRejectedValueOnce(new Error("network failed"));
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<GymFormModal
 				open
 				onClose={onClose}
@@ -165,54 +164,60 @@ describe("GymFormModal", () => {
 			/>,
 		);
 
-		fireEvent.change(screen.getByLabelText("Gym Name"), {
-			target: { value: "Garage Gym Revamp" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Select equipment" }));
-		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+		await screen.getByLabelText("Gym Name").fill("Garage Gym Revamp");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Select equipment" }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Save Changes" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockUpdateGym).toHaveBeenCalledWith({
 				id: "gym-1",
 				name: "Garage Gym Revamp",
 				equipmentIds: ["equipment-1"],
 			});
 		});
-		expect(await screen.findByText("network failed")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("network failed"))
+			.toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
 	it("uses the fallback create error message for non-Error failures", async () => {
 		mockCreateGym.mockRejectedValueOnce("boom");
 
-		render(<GymFormModal open onClose={vi.fn()} />);
+		const screen = await render(<GymFormModal open onClose={vi.fn()} />);
 
-		fireEvent.change(screen.getByLabelText("Gym Name"), {
-			target: { value: "Garage Gym" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Select equipment" }));
-		fireEvent.click(screen.getByRole("button", { name: "Save Gym" }));
+		await screen.getByLabelText("Gym Name").fill("Garage Gym");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Select equipment" }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Save Gym" }));
 
-		expect(await screen.findByText("Failed to create gym")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Failed to create gym"))
+			.toBeInTheDocument();
 	});
 
 	it("rejects whitespace-only gym names before create", async () => {
-		render(<GymFormModal open onClose={vi.fn()} />);
+		const screen = await render(<GymFormModal open onClose={vi.fn()} />);
 
-		fireEvent.change(screen.getByLabelText("Gym Name"), {
-			target: { value: "   " },
-		});
-		fireEvent.click(screen.getByRole("button", { name: "Select equipment" }));
-		fireEvent.click(screen.getByRole("button", { name: "Save Gym" }));
+		await screen.getByLabelText("Gym Name").fill("   ");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Select equipment" }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Save Gym" }));
 
-		expect(await screen.findByText("Gym name is required")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Gym name is required"))
+			.toBeInTheDocument();
 		expect(mockCreateGym).not.toHaveBeenCalled();
 	});
 
 	it("uses the fallback update error message for non-Error failures", async () => {
 		mockUpdateGym.mockRejectedValueOnce("boom");
 
-		render(
+		const screen = await render(
 			<GymFormModal
 				open
 				onClose={vi.fn()}
@@ -224,16 +229,20 @@ describe("GymFormModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Select equipment" }));
-		fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Select equipment" }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Save Changes" }));
 
-		expect(await screen.findByText("Failed to update gym")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Failed to update gym"))
+			.toBeInTheDocument();
 	});
 
-	it("loads existing gym values and closes through the dialog control", () => {
+	it("loads existing gym values and closes through the dialog control", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<GymFormModal
 				open
 				onClose={onClose}
@@ -245,10 +254,12 @@ describe("GymFormModal", () => {
 			/>,
 		);
 
-		expect(screen.getByLabelText("Gym Name")).toHaveValue("Garage Gym");
-		expect(screen.getByText("equipment-2")).toBeInTheDocument();
+		await expect
+			.element(screen.getByLabelText("Gym Name"))
+			.toHaveValue("Garage Gym");
+		await expect.element(screen.getByText("equipment-2")).toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+		await userEvent.click(screen.getByRole("button", { name: "Close dialog" }));
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});

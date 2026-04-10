@@ -1,5 +1,6 @@
-import { act, renderHook } from "@testing-library/react";
+import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import { useExerciseImageQueue } from "./use-exercise-image-queue";
 
 describe("useExerciseImageQueue", () => {
@@ -22,12 +23,12 @@ describe("useExerciseImageQueue", () => {
 		vi.restoreAllMocks();
 	});
 
-	it("creates previews for new files and revokes their blob URLs when resetting", () => {
+	it("creates previews for new files and revokes their blob URLs when resetting", async () => {
 		const firstFile = new File(["first"], "first.png", { type: "image/png" });
 		const secondFile = new File(["second"], "second.png", {
 			type: "image/png",
 		});
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useExerciseImageQueue({ imageUrls: ["/existing.png"] }),
 		);
 
@@ -53,9 +54,9 @@ describe("useExerciseImageQueue", () => {
 		]);
 	});
 
-	it("revokes any remaining blob URLs on unmount", () => {
+	it("revokes any remaining blob URLs on unmount", async () => {
 		const file = new File(["preview"], "preview.png", { type: "image/png" });
-		const { result, unmount } = renderHook(() => useExerciseImageQueue());
+		const { result, unmount } = await renderHook(() => useExerciseImageQueue());
 
 		act(() => {
 			result.current.addFiles([file]);
@@ -66,9 +67,9 @@ describe("useExerciseImageQueue", () => {
 		expect(revokeObjectURL).toHaveBeenCalledWith("blob:one");
 	});
 
-	it("revokes queued blob URLs when the queue is cleared by closing", () => {
+	it("revokes queued blob URLs when the queue is cleared by closing", async () => {
 		const file = new File(["preview"], "preview.png", { type: "image/png" });
-		const { result, rerender } = renderHook(
+		const { result, rerender } = await renderHook(
 			({ open }: { open: boolean }) => useExerciseImageQueue({ open }),
 			{
 				initialProps: { open: true },
@@ -85,9 +86,9 @@ describe("useExerciseImageQueue", () => {
 		expect(result.current.images).toEqual([]);
 	});
 
-	it("revokes a blob URL only for removed new images", () => {
+	it("revokes a blob URL only for removed new images", async () => {
 		const file = new File(["preview"], "preview.png", { type: "image/png" });
-		const { result } = renderHook(() =>
+		const { result } = await renderHook(() =>
 			useExerciseImageQueue({ imageUrls: ["/existing.png"] }),
 		);
 

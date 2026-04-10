@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { RoutineWithDays } from "@/lib/types";
 import { RoutineModal } from "./routine-modal";
 
@@ -98,8 +99,8 @@ const mockRoutine: RoutineWithDays = {
 };
 
 describe("RoutineModal", () => {
-	it("falls back to overview when initialTab is invalid", () => {
-		render(
+	it("falls back to overview when initialTab is invalid", async () => {
+		const screen = await render(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -109,12 +110,14 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Overview body")).toBeInTheDocument();
-		expect(screen.queryByText("Day tab day-1")).not.toBeInTheDocument();
+		await expect.element(screen.getByText("Overview body")).toBeInTheDocument();
+		await expect
+			.element(screen.queryByText("Day tab day-1"))
+			.not.toBeInTheDocument();
 	});
 
-	it("renders the requested day tab when initialTab matches a routine day", () => {
-		render(
+	it("renders the requested day tab when initialTab matches a routine day", async () => {
+		const screen = await render(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -124,11 +127,13 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Day tab day-2")).toBeInTheDocument();
-		expect(screen.queryByText("Overview body")).not.toBeInTheDocument();
+		await expect.element(screen.getByText("Day tab day-2")).toBeInTheDocument();
+		await expect
+			.element(screen.queryByText("Overview body"))
+			.not.toBeInTheDocument();
 	});
 
-	it("truncates long routine day names in the tab list", () => {
+	it("truncates long routine day names in the tab list", async () => {
 		const routine = {
 			...mockRoutine,
 			routineDays: [
@@ -139,7 +144,7 @@ describe("RoutineModal", () => {
 			],
 		};
 
-		render(
+		const screen = await render(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -148,13 +153,13 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		expect(
-			screen.getByRole("tab", { name: "Day 1: An extremely lo..." }),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("tab", { name: "Day 1: An extremely lo..." }))
+			.toBeInTheDocument();
 	});
 
-	it("returns to overview when day-tab deletion callback fires", () => {
-		render(
+	it("returns to overview when day-tab deletion callback fires", async () => {
+		const screen = await render(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -164,13 +169,15 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Day tab day-1")).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "Delete this day" }));
-		expect(screen.getByText("Overview body")).toBeInTheDocument();
+		await expect.element(screen.getByText("Day tab day-1")).toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete this day" }),
+		);
+		await expect.element(screen.getByText("Overview body")).toBeInTheDocument();
 	});
 
-	it("switches to a selected day from the overview tab", () => {
-		render(
+	it("switches to a selected day from the overview tab", async () => {
+		const screen = await render(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -179,12 +186,14 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Select day 2" }));
-		expect(screen.getByText("Day tab day-2")).toBeInTheDocument();
-		expect(screen.queryByText("Overview body")).not.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Select day 2" }));
+		await expect.element(screen.getByText("Day tab day-2")).toBeInTheDocument();
+		await expect
+			.element(screen.queryByText("Overview body"))
+			.not.toBeInTheDocument();
 	});
 
-	it("switches to a newly added day from the overview tab", () => {
+	it("switches to a newly added day from the overview tab", async () => {
 		const updatedRoutine = {
 			...mockRoutine,
 			routineDays: [
@@ -201,7 +210,7 @@ describe("RoutineModal", () => {
 			],
 		};
 
-		const { rerender } = render(
+		const screen = await render(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -210,7 +219,7 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		rerender(
+		screen.rerender(
 			<RoutineModal
 				open={false}
 				onClose={vi.fn()}
@@ -218,7 +227,7 @@ describe("RoutineModal", () => {
 				currentSession={undefined}
 			/>,
 		);
-		rerender(
+		screen.rerender(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -228,8 +237,8 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Add day 3" }));
-		rerender(
+		await userEvent.click(screen.getByRole("button", { name: "Add day 3" }));
+		screen.rerender(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -238,12 +247,14 @@ describe("RoutineModal", () => {
 				initialTab="overview"
 			/>,
 		);
-		expect(screen.getByText("Day tab day-3")).toBeInTheDocument();
-		expect(screen.queryByText("Overview body")).not.toBeInTheDocument();
+		await expect.element(screen.getByText("Day tab day-3")).toBeInTheDocument();
+		await expect
+			.element(screen.queryByText("Overview body"))
+			.not.toBeInTheDocument();
 	});
 
-	it("resets to the initial tab when the modal is reopened", () => {
-		const { rerender } = render(
+	it("resets to the initial tab when the modal is reopened", async () => {
+		const screen = await render(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -253,9 +264,9 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Day tab day-1")).toBeInTheDocument();
+		await expect.element(screen.getByText("Day tab day-1")).toBeInTheDocument();
 
-		rerender(
+		screen.rerender(
 			<RoutineModal
 				open={false}
 				onClose={vi.fn()}
@@ -264,7 +275,7 @@ describe("RoutineModal", () => {
 				initialTab="overview"
 			/>,
 		);
-		rerender(
+		screen.rerender(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -274,14 +285,16 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Overview body")).toBeInTheDocument();
-		expect(screen.queryByText("Day tab day-1")).not.toBeInTheDocument();
+		await expect.element(screen.getByText("Overview body")).toBeInTheDocument();
+		await expect
+			.element(screen.queryByText("Day tab day-1"))
+			.not.toBeInTheDocument();
 	});
 
-	it("closes from the dialog close button", () => {
+	it("closes from the dialog close button", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<RoutineModal
 				open
 				onClose={onClose}
@@ -290,13 +303,13 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+		await userEvent.click(screen.getByRole("button", { name: "Close dialog" }));
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
-	it("resets to the initial tab when the dialog reports reopening", () => {
-		render(
+	it("resets to the initial tab when the dialog reports reopening", async () => {
+		const screen = await render(
 			<RoutineModal
 				open
 				onClose={vi.fn()}
@@ -306,11 +319,13 @@ describe("RoutineModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Delete this day" }));
-		expect(screen.getByText("Overview body")).toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete this day" }),
+		);
+		await expect.element(screen.getByText("Overview body")).toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Open dialog" }));
+		await userEvent.click(screen.getByRole("button", { name: "Open dialog" }));
 
-		expect(screen.getByText("Day tab day-1")).toBeInTheDocument();
+		await expect.element(screen.getByText("Day tab day-1")).toBeInTheDocument();
 	});
 });

@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { WorkoutSetGroup } from "@/lib/types";
 import { DeleteSetGroupModal } from "./delete-set-group-modal";
 
@@ -60,20 +61,22 @@ describe("DeleteSetGroupModal", () => {
 			id: "set-group-1",
 		} as WorkoutSetGroup;
 
-		render(<DeleteSetGroupModal open onClose={onClose} setGroup={setGroup} />);
+		const screen = await render(
+			<DeleteSetGroupModal open onClose={onClose} setGroup={setGroup} />,
+		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Yes" }));
+		await userEvent.click(screen.getByRole("button", { name: "Yes" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockDeleteSetGroup).toHaveBeenCalledWith("set-group-1");
 			expect(onClose).toHaveBeenCalledTimes(1);
 		});
 	});
 
-	it("closes without deleting when No is clicked", () => {
+	it("closes without deleting when No is clicked", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<DeleteSetGroupModal
 				open
 				onClose={onClose}
@@ -81,16 +84,16 @@ describe("DeleteSetGroupModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "No" }));
+		await userEvent.click(screen.getByRole("button", { name: "No" }));
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 		expect(mockDeleteSetGroup).not.toHaveBeenCalled();
 	});
 
-	it("closes from the dialog close button", () => {
+	it("closes from the dialog close button", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<DeleteSetGroupModal
 				open
 				onClose={onClose}
@@ -98,15 +101,15 @@ describe("DeleteSetGroupModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+		await userEvent.click(screen.getByRole("button", { name: "Close dialog" }));
 
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 
-	it("keeps the dialog open when no close event is dispatched", () => {
+	it("keeps the dialog open when no close event is dispatched", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<DeleteSetGroupModal
 				open
 				onClose={onClose}
@@ -114,14 +117,16 @@ describe("DeleteSetGroupModal", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("button", { name: "Yes" })).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Yes" }))
+			.toBeInTheDocument();
 		expect(onClose).not.toHaveBeenCalled();
 	});
 
-	it("does not close when the dialog reports staying open", () => {
+	it("does not close when the dialog reports staying open", async () => {
 		const onClose = vi.fn();
 
-		render(
+		const screen = await render(
 			<DeleteSetGroupModal
 				open
 				onClose={onClose}
@@ -129,7 +134,7 @@ describe("DeleteSetGroupModal", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByRole("button", { name: "Stay open" }));
+		await userEvent.click(screen.getByRole("button", { name: "Stay open" }));
 		expect(onClose).not.toHaveBeenCalled();
 	});
 });

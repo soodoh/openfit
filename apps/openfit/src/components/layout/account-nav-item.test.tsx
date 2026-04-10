@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { AccountNavItem } from "./account-nav-item";
 
 const mockNavigate = vi.fn();
@@ -63,11 +64,13 @@ describe("AccountNavItem", () => {
 		mockSignOut.mockResolvedValue(undefined);
 	});
 
-	it("does not render when the user is anonymous", () => {
-		render(<AccountNavItem />);
+	it("does not render when the user is anonymous", async () => {
+		const screen = await render(<AccountNavItem />);
 
-		expect(screen.queryByRole("button")).not.toBeInTheDocument();
-		expect(screen.queryByTestId("profile-modal")).not.toBeInTheDocument();
+		await expect.element(screen.getByRole("button")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("profile-modal"))
+			.not.toBeInTheDocument();
 	});
 
 	it("renders admin actions and signs out to the sign-in page", async () => {
@@ -76,52 +79,62 @@ describe("AccountNavItem", () => {
 			data: { role: "ADMIN" },
 		});
 
-		render(<AccountNavItem />);
+		const screen = await render(<AccountNavItem />);
 
-		fireEvent.click(screen.getByRole("button", { name: "Admin" }));
+		await userEvent.click(screen.getByRole("button", { name: "Admin" }));
 		expect(mockNavigate).toHaveBeenCalledWith({ to: "/admin" });
 
-		fireEvent.click(screen.getByRole("button", { name: "Profile" }));
-		expect(screen.getByTestId("profile-modal")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Profile" }));
+		await expect
+			.element(screen.getByTestId("profile-modal"))
+			.toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole("button", { name: "Logout" }));
+		await userEvent.click(screen.getByRole("button", { name: "Logout" }));
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(mockSignOut).toHaveBeenCalledTimes(1);
 			expect(mockNavigate).toHaveBeenCalledWith({ to: "/signin" });
 		});
 	});
 
-	it("hides admin actions for non-admin users", () => {
+	it("hides admin actions for non-admin users", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: true });
 		mockUseUserProfile.mockReturnValue({
 			data: { role: "USER" },
 		});
 
-		render(<AccountNavItem />);
+		const screen = await render(<AccountNavItem />);
 
-		expect(
-			screen.queryByRole("button", { name: "Admin" }),
-		).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Profile" })).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Logout" })).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Admin" }))
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Profile" }))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Logout" }))
+			.toBeInTheDocument();
 	});
 
-	it("closes the profile modal when it requests to close", () => {
+	it("closes the profile modal when it requests to close", async () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: true });
 		mockUseUserProfile.mockReturnValue({
 			data: { role: "USER" },
 		});
 
-		render(<AccountNavItem />);
+		const screen = await render(<AccountNavItem />);
 
-		fireEvent.click(screen.getByRole("button", { name: "Profile" }));
-		expect(screen.getByTestId("profile-modal")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Profile" }));
+		await expect
+			.element(screen.getByTestId("profile-modal"))
+			.toBeInTheDocument();
 
-		fireEvent.click(
+		await userEvent.click(
 			screen.getByRole("button", { name: "Close profile modal" }),
 		);
 
-		expect(screen.queryByTestId("profile-modal")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("profile-modal"))
+			.not.toBeInTheDocument();
 	});
 });

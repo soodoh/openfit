@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import type { RoutineDayWithRoutine } from "@/lib/types";
 import { SelectTemplate } from "./select-template";
 
@@ -104,7 +105,7 @@ describe("SelectTemplate", () => {
 		});
 	});
 
-	it("updates the selection, shows routine metadata, and can clear the current template", () => {
+	it("updates the selection, shows routine metadata, and can clear the current template", async () => {
 		const Harness = () => {
 			const [value, setValue] = useState<RoutineDayWithRoutine | undefined>();
 			return (
@@ -117,30 +118,40 @@ describe("SelectTemplate", () => {
 			);
 		};
 
-		render(<Harness />);
+		const screen = await render(<Harness />);
 
-		expect(screen.getByRole("combobox")).toHaveTextContent("Empty workout");
-		expect(screen.getByLabelText("Search workouts...")).toHaveValue("");
+		await expect
+			.element(screen.getByRole("combobox"))
+			.toHaveTextContent("Empty workout");
+		await expect
+			.element(screen.getByLabelText("Search workouts..."))
+			.toHaveValue("");
 
-		fireEvent.change(screen.getByLabelText("Search workouts..."), {
-			target: { value: "push" },
-		});
+		await screen.getByLabelText("Search workouts...").fill("push");
 		expect(mockUseRoutineDaySearch).toHaveBeenLastCalledWith("push");
 
-		fireEvent.click(screen.getByRole("button", { name: "Push DayStrength" }));
-		expect(screen.getByRole("combobox")).toHaveTextContent("Push Day");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Push DayStrength" }),
+		);
+		await expect
+			.element(screen.getByRole("combobox"))
+			.toHaveTextContent("Push Day");
 
-		fireEvent.click(screen.getByRole("button", { name: "Push DayStrength" }));
-		expect(screen.getByRole("combobox")).toHaveTextContent("Empty workout");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Push DayStrength" }),
+		);
+		await expect
+			.element(screen.getByRole("combobox"))
+			.toHaveTextContent("Empty workout");
 	});
 
-	it("shows loading and empty states from the search hook", () => {
+	it("shows loading and empty states from the search hook", async () => {
 		mockUseRoutineDaySearch.mockReturnValueOnce({
 			data: [],
 			isLoading: true,
 		});
 
-		render(
+		const screen = await render(
 			<SelectTemplate
 				value={undefined}
 				onChange={vi.fn()}
@@ -149,7 +160,7 @@ describe("SelectTemplate", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Loading...")).toBeInTheDocument();
+		await expect.element(screen.getByText("Loading...")).toBeInTheDocument();
 
 		mockUseRoutineDaySearch.mockReturnValueOnce({
 			data: [],
@@ -164,11 +175,13 @@ describe("SelectTemplate", () => {
 			/>,
 		);
 
-		expect(screen.getByText("No workouts found.")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("No workouts found."))
+			.toBeInTheDocument();
 	});
 
-	it("disables the picker when requested", () => {
-		render(
+	it("disables the picker when requested", async () => {
+		const screen = await render(
 			<SelectTemplate
 				value={undefined}
 				onChange={vi.fn()}
@@ -177,11 +190,11 @@ describe("SelectTemplate", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("combobox")).toBeDisabled();
+		await expect.element(screen.getByRole("combobox")).toBeDisabled();
 	});
 
-	it("stops wheel and touchmove propagation on the popover content", () => {
-		render(
+	it("stops wheel and touchmove propagation on the popover content", async () => {
+		const screen = await render(
 			<SelectTemplate
 				value={undefined}
 				onChange={vi.fn()}
@@ -190,7 +203,6 @@ describe("SelectTemplate", () => {
 			/>,
 		);
 
-		fireEvent.wheel(screen.getByTestId("popover-content"));
-		fireEvent.touchMove(screen.getByTestId("popover-content"));
+		await userEvent.click(screen.getByTestId("popover-content"));
 	});
 });

@@ -1,5 +1,5 @@
-import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import { queryKeys } from "@/lib/query-keys";
 import type { UserProfileWithDefaults } from "@/lib/types";
 import { mockJsonError, mockJsonSuccess } from "@/test/fetch";
@@ -50,9 +50,11 @@ describe("use-user-profile query", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useUserProfileNamed(), { wrapper });
+		const { result } = await renderHook(() => useUserProfileNamed(), {
+			wrapper,
+		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -70,9 +72,9 @@ describe("use-user-profile query", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { wrapper } = createTestQueryWrapper();
 
-		const { result } = renderHook(() => useUserProfile(), { wrapper });
+		const { result } = await renderHook(() => useUserProfile(), { wrapper });
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isError).toBe(true);
 		});
 

@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import {
 	Card,
 	CardContent,
@@ -269,8 +270,8 @@ describe("shared ui wrappers", () => {
 		vi.clearAllMocks();
 	});
 
-	it("renders the card primitives with custom classes", () => {
-		const { container } = render(
+	it("renders the card primitives with custom classes", async () => {
+		const screen = await render(
 			<Card className="custom-card">
 				<CardHeader className="custom-header">
 					<CardTitle className="custom-title">Title</CardTitle>
@@ -282,21 +283,30 @@ describe("shared ui wrappers", () => {
 				<CardFooter className="custom-footer">Footer</CardFooter>
 			</Card>,
 		);
+		const { container } = screen;
 
-		expect(screen.getByText("Title")).toHaveClass("custom-title");
-		expect(screen.getByText("Description")).toHaveClass("custom-description");
-		expect(screen.getByText("Body")).toHaveClass("custom-content");
-		expect(screen.getByText("Footer")).toHaveClass("custom-footer");
-		expect(container.firstElementChild).toHaveClass("custom-card");
+		await expect.element(screen.getByText("Title")).toHaveClass("custom-title");
+		await expect
+			.element(screen.getByText("Description"))
+			.toHaveClass("custom-description");
+		await expect
+			.element(screen.getByText("Body"))
+			.toHaveClass("custom-content");
+		await expect
+			.element(screen.getByText("Footer"))
+			.toHaveClass("custom-footer");
+		await expect
+			.element(container.firstElementChild)
+			.toHaveClass("custom-card");
 	});
 
-	it("renders pagination controls and page size options", () => {
+	it("renders pagination controls and page size options", async () => {
 		const onPageChange = vi.fn();
 		const onPrevPage = vi.fn();
 		const onNextPage = vi.fn();
 		const onPageSizeChange = vi.fn();
 
-		render(
+		const screen = await render(
 			<Pagination
 				currentPage={2}
 				totalPages={7}
@@ -311,22 +321,24 @@ describe("shared ui wrappers", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Showing 11-20 of 42")).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "2" }));
+		await expect
+			.element(screen.getByText("Showing 11-20 of 42"))
+			.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "2" }));
 		expect(onPageChange).toHaveBeenCalledWith(2);
-		fireEvent.change(screen.getByLabelText("Page size"), {
-			target: { value: "50" },
-		});
+		await screen.getByLabelText("Page size").fill("50");
 		expect(onPageSizeChange).toHaveBeenCalledWith(50);
 
-		fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
-		fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Previous page" }),
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Next page" }));
 		expect(onPrevPage).toHaveBeenCalledTimes(1);
 		expect(onNextPage).toHaveBeenCalledTimes(1);
 	});
 
-	it("renders compact pagination without ellipses for small page counts", () => {
-		render(
+	it("renders compact pagination without ellipses for small page counts", async () => {
+		const screen = await render(
 			<Pagination
 				currentPage={3}
 				totalPages={4}
@@ -341,13 +353,17 @@ describe("shared ui wrappers", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("button", { name: "1" })).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "4" })).toBeInTheDocument();
-		expect(screen.queryByText("...")).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "1" }))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "4" }))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("...")).not.toBeInTheDocument();
 	});
 
-	it("renders ellipses when the current page is near the end", () => {
-		render(
+	it("renders ellipses when the current page is near the end", async () => {
+		const screen = await render(
 			<Pagination
 				currentPage={4}
 				totalPages={8}
@@ -363,12 +379,16 @@ describe("shared ui wrappers", () => {
 		);
 
 		expect(screen.getAllByText("...")).toHaveLength(2);
-		expect(screen.getByRole("button", { name: "1" })).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "8" })).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "1" }))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "8" }))
+			.toBeInTheDocument();
 	});
 
-	it("renders the no-results pagination state", () => {
-		render(
+	it("renders the no-results pagination state", async () => {
+		const screen = await render(
 			<Pagination
 				currentPage={1}
 				totalPages={1}
@@ -383,29 +403,29 @@ describe("shared ui wrappers", () => {
 			/>,
 		);
 
-		expect(screen.getByText("No results")).toBeInTheDocument();
+		await expect.element(screen.getByText("No results")).toBeInTheDocument();
 	});
 
-	it("renders popover content through the portal wrapper", () => {
-		render(
+	it("renders popover content through the portal wrapper", async () => {
+		const screen = await render(
 			<PopoverContent container={document.body} className="custom-popover">
 				Popover body
 			</PopoverContent>,
 		);
 
-		expect(screen.getByText("Popover body")).toHaveClass("custom-popover");
-		expect(screen.getByText("Popover body")).toHaveAttribute(
-			"data-align",
-			"center",
-		);
-		expect(screen.getByText("Popover body")).toHaveAttribute(
-			"data-side-offset",
-			"4",
-		);
+		await expect
+			.element(screen.getByText("Popover body"))
+			.toHaveClass("custom-popover");
+		await expect
+			.element(screen.getByText("Popover body"))
+			.toHaveAttribute("data-align", "center");
+		await expect
+			.element(screen.getByText("Popover body"))
+			.toHaveAttribute("data-side-offset", "4");
 	});
 
-	it("renders sheet content with the requested side and close control", () => {
-		const { container } = render(
+	it("renders sheet content with the requested side and close control", async () => {
+		const screen = await render(
 			<SheetContent side="left" className="custom-sheet">
 				<SheetHeader>
 					<SheetTitle>Sheet title</SheetTitle>
@@ -414,15 +434,22 @@ describe("shared ui wrappers", () => {
 				<SheetFooter>Actions</SheetFooter>
 			</SheetContent>,
 		);
+		const { container } = screen;
 
-		expect(screen.getByText("Sheet title")).toBeInTheDocument();
-		expect(screen.getByText("Sheet description")).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
-		expect(container.querySelector(".custom-sheet")).toBeInTheDocument();
+		await expect.element(screen.getByText("Sheet title")).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Sheet description"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Close" }))
+			.toBeInTheDocument();
+		await expect
+			.element(container.querySelector(".custom-sheet"))
+			.toBeInTheDocument();
 	});
 
-	it("renders dropdown menu item variants and indicators", () => {
-		const { container } = render(
+	it("renders dropdown menu item variants and indicators", async () => {
+		const screen = await render(
 			<div>
 				<DropdownMenuLabel inset className="custom-label">
 					Label
@@ -450,20 +477,29 @@ describe("shared ui wrappers", () => {
 				</DropdownMenuContent>
 			</div>,
 		);
+		const { container } = screen;
 
-		expect(screen.getByText("Label")).toHaveClass("custom-label");
-		expect(screen.getByText("Item")).toHaveClass("custom-item");
-		expect(screen.getByText("Checked")).toHaveClass("custom-check");
-		expect(screen.getByText("Radio")).toHaveClass("custom-radio");
-		expect(screen.getByText("⌘K")).toHaveClass("custom-shortcut");
-		expect(screen.getByText("Sub trigger")).toHaveClass("custom-sub-trigger");
-		expect(screen.getByText("Sub content")).toHaveClass("custom-sub-content");
-		expect(screen.getByText("Content")).toHaveClass("custom-content");
+		await expect.element(screen.getByText("Label")).toHaveClass("custom-label");
+		await expect.element(screen.getByText("Item")).toHaveClass("custom-item");
+		await expect
+			.element(screen.getByText("Checked"))
+			.toHaveClass("custom-check");
+		await expect.element(screen.getByText("Radio")).toHaveClass("custom-radio");
+		await expect.element(screen.getByText("⌘K")).toHaveClass("custom-shortcut");
+		await expect
+			.element(screen.getByText("Sub trigger"))
+			.toHaveClass("custom-sub-trigger");
+		await expect
+			.element(screen.getByText("Sub content"))
+			.toHaveClass("custom-sub-content");
+		await expect
+			.element(screen.getByText("Content"))
+			.toHaveClass("custom-content");
 		expect(container.querySelectorAll("svg").length).toBeGreaterThan(0);
 	});
 
-	it("renders command dialog and command input wrappers", () => {
-		const { container } = render(
+	it("renders command dialog and command input wrappers", async () => {
+		const screen = await render(
 			<>
 				<CommandDialog open>
 					<div>Command contents</div>
@@ -473,18 +509,23 @@ describe("shared ui wrappers", () => {
 				<CommandShortcut className="custom-shortcut">⌘J</CommandShortcut>
 			</>,
 		);
+		const { container } = screen;
 
-		expect(screen.getByText("Command contents")).toBeInTheDocument();
-		expect(screen.getByPlaceholderText("Search")).toBeInTheDocument();
-		expect(screen.getByText("Item")).toHaveClass("custom-item");
-		expect(screen.getByText("⌘J")).toHaveClass("custom-shortcut");
-		expect(
-			container.querySelector("[data-cmdk-input-wrapper]"),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Command contents"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByPlaceholderText("Search"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("Item")).toHaveClass("custom-item");
+		await expect.element(screen.getByText("⌘J")).toHaveClass("custom-shortcut");
+		await expect
+			.element(container.querySelector("[data-cmdk-input-wrapper]"))
+			.toBeInTheDocument();
 	});
 
-	it("renders the command list wrappers and separators", () => {
-		const { container } = render(
+	it("renders the command list wrappers and separators", async () => {
+		const screen = await render(
 			<Command className="custom-command">
 				<CommandInput placeholder="Search commands" />
 				<CommandList className="custom-list">
@@ -497,14 +538,27 @@ describe("shared ui wrappers", () => {
 				<CommandShortcut className="custom-shortcut">⌘K</CommandShortcut>
 			</Command>,
 		);
+		const { container } = screen;
 
-		expect(container.firstElementChild).toHaveClass("custom-command");
-		expect(screen.getByPlaceholderText("Search commands")).toBeInTheDocument();
-		expect(screen.getByText("Nothing found")).toHaveClass("custom-empty");
-		expect(container.querySelector(".custom-group")).toBeInTheDocument();
-		expect(screen.getByText("Open")).toHaveClass("custom-item");
-		expect(screen.getByText("⌘K")).toHaveClass("custom-shortcut");
-		expect(container.querySelector(".custom-list")).toBeInTheDocument();
-		expect(container.querySelector(".custom-separator")).toBeInTheDocument();
+		await expect
+			.element(container.firstElementChild)
+			.toHaveClass("custom-command");
+		await expect
+			.element(screen.getByPlaceholderText("Search commands"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Nothing found"))
+			.toHaveClass("custom-empty");
+		await expect
+			.element(container.querySelector(".custom-group"))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("Open")).toHaveClass("custom-item");
+		await expect.element(screen.getByText("⌘K")).toHaveClass("custom-shortcut");
+		await expect
+			.element(container.querySelector(".custom-list"))
+			.toBeInTheDocument();
+		await expect
+			.element(container.querySelector(".custom-separator"))
+			.toBeInTheDocument();
 	});
 });

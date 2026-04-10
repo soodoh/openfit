@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@vitest/browser/context";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { SessionSummaryCard } from "./session-summary-card";
 
 dayjs.extend(duration);
@@ -18,8 +19,8 @@ vi.mock("./edit-session-menu", () => ({
 }));
 
 describe("SessionSummaryCard", () => {
-	it("links to the workout view for active sessions and hides the edit menu when requested", () => {
-		render(
+	it("links to the workout view for active sessions and hides the edit menu when requested", async () => {
+		const screen = await render(
 			<SessionSummaryCard
 				session={{
 					id: "session-1",
@@ -35,17 +36,19 @@ describe("SessionSummaryCard", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("link")).toHaveAttribute("href", "/workout");
-		expect(screen.getByText("1h 15m")).toBeInTheDocument();
-		expect(screen.getByText("2 sets")).toBeInTheDocument();
-		expect(screen.getByText("Strong set")).toBeInTheDocument();
-		expect(
-			screen.queryByRole("button", { name: "Edit session menu" }),
-		).not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("link"))
+			.toHaveAttribute("href", "/workout");
+		await expect.element(screen.getByText("1h 15m")).toBeInTheDocument();
+		await expect.element(screen.getByText("2 sets")).toBeInTheDocument();
+		await expect.element(screen.getByText("Strong set")).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Edit session menu" }))
+			.not.toBeInTheDocument();
 	});
 
-	it("links completed sessions to logs and shows the edit menu by default", () => {
-		render(
+	it("links completed sessions to logs and shows the edit menu by default", async () => {
+		const screen = await render(
 			<SessionSummaryCard
 				session={{
 					id: "session-3",
@@ -59,17 +62,19 @@ describe("SessionSummaryCard", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("link")).toHaveAttribute("href", "/logs");
-		expect(
-			screen.getByRole("button", { name: "Edit session menu" }),
-		).toBeInTheDocument();
-		expect(screen.getByText("45 min")).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("link"))
+			.toHaveAttribute("href", "/logs");
+		await expect
+			.element(screen.getByRole("button", { name: "Edit session menu" }))
+			.toBeInTheDocument();
+		await expect.element(screen.getByText("45 min")).toBeInTheDocument();
 	});
 
-	it("renders as a button when an onClick handler is provided", () => {
+	it("renders as a button when an onClick handler is provided", async () => {
 		const onClick = vi.fn();
 
-		render(
+		const screen = await render(
 			<SessionSummaryCard
 				session={{
 					id: "session-2",
@@ -84,14 +89,14 @@ describe("SessionSummaryCard", () => {
 			/>,
 		);
 
-		fireEvent.click(screen.getByText("Push Day"));
+		await userEvent.click(screen.getByText("Push Day"));
 		expect(onClick).toHaveBeenCalledTimes(1);
 	});
 
-	it("stops pointer down from reaching the card when the edit menu is interacted with", () => {
+	it("stops pointer down from reaching the card when the edit menu is interacted with", async () => {
 		const onClick = vi.fn();
 
-		render(
+		const screen = await render(
 			<SessionSummaryCard
 				session={{
 					id: "session-4",
@@ -107,14 +112,17 @@ describe("SessionSummaryCard", () => {
 			/>,
 		);
 
-		fireEvent.pointerDown(
-			screen.getByRole("button", { name: "Edit session menu" }),
-		);
+		await userEvent.pointer([
+			{
+				target: screen.getByRole("button", { name: "Edit session menu" }),
+				keys: "[MouseLeft>]",
+			},
+		]);
 		expect(onClick).not.toHaveBeenCalled();
 	});
 
-	it("omits duration text when the session is still in progress and uses the singular set label", () => {
-		render(
+	it("omits duration text when the session is still in progress and uses the singular set label", async () => {
+		const screen = await render(
 			<SessionSummaryCard
 				session={{
 					id: "session-5",
@@ -128,13 +136,13 @@ describe("SessionSummaryCard", () => {
 			/>,
 		);
 
-		expect(screen.getByText("1 set")).toBeInTheDocument();
-		expect(screen.queryByText(/ min$/)).not.toBeInTheDocument();
-		expect(screen.queryByText(/ h /)).not.toBeInTheDocument();
+		await expect.element(screen.getByText("1 set")).toBeInTheDocument();
+		await expect.element(screen.getByText(/ min$/)).not.toBeInTheDocument();
+		await expect.element(screen.getByText(/ h /)).not.toBeInTheDocument();
 	});
 
-	it("renders both filled and unfilled stars for partial impressions", () => {
-		const { container } = render(
+	it("renders both filled and unfilled stars for partial impressions", async () => {
+		const { container } = await render(
 			<SessionSummaryCard
 				session={{
 					id: "session-6",

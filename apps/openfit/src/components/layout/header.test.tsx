@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { Header } from "./header";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -45,18 +45,20 @@ vi.mock("@/components/ui/sheet", () => ({
 }));
 
 describe("Header", () => {
-	it("renders desktop and mobile navigation plus the account menu", () => {
-		render(<Header />);
+	it("renders desktop and mobile navigation plus the account menu", async () => {
+		const screen = await render(<Header />);
 
-		expect(
-			screen.getByRole("link", { name: "OpenFit logo" }),
-		).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("link", { name: "OpenFit logo" }))
+			.toBeInTheDocument();
 		expect(screen.getAllByRole("link", { name: "Routines" })).toHaveLength(2);
 		expect(screen.getAllByRole("link", { name: "Exercises" })).toHaveLength(2);
 		expect(screen.getAllByRole("link", { name: "Logs" })).toHaveLength(2);
-		expect(
-			screen.getByRole("button", { name: "Open navigation menu" }),
-		).toBeInTheDocument();
-		expect(screen.getByTestId("account-nav-item")).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Open navigation menu" }))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("account-nav-item"))
+			.toBeInTheDocument();
 	});
 });

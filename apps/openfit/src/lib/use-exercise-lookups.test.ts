@@ -1,5 +1,5 @@
-import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 
 const mocks = vi.hoisted(() => ({
 	useEquipment: vi.fn(),
@@ -32,35 +32,35 @@ describe("useExerciseLookups", () => {
 		});
 	});
 
-	it("reports loading while any lookup query is unresolved", () => {
+	it("reports loading while any lookup query is unresolved", async () => {
 		mocks.useEquipment.mockReturnValue({ data: undefined });
 
-		const { result } = renderHook(() => useExerciseLookups());
+		const { result } = await renderHook(() => useExerciseLookups());
 
 		expect(result.current.isLoading).toBe(true);
 		expect(result.current.equipment).toBeUndefined();
 	});
 
-	it("reports loading while muscle groups are unresolved", () => {
+	it("reports loading while muscle groups are unresolved", async () => {
 		mocks.useMuscleGroups.mockReturnValue({ data: undefined });
 
-		const { result } = renderHook(() => useExerciseLookups());
+		const { result } = await renderHook(() => useExerciseLookups());
 
 		expect(result.current.isLoading).toBe(true);
 		expect(result.current.muscleGroups).toBeUndefined();
 	});
 
-	it("reports loading while categories are unresolved", () => {
+	it("reports loading while categories are unresolved", async () => {
 		mocks.useCategories.mockReturnValue({ data: undefined });
 
-		const { result } = renderHook(() => useExerciseLookups());
+		const { result } = await renderHook(() => useExerciseLookups());
 
 		expect(result.current.isLoading).toBe(true);
 		expect(result.current.categories).toBeUndefined();
 	});
 
-	it("returns names for known ids and safe fallbacks for unknown ids", () => {
-		const { result } = renderHook(() => useExerciseLookups());
+	it("returns names for known ids and safe fallbacks for unknown ids", async () => {
+		const { result } = await renderHook(() => useExerciseLookups());
 
 		expect(result.current.isLoading).toBe(false);
 		expect(result.current.getEquipmentName("eq_1")).toBe("Barbell");
@@ -76,12 +76,12 @@ describe("useExerciseLookups", () => {
 		).toEqual(["Chest", "Back"]);
 	});
 
-	it("filters empty results from muscle group lookups", () => {
+	it("filters empty results from muscle group lookups", async () => {
 		mocks.useEquipment.mockReturnValue({ data: [] });
 		mocks.useMuscleGroups.mockReturnValue({ data: [] });
 		mocks.useCategories.mockReturnValue({ data: [] });
 
-		const { result } = renderHook(() => useExerciseLookups());
+		const { result } = await renderHook(() => useExerciseLookups());
 
 		expect(result.current.isLoading).toBe(false);
 		expect(

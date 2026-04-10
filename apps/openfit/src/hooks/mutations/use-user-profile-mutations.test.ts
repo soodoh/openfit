@@ -1,5 +1,6 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderHook } from "vitest-browser-react";
 import type { UserProfileResult } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
 import { mockJsonSuccess } from "@/test/fetch";
@@ -55,13 +56,15 @@ describe("use-user-profile-mutations", () => {
 			defaultGymId: "gym-1",
 		};
 
-		const { result } = renderHook(() => useUpdateUserProfile(), { wrapper });
+		const { result } = await renderHook(() => useUpdateUserProfile(), {
+			wrapper,
+		});
 
 		await act(async () => {
 			await result.current.mutateAsync(input);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 
@@ -90,13 +93,13 @@ describe("use-user-profile-mutations", () => {
 		const { queryClient, wrapper } = createTestQueryWrapper();
 		const invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
 
-		const { result } = renderHook(() => useSetDefaultGym(), { wrapper });
+		const { result } = await renderHook(() => useSetDefaultGym(), { wrapper });
 
 		await act(async () => {
 			await result.current.mutateAsync(null);
 		});
 
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(result.current.isSuccess).toBe(true);
 		});
 

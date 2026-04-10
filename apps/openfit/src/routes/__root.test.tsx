@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import RootRoute from "./__root";
 
 const mockHeadContent = vi.fn(() => null);
@@ -37,7 +37,7 @@ vi.mock("@/components/providers/theme-provider", () => ({
 }));
 
 describe("root route", () => {
-	it("declares the document head metadata and wraps the shell providers", () => {
+	it("declares the document head metadata and wraps the shell providers", async () => {
 		mockHeadContent.mockClear();
 		const head = RootRoute.options.head?.();
 
@@ -62,12 +62,13 @@ describe("root route", () => {
 			]),
 		);
 
-		const { container } = render(<RootRoute.options.component />);
+		const screen = await render(<RootRoute.options.component />);
 
 		expect(mockHeadContent).toHaveBeenCalledTimes(1);
-		expect(screen.getByTestId("scripts")).toBeInTheDocument();
-		expect(screen.getByTestId("app-wrapper")).toBeInTheDocument();
-		expect(screen.getByTestId("route-outlet")).toBeInTheDocument();
-		expect(container.firstElementChild).toBeInTheDocument();
+		await expect.element(screen.getByTestId("scripts")).toBeInTheDocument();
+		await expect.element(screen.getByTestId("app-wrapper")).toBeInTheDocument();
+		await expect
+			.element(screen.getByTestId("route-outlet"))
+			.toBeInTheDocument();
 	});
 });
