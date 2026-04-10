@@ -31,7 +31,7 @@ export default defineConfig({
 				test: {
 					name: "unit-node",
 					environment: "node",
-					include: ["src/lib/**/*.test.ts"],
+					include: ["src/lib/**/*.test.ts", "src/routes/api/**/*.test.ts"],
 					exclude: [
 						"node_modules",
 						".output",
@@ -53,12 +53,19 @@ export default defineConfig({
 						"src/routes/**/*.test.{ts,tsx}",
 						"src/lib/use-exercise-lookups.test.ts",
 					],
-					exclude: ["node_modules", ".output"],
+					exclude: [
+						"node_modules",
+						".output",
+						// API route tests are pure server logic - run in node project
+						"src/routes/api/**/*.test.ts",
+					],
 					browser: {
 						enabled: true,
-						provider: playwright(),
+						provider: playwright({
+							launchOptions: { channel: "chrome" },
+						}),
 						headless: true,
-						instances: [{ browser: "firefox" }],
+						instances: [{ browser: "chromium" }],
 					},
 				},
 			},

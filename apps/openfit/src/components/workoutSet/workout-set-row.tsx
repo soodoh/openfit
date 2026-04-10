@@ -53,6 +53,7 @@ export const WorkoutSetRow = ({
 					<Input
 						key={`reps-${set.id}-${set.reps}`}
 						type="text"
+						aria-label="Reps"
 						disabled={isRowDisabled}
 						defaultValue={set.reps}
 						className="h-9 text-sm text-center font-medium flex-1 min-w-0"
@@ -80,6 +81,7 @@ export const WorkoutSetRow = ({
 					<Input
 						key={`weight-${set.id}-${set.weight}`}
 						type="text"
+						aria-label="Weight"
 						disabled={isRowDisabled}
 						defaultValue={set.weight}
 						className="h-9 text-sm text-center font-medium flex-1 min-w-0"
