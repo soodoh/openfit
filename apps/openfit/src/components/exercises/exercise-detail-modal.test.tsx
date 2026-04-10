@@ -135,7 +135,7 @@ describe("ExerciseDetailModal", () => {
 			.toBeInTheDocument();
 		await expect.element(screen.getByText("Instructions")).toBeInTheDocument();
 
-		screen.getByRole("button", { name: "Close" }).click();
+		await screen.getByRole("button", { name: "Close" }).click();
 		expect(onClose).toHaveBeenCalledTimes(1);
 	});
 

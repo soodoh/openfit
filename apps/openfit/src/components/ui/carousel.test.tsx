@@ -135,7 +135,7 @@ describe("carousel wrappers", () => {
 			return null;
 		}
 
-		expect(() => render(<Consumer />)).toThrow(
+		await expect(render(<Consumer />)).rejects.toThrow(
 			"useCarousel must be used within a <Carousel />",
 		);
 	});

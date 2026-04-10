@@ -326,7 +326,7 @@ describe("shared ui wrappers", () => {
 			.toBeInTheDocument();
 		await userEvent.click(screen.getByRole("button", { name: "2" }));
 		expect(onPageChange).toHaveBeenCalledWith(2);
-		await screen.getByLabelText("Page size").fill("50");
+		await screen.getByLabelText("Page size").selectOptions("50");
 		expect(onPageSizeChange).toHaveBeenCalledWith(50);
 
 		await userEvent.click(

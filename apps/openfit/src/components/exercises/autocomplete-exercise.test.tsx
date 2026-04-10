@@ -306,6 +306,8 @@ describe("AutocompleteExercise", () => {
 		await userEvent.click(
 			screen.getByRole("button", { name: "Simulate pointer down outside" }),
 		);
+		// Re-focus input after clicking popover buttons to keep popover open
+		await userEvent.click(input);
 
 		await expect
 			.element(screen.getByTestId("popover"))

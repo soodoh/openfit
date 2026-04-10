@@ -1,3 +1,4 @@
+import { page } from "@vitest/browser/context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import AdminRoute from "./admin";
@@ -53,13 +54,12 @@ describe("admin route", () => {
 
 		const screen = await render(<AdminRoute.options.component />);
 
+		// Loading spinner is shown; admin-page is not present
 		await expect
 			.element(
-				screen.getByTestId("admin-page").element().closest(".animate-spin") ??
-					screen.getByTestId("admin-page"),
+				page.elementLocator(document.querySelector(".animate-spin") as Element),
 			)
-			.not.toBeInTheDocument()
-			.catch(() => undefined);
+			.toBeInTheDocument();
 		expect(mockFetch).not.toHaveBeenCalled();
 	});
 

@@ -45,7 +45,7 @@ describe("Pagination", () => {
 			.element(screen.getByRole("button", { name: "Next page" }))
 			.toBeDisabled();
 		await expect
-			.element(screen.getByRole("button", { name: "1" }))
+			.element(screen.getByRole("button", { name: "1", exact: true }))
 			.toBeDisabled();
 	});
 
