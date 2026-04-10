@@ -112,11 +112,16 @@ describe("carousel wrappers", () => {
 			screen.getByRole("button", { name: "Go to slide 1" }).query(),
 		).toBeNull();
 
-		// Focus the carousel region so it receives keyboard events
+		// Dispatch keyboard events directly on the region since onKeyDownCapture
+		// is attached to it; focus-based keyboard events don't reliably propagate
+		// in the vitest browser environment.
 		const region = screen.getByRole("region").element() as HTMLElement;
-		region.focus();
-		await userEvent.keyboard("{ArrowRight}");
-		await userEvent.keyboard("{ArrowLeft}");
+		region.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
+		);
+		region.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }),
+		);
 		expect(mockScrollNext).toHaveBeenCalledTimes(1);
 		expect(mockScrollPrev).toHaveBeenCalledTimes(1);
 
