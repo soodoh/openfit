@@ -191,6 +191,7 @@ export function LookupTable({
 										<Button
 											variant="ghost"
 											size="icon"
+											aria-label={`Edit ${singularTitle} ${item.name}`}
 											onClick={() => handleEdit(item)}
 										>
 											<Edit2 className="h-4 w-4" />
@@ -198,6 +199,7 @@ export function LookupTable({
 										<Button
 											variant="ghost"
 											size="icon"
+											aria-label={`Delete ${singularTitle} ${item.name}`}
 											onClick={() => setDeleteItem(item)}
 											className="text-destructive hover:text-destructive"
 										>

@@ -342,7 +342,7 @@ describe("admin tables", () => {
 			.element(screen.getByText("coach@example.com"))
 			.toBeInTheDocument();
 		await expect.element(screen.getByText("ADMIN")).toBeInTheDocument();
-		await expect.element(screen.getByText("page 1 of 2")).toHaveCount(2);
+		expect(screen.getByText("page 1 of 2").length).toBe(2);
 
 		await userEvent.click(
 			screen.getByRole("button", { name: "Prev page" }).nth(0),
@@ -380,12 +380,9 @@ describe("admin tables", () => {
 		});
 
 		await userEvent.click(
-			screen
-				.getByText("coach@example.com")
-				.closest("div")
-				?.parentElement?.parentElement?.querySelector(
-					"button",
-				) as HTMLButtonElement,
+			screen.getByRole("button", {
+				name: "Edit role for coach@example.com",
+			}),
 		);
 		await expect
 			.element(screen.getByText("Role modal: coach@example.com"))
@@ -488,9 +485,7 @@ describe("admin tables", () => {
 		});
 
 		await userEvent.click(
-			screen
-				.getByText("Rope")
-				.parentElement?.querySelectorAll("button")[0] as HTMLButtonElement,
+			screen.getByRole("button", { name: "Edit Equipment Rope" }),
 		);
 		await expect
 			.element(screen.getByText("Edit Equipment: Rope"))
@@ -508,9 +503,7 @@ describe("admin tables", () => {
 		});
 
 		await userEvent.click(
-			screen
-				.getByText("Rope")
-				.parentElement?.querySelectorAll("button")[1] as HTMLButtonElement,
+			screen.getByRole("button", { name: "Delete Equipment Rope" }),
 		);
 		await expect
 			.element(screen.getByText("Delete Equipment: Rope"))
@@ -561,11 +554,7 @@ describe("admin tables", () => {
 			.not.toBeInTheDocument();
 
 		await userEvent.click(
-			screen
-				.getByText("Bench Press")
-				.parentElement?.parentElement?.parentElement?.querySelectorAll(
-					"button",
-				)[1] as HTMLButtonElement,
+			screen.getByRole("button", { name: "Delete exercise Bench Press" }),
 		);
 		await expect
 			.element(screen.getByText("Delete exercise: Bench Press"))
@@ -593,11 +582,25 @@ describe("admin tables", () => {
 		await vi.waitFor(() => {
 			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
 		});
-		await expect.element(screen.getByText("Google")).toBeInTheDocument();
-		await expect.element(screen.getByText("GitHub")).toBeInTheDocument();
-		await expect.element(screen.getByText("Discord")).toBeInTheDocument();
-		await expect.element(screen.getByText("Configured")).toHaveCount(2);
-		await expect.element(screen.getByText("Not configured")).toHaveCount(2);
+		await expect
+			.element(screen.getByText("Google").first())
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("GitHub").first())
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Discord").first())
+			.toBeInTheDocument();
+		expect(
+			[...document.querySelectorAll("span")].filter(
+				(el) => el.textContent?.trim() === "Configured",
+			).length,
+		).toBe(2);
+		expect(
+			[...document.querySelectorAll("span")].filter(
+				(el) => el.textContent?.trim() === "Not configured",
+			).length,
+		).toBe(2);
 	});
 
 	it("uses a custom OIDC provider label when the environment provides one", async () => {
@@ -646,8 +649,14 @@ describe("admin tables", () => {
 			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
 		});
 
-		await expect.element(screen.getByText("Google")).toBeInTheDocument();
-		await expect.element(screen.getByText("Not configured")).toHaveCount(4);
+		await expect
+			.element(screen.getByText("Google").first())
+			.toBeInTheDocument();
+		expect(
+			[...document.querySelectorAll("span")].filter(
+				(el) => el.textContent?.trim() === "Not configured",
+			).length,
+		).toBe(4);
 	});
 
 	it("ignores provider status updates after the component unmounts", async () => {

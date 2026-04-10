@@ -1,5 +1,5 @@
 import { userEvent } from "@vitest/browser/context";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import type { RoutineWithDays, WorkoutSessionWithData } from "@/lib/types";
 import { RoutineOverviewTab } from "./routine-overview-tab";
@@ -13,19 +13,13 @@ const mockUpdateRoutineDay = vi.fn();
 const mockDeleteRoutine = vi.fn();
 const mockDeleteRoutineDay = vi.fn();
 
-vi.mock("dayjs", () => {
-	const dayjsMock = (value?: Date | string) => ({
-		fromNow: () => "just now",
-		day: (weekday: number) => ({
-			format: () => {
-				const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-				return labels[weekday] ?? String(value ?? "");
-			},
-		}),
-	});
-
-	dayjsMock.extend = vi.fn();
-	return { default: dayjsMock };
+// Pin system time just after the routine's updatedAt so fromNow() returns "a few seconds ago"
+beforeEach(() => {
+	vi.useFakeTimers();
+	vi.setSystemTime(new Date("2026-03-02T00:00:01.000Z"));
+});
+afterEach(() => {
+	vi.useRealTimers();
 });
 
 vi.mock("@tanstack/react-router", () => ({

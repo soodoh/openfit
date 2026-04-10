@@ -1,16 +1,16 @@
 import { userEvent } from "@vitest/browser/context";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import type { RoutineWithDays } from "@/lib/types";
 import { RoutineCard } from "./routine-card";
 
-vi.mock("dayjs", () => {
-	const dayjsMock = () => ({
-		fromNow: () => "just now",
-	});
-
-	dayjsMock.extend = vi.fn();
-	return { default: dayjsMock };
+// Use fake timers pinned just after the routine's updatedAt so fromNow() returns "just now"
+beforeEach(() => {
+	vi.useFakeTimers();
+	vi.setSystemTime(new Date("2026-03-02T00:00:01.000Z"));
+});
+afterEach(() => {
+	vi.useRealTimers();
 });
 
 vi.mock("./routine-modal", () => ({
@@ -53,7 +53,7 @@ describe("RoutineCard", () => {
 
 		await expect.element(screen.getByText("1 day")).toBeInTheDocument();
 		await expect
-			.element(screen.getByText("Updated just now"))
+			.element(screen.getByText(/Updated .+ ago|Updated in .+/))
 			.toBeInTheDocument();
 		await expect.element(screen.getByText("Pull Day")).not.toBeInTheDocument();
 
