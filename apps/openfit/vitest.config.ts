@@ -1,6 +1,31 @@
 import react from "@vitejs/plugin-react";
 import { playwright } from "@vitest/browser-playwright";
-import { defineConfig } from "vitest/config";
+import { defineConfig, type Plugin } from "vitest/config";
+
+const stubTanstackVirtualEntries = (): Plugin => {
+	const ROUTER_STUB_ID = "\0virtual:tanstack-router-entry";
+	const START_STUB_ID = "\0virtual:tanstack-start-entry";
+	return {
+		name: "stub-tanstack-virtual-entries",
+		enforce: "pre",
+		resolveId(id) {
+			if (id === "#tanstack-router-entry") {
+				return ROUTER_STUB_ID;
+			}
+			if (id === "#tanstack-start-entry") {
+				return START_STUB_ID;
+			}
+		},
+		load(id) {
+			if (id === ROUTER_STUB_ID) {
+				return "export async function getRouter() {}";
+			}
+			if (id === START_STUB_ID) {
+				return "export const startInstance = undefined;";
+			}
+		},
+	};
+};
 
 export default defineConfig({
 	plugins: [react()],
@@ -28,6 +53,7 @@ export default defineConfig({
 		},
 		projects: [
 			{
+				plugins: [stubTanstackVirtualEntries()],
 				resolve: {
 					tsconfigPaths: true,
 				},
@@ -43,6 +69,12 @@ export default defineConfig({
 				},
 			},
 			{
+				plugins: [stubTanstackVirtualEntries()],
+				optimizeDeps: {
+					rolldownOptions: {
+						plugins: [stubTanstackVirtualEntries()],
+					},
+				},
 				resolve: {
 					tsconfigPaths: true,
 				},

@@ -19,7 +19,6 @@
 		"unrs-resolver"
 	],
 	"scripts": {
-		"postinstall": "bun scripts/patch-tanstack-imports.ts",
 		"dev": "bun --bun vite dev",
 		"build": "bun --bun vite build",
 		"start": "bun run .output/server/index.mjs",
