@@ -4,14 +4,15 @@ FROM oven/bun:1-alpine AS builder
 WORKDIR /repo
 
 # Install build dependencies
-RUN apk add --no-cache bash
+RUN apk add --no-cache bash git
 
 # Install dependencies (cached layer - only re-runs when lockfile changes)
 COPY package.json bun.lock turbo.json ./
 COPY apps/openfit/package.json ./apps/openfit/package.json
 COPY apps/docs/package.json ./apps/docs/package.json
 COPY apps/mobile-app/package.json ./apps/mobile-app/package.json
-RUN bun install --frozen-lockfile
+COPY apps/openfit/scripts/patch-tanstack-imports.ts ./apps/openfit/scripts/patch-tanstack-imports.ts
+RUN git init && bun install --frozen-lockfile
 
 # Copy source and build the openfit workspace
 COPY . .
@@ -27,6 +28,7 @@ COPY --from=builder /repo/apps/openfit/.output ./.output
 
 # Copy package files and install production deps directly (avoids symlink issues from monorepo)
 COPY --from=builder /repo/apps/openfit/package.json ./package.json
+COPY --from=builder /repo/apps/openfit/scripts/patch-tanstack-imports.ts ./scripts/patch-tanstack-imports.ts
 RUN bun install --production
 COPY --from=builder /repo/apps/openfit/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder /repo/apps/openfit/tsconfig.json ./tsconfig.json
