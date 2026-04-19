@@ -28,12 +28,12 @@
 		"version": "changeset version"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.10",
-		"@changesets/cli": "^2.30.0",
+		"@biomejs/biome": "^2.4.12",
+		"@changesets/cli": "^2.31.0",
 		"@commitlint/cli": "^20.5.0",
 		"@commitlint/config-conventional": "^20.5.0",
 		"@commitlint/types": "^20.5.0",
-		"lefthook": "^2.1.5",
-		"turbo": "^2.9.5"
+		"lefthook": "^2.1.6",
+		"turbo": "^2.9.6"
 	}
 }
