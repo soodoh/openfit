@@ -3,14 +3,15 @@ import { playwright } from "@vitest/browser-playwright";
 import { defineConfig, type Plugin } from "vitest/config";
 
 // `@tanstack/start-server-core/createStartHandler` does dynamic subpath imports
-// of `#tanstack-router-entry` and `#tanstack-start-entry`, which upstream's
-// package.json#imports never declares — they're meant to be filled in by the
-// TanStack Start Vite plugin at production build time. Vitest doesn't load that
-// plugin, so Rolldown's dep optimizer crashes pre-bundling. This stub serves
-// no-op modules with the named exports that downstream code actually imports
-// (`getRouter` from start-client-core/hydrateStart, `startInstance`).
+// of TanStack Start virtual entry IDs that upstream's package.json#imports never
+// declares — they're meant to be filled in by the TanStack Start Vite plugin at
+// production build time. Vitest doesn't load that plugin, so Rolldown's dep
+// optimizer crashes pre-bundling. This stub serves no-op modules with the named
+// exports that downstream code actually imports (`getRouter`,
+// `startInstance`, and plugin adapter metadata).
 const ROUTER_STUB_ID = "\0virtual:tanstack-router-entry";
 const START_STUB_ID = "\0virtual:tanstack-start-entry";
+const PLUGIN_ADAPTERS_STUB_ID = "\0virtual:tanstack-start-plugin-adapters";
 const tanstackVirtualEntriesStub: Plugin = {
 	name: "stub-tanstack-virtual-entries",
 	enforce: "pre",
@@ -21,6 +22,9 @@ const tanstackVirtualEntriesStub: Plugin = {
 		if (id === "#tanstack-start-entry") {
 			return START_STUB_ID;
 		}
+		if (id === "#tanstack-start-plugin-adapters") {
+			return PLUGIN_ADAPTERS_STUB_ID;
+		}
 	},
 	load(id) {
 		if (id === ROUTER_STUB_ID) {
@@ -28,6 +32,9 @@ const tanstackVirtualEntriesStub: Plugin = {
 		}
 		if (id === START_STUB_ID) {
 			return "export const startInstance = undefined;";
+		}
+		if (id === PLUGIN_ADAPTERS_STUB_ID) {
+			return "export const hasPluginAdapters = false; export const pluginSerializationAdapters = [];";
 		}
 	},
 };
