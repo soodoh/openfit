@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-
+import type { AuthConfig } from "@/lib/auth-config";
 import { getAuthConfig } from "@/lib/auth-config";
 import {
 	isEmailPasswordRegistrationAllowedForBootstrapState,
@@ -10,7 +10,7 @@ const socialProviderNames = {
 	google: "Google",
 	github: "GitHub",
 	discord: "Discord",
-} as const;
+} as const satisfies Record<keyof AuthConfig["socialProviders"], string>;
 
 export const Route = createFileRoute("/api/auth/providers")({
 	server: {

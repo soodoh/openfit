@@ -17,7 +17,7 @@ const handlers = AuthProvidersRoute.options.server?.handlers as {
 	GET: () => Promise<Response> | Response;
 };
 
-const envKeys = [
+const explicitEnvKeys = [
 	"AUTH_GOOGLE_ID",
 	"AUTH_GOOGLE_SECRET",
 	"AUTH_GITHUB_ID",
@@ -26,27 +26,26 @@ const envKeys = [
 	"AUTH_DISCORD_SECRET",
 	"DISABLE_REGISTRATION",
 	"DISABLE_EMAIL_PASSWORD_REGISTRATION",
-	"OIDC_1_PROVIDER_ID",
-	"OIDC_1_PROVIDER_NAME",
-	"OIDC_1_CLIENT_ID",
-	"OIDC_1_CLIENT_SECRET",
-	"OIDC_1_ISSUER",
-	"OIDC_1_ALLOW_ACCOUNT_CREATION",
-	"OIDC_1_SCOPES",
-	"OIDC_2_PROVIDER_ID",
-	"OIDC_2_PROVIDER_NAME",
-	"OIDC_2_CLIENT_ID",
-	"OIDC_2_CLIENT_SECRET",
-	"OIDC_2_ISSUER",
-	"OIDC_2_ALLOW_ACCOUNT_CREATION",
-	"OIDC_2_SCOPES",
 ];
 
+const oidcEnvKeyPattern = /^OIDC_\d+_/;
 const originalEnv = new Map<string, string | undefined>();
+const envKeysToRestore = new Set<string>();
+
+function getCurrentAuthEnvKeys(): string[] {
+	return [
+		...explicitEnvKeys,
+		...Object.keys(process.env).filter((key) => oidcEnvKeyPattern.test(key)),
+	];
+}
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	for (const key of envKeys) {
+	originalEnv.clear();
+	envKeysToRestore.clear();
+
+	for (const key of getCurrentAuthEnvKeys()) {
+		envKeysToRestore.add(key);
 		originalEnv.set(key, process.env[key]);
 		delete process.env[key];
 	}
@@ -57,7 +56,11 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-	for (const key of envKeys) {
+	for (const key of getCurrentAuthEnvKeys()) {
+		envKeysToRestore.add(key);
+	}
+
+	for (const key of envKeysToRestore) {
 		const value = originalEnv.get(key);
 		if (value === undefined) {
 			delete process.env[key];
