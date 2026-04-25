@@ -1,6 +1,5 @@
-import { Database, KeyRound, Users } from "lucide-react";
+import { Database, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AuthProvidersTable } from "./auth-providers-table";
 import { SharedEntitiesView } from "./shared-entities-view";
 import { UserTable } from "./user-table";
 export function AdminPage() {
@@ -14,7 +13,7 @@ export function AdminPage() {
 			</div>
 
 			<Tabs defaultValue="entities" className="w-full">
-				<TabsList className="grid w-full grid-cols-3 mb-6">
+				<TabsList className="grid w-full grid-cols-2 mb-6">
 					<TabsTrigger value="entities" className="flex items-center gap-2">
 						<Database className="h-4 w-4" />
 						<span>Shared Entities</span>
@@ -22,10 +21,6 @@ export function AdminPage() {
 					<TabsTrigger value="users" className="flex items-center gap-2">
 						<Users className="h-4 w-4" />
 						<span>Users</span>
-					</TabsTrigger>
-					<TabsTrigger value="auth" className="flex items-center gap-2">
-						<KeyRound className="h-4 w-4" />
-						<span>Auth</span>
 					</TabsTrigger>
 				</TabsList>
 
@@ -35,10 +30,6 @@ export function AdminPage() {
 
 				<TabsContent value="users">
 					<UserTable />
-				</TabsContent>
-
-				<TabsContent value="auth">
-					<AuthProvidersTable />
 				</TabsContent>
 			</Tabs>
 		</div>

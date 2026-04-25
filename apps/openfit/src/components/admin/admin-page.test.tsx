@@ -10,25 +10,18 @@ vi.mock("./user-table", () => ({
 	UserTable: () => <div>Users body</div>,
 }));
 
-vi.mock("./auth-providers-table", () => ({
-	AuthProvidersTable: () => <div>Auth body</div>,
-}));
-
 describe("AdminPage", () => {
-	it("shows the admin shell and switches between the top-level tabs", async () => {
+	it("renders shared entities and users tabs", async () => {
 		const screen = await render(<AdminPage />);
 
 		await expect
-			.element(screen.getByRole("heading", { name: "Admin Panel" }))
+			.element(screen.getByRole("tab", { name: /shared entities/i }))
 			.toBeInTheDocument();
 		await expect
-			.element(screen.getByText("Shared entities body"))
+			.element(screen.getByRole("tab", { name: /users/i }))
 			.toBeInTheDocument();
 		await expect
-			.element(screen.getByRole("tab", { name: "Users" }))
-			.toBeInTheDocument();
-		await expect
-			.element(screen.getByRole("tab", { name: "Auth" }))
-			.toBeInTheDocument();
+			.element(screen.getByRole("tab", { name: /auth/i }))
+			.not.toBeInTheDocument();
 	});
 });

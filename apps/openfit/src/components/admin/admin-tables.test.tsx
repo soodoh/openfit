@@ -1,7 +1,6 @@
 import { userEvent } from "@vitest/browser/context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
-import { AuthProvidersTable } from "./auth-providers-table";
 import { ExerciseTable } from "./exercise-table";
 import { LookupTable } from "./lookup-table";
 import { UserTable } from "./user-table";
@@ -564,125 +563,6 @@ describe("admin tables", () => {
 			screen.getByRole("button", { name: "Confirm delete exercise" }),
 		);
 		expect(deleteExerciseMutation).toHaveBeenCalledWith("exercise-1");
-	});
-
-	it("renders auth provider configuration status from the API", async () => {
-		const fetchMock = vi.fn().mockResolvedValue(
-			Response.json({
-				google: true,
-				github: false,
-				discord: true,
-				oidc: false,
-			}),
-		);
-		vi.stubGlobal("fetch", fetchMock);
-
-		const screen = await render(<AuthProvidersTable />);
-
-		await vi.waitFor(() => {
-			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
-		});
-		await expect
-			.element(screen.getByText("Google").first())
-			.toBeInTheDocument();
-		await expect
-			.element(screen.getByText("GitHub").first())
-			.toBeInTheDocument();
-		await expect
-			.element(screen.getByText("Discord").first())
-			.toBeInTheDocument();
-		await vi.waitFor(() => {
-			expect(
-				[...document.querySelectorAll("span")].filter(
-					(el) => el.textContent?.trim() === "Configured",
-				).length,
-			).toBe(2);
-		});
-		expect(
-			[...document.querySelectorAll("span")].filter(
-				(el) => el.textContent?.trim() === "Not configured",
-			).length,
-		).toBe(2);
-	});
-
-	it("uses a custom OIDC provider label when the environment provides one", async () => {
-		vi.stubEnv("VITE_AUTH_OIDC_PROVIDER_NAME", "Acme SSO");
-
-		const fetchMock = vi.fn().mockResolvedValue(
-			Response.json({
-				google: false,
-				github: false,
-				discord: false,
-				oidc: true,
-			}),
-		);
-		vi.stubGlobal("fetch", fetchMock);
-
-		const screen = await render(<AuthProvidersTable />);
-
-		await vi.waitFor(() => {
-			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
-		});
-		await expect.element(screen.getByText("Acme SSO")).toBeInTheDocument();
-		await expect
-			.element(
-				screen.getByText(
-					"Requires: AUTH_OIDC_CLIENT_ID, AUTH_OIDC_CLIENT_SECRET, AUTH_OIDC_ISSUER",
-				),
-			)
-			.toBeInTheDocument();
-		await expect
-			.element(screen.getByText("Configured").first())
-			.toBeInTheDocument();
-
-		vi.unstubAllEnvs();
-	});
-
-	it("keeps auth providers visible when the status request fails", async () => {
-		const fetchMock = vi.fn().mockRejectedValueOnce(new Error("network down"));
-		vi.stubGlobal("fetch", fetchMock);
-
-		const screen = await render(<AuthProvidersTable />);
-
-		await vi.waitFor(() => {
-			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
-		});
-
-		await expect
-			.element(screen.getByText("Google").first())
-			.toBeInTheDocument();
-		expect(
-			[...document.querySelectorAll("span")].filter(
-				(el) => el.textContent?.trim() === "Not configured",
-			).length,
-		).toBe(4);
-	});
-
-	it("ignores provider status updates after the component unmounts", async () => {
-		let resolveResponse: (response: Response) => void = () => undefined;
-		const fetchMock = vi.fn(
-			() =>
-				new Promise<Response>((resolve) => {
-					resolveResponse = resolve;
-				}),
-		);
-		vi.stubGlobal("fetch", fetchMock);
-
-		const { unmount } = await render(<AuthProvidersTable />);
-		unmount();
-
-		resolveResponse(
-			Response.json({
-				google: true,
-				github: true,
-				discord: true,
-				oidc: true,
-			}),
-		);
-
-		await vi.waitFor(() => {
-			expect(fetchMock).toHaveBeenCalledWith("/api/auth/providers");
-		});
 	});
 
 	it("shows empty lookup results when the search returns no items", async () => {
