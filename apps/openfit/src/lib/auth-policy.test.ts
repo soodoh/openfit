@@ -16,6 +16,7 @@ vi.mock("@/db", () => ({
 
 import {
 	canRequestOidcAccountCreation,
+	canRequestSocialAccountCreation,
 	getAuthProviderById,
 	isEmailPasswordRegistrationAllowed,
 	isEmailPasswordRegistrationAllowedForBootstrapState,
@@ -165,6 +166,54 @@ describe("auth-policy", () => {
 		await expect(
 			canRequestOidcAccountCreation(baseConfig, "missing"),
 		).resolves.toBe(false);
+		expect(mocks.findFirst).not.toHaveBeenCalled();
+	});
+
+	it("allows social account creation when global registration is open", async () => {
+		await expect(canRequestSocialAccountCreation(baseConfig)).resolves.toBe(
+			true,
+		);
+		expect(mocks.findFirst).not.toHaveBeenCalled();
+	});
+
+	it("allows social account creation for first-user bootstrap when global registration is disabled", async () => {
+		mocks.findFirst.mockResolvedValueOnce(undefined);
+
+		await expect(
+			canRequestSocialAccountCreation({
+				...baseConfig,
+				registration: {
+					disableAll: true,
+					disableEmailPassword: false,
+				},
+			}),
+		).resolves.toBe(true);
+	});
+
+	it("blocks social account creation after bootstrap when global registration is disabled", async () => {
+		mocks.findFirst.mockResolvedValueOnce({ id: "existing-user" });
+
+		await expect(
+			canRequestSocialAccountCreation({
+				...baseConfig,
+				registration: {
+					disableAll: true,
+					disableEmailPassword: false,
+				},
+			}),
+		).resolves.toBe(false);
+	});
+
+	it("does not block social account creation when only email registration is disabled", async () => {
+		await expect(
+			canRequestSocialAccountCreation({
+				...baseConfig,
+				registration: {
+					disableAll: false,
+					disableEmailPassword: true,
+				},
+			}),
+		).resolves.toBe(true);
 		expect(mocks.findFirst).not.toHaveBeenCalled();
 	});
 

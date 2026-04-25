@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
 	getAuthConfig: vi.fn(),
 	isEmailPasswordRegistrationAllowed: vi.fn(),
 	canRequestOidcAccountCreation: vi.fn(),
+	canRequestSocialAccountCreation: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -20,6 +21,7 @@ vi.mock("@/lib/auth-config", () => ({
 vi.mock("@/lib/auth-policy", () => ({
 	isEmailPasswordRegistrationAllowed: mocks.isEmailPasswordRegistrationAllowed,
 	canRequestOidcAccountCreation: mocks.canRequestOidcAccountCreation,
+	canRequestSocialAccountCreation: mocks.canRequestSocialAccountCreation,
 }));
 
 import AuthRoute from "@/routes/api/auth.$";
@@ -47,6 +49,7 @@ describe("api/auth/$", () => {
 		mocks.getAuthConfig.mockReturnValue(config);
 		mocks.isEmailPasswordRegistrationAllowed.mockResolvedValue(true);
 		mocks.canRequestOidcAccountCreation.mockResolvedValue(true);
+		mocks.canRequestSocialAccountCreation.mockResolvedValue(true);
 		mocks.authHandler.mockResolvedValue(
 			new Response("auth ok", { status: 207 }),
 		);
@@ -200,6 +203,68 @@ describe("api/auth/$", () => {
 		const response = await handlers.POST({ request });
 
 		expect(mocks.canRequestOidcAccountCreation).not.toHaveBeenCalled();
+		expect(mocks.authHandler).toHaveBeenCalledWith(request);
+		expect(response.status).toBe(207);
+	});
+
+	it("blocks social requestSignUp when account creation policy disallows it", async () => {
+		mocks.canRequestSocialAccountCreation.mockResolvedValueOnce(false);
+		const request = new Request("http://localhost/api/auth/sign-in/social", {
+			method: "POST",
+			body: JSON.stringify({
+				provider: "google",
+				callbackURL: "/",
+				requestSignUp: true,
+			}),
+			headers: {
+				"content-type": "application/json",
+			},
+		});
+
+		const response = await handlers.POST({ request });
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({
+			error: "Account creation is disabled for this provider",
+		});
+		expect(mocks.authHandler).not.toHaveBeenCalled();
+	});
+
+	it("delegates social requestSignUp when account creation policy allows it", async () => {
+		const request = new Request("http://localhost/api/auth/sign-in/social", {
+			method: "POST",
+			body: JSON.stringify({
+				provider: "google",
+				callbackURL: "/",
+				requestSignUp: true,
+			}),
+			headers: {
+				"content-type": "application/json",
+			},
+		});
+
+		const response = await handlers.POST({ request });
+
+		expect(mocks.canRequestSocialAccountCreation).toHaveBeenCalledWith(config);
+		expect(mocks.authHandler).toHaveBeenCalledWith(request);
+		expect(response.status).toBe(207);
+	});
+
+	it("delegates social sign-in without requestSignUp without checking account creation policy", async () => {
+		const request = new Request("http://localhost/api/auth/sign-in/social", {
+			method: "POST",
+			body: JSON.stringify({
+				provider: "google",
+				callbackURL: "/",
+			}),
+			headers: {
+				"content-type": "application/json",
+			},
+		});
+
+		const response = await handlers.POST({ request });
+
+		expect(mocks.canRequestSocialAccountCreation).not.toHaveBeenCalled();
 		expect(mocks.authHandler).toHaveBeenCalledWith(request);
 		expect(response.status).toBe(207);
 	});

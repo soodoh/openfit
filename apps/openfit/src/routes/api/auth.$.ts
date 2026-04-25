@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getAuthConfig } from "@/lib/auth-config";
 import {
 	canRequestOidcAccountCreation,
+	canRequestSocialAccountCreation,
 	isEmailPasswordRegistrationAllowed,
 } from "@/lib/auth-policy";
 
@@ -17,6 +18,13 @@ function isOidcSignInRequest(request: Request): boolean {
 	return (
 		request.method === "POST" &&
 		new URL(request.url).pathname.endsWith("/api/auth/sign-in/oauth2")
+	);
+}
+
+function isSocialSignInRequest(request: Request): boolean {
+	return (
+		request.method === "POST" &&
+		new URL(request.url).pathname.endsWith("/api/auth/sign-in/social")
 	);
 }
 
@@ -56,6 +64,19 @@ async function enforceRegistrationPolicy(
 			if (!allowed) {
 				return Response.json(
 					{ error: "Account creation is disabled for this OIDC provider" },
+					{ status: 403 },
+				);
+			}
+		}
+	}
+
+	if (isSocialSignInRequest(request)) {
+		const body = await readJsonBody(request);
+		if (body.requestSignUp === true) {
+			const allowed = await canRequestSocialAccountCreation(authConfig);
+			if (!allowed) {
+				return Response.json(
+					{ error: "Account creation is disabled for this provider" },
 					{ status: 403 },
 				);
 			}

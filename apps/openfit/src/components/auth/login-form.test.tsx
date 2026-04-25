@@ -236,6 +236,38 @@ describe("LoginForm redirects", () => {
 		});
 	});
 
+	it("passes requestSignUp for social providers during first-user bootstrap", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({
+				emailPassword: {
+					signInEnabled: true,
+					registrationEnabled: true,
+				},
+				bootstrapAvailable: true,
+				providers: [
+					{
+						id: "google",
+						name: "Google",
+						type: "social",
+					},
+				],
+			}),
+		});
+
+		const screen = await render(<LoginForm />);
+
+		await userEvent.click(
+			screen.getByRole("button", { name: "Continue with Google" }),
+		);
+
+		expect(mockSignInSocial).toHaveBeenCalledWith({
+			provider: "google",
+			callbackURL: "/",
+			requestSignUp: true,
+		});
+	});
+
 	it("shows a social OAuth error when the provider flow throws", async () => {
 		mockFetch.mockResolvedValueOnce({
 			ok: true,

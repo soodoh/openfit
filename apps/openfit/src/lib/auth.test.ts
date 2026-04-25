@@ -107,7 +107,11 @@ async function loadAuthModule(options?: {
 				enabled: true,
 			},
 			socialProviders: {
-				google: { clientId: "google", clientSecret: "secret" },
+				google: {
+					clientId: "google",
+					clientSecret: "secret",
+					disableImplicitSignUp: true,
+				},
 			},
 			oidcProviders: [],
 		},
@@ -207,7 +211,11 @@ describe("auth", () => {
 		expect(capturedConfig.baseURL).toBe("https://auth.example.com");
 		expect(capturedConfig.emailAndPassword.enabled).toBe(true);
 		expect(capturedConfig.socialProviders).toEqual({
-			google: { clientId: "google", clientSecret: "secret" },
+			google: {
+				clientId: "google",
+				clientSecret: "secret",
+				disableImplicitSignUp: true,
+			},
 		});
 		expect(capturedConfig.plugins).toEqual([]);
 		expect(getAuthConfigMock).toHaveBeenCalledWith(process.env);

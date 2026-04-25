@@ -209,6 +209,9 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 				: signIn.social({
 						provider: provider.id as "google" | "github" | "discord",
 						callbackURL: "/",
+						...(providerStatus.bootstrapAvailable
+							? { requestSignUp: true }
+							: {}),
 					}));
 		} catch (error) {
 			const message =

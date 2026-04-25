@@ -3,6 +3,7 @@ type EnvSource = Record<string, string | undefined>;
 export type SocialProviderConfig = {
 	clientId: string;
 	clientSecret: string;
+	disableImplicitSignUp?: boolean;
 };
 
 export type OidcProviderConfig = {
@@ -100,6 +101,10 @@ function getOidcScopes(value: string | undefined): string[] {
 	return scopes?.length ? scopes : [...DEFAULT_OIDC_SCOPES];
 }
 
+function normalizeIssuerUrl(issuer: string): string {
+	return issuer.replace(/\/+$/, "");
+}
+
 function getIndexedOidcProviderConfig(
 	env: EnvSource,
 	index: number,
@@ -116,14 +121,15 @@ function getIndexedOidcProviderConfig(
 
 	const displayName =
 		getRequiredEnvValue(env[`${prefix}_PROVIDER_NAME`]) ?? providerId;
+	const normalizedIssuer = normalizeIssuerUrl(issuer);
 
 	return {
 		providerId,
 		displayName,
 		clientId,
 		clientSecret,
-		issuer,
-		discoveryUrl: `${issuer}/.well-known/openid-configuration`,
+		issuer: normalizedIssuer,
+		discoveryUrl: `${normalizedIssuer}/.well-known/openid-configuration`,
 		scopes: getOidcScopes(env[`${prefix}_SCOPES`]),
 		pkce: true,
 		allowAccountCreation: getBooleanEnvValue(
@@ -133,9 +139,12 @@ function getIndexedOidcProviderConfig(
 }
 
 export function getAuthConfig(env: EnvSource): AuthConfig {
+	const disableRegistration = getBooleanEnvValue(env.DISABLE_REGISTRATION);
+	const socialProviders = getSocialProviderConfigs(env);
+
 	return {
 		registration: {
-			disableAll: getBooleanEnvValue(env.DISABLE_REGISTRATION),
+			disableAll: disableRegistration,
 			disableEmailPassword: getBooleanEnvValue(
 				env.DISABLE_EMAIL_PASSWORD_REGISTRATION,
 			),
@@ -143,33 +152,16 @@ export function getAuthConfig(env: EnvSource): AuthConfig {
 		emailPassword: {
 			enabled: true,
 		},
-		socialProviders: getSocialProviderConfigs(env),
+		socialProviders: disableRegistration
+			? Object.fromEntries(
+					Object.entries(socialProviders).map(([provider, config]) => [
+						provider,
+						{ ...config, disableImplicitSignUp: true },
+					]),
+				)
+			: socialProviders,
 		oidcProviders: getOidcProviderIndexes(env)
 			.map((index) => getIndexedOidcProviderConfig(env, index))
 			.filter((provider): provider is OidcProviderConfig => provider !== null),
-	};
-}
-
-export function getOidcProviderConfig(
-	env: EnvSource,
-): OidcProviderConfig | null {
-	const clientId = getRequiredEnvValue(env.AUTH_OIDC_CLIENT_ID);
-	const clientSecret = getRequiredEnvValue(env.AUTH_OIDC_CLIENT_SECRET);
-	const issuer = getRequiredEnvValue(env.AUTH_OIDC_ISSUER);
-
-	if (!clientId || !clientSecret || !issuer) {
-		return null;
-	}
-
-	return {
-		providerId: "oidc",
-		displayName: "oidc",
-		clientId,
-		clientSecret,
-		issuer,
-		discoveryUrl: `${issuer}/.well-known/openid-configuration`,
-		scopes: [...DEFAULT_OIDC_SCOPES],
-		pkce: true,
-		allowAccountCreation: false,
 	};
 }

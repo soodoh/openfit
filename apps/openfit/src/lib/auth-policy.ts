@@ -60,3 +60,13 @@ export async function canRequestOidcAccountCreation(
 
 	return isFirstUserBootstrapAvailable();
 }
+
+export async function canRequestSocialAccountCreation(
+	config: AuthConfig,
+): Promise<boolean> {
+	if (!config.registration.disableAll) {
+		return true;
+	}
+
+	return isFirstUserBootstrapAvailable();
+}

@@ -69,7 +69,7 @@ OIDC_1_PROVIDER_ID=authentik
 OIDC_1_PROVIDER_NAME=Authentik
 OIDC_1_CLIENT_ID=replace-with-client-id
 OIDC_1_CLIENT_SECRET=replace-with-client-secret
-OIDC_1_ISSUER=https://auth.example.com/application/o/openfit/
+OIDC_1_ISSUER=https://auth.example.com/application/o/openfit
 OIDC_1_ALLOW_ACCOUNT_CREATION=true
 ```
 

@@ -77,6 +77,35 @@ describe("getAuthConfig", () => {
 		});
 	});
 
+	it("disables implicit social sign-up when global registration is disabled", () => {
+		const config = getAuthConfig({
+			DISABLE_REGISTRATION: "true",
+			AUTH_GOOGLE_ID: "id",
+			AUTH_GOOGLE_SECRET: "secret",
+		});
+
+		expect(config.socialProviders.google).toEqual({
+			clientId: "id",
+			clientSecret: "secret",
+			disableImplicitSignUp: true,
+		});
+	});
+
+	it("does not add implicit social sign-up flags when global registration is open", () => {
+		const config = getAuthConfig({
+			AUTH_GOOGLE_ID: "id",
+			AUTH_GOOGLE_SECRET: "secret",
+		});
+
+		expect(config.socialProviders.google).toEqual({
+			clientId: "id",
+			clientSecret: "secret",
+		});
+		expect(config.socialProviders.google).not.toHaveProperty(
+			"disableImplicitSignUp",
+		);
+	});
+
 	it("parses multiple indexed OIDC providers", () => {
 		const config = getAuthConfig({
 			OIDC_1_PROVIDER_ID: "authentik",
@@ -118,6 +147,26 @@ describe("getAuthConfig", () => {
 				allowAccountCreation: false,
 			},
 		]);
+	});
+
+	it("normalizes trailing slashes from OIDC issuer URLs", () => {
+		const config = getAuthConfig({
+			OIDC_1_PROVIDER_ID: "authentik",
+			OIDC_1_CLIENT_ID: "client",
+			OIDC_1_CLIENT_SECRET: "secret",
+			OIDC_1_ISSUER: " https://auth.example.com/application/o/openfit/ ",
+		});
+
+		expect(config.oidcProviders[0]).toEqual(
+			expect.objectContaining({
+				issuer: "https://auth.example.com/application/o/openfit",
+				discoveryUrl:
+					"https://auth.example.com/application/o/openfit/.well-known/openid-configuration",
+			}),
+		);
+		expect(config.oidcProviders[0]?.discoveryUrl).not.toContain(
+			"//.well-known",
+		);
 	});
 
 	it("fails partial OIDC providers closed", () => {
