@@ -101,6 +101,7 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 	);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [authError, setAuthError] = useState<string | undefined>(undefined);
 	const [emailError, setEmailError] = useState<string[]>([]);
 	const [passwordError, setPasswordError] = useState<string[]>([]);
 	const [providerStatus, setProviderStatus] = useState<AuthProviderStatus>(
@@ -145,6 +146,7 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 
 	const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault();
+		setAuthError(undefined);
 		setEmailError([]);
 		setPasswordError([]);
 		const validation = SignUpSchema.safeParse({ email, password });
@@ -188,12 +190,13 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 		} catch (error) {
 			const message =
 				error instanceof Error ? error.message : "Authentication failed";
-			setPasswordError([message]);
+			setAuthError(message);
 			setLoading(false);
 		}
 	};
 	const handleOAuthSignIn = async (provider: AuthProvider) => {
 		setOauthLoading(provider.id);
+		setAuthError(undefined);
 		try {
 			await (provider.type === "oidc"
 				? signIn.oauth2({
@@ -210,7 +213,7 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 		} catch (error) {
 			const message =
 				error instanceof Error ? error.message : "OAuth sign-in failed";
-			setPasswordError([message]);
+			setAuthError(message);
 			setOauthLoading(undefined);
 		}
 	};
@@ -269,6 +272,10 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 							</div>
 						)}
 					</>
+				)}
+
+				{authError && (
+					<p className="text-sm text-destructive text-center">{authError}</p>
 				)}
 
 				{register && !canRegisterWithEmail ? (

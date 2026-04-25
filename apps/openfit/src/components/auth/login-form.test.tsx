@@ -1,6 +1,6 @@
 import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import { LoginForm } from "./login-form";
 
@@ -12,8 +12,6 @@ const mockSignUpEmail = vi.fn();
 const mockUseAuth = vi.fn();
 const mockGetSession = vi.fn();
 const mockFetch = vi.fn();
-
-globalThis.fetch = mockFetch;
 
 vi.mock("@tanstack/react-router", () => ({
 	Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => (
@@ -43,6 +41,7 @@ vi.mock("@/lib/auth-client", () => ({
 describe("LoginForm redirects", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.stubGlobal("fetch", mockFetch);
 		mockFetch.mockResolvedValue({
 			ok: true,
 			json: async () => ({
@@ -62,6 +61,10 @@ describe("LoginForm redirects", () => {
 		mockGetSession.mockResolvedValue({
 			data: { session: { id: "session-1" } },
 		});
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
 	});
 
 	it("redirects to home when already authenticated", async () => {
@@ -457,6 +460,38 @@ describe("LoginForm redirects", () => {
 			.toBeInTheDocument();
 		await expect
 			.element(screen.getByText("Email/password registration is disabled"))
+			.toBeInTheDocument();
+	});
+
+	it("shows OIDC errors when email registration controls are hidden", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({
+				emailPassword: {
+					signInEnabled: true,
+					registrationEnabled: false,
+				},
+				bootstrapAvailable: false,
+				providers: [
+					{
+						id: "authentik",
+						name: "Authentik",
+						type: "oidc",
+						allowAccountCreation: true,
+					},
+				],
+			}),
+		});
+		mockSignInOauth2.mockRejectedValueOnce(new Error("OIDC unavailable"));
+
+		const screen = await render(<LoginForm register />);
+
+		await userEvent.click(
+			screen.getByRole("button", { name: "Continue with Authentik" }),
+		);
+
+		await expect
+			.element(screen.getByText("OIDC unavailable"))
 			.toBeInTheDocument();
 	});
 });
