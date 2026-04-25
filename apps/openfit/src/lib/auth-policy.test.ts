@@ -18,6 +18,7 @@ import {
 	canRequestOidcAccountCreation,
 	getAuthProviderById,
 	isEmailPasswordRegistrationAllowed,
+	isEmailPasswordRegistrationAllowedForBootstrapState,
 	isFirstUserBootstrapAvailable,
 } from "./auth-policy";
 
@@ -80,6 +81,26 @@ describe("auth-policy", () => {
 				},
 			}),
 		).resolves.toBe(true);
+	});
+
+	it("derives email registration from a known bootstrap state", () => {
+		const closedConfig = {
+			...baseConfig,
+			registration: {
+				disableAll: true,
+				disableEmailPassword: true,
+			},
+		};
+
+		expect(
+			isEmailPasswordRegistrationAllowedForBootstrapState(closedConfig, true),
+		).toBe(true);
+		expect(
+			isEmailPasswordRegistrationAllowedForBootstrapState(closedConfig, false),
+		).toBe(false);
+		expect(
+			isEmailPasswordRegistrationAllowedForBootstrapState(baseConfig, false),
+		).toBe(true);
 	});
 
 	it("allows email registration when gates are open without checking bootstrap", async () => {

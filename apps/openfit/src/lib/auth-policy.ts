@@ -6,6 +6,20 @@ export async function isFirstUserBootstrapAvailable(): Promise<boolean> {
 	return !existingUser;
 }
 
+export function isEmailPasswordRegistrationAllowedForBootstrapState(
+	config: AuthConfig,
+	bootstrapAvailable: boolean,
+): boolean {
+	if (
+		!config.registration.disableAll &&
+		!config.registration.disableEmailPassword
+	) {
+		return true;
+	}
+
+	return bootstrapAvailable;
+}
+
 export async function isEmailPasswordRegistrationAllowed(
 	config: AuthConfig,
 ): Promise<boolean> {
@@ -16,7 +30,10 @@ export async function isEmailPasswordRegistrationAllowed(
 		return true;
 	}
 
-	return isFirstUserBootstrapAvailable();
+	return isEmailPasswordRegistrationAllowedForBootstrapState(
+		config,
+		await isFirstUserBootstrapAvailable(),
+	);
 }
 
 export function getAuthProviderById(

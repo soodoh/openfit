@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { getAuthConfig } from "@/lib/auth-config";
 import {
-	isEmailPasswordRegistrationAllowed,
+	isEmailPasswordRegistrationAllowedForBootstrapState,
 	isFirstUserBootstrapAvailable,
 } from "@/lib/auth-policy";
 
@@ -17,10 +17,12 @@ export const Route = createFileRoute("/api/auth/providers")({
 		handlers: {
 			GET: async () => {
 				const authConfig = getAuthConfig(process.env);
-				const [registrationEnabled, bootstrapAvailable] = await Promise.all([
-					isEmailPasswordRegistrationAllowed(authConfig),
-					isFirstUserBootstrapAvailable(),
-				]);
+				const bootstrapAvailable = await isFirstUserBootstrapAvailable();
+				const registrationEnabled =
+					isEmailPasswordRegistrationAllowedForBootstrapState(
+						authConfig,
+						bootstrapAvailable,
+					);
 
 				return Response.json({
 					emailPassword: {
