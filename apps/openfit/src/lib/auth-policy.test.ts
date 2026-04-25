@@ -126,6 +126,13 @@ describe("auth-policy", () => {
 		).resolves.toBe(false);
 	});
 
+	it("blocks OIDC account creation when provider is missing", async () => {
+		await expect(
+			canRequestOidcAccountCreation(baseConfig, "missing"),
+		).resolves.toBe(false);
+		expect(mocks.findFirst).not.toHaveBeenCalled();
+	});
+
 	it("finds configured OIDC providers by id", () => {
 		expect(getAuthProviderById(baseConfig, "authentik")).toEqual(
 			baseConfig.oidcProviders[0],
