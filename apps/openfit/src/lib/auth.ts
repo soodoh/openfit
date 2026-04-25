@@ -1,21 +1,18 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { genericOAuth } from "better-auth/plugins";
+import { ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
-import {
-	getOidcProviderConfig,
-	getSocialProviderConfigs,
-} from "@/lib/auth-config";
+import { getAuthConfig } from "@/lib/auth-config";
 
 const authBaseURL =
 	process.env.BETTER_AUTH_BASE_URL ??
 	process.env.VITE_APP_URL ??
 	(process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000");
 
-const socialProviders = getSocialProviderConfigs(process.env);
-const oidcProviderConfig = getOidcProviderConfig(process.env);
+const authConfig = getAuthConfig(process.env);
 
 export const auth = betterAuth({
 	...(authBaseURL ? { baseURL: authBaseURL } : {}),
@@ -29,21 +26,26 @@ export const auth = betterAuth({
 		},
 	}),
 	emailAndPassword: {
-		enabled: true,
+		enabled: authConfig.emailPassword.enabled,
 	},
-	socialProviders,
-	plugins: oidcProviderConfig
-		? [
-				genericOAuth({
-					config: [
-						{
-							providerId: "oidc",
-							...oidcProviderConfig,
-						},
-					],
-				}),
-			]
-		: [],
+	socialProviders: authConfig.socialProviders,
+	plugins:
+		authConfig.oidcProviders.length > 0
+			? [
+					genericOAuth({
+						config: authConfig.oidcProviders.map((provider) => ({
+							providerId: provider.providerId,
+							clientId: provider.clientId,
+							clientSecret: provider.clientSecret,
+							discoveryUrl: provider.discoveryUrl,
+							issuer: provider.issuer,
+							scopes: provider.scopes,
+							pkce: provider.pkce,
+							disableImplicitSignUp: !provider.allowAccountCreation,
+						})),
+					}),
+				]
+			: [],
 	user: {
 		additionalFields: {},
 	},
@@ -72,6 +74,9 @@ export const auth = betterAuth({
 		user: {
 			create: {
 				after: async (user) => {
+					const otherUser = await db.query.users.findFirst({
+						where: ne(schema.users.id, user.id),
+					});
 					const repUnits = db
 						.select()
 						.from(schema.repetitionUnits)
@@ -87,7 +92,7 @@ export const auth = betterAuth({
 						.values({
 							id: nanoid(),
 							userId: user.id,
-							role: "USER",
+							role: otherUser ? "USER" : "ADMIN",
 							defaultRepetitionUnitId: repUnits[0]?.id ?? null,
 							defaultWeightUnitId: weightUnits[0]?.id ?? null,
 							theme: "system",

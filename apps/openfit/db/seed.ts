@@ -401,6 +401,7 @@ async function seedAdminUser() {
 		return;
 	}
 	// Upgrade the auto-created profile to ADMIN
+	// Ensure the seeded admin account is ADMIN even when other users already exist.
 	await db
 		.update(schema.userProfiles)
 		.set({ role: "ADMIN" })

@@ -9,8 +9,7 @@ const originalEnv = {
 const betterAuthMock = vi.fn();
 const drizzleAdapterMock = vi.fn();
 const genericOAuthMock = vi.fn();
-const getSocialProviderConfigsMock = vi.fn();
-const getOidcProviderConfigMock = vi.fn();
+const getAuthConfigMock = vi.fn();
 const nanoidMock = vi.fn();
 const selectMock = vi.fn();
 const fromMock = vi.fn();
@@ -19,9 +18,11 @@ const allMock = vi.fn();
 const insertMock = vi.fn();
 const insertValuesMock = vi.fn();
 const insertRunMock = vi.fn();
+const findFirstMock = vi.fn();
+const neMock = vi.fn();
 
 const schemaMock = {
-	users: "users",
+	users: { id: "users.id", email: "users.email" },
 	sessions: "sessions",
 	accounts: "accounts",
 	verifications: "verifications",
@@ -32,6 +33,10 @@ const schemaMock = {
 
 type CapturedAuthConfig = {
 	baseURL?: string;
+	emailAndPassword: {
+		enabled: boolean;
+	};
+	socialProviders: Record<string, unknown>;
 	plugins: unknown[];
 	callbacks: {
 		session: (args: {
@@ -55,9 +60,8 @@ let weightUnitsResult: Array<{ id: string }>;
 async function loadAuthModule(options?: {
 	betterAuthBaseUrl?: string;
 	nodeEnv?: string;
-	oidcProviderConfig?: Record<string, unknown> | null;
+	authConfig?: Record<string, unknown>;
 	repetitionUnits?: Array<{ id: string }>;
-	socialProviders?: Record<string, unknown>;
 	viteAppUrl?: string;
 	weightUnits?: Array<{ id: string }>;
 }) {
@@ -93,15 +97,23 @@ async function loadAuthModule(options?: {
 		type: "generic-oauth",
 		plugin,
 	}));
-	getSocialProviderConfigsMock.mockReturnValue(
-		options?.socialProviders ?? {
-			google: { clientId: "google", clientSecret: "secret" },
+	getAuthConfigMock.mockReturnValue(
+		options?.authConfig ?? {
+			registration: {
+				disableAll: false,
+				disableEmailPassword: false,
+			},
+			emailPassword: {
+				enabled: true,
+			},
+			socialProviders: {
+				google: { clientId: "google", clientSecret: "secret" },
+			},
+			oidcProviders: [],
 		},
 	);
-	getOidcProviderConfigMock.mockReturnValue(
-		options?.oidcProviderConfig ?? null,
-	);
 	nanoidMock.mockReturnValue("profile_123");
+	neMock.mockReturnValue("not-created-user-condition");
 
 	selectMock.mockReturnValue({ from: fromMock });
 	fromMock.mockImplementation((table) => {
@@ -130,11 +142,19 @@ async function loadAuthModule(options?: {
 	vi.doMock("better-auth/plugins", () => ({
 		genericOAuth: genericOAuthMock,
 	}));
+	vi.doMock("drizzle-orm", () => ({
+		ne: neMock,
+	}));
 	vi.doMock("nanoid", () => ({
 		nanoid: nanoidMock,
 	}));
 	vi.doMock("@/db", () => ({
 		db: {
+			query: {
+				users: {
+					findFirst: findFirstMock,
+				},
+			},
 			select: selectMock,
 			insert: insertMock,
 		},
@@ -143,8 +163,7 @@ async function loadAuthModule(options?: {
 		schema: schemaMock,
 	}));
 	vi.doMock("@/lib/auth-config", () => ({
-		getOidcProviderConfig: getOidcProviderConfigMock,
-		getSocialProviderConfigs: getSocialProviderConfigsMock,
+		getAuthConfig: getAuthConfigMock,
 	}));
 
 	return import("./auth");
@@ -186,8 +205,12 @@ describe("auth", () => {
 
 		expect(betterAuthMock).toHaveBeenCalledTimes(1);
 		expect(capturedConfig.baseURL).toBe("https://auth.example.com");
+		expect(capturedConfig.emailAndPassword.enabled).toBe(true);
+		expect(capturedConfig.socialProviders).toEqual({
+			google: { clientId: "google", clientSecret: "secret" },
+		});
 		expect(capturedConfig.plugins).toEqual([]);
-		expect(getSocialProviderConfigsMock).toHaveBeenCalledWith(process.env);
+		expect(getAuthConfigMock).toHaveBeenCalledWith(process.env);
 		expect(drizzleAdapterMock).toHaveBeenCalledWith(
 			expect.objectContaining({
 				select: selectMock,
@@ -211,66 +234,120 @@ describe("auth", () => {
 		});
 	});
 
-	it("falls back to the local dev base URL when no explicit URL is configured", async () => {
+	it("falls back to the local dev base URL and skips OIDC plugins when no providers are configured", async () => {
 		await loadAuthModule({
 			nodeEnv: "development",
-			socialProviders: {},
+			authConfig: {
+				registration: {
+					disableAll: false,
+					disableEmailPassword: false,
+				},
+				emailPassword: {
+					enabled: true,
+				},
+				socialProviders: {},
+				oidcProviders: [],
+			},
 		});
 
 		expect(capturedConfig.baseURL).toBe("http://localhost:3000");
 		expect(capturedConfig.plugins).toEqual([]);
+		expect(capturedConfig.socialProviders).toEqual({});
 	});
 
-	it("omits the base URL in production, configures OIDC, and seeds a user profile after creation", async () => {
+	it("configures all indexed OIDC providers for generic OAuth", async () => {
 		await loadAuthModule({
 			nodeEnv: "production",
-			oidcProviderConfig: {
-				clientId: "oidc-client",
-				clientSecret: "oidc-secret",
-				discoveryUrl:
-					"https://issuer.example.com/.well-known/openid-configuration",
-				scopes: ["openid", "email", "profile"],
-				pkce: true,
+			authConfig: {
+				registration: {
+					disableAll: true,
+					disableEmailPassword: false,
+				},
+				emailPassword: {
+					enabled: true,
+				},
+				socialProviders: {},
+				oidcProviders: [
+					{
+						providerId: "authentik",
+						displayName: "Authentik",
+						clientId: "oidc-client",
+						clientSecret: "oidc-secret",
+						issuer: "https://issuer.example.com",
+						discoveryUrl:
+							"https://issuer.example.com/.well-known/openid-configuration",
+						scopes: ["openid", "email", "profile"],
+						pkce: true,
+						allowAccountCreation: false,
+					},
+					{
+						providerId: "authelia",
+						displayName: "Authelia",
+						clientId: "authelia-client",
+						clientSecret: "authelia-secret",
+						issuer: "https://sso.example.com",
+						discoveryUrl:
+							"https://sso.example.com/.well-known/openid-configuration",
+						scopes: ["openid", "email"],
+						pkce: true,
+						allowAccountCreation: true,
+					},
+				],
 			},
-			repetitionUnits: [],
-			weightUnits: [],
-			socialProviders: {},
 		});
 
-		expect(capturedConfig.baseURL).toBeUndefined();
 		expect(genericOAuthMock).toHaveBeenCalledWith({
 			config: [
 				expect.objectContaining({
-					providerId: "oidc",
+					providerId: "authentik",
 					clientId: "oidc-client",
+					disableImplicitSignUp: true,
+				}),
+				expect.objectContaining({
+					providerId: "authelia",
+					clientId: "authelia-client",
+					disableImplicitSignUp: false,
 				}),
 			],
 		});
-		expect(capturedConfig.plugins).toEqual([
-			{
-				type: "generic-oauth",
-				plugin: {
-					config: [
-						expect.objectContaining({
-							providerId: "oidc",
-						}),
-					],
+	});
+
+	it("creates the first user profile as admin and later profiles as users", async () => {
+		findFirstMock.mockResolvedValueOnce(undefined);
+		await loadAuthModule({
+			nodeEnv: "development",
+			authConfig: {
+				registration: {
+					disableAll: false,
+					disableEmailPassword: false,
 				},
+				emailPassword: {
+					enabled: true,
+				},
+				socialProviders: {},
+				oidcProviders: [],
 			},
-		]);
-
-		await capturedConfig.databaseHooks.user.create.after({ id: "user_123" });
-
-		expect(selectMock).toHaveBeenCalledTimes(2);
-		expect(insertMock).toHaveBeenCalledWith(schemaMock.userProfiles);
-		expect(insertValuesMock).toHaveBeenCalledWith({
-			id: "profile_123",
-			userId: "user_123",
-			role: "USER",
-			defaultRepetitionUnitId: null,
-			defaultWeightUnitId: null,
-			theme: "system",
 		});
-		expect(insertRunMock).toHaveBeenCalledTimes(1);
+
+		await capturedConfig.databaseHooks.user.create.after({ id: "first_user" });
+
+		expect(neMock).toHaveBeenCalledWith(schemaMock.users.id, "first_user");
+		expect(insertValuesMock).toHaveBeenLastCalledWith(
+			expect.objectContaining({
+				userId: "first_user",
+				role: "ADMIN",
+			}),
+		);
+
+		findFirstMock.mockResolvedValueOnce({ id: "first_user" });
+		await capturedConfig.databaseHooks.user.create.after({ id: "second_user" });
+
+		expect(insertValuesMock).toHaveBeenLastCalledWith(
+			expect.objectContaining({
+				userId: "second_user",
+				role: "USER",
+			}),
+		);
+		expect(insertRunMock).toHaveBeenCalledTimes(2);
 	});
 });
