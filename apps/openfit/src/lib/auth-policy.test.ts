@@ -58,7 +58,7 @@ const baseConfig = {
 
 describe("auth-policy", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 	});
 
 	it("reports bootstrap availability when no user exists", async () => {
@@ -80,6 +80,13 @@ describe("auth-policy", () => {
 				},
 			}),
 		).resolves.toBe(true);
+	});
+
+	it("allows email registration when gates are open without checking bootstrap", async () => {
+		await expect(isEmailPasswordRegistrationAllowed(baseConfig)).resolves.toBe(
+			true,
+		);
+		expect(mocks.findFirst).not.toHaveBeenCalled();
 	});
 
 	it("blocks email registration after bootstrap when either email gate is disabled", async () => {
@@ -116,6 +123,13 @@ describe("auth-policy", () => {
 		await expect(
 			canRequestOidcAccountCreation(baseConfig, "authelia"),
 		).resolves.toBe(true);
+	});
+
+	it("allows OIDC account creation for provider opt-in without checking bootstrap", async () => {
+		await expect(
+			canRequestOidcAccountCreation(baseConfig, "authelia"),
+		).resolves.toBe(true);
+		expect(mocks.findFirst).not.toHaveBeenCalled();
 	});
 
 	it("blocks OIDC account creation when provider defaults closed", async () => {

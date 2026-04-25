@@ -9,13 +9,14 @@ export async function isFirstUserBootstrapAvailable(): Promise<boolean> {
 export async function isEmailPasswordRegistrationAllowed(
 	config: AuthConfig,
 ): Promise<boolean> {
-	if (await isFirstUserBootstrapAvailable()) {
+	if (
+		!config.registration.disableAll &&
+		!config.registration.disableEmailPassword
+	) {
 		return true;
 	}
 
-	return (
-		!config.registration.disableAll && !config.registration.disableEmailPassword
-	);
+	return isFirstUserBootstrapAvailable();
 }
 
 export function getAuthProviderById(
@@ -36,9 +37,9 @@ export async function canRequestOidcAccountCreation(
 		return false;
 	}
 
-	if (await isFirstUserBootstrapAvailable()) {
+	if (provider.allowAccountCreation) {
 		return true;
 	}
 
-	return provider.allowAccountCreation;
+	return isFirstUserBootstrapAvailable();
 }
