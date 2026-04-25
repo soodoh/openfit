@@ -169,6 +169,22 @@ describe("api/auth/$", () => {
 		expect(response.status).toBe(207);
 	});
 
+	it("delegates OIDC sign-in when JSON parsing fails", async () => {
+		const request = new Request("http://localhost/api/auth/sign-in/oauth2", {
+			method: "POST",
+			body: "{",
+			headers: {
+				"content-type": "application/json",
+			},
+		});
+
+		const response = await handlers.POST({ request });
+
+		expect(mocks.canRequestOidcAccountCreation).not.toHaveBeenCalled();
+		expect(mocks.authHandler).toHaveBeenCalledWith(request);
+		expect(response.status).toBe(207);
+	});
+
 	it("delegates OIDC sign-in when requestSignUp is absent", async () => {
 		const request = new Request("http://localhost/api/auth/sign-in/oauth2", {
 			method: "POST",
