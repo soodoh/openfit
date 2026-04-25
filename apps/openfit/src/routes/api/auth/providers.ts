@@ -1,26 +1,47 @@
 import { createFileRoute } from "@tanstack/react-router";
+
+import { getAuthConfig } from "@/lib/auth-config";
+import {
+	isEmailPasswordRegistrationAllowed,
+	isFirstUserBootstrapAvailable,
+} from "@/lib/auth-policy";
+
+const socialProviderNames = {
+	google: "Google",
+	github: "GitHub",
+	discord: "Discord",
+} as const;
+
 export const Route = createFileRoute("/api/auth/providers")({
 	server: {
 		handlers: {
-			GET: () => {
-				// Check which OAuth providers are configured via environment variables
-				const providerStatus = {
-					google: Boolean(
-						process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
-					),
-					github: Boolean(
-						process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET,
-					),
-					discord: Boolean(
-						process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET,
-					),
-					oidc: Boolean(
-						process.env.AUTH_OIDC_CLIENT_ID &&
-							process.env.AUTH_OIDC_CLIENT_SECRET &&
-							process.env.AUTH_OIDC_ISSUER,
-					),
-				};
-				return Response.json(providerStatus);
+			GET: async () => {
+				const authConfig = getAuthConfig(process.env);
+				const [registrationEnabled, bootstrapAvailable] = await Promise.all([
+					isEmailPasswordRegistrationAllowed(authConfig),
+					isFirstUserBootstrapAvailable(),
+				]);
+
+				return Response.json({
+					emailPassword: {
+						signInEnabled: authConfig.emailPassword.enabled,
+						registrationEnabled,
+					},
+					bootstrapAvailable,
+					providers: [
+						...Object.keys(authConfig.socialProviders).map((id) => ({
+							id,
+							name: socialProviderNames[id as keyof typeof socialProviderNames],
+							type: "social" as const,
+						})),
+						...authConfig.oidcProviders.map((provider) => ({
+							id: provider.providerId,
+							name: provider.displayName,
+							type: "oidc" as const,
+							allowAccountCreation: provider.allowAccountCreation,
+						})),
+					],
+				});
 			},
 		},
 	},
