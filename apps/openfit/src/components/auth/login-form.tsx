@@ -67,34 +67,33 @@ const PROVIDER_ICONS: Record<string, React.ReactNode> = {
 		</svg>
 	),
 };
-// Check if OAuth providers are configured (based on env vars)
-function getOAuthProviders() {
-	return [
-		{
-			id: "google",
-			name: "Google",
-			enabled: Boolean(import.meta.env.VITE_AUTH_GOOGLE_ENABLED),
-		},
-		{
-			id: "github",
-			name: "GitHub",
-			enabled: Boolean(import.meta.env.VITE_AUTH_GITHUB_ENABLED),
-		},
-		{
-			id: "discord",
-			name: "Discord",
-			enabled: Boolean(import.meta.env.VITE_AUTH_DISCORD_ENABLED),
-		},
-		{
-			id: "oidc",
-			name: String(import.meta.env.VITE_AUTH_OIDC_PROVIDER_NAME ?? "SSO"),
-			enabled: Boolean(import.meta.env.VITE_AUTH_OIDC_ENABLED),
-		},
-	].filter((p) => p.enabled);
-}
+type AuthProvider = {
+	id: string;
+	name: string;
+	type: "social" | "oidc";
+	allowAccountCreation?: boolean;
+};
+
+type AuthProviderStatus = {
+	emailPassword: {
+		signInEnabled: boolean;
+		registrationEnabled: boolean;
+	};
+	bootstrapAvailable: boolean;
+	providers: AuthProvider[];
+};
+
+const defaultProviderStatus: AuthProviderStatus = {
+	emailPassword: {
+		signInEnabled: true,
+		registrationEnabled: true,
+	},
+	bootstrapAvailable: false,
+	providers: [],
+};
+
 export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 	const navigate = useNavigate();
-	const oauthProviders = getOAuthProviders();
 	const { isAuthenticated, isLoading: authLoading } = useAuth();
 	const [loading, setLoading] = useState(false);
 	const [oauthLoading, setOauthLoading] = useState<string | undefined>(
@@ -104,11 +103,46 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 	const [password, setPassword] = useState("");
 	const [emailError, setEmailError] = useState<string[]>([]);
 	const [passwordError, setPasswordError] = useState<string[]>([]);
+	const [providerStatus, setProviderStatus] = useState<AuthProviderStatus>(
+		defaultProviderStatus,
+	);
+
+	useEffect(() => {
+		let isMounted = true;
+		const loadProviders = async () => {
+			try {
+				const response = await fetch("/api/auth/providers");
+				if (!response.ok) {
+					return;
+				}
+				const data = (await response.json()) as AuthProviderStatus;
+				if (isMounted) {
+					setProviderStatus(data);
+				}
+			} catch {
+				if (isMounted) {
+					setProviderStatus(defaultProviderStatus);
+				}
+			}
+		};
+		void loadProviders();
+		return () => {
+			isMounted = false;
+		};
+	}, []);
+
 	useEffect(() => {
 		if (!authLoading && isAuthenticated) {
 			void navigate({ to: "/", replace: true });
 		}
 	}, [authLoading, isAuthenticated, navigate]);
+
+	const oauthProviders = providerStatus.providers;
+	const canRegisterWithEmail =
+		providerStatus.emailPassword.registrationEnabled ||
+		providerStatus.bootstrapAvailable;
+	const showEmailForm = !register || canRegisterWithEmail;
+
 	const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		setEmailError([]);
@@ -158,16 +192,19 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 			setLoading(false);
 		}
 	};
-	const handleOAuthSignIn = async (providerId: string) => {
-		setOauthLoading(providerId);
+	const handleOAuthSignIn = async (provider: AuthProvider) => {
+		setOauthLoading(provider.id);
 		try {
-			await (providerId === "oidc"
+			await (provider.type === "oidc"
 				? signIn.oauth2({
-						providerId: "oidc",
+						providerId: provider.id,
 						callbackURL: "/",
+						...(providerStatus.bootstrapAvailable
+							? { requestSignUp: true }
+							: {}),
 					})
 				: signIn.social({
-						provider: providerId as "google" | "github" | "discord",
+						provider: provider.id as "google" | "github" | "discord",
 						callbackURL: "/",
 					}));
 		} catch (error) {
@@ -206,7 +243,7 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 										variant="outline"
 										className="w-full"
 										disabled={oauthLoading !== undefined}
-										onClick={async () => handleOAuthSignIn(provider.id)}
+										onClick={async () => handleOAuthSignIn(provider)}
 									>
 										{oauthLoading === provider.id ? (
 											<span className="animate-spin mr-2">⏳</span>
@@ -219,61 +256,78 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 							})}
 						</div>
 
-						<div className="relative">
-							<div className="absolute inset-0 flex items-center">
-								<Separator className="w-full" />
+						{showEmailForm && (
+							<div className="relative">
+								<div className="absolute inset-0 flex items-center">
+									<Separator className="w-full" />
+								</div>
+								<div className="relative flex justify-center text-xs uppercase">
+									<span className="bg-background px-2 text-muted-foreground">
+										Or continue with email
+									</span>
+								</div>
 							</div>
-							<div className="relative flex justify-center text-xs uppercase">
-								<span className="bg-background px-2 text-muted-foreground">
-									Or continue with email
-								</span>
-							</div>
-						</div>
+						)}
 					</>
 				)}
 
-				<div className="space-y-2">
-					<Label htmlFor="email">Email</Label>
-					<Input
-						id="email"
-						name="email"
-						type="email"
-						value={email}
-						onChange={(event) => setEmail(event.target.value)}
-						className={emailError.length > 0 ? "border-destructive" : ""}
-					/>
-					{emailError.length > 0 && (
-						<p className="text-sm text-destructive">{emailError[0]}</p>
-					)}
-				</div>
-
-				<div className="space-y-2">
-					<Label htmlFor="password">Password</Label>
-					<Input
-						id="password"
-						name="password"
-						type="password"
-						value={password}
-						onChange={(event) => setPassword(event.target.value)}
-						className={passwordError.length > 0 ? "border-destructive" : ""}
-					/>
-					{passwordError.length > 0 && (
-						<p className="text-sm text-destructive">{passwordError[0]}</p>
-					)}
-				</div>
-
-				<Button type="submit" disabled={loading} className="w-full">
-					{submitLabel}
-				</Button>
-
-				{register ? (
-					<Button variant="outline" className="w-full" asChild>
-						<Link to="/signin">Back to sign in</Link>
-					</Button>
+				{register && !canRegisterWithEmail ? (
+					<>
+						<p className="text-sm text-muted-foreground text-center">
+							Email/password registration is disabled
+						</p>
+						<Button variant="outline" className="w-full" asChild>
+							<Link to="/signin">Back to sign in</Link>
+						</Button>
+					</>
 				) : (
-					<Button variant="outline" className="w-full" asChild>
-						<Link to="/register">Create an account</Link>
-					</Button>
+					<>
+						<div className="space-y-2">
+							<Label htmlFor="email">Email</Label>
+							<Input
+								id="email"
+								name="email"
+								type="email"
+								value={email}
+								onChange={(event) => setEmail(event.target.value)}
+								className={emailError.length > 0 ? "border-destructive" : ""}
+							/>
+							{emailError.length > 0 && (
+								<p className="text-sm text-destructive">{emailError[0]}</p>
+							)}
+						</div>
+
+						<div className="space-y-2">
+							<Label htmlFor="password">Password</Label>
+							<Input
+								id="password"
+								name="password"
+								type="password"
+								value={password}
+								onChange={(event) => setPassword(event.target.value)}
+								className={passwordError.length > 0 ? "border-destructive" : ""}
+							/>
+							{passwordError.length > 0 && (
+								<p className="text-sm text-destructive">{passwordError[0]}</p>
+							)}
+						</div>
+
+						<Button type="submit" disabled={loading} className="w-full">
+							{submitLabel}
+						</Button>
+
+						{register ? (
+							<Button variant="outline" className="w-full" asChild>
+								<Link to="/signin">Back to sign in</Link>
+							</Button>
+						) : (
+							canRegisterWithEmail && (
+								<Button variant="outline" className="w-full" asChild>
+									<Link to="/register">Create an account</Link>
+								</Button>
+							)
+						)}
+					</>
 				)}
 			</form>
 		</div>

@@ -11,6 +11,9 @@ const mockSignInOauth2 = vi.fn();
 const mockSignUpEmail = vi.fn();
 const mockUseAuth = vi.fn();
 const mockGetSession = vi.fn();
+const mockFetch = vi.fn();
+
+globalThis.fetch = mockFetch;
 
 vi.mock("@tanstack/react-router", () => ({
 	Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => (
@@ -40,7 +43,17 @@ vi.mock("@/lib/auth-client", () => ({
 describe("LoginForm redirects", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		vi.unstubAllEnvs();
+		mockFetch.mockResolvedValue({
+			ok: true,
+			json: async () => ({
+				emailPassword: {
+					signInEnabled: true,
+					registrationEnabled: true,
+				},
+				bootstrapAvailable: false,
+				providers: [],
+			}),
+		});
 		mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
 		mockSignInEmail.mockResolvedValue({ error: null });
 		mockSignInSocial.mockResolvedValue({ error: null });
@@ -190,7 +203,23 @@ describe("LoginForm redirects", () => {
 	});
 
 	it("starts social OAuth sign-in when Google is enabled", async () => {
-		vi.stubEnv("VITE_AUTH_GOOGLE_ENABLED", "true");
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({
+				emailPassword: {
+					signInEnabled: true,
+					registrationEnabled: true,
+				},
+				bootstrapAvailable: false,
+				providers: [
+					{
+						id: "google",
+						name: "Google",
+						type: "social",
+					},
+				],
+			}),
+		});
 
 		const screen = await render(<LoginForm />);
 
@@ -202,12 +231,26 @@ describe("LoginForm redirects", () => {
 			provider: "google",
 			callbackURL: "/",
 		});
-
-		vi.unstubAllEnvs();
 	});
 
 	it("shows a social OAuth error when the provider flow throws", async () => {
-		vi.stubEnv("VITE_AUTH_GOOGLE_ENABLED", "true");
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({
+				emailPassword: {
+					signInEnabled: true,
+					registrationEnabled: true,
+				},
+				bootstrapAvailable: false,
+				providers: [
+					{
+						id: "google",
+						name: "Google",
+						type: "social",
+					},
+				],
+			}),
+		});
 		mockSignInSocial.mockRejectedValueOnce(new Error("oauth failed"));
 
 		const screen = await render(<LoginForm />);
@@ -217,25 +260,143 @@ describe("LoginForm redirects", () => {
 		);
 
 		await expect.element(screen.getByText("oauth failed")).toBeInTheDocument();
-
-		vi.unstubAllEnvs();
 	});
 
-	it("starts OIDC OAuth sign-in when the provider is enabled", async () => {
-		vi.stubEnv("VITE_AUTH_OIDC_ENABLED", "true");
-		vi.stubEnv("VITE_AUTH_OIDC_PROVIDER_NAME", "Acme SSO");
+	it("renders OIDC providers from the provider status API", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({
+				emailPassword: {
+					signInEnabled: true,
+					registrationEnabled: true,
+				},
+				bootstrapAvailable: false,
+				providers: [
+					{
+						id: "authentik",
+						name: "Authentik",
+						type: "oidc",
+						allowAccountCreation: true,
+					},
+				],
+			}),
+		});
 
 		const screen = await render(<LoginForm />);
 
 		await userEvent.click(
-			screen.getByRole("button", { name: "Continue with Acme SSO" }),
+			screen.getByRole("button", { name: "Continue with Authentik" }),
 		);
 
 		expect(mockSignInOauth2).toHaveBeenCalledWith({
-			providerId: "oidc",
+			providerId: "authentik",
 			callbackURL: "/",
 		});
+	});
 
-		vi.unstubAllEnvs();
+	it("passes requestSignUp for OIDC during first-user bootstrap", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({
+				emailPassword: {
+					signInEnabled: true,
+					registrationEnabled: true,
+				},
+				bootstrapAvailable: true,
+				providers: [
+					{
+						id: "authentik",
+						name: "Authentik",
+						type: "oidc",
+						allowAccountCreation: false,
+					},
+				],
+			}),
+		});
+
+		const screen = await render(<LoginForm />);
+
+		await userEvent.click(
+			screen.getByRole("button", { name: "Continue with Authentik" }),
+		);
+
+		expect(mockSignInOauth2).toHaveBeenCalledWith({
+			providerId: "authentik",
+			callbackURL: "/",
+			requestSignUp: true,
+		});
+	});
+
+	it("hides email registration controls when registration is disabled", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({
+				emailPassword: {
+					signInEnabled: true,
+					registrationEnabled: false,
+				},
+				bootstrapAvailable: false,
+				providers: [],
+			}),
+		});
+
+		const screen = await render(<LoginForm register />);
+
+		await expect
+			.element(screen.getByText("Email/password registration is disabled"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Register" }))
+			.not.toBeInTheDocument();
+	});
+
+	it("hides the create account link when registration is disabled", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({
+				emailPassword: {
+					signInEnabled: true,
+					registrationEnabled: false,
+				},
+				bootstrapAvailable: false,
+				providers: [],
+			}),
+		});
+
+		const screen = await render(<LoginForm />);
+
+		await expect
+			.element(screen.getByRole("link", { name: "Create an account" }))
+			.not.toBeInTheDocument();
+	});
+
+	it("keeps OIDC provider buttons visible when email registration is disabled", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({
+				emailPassword: {
+					signInEnabled: true,
+					registrationEnabled: false,
+				},
+				bootstrapAvailable: false,
+				providers: [
+					{
+						id: "authentik",
+						name: "Authentik",
+						type: "oidc",
+						allowAccountCreation: true,
+					},
+				],
+			}),
+		});
+
+		const screen = await render(<LoginForm register />);
+
+		await expect
+			.element(screen.getByRole("button", { name: "Continue with Authentik" }))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByText("Email/password registration is disabled"))
+			.toBeInTheDocument();
 	});
 });
