@@ -46,6 +46,41 @@ bun run db:seed-mock -- your@email.com
 
 ---
 
+## Self-Hosted Auth Configuration
+
+OpenFit auth is configured with environment variables. The production Docker
+container reads these values at startup.
+
+Email/password sign-in is enabled by default. Set
+`DISABLE_EMAIL_PASSWORD_REGISTRATION=true` to block new email/password signups
+while keeping existing email/password sign-in working.
+
+Set `DISABLE_REGISTRATION=true` to block self-service account creation after
+the first user is created. OIDC providers can still auto-provision users when
+their indexed provider config sets `OIDC_N_ALLOW_ACCOUNT_CREATION=true`.
+
+The first account created on a fresh install becomes an admin whether it is
+created through email/password or OIDC.
+
+OIDC providers are configured with indexed variables:
+
+```env
+OIDC_1_PROVIDER_ID=authentik
+OIDC_1_PROVIDER_NAME=Authentik
+OIDC_1_CLIENT_ID=replace-with-client-id
+OIDC_1_CLIENT_SECRET=replace-with-client-secret
+OIDC_1_ISSUER=https://auth.example.com/application/o/openfit/
+OIDC_1_ALLOW_ACCOUNT_CREATION=true
+```
+
+Use this callback URL in the OIDC provider:
+
+```text
+https://your-openfit-host.example.com/api/auth/oauth2/callback/<provider-id>
+```
+
+---
+
 ## Project Structure
 
 ```
