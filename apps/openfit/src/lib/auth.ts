@@ -1,4 +1,4 @@
-import { betterAuth } from "better-auth";
+import { APIError, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { genericOAuth } from "better-auth/plugins";
 import { ne } from "drizzle-orm";
@@ -6,6 +6,11 @@ import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
 import { getAuthConfig } from "@/lib/auth-config";
+import {
+	canRequestOidcAccountCreation,
+	canRequestSocialAccountCreation,
+	isEmailPasswordRegistrationAllowed,
+} from "@/lib/auth-policy";
 
 const authBaseURL =
 	process.env.BETTER_AUTH_BASE_URL ??
@@ -13,6 +18,62 @@ const authBaseURL =
 	(process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000");
 
 const authConfig = getAuthConfig(process.env);
+
+type AuthEndpointContext = {
+	path: string;
+	params?: Record<string, string | undefined>;
+};
+
+function isAuthEndpointContext(
+	context: unknown,
+): context is AuthEndpointContext {
+	return (
+		!!context &&
+		typeof context === "object" &&
+		"path" in context &&
+		typeof context.path === "string"
+	);
+}
+
+function registrationDisabledError(message: string): APIError {
+	return APIError.fromStatus("FORBIDDEN", { message });
+}
+
+async function assertUserCreationAllowed(context: unknown): Promise<void> {
+	if (!isAuthEndpointContext(context)) {
+		return;
+	}
+
+	if (context.path === "/sign-up/email") {
+		if (!(await isEmailPasswordRegistrationAllowed(authConfig))) {
+			throw registrationDisabledError(
+				"Email/password registration is disabled",
+			);
+		}
+		return;
+	}
+
+	if (context.path.startsWith("/callback")) {
+		if (!(await canRequestSocialAccountCreation(authConfig))) {
+			throw registrationDisabledError(
+				"Account creation is disabled for this provider",
+			);
+		}
+		return;
+	}
+
+	if (context.path.startsWith("/oauth2/callback")) {
+		const providerId = context.params?.providerId;
+		if (
+			!providerId ||
+			!(await canRequestOidcAccountCreation(authConfig, providerId))
+		) {
+			throw registrationDisabledError(
+				"Account creation is disabled for this OIDC provider",
+			);
+		}
+	}
+}
 
 export const auth = betterAuth({
 	...(authBaseURL ? { baseURL: authBaseURL } : {}),
@@ -73,6 +134,9 @@ export const auth = betterAuth({
 	databaseHooks: {
 		user: {
 			create: {
+				before: async (_user, context) => {
+					await assertUserCreationAllowed(context);
+				},
 				after: async (user) => {
 					const otherUser = await db.query.users.findFirst({
 						where: ne(schema.users.id, user.id),

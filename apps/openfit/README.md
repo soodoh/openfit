@@ -60,7 +60,7 @@ the first user is created. OIDC providers can still auto-provision users when
 their indexed provider config sets `OIDC_N_ALLOW_ACCOUNT_CREATION=true`.
 
 The first account created on a fresh install becomes an admin whether it is
-created through email/password or OIDC.
+created through email/password, social login, or OIDC.
 
 OIDC providers are configured with indexed variables:
 

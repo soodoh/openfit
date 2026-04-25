@@ -10,6 +10,9 @@ const betterAuthMock = vi.fn();
 const drizzleAdapterMock = vi.fn();
 const genericOAuthMock = vi.fn();
 const getAuthConfigMock = vi.fn();
+const canRequestOidcAccountCreationMock = vi.fn();
+const canRequestSocialAccountCreationMock = vi.fn();
+const isEmailPasswordRegistrationAllowedMock = vi.fn();
 const nanoidMock = vi.fn();
 const selectMock = vi.fn();
 const fromMock = vi.fn();
@@ -47,6 +50,10 @@ type CapturedAuthConfig = {
 	databaseHooks: {
 		user: {
 			create: {
+				before: (
+					user: Record<string, unknown>,
+					context: Record<string, unknown> | null,
+				) => Promise<void>;
 				after: (user: { id: string }) => Promise<void>;
 			};
 		};
@@ -97,6 +104,9 @@ async function loadAuthModule(options?: {
 		type: "generic-oauth",
 		plugin,
 	}));
+	canRequestOidcAccountCreationMock.mockResolvedValue(true);
+	canRequestSocialAccountCreationMock.mockResolvedValue(true);
+	isEmailPasswordRegistrationAllowedMock.mockResolvedValue(true);
 	getAuthConfigMock.mockReturnValue(
 		options?.authConfig ?? {
 			registration: {
@@ -138,6 +148,11 @@ async function loadAuthModule(options?: {
 	});
 
 	vi.doMock("better-auth", () => ({
+		APIError: class APIError extends Error {
+			static fromStatus(_status: string, body?: { message?: string }) {
+				return new APIError(body?.message ?? "API error");
+			}
+		},
 		betterAuth: betterAuthMock,
 	}));
 	vi.doMock("better-auth/adapters/drizzle", () => ({
@@ -168,6 +183,11 @@ async function loadAuthModule(options?: {
 	}));
 	vi.doMock("@/lib/auth-config", () => ({
 		getAuthConfig: getAuthConfigMock,
+	}));
+	vi.doMock("@/lib/auth-policy", () => ({
+		canRequestOidcAccountCreation: canRequestOidcAccountCreationMock,
+		canRequestSocialAccountCreation: canRequestSocialAccountCreationMock,
+		isEmailPasswordRegistrationAllowed: isEmailPasswordRegistrationAllowedMock,
 	}));
 
 	return import("./auth");
@@ -357,5 +377,93 @@ describe("auth", () => {
 			}),
 		);
 		expect(insertRunMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("rechecks social account creation when Better Auth creates the user", async () => {
+		canRequestSocialAccountCreationMock.mockResolvedValueOnce(false);
+		await loadAuthModule({
+			nodeEnv: "development",
+			authConfig: {
+				registration: {
+					disableAll: true,
+					disableEmailPassword: false,
+				},
+				emailPassword: {
+					enabled: true,
+				},
+				socialProviders: {
+					google: {
+						clientId: "google",
+						clientSecret: "secret",
+						disableImplicitSignUp: true,
+					},
+				},
+				oidcProviders: [],
+			},
+		});
+
+		await expect(
+			capturedConfig.databaseHooks.user.create.before(
+				{ id: "new-user" },
+				{ path: "/callback/:id", params: { id: "google" } },
+			),
+		).rejects.toThrow("Account creation is disabled for this provider");
+		expect(canRequestSocialAccountCreationMock).toHaveBeenCalledWith(
+			expect.objectContaining({
+				registration: expect.objectContaining({ disableAll: true }),
+			}),
+		);
+	});
+
+	it("rechecks OIDC account creation when Better Auth creates the user", async () => {
+		canRequestOidcAccountCreationMock.mockResolvedValueOnce(false);
+		await loadAuthModule({
+			nodeEnv: "development",
+			authConfig: {
+				registration: {
+					disableAll: true,
+					disableEmailPassword: false,
+				},
+				emailPassword: {
+					enabled: true,
+				},
+				socialProviders: {},
+				oidcProviders: [
+					{
+						providerId: "authentik",
+						displayName: "Authentik",
+						clientId: "oidc-client",
+						clientSecret: "oidc-secret",
+						issuer: "https://issuer.example.com",
+						discoveryUrl:
+							"https://issuer.example.com/.well-known/openid-configuration",
+						scopes: ["openid", "email", "profile"],
+						pkce: true,
+						allowAccountCreation: false,
+					},
+				],
+			},
+		});
+
+		await expect(
+			capturedConfig.databaseHooks.user.create.before(
+				{ id: "new-user" },
+				{
+					path: "/oauth2/callback/:providerId",
+					params: { providerId: "authentik" },
+				},
+			),
+		).rejects.toThrow("Account creation is disabled for this OIDC provider");
+		expect(canRequestOidcAccountCreationMock).toHaveBeenCalledWith(
+			expect.objectContaining({
+				oidcProviders: [
+					expect.objectContaining({
+						providerId: "authentik",
+						allowAccountCreation: false,
+					}),
+				],
+			}),
+			"authentik",
+		);
 	});
 });
