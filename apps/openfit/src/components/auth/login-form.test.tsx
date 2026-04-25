@@ -370,6 +370,66 @@ describe("LoginForm redirects", () => {
 			.not.toBeInTheDocument();
 	});
 
+	it("does not expose registration controls in register mode when provider status returns non-OK", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: false,
+			json: async () => ({}),
+		});
+
+		const screen = await render(<LoginForm register />);
+
+		await expect
+			.element(screen.getByText("Email/password registration is disabled"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByLabelText("Email"))
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Register" }))
+			.not.toBeInTheDocument();
+	});
+
+	it("does not expose registration controls in register mode when provider status rejects", async () => {
+		mockFetch.mockRejectedValueOnce(new Error("provider status failed"));
+
+		const screen = await render(<LoginForm register />);
+
+		await expect
+			.element(screen.getByText("Email/password registration is disabled"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByLabelText("Email"))
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Register" }))
+			.not.toBeInTheDocument();
+	});
+
+	it("does not show create account when provider status returns non-OK", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: false,
+			json: async () => ({}),
+		});
+
+		const screen = await render(<LoginForm />);
+
+		await expect.element(screen.getByLabelText("Email")).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("link", { name: "Create an account" }))
+			.not.toBeInTheDocument();
+	});
+
+	it("does not show create account when provider status rejects", async () => {
+		mockFetch.mockRejectedValueOnce(new Error("provider status failed"));
+
+		const screen = await render(<LoginForm />);
+
+		await expect.element(screen.getByLabelText("Email")).toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("link", { name: "Create an account" }))
+			.not.toBeInTheDocument();
+	});
+
 	it("keeps OIDC provider buttons visible when email registration is disabled", async () => {
 		mockFetch.mockResolvedValueOnce({
 			ok: true,

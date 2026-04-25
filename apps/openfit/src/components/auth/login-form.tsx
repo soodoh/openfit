@@ -86,7 +86,7 @@ type AuthProviderStatus = {
 const defaultProviderStatus: AuthProviderStatus = {
 	emailPassword: {
 		signInEnabled: true,
-		registrationEnabled: true,
+		registrationEnabled: false,
 	},
 	bootstrapAvailable: false,
 	providers: [],
