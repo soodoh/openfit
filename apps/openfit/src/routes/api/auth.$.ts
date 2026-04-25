@@ -23,13 +23,12 @@ function isOidcSignInRequest(request: Request): boolean {
 async function readJsonBody(
 	request: Request,
 ): Promise<Record<string, unknown>> {
-	const contentType = request.headers.get("content-type") ?? "";
-	if (!contentType.includes("application/json")) {
+	try {
+		const body = await request.clone().json();
+		return body && typeof body === "object" ? body : {};
+	} catch {
 		return {};
 	}
-
-	const body = await request.clone().json();
-	return body && typeof body === "object" ? body : {};
 }
 
 async function enforceRegistrationPolicy(

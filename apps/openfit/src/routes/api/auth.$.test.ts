@@ -126,6 +126,49 @@ describe("api/auth/$", () => {
 		expect(mocks.authHandler).not.toHaveBeenCalled();
 	});
 
+	it("blocks OIDC requestSignUp without requiring a content-type header", async () => {
+		mocks.canRequestOidcAccountCreation.mockResolvedValueOnce(false);
+		const request = new Request("http://localhost/api/auth/sign-in/oauth2", {
+			method: "POST",
+			body: JSON.stringify({
+				providerId: "authentik",
+				callbackURL: "/",
+				requestSignUp: true,
+			}),
+		});
+
+		const response = await handlers.POST({ request });
+
+		expect(response.status).toBe(403);
+		await expect(response.json()).resolves.toEqual({
+			error: "Account creation is disabled for this OIDC provider",
+		});
+		expect(mocks.authHandler).not.toHaveBeenCalled();
+	});
+
+	it("delegates OIDC requestSignUp when the provider can create accounts", async () => {
+		const request = new Request("http://localhost/api/auth/sign-in/oauth2", {
+			method: "POST",
+			body: JSON.stringify({
+				providerId: "authentik",
+				callbackURL: "/",
+				requestSignUp: true,
+			}),
+			headers: {
+				"content-type": "application/json",
+			},
+		});
+
+		const response = await handlers.POST({ request });
+
+		expect(mocks.canRequestOidcAccountCreation).toHaveBeenCalledWith(
+			config,
+			"authentik",
+		);
+		expect(mocks.authHandler).toHaveBeenCalledWith(request);
+		expect(response.status).toBe(207);
+	});
+
 	it("delegates OIDC sign-in when requestSignUp is absent", async () => {
 		const request = new Request("http://localhost/api/auth/sign-in/oauth2", {
 			method: "POST",
