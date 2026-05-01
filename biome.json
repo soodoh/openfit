@@ -6,13 +6,7 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": [
-			"**",
-			"!!**/dist",
-			"!!**/.output",
-			"!!**/src/routeTree.gen.ts",
-			"!!**/src/route-tree.gen.ts"
-		]
+		"includes": ["**", "!!apps/openfit/src/routeTree.gen.ts"]
 	},
 	"assist": {
 		"enabled": true,
