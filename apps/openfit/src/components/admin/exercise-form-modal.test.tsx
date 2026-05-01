@@ -340,13 +340,16 @@ describe("ExerciseFormModal", () => {
 
 		await expect.element(screen.getByText("No preview")).toBeInTheDocument();
 
-		const fileInputEl = screen.container.querySelector('input[type="file"]');
-		expect(fileInputEl).toBeTruthy();
-		const fileInput = page.elementLocator(fileInputEl as Element);
+		const fileInputEl =
+			screen.container.querySelector<HTMLInputElement>('input[type="file"]');
+		if (!fileInputEl) {
+			throw new Error("Expected file input to exist");
+		}
+		const fileInput = page.elementLocator(fileInputEl);
 		await expect.element(fileInput).toBeInTheDocument();
 
 		// Simulate change event with no files selected
-		fileInputEl!.dispatchEvent(new Event("change", { bubbles: true }));
+		fileInputEl.dispatchEvent(new Event("change", { bubbles: true }));
 
 		expect(mockAddFiles).not.toHaveBeenCalled();
 	});

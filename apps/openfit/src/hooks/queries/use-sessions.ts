@@ -81,7 +81,12 @@ export function useSession(
 ): UseQueryResult<WorkoutSessionWithData | undefined> {
 	return useQuery({
 		queryKey: queryKeys.sessions.detail(id ?? ""),
-		queryFn: async () => fetchSession(id!),
+		queryFn: async () => {
+			if (!id) {
+				throw new Error("Session id is required");
+			}
+			return fetchSession(id);
+		},
 		select: (session) => session ?? undefined,
 		enabled: Boolean(id),
 	});

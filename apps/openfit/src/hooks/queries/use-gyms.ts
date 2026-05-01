@@ -28,7 +28,12 @@ export function useGyms(): UseQueryResult<Gym[]> {
 export function useGym(id: string | undefined): UseQueryResult<Gym> {
 	return useQuery({
 		queryKey: queryKeys.gyms.detail(id ?? ""),
-		queryFn: async () => fetchGym(id!),
+		queryFn: async () => {
+			if (!id) {
+				throw new Error("Gym id is required");
+			}
+			return fetchGym(id);
+		},
 		enabled: Boolean(id),
 	});
 }

@@ -156,7 +156,12 @@ export function useExercise(
 ): UseQueryResult<Exercise | undefined> {
 	return useQuery({
 		queryKey: queryKeys.exercises.detail(id ?? ""),
-		queryFn: async () => fetchExercise(id!),
+		queryFn: async () => {
+			if (!id) {
+				throw new Error("Exercise id is required");
+			}
+			return fetchExercise(id);
+		},
 		select: (exercise) => exercise ?? undefined,
 		enabled: Boolean(id),
 	});

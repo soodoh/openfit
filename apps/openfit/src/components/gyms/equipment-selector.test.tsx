@@ -56,7 +56,7 @@ describe("EquipmentSelector", () => {
 	it("shows loading state while equipment is still being fetched", async () => {
 		mockUseEquipment.mockReturnValueOnce({ data: undefined, isLoading: true });
 
-		const screen = await render(
+		await render(
 			<EquipmentSelector selectedIds={[]} onSelectionChange={vi.fn()} />,
 		);
 
