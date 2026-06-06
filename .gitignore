@@ -3,6 +3,8 @@
 # Agents
 .worktrees/
 .serena/
+.codanna/
+.codannaignore
 .playwright-mcp/
 .playwright-cli/
 .claude/worktrees/
