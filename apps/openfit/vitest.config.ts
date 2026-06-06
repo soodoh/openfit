@@ -50,10 +50,8 @@ export default defineConfig({
 	test: {
 		globals: true,
 		coverage: {
-			provider: "custom",
-			customProviderModule: "vitest-monocart-coverage",
-			reporter: [["raw", {}]],
-			all: true,
+			provider: "istanbul",
+			reporter: ["text", "json-summary", "html"],
 			include: ["src/**/*.{ts,tsx}"],
 			exclude: [
 				"src/**/*.test.{ts,tsx}",
@@ -62,6 +60,12 @@ export default defineConfig({
 				"src/lib/api-types.ts",
 				"db/schema/**",
 			],
+			thresholds: {
+				statements: 95,
+				branches: 90,
+				functions: 95,
+				lines: 95,
+			},
 		},
 		projects: [
 			{

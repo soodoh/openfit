@@ -26,8 +26,7 @@
 		"lint:fix": "biome check --write .",
 		"test": "vitest",
 		"test:run": "vitest run",
-		"test:coverage:unit": "vitest run --coverage --fileParallelism=false && npx tsx scripts/merge-coverage.ts --mode unit && bun scripts/check-coverage.ts --mode unit",
-		"test:coverage": "vitest run --coverage --fileParallelism=false && COLLECT_COVERAGE=true playwright test --project=setup --project=chromium && npx tsx scripts/merge-coverage.ts --mode merged && bun scripts/check-coverage.ts --mode merged",
+		"test:coverage": "vitest run --coverage --fileParallelism=false",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
 		"test:e2e:headed": "playwright test --headed",
@@ -91,8 +90,6 @@
 		"dotenv": "^17.4.2",
 		"dotenv-expand": "^13.0.0",
 		"drizzle-kit": "^0.31.10",
-		"monocart-coverage-reports": "^2.12.12",
-		"monocart-reporter": "^2.11.2",
 		"playwright": "^1.60.0",
 		"tailwind-merge": "^3.6.0",
 		"tailwindcss": "^4.3.0",
@@ -100,7 +97,6 @@
 		"typescript": "^6.0.3",
 		"vitest": "4.1.8",
 		"vitest-browser-react": "^2.2.0",
-		"vitest-monocart-coverage": "^4.0.2",
 		"wait-on": "^9.0.10"
 	}
 }

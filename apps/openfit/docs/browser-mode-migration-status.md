@@ -7,7 +7,7 @@ Branch: `feat/vitest-browser-mode`
 ### What's Done
 - All 97 test files migrated from RTL imports to vitest-browser-react
 - Vitest config with unit-node + unit-browser projects
-- monocart coverage pipeline (merge script, check-coverage with --mode)
+- Vitest coverage with global thresholds
 - TanStack Start virtual imports patch (postinstall script)
 - Old deps removed, new deps installed
 - Node tests: 174/174 passing
