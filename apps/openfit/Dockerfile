@@ -37,8 +37,10 @@ COPY --from=builder /repo/apps/openfit/tsconfig.json ./tsconfig.json
 # Copy db source (scripts, schema, migrations, seed data)
 COPY --from=builder /repo/apps/openfit/db ./db
 
-# Copy src/lib/auth.ts (imported by db/seed.ts via @/lib/auth)
+# Copy auth helpers imported by db/seed.ts via @/lib/auth
 COPY --from=builder /repo/apps/openfit/src/lib/auth.ts ./src/lib/auth.ts
+COPY --from=builder /repo/apps/openfit/src/lib/auth-config.ts ./src/lib/auth-config.ts
+COPY --from=builder /repo/apps/openfit/src/lib/auth-policy.ts ./src/lib/auth-policy.ts
 
 # Copy public assets
 COPY --from=builder /repo/apps/openfit/public ./public

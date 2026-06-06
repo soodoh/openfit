@@ -19,6 +19,7 @@
 		"test:run": "turbo run test:run",
 		"test:coverage": "turbo run test:coverage --filter=openfit",
 		"test:e2e": "turbo run test:e2e --filter=openfit",
+		"test:e2e:pr": "turbo run test:e2e:pr --filter=openfit",
 		"db:init": "turbo run db:init --filter=openfit",
 		"db:migrate": "turbo run db:migrate --filter=openfit",
 		"db:seed": "turbo run db:seed --filter=openfit",

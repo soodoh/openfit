@@ -30,6 +30,9 @@ bun run db:migrate    # Run database migrations
 bun run db:seed       # Seed exercise data (873 exercises)
 ```
 
+Set `SKIP_EXERCISE_IMAGE_DOWNLOADS=true` when running `db:seed` to skip
+external exercise image downloads for faster local setup or CI test containers.
+
 ### 4. Start Development Server
 
 ```bash
@@ -129,7 +132,8 @@ This creates a markdown file in `.changeset/` that should be committed with your
 Releases are automated via GitHub Actions:
 
 1. **Create changes** - Make your code changes and create a changeset
-2. **Open a PR** - Include the changeset file with your changes
+2. **Open a PR** - Include the changeset file with your changes. CI runs lint,
+   unit tests, and a reduced Playwright suite against the Docker image.
 3. **Merge to main** - Once approved and merged, the release workflow detects pending changesets
 4. **Version PR created** - A "chore: release" PR is automatically created/updated with version bumps
 5. **Merge the release PR** - This triggers:

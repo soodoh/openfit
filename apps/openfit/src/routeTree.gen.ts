@@ -24,6 +24,7 @@ import { Route as ApiSetGroupsRouteImport } from './routes/api/set-groups'
 import { Route as ApiSessionsRouteImport } from './routes/api/sessions'
 import { Route as ApiRoutinesRouteImport } from './routes/api/routines'
 import { Route as ApiRoutineDaysRouteImport } from './routes/api/routine-days'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiGymsRouteImport } from './routes/api/gyms'
 import { Route as ApiExercisesRouteImport } from './routes/api/exercises'
 import { Route as ApiUploadsSplatRouteImport } from './routes/api/uploads.$'
@@ -131,6 +132,11 @@ const ApiRoutinesRoute = ApiRoutinesRouteImport.update({
 const ApiRoutineDaysRoute = ApiRoutineDaysRouteImport.update({
   id: '/api/routine-days',
   path: '/api/routine-days',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiGymsRoute = ApiGymsRouteImport.update({
@@ -312,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/workout': typeof WorkoutRoute
   '/api/exercises': typeof ApiExercisesRouteWithChildren
   '/api/gyms': typeof ApiGymsRouteWithChildren
+  '/api/health': typeof ApiHealthRoute
   '/api/routine-days': typeof ApiRoutineDaysRouteWithChildren
   '/api/routines': typeof ApiRoutinesRouteWithChildren
   '/api/sessions': typeof ApiSessionsRouteWithChildren
@@ -362,6 +369,7 @@ export interface FileRoutesByTo {
   '/workout': typeof WorkoutRoute
   '/api/exercises': typeof ApiExercisesRouteWithChildren
   '/api/gyms': typeof ApiGymsRouteWithChildren
+  '/api/health': typeof ApiHealthRoute
   '/api/routine-days': typeof ApiRoutineDaysRouteWithChildren
   '/api/routines': typeof ApiRoutinesRouteWithChildren
   '/api/sessions': typeof ApiSessionsRouteWithChildren
@@ -413,6 +421,7 @@ export interface FileRoutesById {
   '/workout': typeof WorkoutRoute
   '/api/exercises': typeof ApiExercisesRouteWithChildren
   '/api/gyms': typeof ApiGymsRouteWithChildren
+  '/api/health': typeof ApiHealthRoute
   '/api/routine-days': typeof ApiRoutineDaysRouteWithChildren
   '/api/routines': typeof ApiRoutinesRouteWithChildren
   '/api/sessions': typeof ApiSessionsRouteWithChildren
@@ -465,6 +474,7 @@ export interface FileRouteTypes {
     | '/workout'
     | '/api/exercises'
     | '/api/gyms'
+    | '/api/health'
     | '/api/routine-days'
     | '/api/routines'
     | '/api/sessions'
@@ -515,6 +525,7 @@ export interface FileRouteTypes {
     | '/workout'
     | '/api/exercises'
     | '/api/gyms'
+    | '/api/health'
     | '/api/routine-days'
     | '/api/routines'
     | '/api/sessions'
@@ -565,6 +576,7 @@ export interface FileRouteTypes {
     | '/workout'
     | '/api/exercises'
     | '/api/gyms'
+    | '/api/health'
     | '/api/routine-days'
     | '/api/routines'
     | '/api/sessions'
@@ -616,6 +628,7 @@ export interface RootRouteChildren {
   WorkoutRoute: typeof WorkoutRoute
   ApiExercisesRoute: typeof ApiExercisesRouteWithChildren
   ApiGymsRoute: typeof ApiGymsRouteWithChildren
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiRoutineDaysRoute: typeof ApiRoutineDaysRouteWithChildren
   ApiRoutinesRoute: typeof ApiRoutinesRouteWithChildren
   ApiSessionsRoute: typeof ApiSessionsRouteWithChildren
@@ -744,6 +757,13 @@ declare module '@tanstack/react-router' {
       path: '/api/routine-days'
       fullPath: '/api/routine-days'
       preLoaderRoute: typeof ApiRoutineDaysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/gyms': {
@@ -1132,6 +1152,7 @@ const rootRouteChildren: RootRouteChildren = {
   WorkoutRoute: WorkoutRoute,
   ApiExercisesRoute: ApiExercisesRouteWithChildren,
   ApiGymsRoute: ApiGymsRouteWithChildren,
+  ApiHealthRoute: ApiHealthRoute,
   ApiRoutineDaysRoute: ApiRoutineDaysRouteWithChildren,
   ApiRoutinesRoute: ApiRoutinesRouteWithChildren,
   ApiSessionsRoute: ApiSessionsRouteWithChildren,

@@ -1,3 +1,4 @@
+import fs from "node:fs/promises";
 import path from "node:path";
 import { expect, test as setup } from "@playwright/test";
 import { waitForAuthPageHydration } from "@/e2e/utils/auth.helper";
@@ -26,6 +27,8 @@ setup("authenticate", async ({ page }) => {
 				"Please set them in .env.local",
 		);
 	}
+
+	await fs.mkdir(path.dirname(authFile), { recursive: true });
 
 	await page.goto("/signin");
 	await waitForAuthPageHydration(page);

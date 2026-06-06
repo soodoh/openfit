@@ -40,6 +40,10 @@
 			"cache": false,
 			"outputs": ["playwright-report/**", "test-results/**"]
 		},
+		"test:e2e:pr": {
+			"cache": false,
+			"outputs": ["playwright-report/**", "test-results/**"]
+		},
 		"db:init": {
 			"cache": false,
 			"outputs": []

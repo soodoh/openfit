@@ -13,6 +13,8 @@ const IMAGE_BASE_URL =
 const UPLOAD_DIR = path.join(process.cwd(), "data", "uploads");
 const IMAGE_DOWNLOAD_CONCURRENCY = 50;
 const IMAGE_INSERT_CHUNK_SIZE = 150;
+const skipExerciseImageDownloads =
+	process.env.SKIP_EXERCISE_IMAGE_DOWNLOADS === "true";
 
 async function mapWithConcurrencyLimit<T, R>(
 	items: T[],
@@ -292,7 +294,11 @@ async function seedExercises(lookups: LookupMaps) {
 			await db.insert(schema.exerciseInstructions).values(instructionRows);
 		}
 		// Queue images for bounded parallel download after exercise rows exist.
-		if (exercise.images && exercise.images.length > 0) {
+		if (
+			!skipExerciseImageDownloads &&
+			exercise.images &&
+			exercise.images.length > 0
+		) {
 			for (let i = 0; i < exercise.images.length; i += 1) {
 				const imagePath = exercise.images[i];
 				const imageUrl = `${IMAGE_BASE_URL}/${imagePath}`;
@@ -309,10 +315,17 @@ async function seedExercises(lookups: LookupMaps) {
 		}
 	}
 
-	// oxlint-disable-next-line no-console
-	console.log(
-		`Downloading ${imageJobs.length} images with concurrency ${IMAGE_DOWNLOAD_CONCURRENCY}...`,
-	);
+	if (skipExerciseImageDownloads) {
+		// oxlint-disable-next-line no-console
+		console.log(
+			`Skipping ${totalImages} exercise image downloads because SKIP_EXERCISE_IMAGE_DOWNLOADS=true.`,
+		);
+	} else {
+		// oxlint-disable-next-line no-console
+		console.log(
+			`Downloading ${imageJobs.length} images with concurrency ${IMAGE_DOWNLOAD_CONCURRENCY}...`,
+		);
+	}
 	let completedImageJobs = 0;
 
 	const downloadedImageRows = await mapWithConcurrencyLimit(
@@ -415,7 +428,7 @@ async function main() {
 	// oxlint-disable-next-line no-console
 	console.log("Assuming migrations already ran (bun run db:migrate).");
 	// oxlint-disable-next-line no-console
-	console.log("Downloading exercise images from GitHub...");
+	console.log("Preparing exercise seed data...");
 	try {
 		// Seed reference data
 		const lookups = await seedReferenceData();
