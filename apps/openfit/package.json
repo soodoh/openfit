@@ -85,8 +85,8 @@
 		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.3",
-		"@vitest/browser": "^4.1.10",
-		"@vitest/browser-playwright": "^4.1.10",
+		"@vitest/browser": "^5.0.0",
+		"@vitest/browser-playwright": "^5.0.0",
 		"class-variance-authority": "^0.7.1",
 		"dotenv": "^17.4.2",
 		"dotenv-expand": "^13.0.0",
@@ -96,7 +96,7 @@
 		"tailwindcss": "^4.3.2",
 		"tsx": "^4.23.0",
 		"typescript": "^7.0.2",
-		"vitest": "4.1.10",
+		"vitest": "5.0.0",
 		"vitest-browser-react": "^2.2.0",
 		"wait-on": "^9.0.10"
 	}
