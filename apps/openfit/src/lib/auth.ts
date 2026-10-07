@@ -5,81 +5,12 @@ import { ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/db";
 import { schema } from "@/db/schema";
-import { getAuthConfig } from "@/lib/auth-config";
-import {
-	canRequestOidcAccountCreation,
-	canRequestSocialAccountCreation,
-	isEmailPasswordRegistrationAllowed,
-} from "@/lib/auth-policy";
+import { authConfig, registrationPolicy } from "@/lib/auth-policy";
 
 const authBaseURL =
 	process.env.BETTER_AUTH_BASE_URL ??
 	process.env.VITE_APP_URL ??
 	(process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000");
-
-const authConfig = getAuthConfig(process.env);
-
-type AuthEndpointContext = {
-	path: string;
-	params?: Record<string, string | undefined>;
-	body?: { provider?: string };
-};
-
-function isAuthEndpointContext(
-	context: unknown,
-): context is AuthEndpointContext {
-	return (
-		!!context &&
-		typeof context === "object" &&
-		"path" in context &&
-		typeof context.path === "string"
-	);
-}
-
-function registrationDisabledError(message: string): APIError {
-	return APIError.fromStatus("FORBIDDEN", { message });
-}
-
-async function assertUserCreationAllowed(context: unknown): Promise<void> {
-	if (!isAuthEndpointContext(context)) {
-		return;
-	}
-
-	if (context.path === "/sign-up/email") {
-		if (!(await isEmailPasswordRegistrationAllowed(authConfig))) {
-			throw registrationDisabledError(
-				"Email/password registration is disabled",
-			);
-		}
-		return;
-	}
-
-	if (
-		context.path.startsWith("/callback") ||
-		context.path === "/sign-in/social"
-	) {
-		const providerId = context.params?.id ?? context.body?.provider;
-		if (
-			providerId &&
-			authConfig.oidcProviders.some(
-				(provider) => provider.providerId === providerId,
-			)
-		) {
-			if (!(await canRequestOidcAccountCreation(authConfig, providerId))) {
-				throw registrationDisabledError(
-					"Account creation is disabled for this OIDC provider",
-				);
-			}
-			return;
-		}
-		if (!(await canRequestSocialAccountCreation(authConfig))) {
-			throw registrationDisabledError(
-				"Account creation is disabled for this provider",
-			);
-		}
-		return;
-	}
-}
 
 export const auth = betterAuth({
 	...(authBaseURL ? { baseURL: authBaseURL } : {}),
@@ -141,24 +72,28 @@ export const auth = betterAuth({
 		user: {
 			create: {
 				before: async (_user, context) => {
-					await assertUserCreationAllowed(context);
+					const denial = await registrationPolicy.checkUserCreation(context);
+					if (denial) {
+						throw APIError.fromStatus("FORBIDDEN", { message: denial.message });
+					}
 				},
 				after: async (user) => {
 					const otherUser = await db.query.users.findFirst({
 						where: ne(schema.users.id, user.id),
 					});
-					const repUnits = db
+					const repUnits = await db
 						.select()
 						.from(schema.repetitionUnits)
 						.limit(1)
 						.all();
-					const weightUnits = db
+					const weightUnits = await db
 						.select()
 						.from(schema.weightUnits)
 						.limit(1)
 						.all();
 
-					db.insert(schema.userProfiles)
+					await db
+						.insert(schema.userProfiles)
 						.values({
 							id: nanoid(),
 							userId: user.id,

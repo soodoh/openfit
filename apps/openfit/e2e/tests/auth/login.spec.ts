@@ -146,3 +146,121 @@ e2eTest.describe("Login Page", () => {
 		},
 	);
 });
+
+e2eTest.describe("Login provider-status recovery", () => {
+	e2eTest(
+		"shows loading rather than disabled registration until status arrives",
+		async ({ page }) => {
+			let release!: () => void;
+			const pending = new Promise<void>((resolve) => {
+				release = resolve;
+			});
+			await page.route("**/api/auth/providers", async (route) => {
+				await pending;
+				await route.fulfill({
+					json: {
+						emailPassword: { signInEnabled: true, registrationEnabled: true },
+						bootstrapAvailable: true,
+						providers: [],
+					},
+				});
+			});
+			try {
+				await page.goto("/register");
+				await e2eExpect(page.getByRole("status")).toHaveText(
+					"Loading sign-in options...",
+				);
+				await e2eExpect(
+					page.getByText("Email/password registration is disabled"),
+				).not.toBeVisible();
+				await e2eExpect(
+					page.getByRole("button", { name: "Register", exact: true }),
+				).not.toBeVisible();
+			} finally {
+				release();
+			}
+			await e2eExpect(
+				page.getByRole("button", { name: "Register", exact: true }),
+			).toBeVisible();
+		},
+	);
+
+	e2eTest(
+		"recovers unavailable sign-in options while registration stays fail-closed",
+		async ({ page }) => {
+			let requests = 0;
+			let available = false;
+			await page.route("**/api/auth/providers", async (route) => {
+				requests += 1;
+				await route.fulfill(
+					!available
+						? { status: 503, json: { error: "Unavailable" } }
+						: {
+								json: {
+									emailPassword: {
+										signInEnabled: true,
+										registrationEnabled: true,
+									},
+									bootstrapAvailable: false,
+									providers: [],
+								},
+							},
+				);
+			});
+			await page.goto("/signin");
+			await e2eExpect(
+				page.getByText("Could not load sign-in options. Please try again."),
+			).toBeVisible();
+			await e2eExpect(
+				page.getByRole("link", { name: "Create an account" }),
+			).not.toBeVisible();
+			await e2eExpect(page.getByLabel("Email")).toBeVisible();
+			const initialRequests = requests;
+			available = true;
+			await page.getByRole("button", { name: "Retry sign-in options" }).click();
+			await e2eExpect(
+				page.getByRole("link", { name: "Create an account" }),
+			).toBeVisible();
+			e2eExpect(requests).toBeGreaterThan(initialRequests);
+		},
+	);
+
+	e2eTest(
+		"shows a returned OAuth failure and restores its button for retry",
+		async ({ page }) => {
+			await page.route("**/api/auth/providers", (route) =>
+				route.fulfill({
+					json: {
+						emailPassword: { signInEnabled: true, registrationEnabled: false },
+						bootstrapAvailable: false,
+						providers: [
+							{
+								id: "company",
+								name: "Company",
+								type: "oidc",
+								allowAccountCreation: true,
+								requestSignUp: false,
+							},
+						],
+					},
+				}),
+			);
+			await page.route("**/api/auth/sign-in/social", (route) =>
+				route.fulfill({
+					status: 403,
+					json: { message: "Provider denied sign-in", code: "DENIED" },
+				}),
+			);
+			await page.goto("/register");
+			const provider = page.getByRole("button", {
+				name: "Continue with Company",
+			});
+			await provider.click();
+			await e2eExpect(page.getByRole("alert")).toHaveText(
+				"Provider denied sign-in",
+			);
+			await e2eExpect(provider).toBeEnabled();
+			await e2eExpect(page.getByLabel("Email")).not.toBeVisible();
+		},
+	);
+});

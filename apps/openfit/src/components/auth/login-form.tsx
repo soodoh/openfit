@@ -1,13 +1,11 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
-import { flattenError } from "zod";
-import { signIn, signUp, useAuth } from "@/components/providers/auth-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { getSession } from "@/lib/auth-client";
-import { SignUpSchema } from "@/lib/auth-schema";
+import { useLoginFlow } from "./use-login-flow";
 
 // Provider icons (simple SVG paths for common providers)
 const PROVIDER_ICONS: Record<string, React.ReactNode> = {
@@ -67,148 +65,35 @@ const PROVIDER_ICONS: Record<string, React.ReactNode> = {
 		</svg>
 	),
 };
-type AuthProvider = {
-	id: string;
-	name: string;
-	type: "social" | "oidc";
-	allowAccountCreation?: boolean;
-};
-
-type AuthProviderStatus = {
-	emailPassword: {
-		signInEnabled: boolean;
-		registrationEnabled: boolean;
-	};
-	bootstrapAvailable: boolean;
-	providers: AuthProvider[];
-};
-
-const defaultProviderStatus: AuthProviderStatus = {
-	emailPassword: {
-		signInEnabled: true,
-		registrationEnabled: false,
-	},
-	bootstrapAvailable: false,
-	providers: [],
-};
-
 export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 	const navigate = useNavigate();
 	const { isAuthenticated, isLoading: authLoading } = useAuth();
-	const [loading, setLoading] = useState(false);
-	const [oauthLoading, setOauthLoading] = useState<string | undefined>(
-		undefined,
-	);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-	const [authError, setAuthError] = useState<string | undefined>(undefined);
-	const [emailError, setEmailError] = useState<string[]>([]);
-	const [passwordError, setPasswordError] = useState<string[]>([]);
-	const [providerStatus, setProviderStatus] = useState<AuthProviderStatus>(
-		defaultProviderStatus,
-	);
+	const flow = useLoginFlow({
+		register,
+		onAuthenticated: () => navigate({ to: "/", replace: true }),
+	});
+	const {
+		providers: oauthProviders,
+		canRegisterWithEmail,
+		emailLoading: loading,
+		oauthLoading,
+		error: authError,
+		emailErrors: emailError,
+		passwordErrors: passwordError,
+	} = flow;
+	const showEmailForm = !register || canRegisterWithEmail;
 
 	useEffect(() => {
-		let isMounted = true;
-		const loadProviders = async () => {
-			try {
-				const response = await fetch("/api/auth/providers");
-				if (!response.ok) {
-					return;
-				}
-				const data = (await response.json()) as AuthProviderStatus;
-				if (isMounted) {
-					setProviderStatus(data);
-				}
-			} catch {
-				if (isMounted) {
-					setProviderStatus(defaultProviderStatus);
-				}
-			}
-		};
-		void loadProviders();
-		return () => {
-			isMounted = false;
-		};
-	}, []);
-
-	useEffect(() => {
-		if (!authLoading && isAuthenticated) {
+		if (!authLoading && isAuthenticated && !flow.busy) {
 			void navigate({ to: "/", replace: true });
 		}
-	}, [authLoading, isAuthenticated, navigate]);
-
-	const oauthProviders = providerStatus.providers;
-	const canRegisterWithEmail =
-		providerStatus.emailPassword.registrationEnabled ||
-		providerStatus.bootstrapAvailable;
-	const showEmailForm = !register || canRegisterWithEmail;
+	}, [authLoading, isAuthenticated, flow.busy, navigate]);
 
 	const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		setAuthError(undefined);
-		setEmailError([]);
-		setPasswordError([]);
-		const validation = SignUpSchema.safeParse({ email, password });
-		if (validation.error) {
-			const errors = flattenError(validation.error);
-			setEmailError(errors.fieldErrors.email ?? []);
-			setPasswordError(errors.fieldErrors.password ?? []);
-			return;
-		}
-		setLoading(true);
-		try {
-			if (register) {
-				const { error } = await signUp.email({
-					email,
-					password,
-					name: email.split("@")[0],
-				});
-				if (error) {
-					setPasswordError([error.message ?? "Registration failed"]);
-					setLoading(false);
-					return;
-				}
-			} else {
-				const { error } = await signIn.email({ email, password });
-				if (error) {
-					setPasswordError([error.message ?? "Authentication failed"]);
-					setLoading(false);
-					return;
-				}
-			}
-			const { data: session, error: sessionError } = await getSession();
-			if (sessionError ?? !session) {
-				setPasswordError([
-					"Authentication succeeded but session was not ready",
-				]);
-				setLoading(false);
-				return;
-			}
-			// Redirect to dashboard after successful auth and session refresh
-			void navigate({ to: "/", replace: true });
-		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : "Authentication failed";
-			setAuthError(message);
-			setLoading(false);
-		}
-	};
-	const handleOAuthSignIn = async (provider: AuthProvider) => {
-		setOauthLoading(provider.id);
-		setAuthError(undefined);
-		try {
-			await signIn.social({
-				provider: provider.id,
-				callbackURL: "/",
-				...(providerStatus.bootstrapAvailable ? { requestSignUp: true } : {}),
-			});
-		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : "OAuth sign-in failed";
-			setAuthError(message);
-			setOauthLoading(undefined);
-		}
+		await flow.submitCredentials({ email, password });
 	};
 	const hasOAuthProviders = oauthProviders.length > 0;
 	let submitLabel = "Loading...";
@@ -222,6 +107,29 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 				noValidate
 				onSubmit={handleSubmit}
 			>
+				{flow.providerStatus.state === "loading" && (
+					<p
+						role="status"
+						className="text-sm text-muted-foreground text-center"
+					>
+						Loading sign-in options...
+					</p>
+				)}
+				{flow.providerStatus.state === "error" && (
+					<div role="alert" className="space-y-2 text-center">
+						<p className="text-sm text-destructive dark:text-red-300">
+							{flow.providerStatus.message}
+						</p>
+						<Button
+							type="button"
+							variant="outline"
+							disabled={flow.busy}
+							onClick={flow.retryProviders}
+						>
+							Retry sign-in options
+						</Button>
+					</div>
+				)}
 				{/* OAuth Providers */}
 				{hasOAuthProviders && (
 					<>
@@ -241,8 +149,8 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 										type="button"
 										variant="outline"
 										className="w-full"
-										disabled={oauthLoading !== undefined}
-										onClick={async () => handleOAuthSignIn(provider)}
+										disabled={flow.busy}
+										onClick={async () => flow.signInWithProvider(provider.id)}
 									>
 										{oauthLoading === provider.id ? (
 											<span className="animate-spin mr-2">⏳</span>
@@ -271,14 +179,21 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 				)}
 
 				{authError && (
-					<p className="text-sm text-destructive text-center">{authError}</p>
+					<p
+						role="alert"
+						className="text-sm text-destructive dark:text-red-300 text-center"
+					>
+						{authError}
+					</p>
 				)}
 
 				{register && !canRegisterWithEmail ? (
 					<>
-						<p className="text-sm text-muted-foreground text-center">
-							Email/password registration is disabled
-						</p>
+						{flow.providerStatus.state === "ready" && (
+							<p className="text-sm text-muted-foreground text-center">
+								Email/password registration is disabled
+							</p>
+						)}
 						<Button variant="outline" className="w-full" asChild>
 							<Link to="/signin">Back to sign in</Link>
 						</Button>
@@ -315,7 +230,7 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 							)}
 						</div>
 
-						<Button type="submit" disabled={loading} className="w-full">
+						<Button type="submit" disabled={flow.busy} className="w-full">
 							{submitLabel}
 						</Button>
 

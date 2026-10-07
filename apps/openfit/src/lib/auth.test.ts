@@ -10,9 +10,7 @@ const betterAuthMock = vi.fn();
 const drizzleAdapterMock = vi.fn();
 const genericOAuthMock = vi.fn();
 const getAuthConfigMock = vi.fn();
-const canRequestOidcAccountCreationMock = vi.fn();
-const canRequestSocialAccountCreationMock = vi.fn();
-const isEmailPasswordRegistrationAllowedMock = vi.fn();
+const checkUserCreationMock = vi.fn();
 const nanoidMock = vi.fn();
 const selectMock = vi.fn();
 const fromMock = vi.fn();
@@ -104,9 +102,7 @@ async function loadAuthModule(options?: {
 		type: "generic-oauth",
 		plugin,
 	}));
-	canRequestOidcAccountCreationMock.mockResolvedValue(true);
-	canRequestSocialAccountCreationMock.mockResolvedValue(true);
-	isEmailPasswordRegistrationAllowedMock.mockResolvedValue(true);
+	checkUserCreationMock.mockResolvedValue(null);
 	getAuthConfigMock.mockReturnValue(
 		options?.authConfig ?? {
 			registration: {
@@ -181,13 +177,9 @@ async function loadAuthModule(options?: {
 	vi.doMock("@/db/schema", () => ({
 		schema: schemaMock,
 	}));
-	vi.doMock("@/lib/auth-config", () => ({
-		getAuthConfig: getAuthConfigMock,
-	}));
 	vi.doMock("@/lib/auth-policy", () => ({
-		canRequestOidcAccountCreation: canRequestOidcAccountCreationMock,
-		canRequestSocialAccountCreation: canRequestSocialAccountCreationMock,
-		isEmailPasswordRegistrationAllowed: isEmailPasswordRegistrationAllowedMock,
+		authConfig: getAuthConfigMock(process.env),
+		registrationPolicy: { checkUserCreation: checkUserCreationMock },
 	}));
 
 	return import("./auth");
@@ -379,105 +371,30 @@ describe("auth", () => {
 		expect(insertRunMock).toHaveBeenCalledTimes(2);
 	});
 
-	it.each([
-		{ path: "/callback/:id", params: { id: "google" } },
-		{ path: "/sign-in/social", body: { provider: "google" } },
-	])("rechecks social account creation at $path", async (context) => {
-		canRequestSocialAccountCreationMock.mockResolvedValueOnce(false);
-		await loadAuthModule({
-			nodeEnv: "development",
-			authConfig: {
-				registration: {
-					disableAll: true,
-					disableEmailPassword: false,
-				},
-				emailPassword: {
-					enabled: true,
-				},
-				socialProviders: {
-					google: {
-						clientId: "google",
-						clientSecret: "secret",
-						disableImplicitSignUp: true,
-					},
-				},
-				oidcProviders: [],
-			},
+	it("passes creation context to the policy and translates a denial", async () => {
+		await loadAuthModule();
+		checkUserCreationMock.mockResolvedValueOnce({
+			message: "Account creation origin is not recognized",
 		});
-
+		const context = { path: "/unknown" };
 		await expect(
 			capturedConfig.databaseHooks.user.create.before(
 				{ id: "new-user" },
 				context,
 			),
-		).rejects.toThrow("Account creation is disabled for this provider");
-		expect(canRequestSocialAccountCreationMock).toHaveBeenCalledWith(
-			expect.objectContaining({
-				registration: expect.objectContaining({ disableAll: true }),
-			}),
-		);
+		).rejects.toThrow("Account creation origin is not recognized");
+		expect(checkUserCreationMock).toHaveBeenCalledWith(context);
 	});
 
-	it.each([
-		[false, { path: "/callback/:id", params: { id: "authentik" } }],
-		[true, { path: "/callback/:id", params: { id: "authentik" } }],
-		[false, { path: "/sign-in/social", body: { provider: "authentik" } }],
-		[true, { path: "/sign-in/social", body: { provider: "authentik" } }],
-	])(
-		"rechecks OIDC account creation (allowed=%s) at %j",
-		async (allowed, context) => {
-			canRequestOidcAccountCreationMock.mockResolvedValueOnce(allowed);
-			await loadAuthModule({
-				nodeEnv: "development",
-				authConfig: {
-					registration: {
-						disableAll: true,
-						disableEmailPassword: false,
-					},
-					emailPassword: {
-						enabled: true,
-					},
-					socialProviders: {},
-					oidcProviders: [
-						{
-							providerId: "authentik",
-							displayName: "Authentik",
-							clientId: "oidc-client",
-							clientSecret: "oidc-secret",
-							issuer: "https://issuer.example.com",
-							discoveryUrl:
-								"https://issuer.example.com/.well-known/openid-configuration",
-							scopes: ["openid", "email", "profile"],
-							pkce: true,
-							allowAccountCreation: false,
-						},
-					],
-				},
-			});
-
-			const creation = capturedConfig.databaseHooks.user.create.before(
+	it("allows creation when the policy returns no denial", async () => {
+		await loadAuthModule();
+		const context = { path: "/sign-up/email" };
+		await expect(
+			capturedConfig.databaseHooks.user.create.before(
 				{ id: "new-user" },
 				context,
-			);
-			if (allowed) {
-				await expect(creation).resolves.toBeUndefined();
-			} else {
-				await expect(creation).rejects.toThrow(
-					"Account creation is disabled for this OIDC provider",
-				);
-			}
-			expect(canRequestSocialAccountCreationMock).not.toHaveBeenCalled();
-			expect(canRequestOidcAccountCreationMock).toHaveBeenCalledWith(
-				expect.objectContaining({
-					oidcProviders: [
-						expect.objectContaining({
-							providerId: "authentik",
-							allowAccountCreation: false,
-						}),
-					],
-				}),
-				"authentik",
-			);
-		},
-	);
+			),
+		).resolves.toBeUndefined();
+		expect(checkUserCreationMock).toHaveBeenCalledWith(context);
+	});
 });

@@ -2,525 +2,237 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
+import type { AuthProviderStatus } from "@/lib/auth-provider-status";
 import { LoginForm } from "./login-form";
 
-const mockNavigate = vi.fn();
-const mockSignInEmail = vi.fn();
-const mockSignInSocial = vi.fn();
-const mockSignUpEmail = vi.fn();
-const mockUseAuth = vi.fn();
-const mockGetSession = vi.fn();
-const mockFetch = vi.fn();
-
+const mocks = vi.hoisted(() => ({
+	navigate: vi.fn(),
+	signIn: vi.fn(),
+	signUp: vi.fn(),
+	provider: vi.fn(),
+	getSession: vi.fn(),
+	useAuth: vi.fn(),
+	fetch: vi.fn(),
+}));
 vi.mock("@tanstack/react-router", () => ({
 	Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => (
-		<a href={to} {...props} rel="noreferrer">
+		<a href={to} {...props}>
 			{children}
 		</a>
 	),
-	useNavigate: () => mockNavigate,
+	useNavigate: () => mocks.navigate,
 }));
-
 vi.mock("@/components/providers/auth-provider", () => ({
-	signIn: {
-		email: (...args: unknown[]) => mockSignInEmail(...args),
-		social: (...args: unknown[]) => mockSignInSocial(...args),
-	},
-	signUp: {
-		email: (...args: unknown[]) => mockSignUpEmail(...args),
-	},
-	useAuth: () => mockUseAuth(),
+	useAuth: () => mocks.useAuth(),
 }));
-
 vi.mock("@/lib/auth-client", () => ({
-	getSession: (...args: unknown[]) => mockGetSession(...args),
+	signIn: { email: mocks.signIn, social: mocks.provider },
+	signUp: { email: mocks.signUp },
+	getSession: mocks.getSession,
 }));
 
-describe("LoginForm redirects", () => {
+const openStatus: AuthProviderStatus = {
+	emailPassword: { signInEnabled: true, registrationEnabled: true },
+	bootstrapAvailable: false,
+	providers: [],
+};
+const closedStatus: AuthProviderStatus = {
+	...openStatus,
+	emailPassword: { signInEnabled: true, registrationEnabled: false },
+};
+
+describe("login presentation with the real login-flow module", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
-		vi.stubGlobal("fetch", mockFetch);
-		mockFetch.mockResolvedValue({
-			ok: true,
-			json: async () => ({
-				emailPassword: {
-					signInEnabled: true,
-					registrationEnabled: true,
-				},
-				bootstrapAvailable: false,
-				providers: [],
-			}),
-		});
-		mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
-		mockSignInEmail.mockResolvedValue({ error: null });
-		mockSignInSocial.mockResolvedValue({ error: null });
-		mockSignUpEmail.mockResolvedValue({ error: null });
-		mockGetSession.mockResolvedValue({
-			data: { session: { id: "session-1" } },
+		vi.resetAllMocks();
+		vi.stubGlobal("fetch", mocks.fetch);
+		mocks.fetch.mockResolvedValue(Response.json(openStatus));
+		mocks.useAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
+		mocks.signIn.mockResolvedValue({ error: null });
+		mocks.signUp.mockResolvedValue({ error: null });
+		mocks.provider.mockResolvedValue({ error: null });
+		mocks.getSession.mockResolvedValue({
+			data: { session: { id: "session" }, user: { id: "user" } },
 		});
 	});
+	afterEach(() => vi.unstubAllGlobals());
 
-	afterEach(() => {
-		vi.unstubAllGlobals();
-	});
-
-	it("redirects to home when already authenticated", async () => {
-		mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
-
+	it("redirects an already authenticated user", async () => {
+		mocks.useAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
 		await render(<LoginForm />);
+		await vi.waitFor(() =>
+			expect(mocks.navigate).toHaveBeenCalledWith({ to: "/", replace: true }),
+		);
+	});
 
-		await vi.waitFor(() => {
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/", replace: true });
+	it("renders email login and completes through the flow", async () => {
+		const screen = await render(<LoginForm />);
+		await screen.getByLabelText("Email").fill("person@example.com");
+		await screen.getByLabelText("Password").fill("Password1!");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Login", exact: true }),
+		);
+		await vi.waitFor(() =>
+			expect(mocks.navigate).toHaveBeenCalledWith({ to: "/", replace: true }),
+		);
+		expect(mocks.signIn).toHaveBeenCalledWith({
+			email: "person@example.com",
+			password: "Password1!",
 		});
 	});
 
-	it("refreshes session and redirects after email login", async () => {
-		const screen = await render(<LoginForm />);
-
-		await screen.getByLabelText("Email").fill("person@example.com");
+	it("renders registration when the server grants it", async () => {
+		const screen = await render(<LoginForm register />);
+		await screen.getByLabelText("Email").fill("new@example.com");
 		await screen.getByLabelText("Password").fill("Password1!");
-		await userEvent.click(screen.getByRole("button", { name: "Login" }));
-
-		await vi.waitFor(() => {
-			expect(mockSignInEmail).toHaveBeenCalledWith({
-				email: "person@example.com",
+		await userEvent.click(
+			screen.getByRole("button", { name: "Register", exact: true }),
+		);
+		await vi.waitFor(() =>
+			expect(mocks.signUp).toHaveBeenCalledWith({
+				email: "new@example.com",
 				password: "Password1!",
-			});
-			expect(mockGetSession).toHaveBeenCalledTimes(1);
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/", replace: true });
-		});
+				name: "new",
+			}),
+		);
 	});
 
-	it("shows an error when session is missing after successful login", async () => {
-		mockGetSession.mockResolvedValue({
-			data: null,
-			error: { message: "missing" },
-		});
-
-		const screen = await render(<LoginForm />);
-
-		await screen.getByLabelText("Email").fill("person@example.com");
-		await screen.getByLabelText("Password").fill("Password1!");
-		await userEvent.click(screen.getByRole("button", { name: "Login" }));
-
-		await vi.waitFor(() => {
-			expect(mockNavigate).not.toHaveBeenCalled();
-		});
+	it("distinguishes loading from disabled registration", async () => {
+		mocks.fetch.mockReturnValue(new Promise<Response>(() => {}));
+		const screen = await render(<LoginForm register />);
 		await expect
-			.element(
-				screen.getByText("Authentication succeeded but session was not ready"),
-			)
+			.element(screen.getByRole("status"))
+			.toHaveTextContent("Loading sign-in options...");
+		await expect
+			.element(screen.getByText("Email/password registration is disabled"))
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Register", exact: true }))
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByLabelText("Email"))
+			.not.toBeInTheDocument();
+	});
+
+	it.each([false, true])(
+		"keeps email registration closed after discovery failure and offers retry (register=%s)",
+		async (register) => {
+			mocks.fetch
+				.mockResolvedValueOnce(new Response(null, { status: 503 }))
+				.mockResolvedValueOnce(Response.json(openStatus));
+			const screen = await render(<LoginForm register={register} />);
+			await expect
+				.element(
+					screen.getByText("Could not load sign-in options. Please try again."),
+				)
+				.toBeInTheDocument();
+			await expect
+				.element(screen.getByRole("link", { name: "Create an account" }))
+				.not.toBeInTheDocument();
+			if (register)
+				await expect
+					.element(screen.getByLabelText("Email"))
+					.not.toBeInTheDocument();
+			else
+				await expect
+					.element(screen.getByLabelText("Email"))
+					.toBeInTheDocument();
+			await userEvent.click(
+				screen.getByRole("button", { name: "Retry sign-in options" }),
+			);
+			if (register)
+				await expect
+					.element(
+						screen.getByRole("button", { name: "Register", exact: true }),
+					)
+					.toBeInTheDocument();
+			else
+				await expect
+					.element(screen.getByRole("link", { name: "Create an account" }))
+					.toBeInTheDocument();
+			expect(mocks.fetch).toHaveBeenCalledTimes(2);
+		},
+	);
+
+	it.each([
+		{},
+		{
+			...openStatus,
+			bootstrapAvailable: true,
+			emailPassword: { signInEnabled: true, registrationEnabled: false },
+		},
+	])(
+		"treats invalid provider status as unavailable, not permission (%j)",
+		async (payload) => {
+			mocks.fetch.mockResolvedValueOnce(Response.json(payload));
+			const screen = await render(<LoginForm register />);
+			await expect
+				.element(screen.getByRole("button", { name: "Retry sign-in options" }))
+				.toBeInTheDocument();
+			await expect
+				.element(screen.getByRole("button", { name: "Register", exact: true }))
+				.not.toBeInTheDocument();
+		},
+	);
+
+	it("shows disabled registration only after valid closed status arrives", async () => {
+		mocks.fetch.mockResolvedValueOnce(Response.json(closedStatus));
+		const screen = await render(<LoginForm register />);
+		await expect
+			.element(screen.getByText("Email/password registration is disabled"))
+			.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("button", { name: "Retry sign-in options" }))
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole("link", { name: "Back to sign in" }))
 			.toBeInTheDocument();
 	});
 
-	it("shows validation errors and blocks submission when the form is invalid", async () => {
-		const screen = await render(<LoginForm />);
+	it("keeps OIDC visible with email registration closed and displays returned OAuth errors", async () => {
+		mocks.fetch.mockResolvedValueOnce(
+			Response.json({
+				...closedStatus,
+				providers: [
+					{
+						id: "company",
+						name: "Company",
+						type: "oidc",
+						allowAccountCreation: true,
+						requestSignUp: false,
+					},
+				],
+			}),
+		);
+		mocks.provider.mockResolvedValueOnce({
+			error: { message: "OIDC unavailable" },
+		});
+		const screen = await render(<LoginForm register />);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Continue with Company" }),
+		);
+		await expect
+			.element(screen.getByRole("alert"))
+			.toHaveTextContent("OIDC unavailable");
+		await expect
+			.element(screen.getByRole("button", { name: "Continue with Company" }))
+			.toBeEnabled();
+		expect(mocks.provider).toHaveBeenCalledWith({
+			provider: "company",
+			callbackURL: "/",
+		});
+	});
 
+	it("renders field validation from the flow", async () => {
+		const screen = await render(<LoginForm />);
 		await screen.getByLabelText("Email").fill("invalid");
 		await screen.getByLabelText("Password").fill("abc");
-		await userEvent.click(screen.getByRole("button", { name: "Login" }));
-
-		await vi.waitFor(() => {
-			expect(mockSignInEmail).not.toHaveBeenCalled();
-		});
+		await userEvent.click(
+			screen.getByRole("button", { name: "Login", exact: true }),
+		);
 		await expect.element(screen.getByText("Invalid email")).toBeInTheDocument();
 		await expect
 			.element(screen.getByText("Be at least 8 characters long"))
 			.toBeInTheDocument();
-		expect(mockSignInEmail).not.toHaveBeenCalled();
-		expect(mockGetSession).not.toHaveBeenCalled();
-	});
-
-	it("shows sign-in API errors and does not refresh session", async () => {
-		mockSignInEmail.mockResolvedValue({
-			error: { message: "Invalid email or password" },
-		});
-
-		const screen = await render(<LoginForm />);
-
-		await screen.getByLabelText("Email").fill("person@example.com");
-		await screen.getByLabelText("Password").fill("Password1!");
-		await userEvent.click(screen.getByRole("button", { name: "Login" }));
-
-		await vi.waitFor(() => {
-			expect(mockGetSession).not.toHaveBeenCalled();
-		});
-		await expect
-			.element(screen.getByText("Invalid email or password"))
-			.toBeInTheDocument();
-		expect(mockNavigate).not.toHaveBeenCalled();
-	});
-
-	it("registers a new account when register mode is enabled", async () => {
-		const screen = await render(<LoginForm register />);
-
-		await screen.getByLabelText("Email").fill("newperson@example.com");
-		await screen.getByLabelText("Password").fill("Password1!");
-		await userEvent.click(screen.getByRole("button", { name: "Register" }));
-
-		await vi.waitFor(() => {
-			expect(mockSignUpEmail).toHaveBeenCalledWith({
-				email: "newperson@example.com",
-				password: "Password1!",
-				name: "newperson",
-			});
-			expect(mockGetSession).toHaveBeenCalledTimes(1);
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/", replace: true });
-		});
-	});
-
-	it("shows the fallback error when sign-in throws a non-Error", async () => {
-		mockSignInEmail.mockRejectedValueOnce("boom");
-
-		const screen = await render(<LoginForm />);
-
-		await screen.getByLabelText("Email").fill("person@example.com");
-		await screen.getByLabelText("Password").fill("Password1!");
-		await userEvent.click(screen.getByRole("button", { name: "Login" }));
-
-		await expect
-			.element(screen.getByText("Authentication failed"))
-			.toBeInTheDocument();
-		expect(mockGetSession).not.toHaveBeenCalled();
-	});
-
-	it("shows registration errors when sign-up fails", async () => {
-		mockSignUpEmail.mockResolvedValueOnce({
-			error: { message: "Registration failed" },
-		});
-
-		const screen = await render(<LoginForm register />);
-
-		await screen.getByLabelText("Email").fill("newperson@example.com");
-		await screen.getByLabelText("Password").fill("Password1!");
-		await userEvent.click(screen.getByRole("button", { name: "Register" }));
-
-		await expect
-			.element(screen.getByText("Registration failed"))
-			.toBeInTheDocument();
-		expect(mockGetSession).not.toHaveBeenCalled();
-		expect(mockNavigate).not.toHaveBeenCalled();
-	});
-
-	it("starts social OAuth sign-in when Google is enabled", async () => {
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({
-				emailPassword: {
-					signInEnabled: true,
-					registrationEnabled: true,
-				},
-				bootstrapAvailable: false,
-				providers: [
-					{
-						id: "google",
-						name: "Google",
-						type: "social",
-					},
-				],
-			}),
-		});
-
-		const screen = await render(<LoginForm />);
-
-		await userEvent.click(
-			screen.getByRole("button", { name: "Continue with Google" }),
-		);
-
-		expect(mockSignInSocial).toHaveBeenCalledWith({
-			provider: "google",
-			callbackURL: "/",
-		});
-	});
-
-	it("passes requestSignUp for social providers during first-user bootstrap", async () => {
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({
-				emailPassword: {
-					signInEnabled: true,
-					registrationEnabled: true,
-				},
-				bootstrapAvailable: true,
-				providers: [
-					{
-						id: "google",
-						name: "Google",
-						type: "social",
-					},
-				],
-			}),
-		});
-
-		const screen = await render(<LoginForm />);
-
-		await userEvent.click(
-			screen.getByRole("button", { name: "Continue with Google" }),
-		);
-
-		expect(mockSignInSocial).toHaveBeenCalledWith({
-			provider: "google",
-			callbackURL: "/",
-			requestSignUp: true,
-		});
-	});
-
-	it("shows a social OAuth error when the provider flow throws", async () => {
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({
-				emailPassword: {
-					signInEnabled: true,
-					registrationEnabled: true,
-				},
-				bootstrapAvailable: false,
-				providers: [
-					{
-						id: "google",
-						name: "Google",
-						type: "social",
-					},
-				],
-			}),
-		});
-		mockSignInSocial.mockRejectedValueOnce(new Error("oauth failed"));
-
-		const screen = await render(<LoginForm />);
-
-		await userEvent.click(
-			screen.getByRole("button", { name: "Continue with Google" }),
-		);
-
-		await expect.element(screen.getByText("oauth failed")).toBeInTheDocument();
-	});
-
-	it("renders OIDC providers from the provider status API", async () => {
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({
-				emailPassword: {
-					signInEnabled: true,
-					registrationEnabled: true,
-				},
-				bootstrapAvailable: false,
-				providers: [
-					{
-						id: "authentik",
-						name: "Authentik",
-						type: "oidc",
-						allowAccountCreation: true,
-					},
-				],
-			}),
-		});
-
-		const screen = await render(<LoginForm />);
-
-		await userEvent.click(
-			screen.getByRole("button", { name: "Continue with Authentik" }),
-		);
-
-		expect(mockSignInSocial).toHaveBeenCalledWith({
-			provider: "authentik",
-			callbackURL: "/",
-		});
-	});
-
-	it("passes requestSignUp for OIDC during first-user bootstrap", async () => {
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({
-				emailPassword: {
-					signInEnabled: true,
-					registrationEnabled: true,
-				},
-				bootstrapAvailable: true,
-				providers: [
-					{
-						id: "authentik",
-						name: "Authentik",
-						type: "oidc",
-						allowAccountCreation: false,
-					},
-				],
-			}),
-		});
-
-		const screen = await render(<LoginForm />);
-
-		await userEvent.click(
-			screen.getByRole("button", { name: "Continue with Authentik" }),
-		);
-
-		expect(mockSignInSocial).toHaveBeenCalledWith({
-			provider: "authentik",
-			callbackURL: "/",
-			requestSignUp: true,
-		});
-	});
-
-	it("hides email registration controls when registration is disabled", async () => {
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({
-				emailPassword: {
-					signInEnabled: true,
-					registrationEnabled: false,
-				},
-				bootstrapAvailable: false,
-				providers: [],
-			}),
-		});
-
-		const screen = await render(<LoginForm register />);
-
-		await expect
-			.element(screen.getByText("Email/password registration is disabled"))
-			.toBeInTheDocument();
-		await expect
-			.element(screen.getByRole("button", { name: "Register" }))
-			.not.toBeInTheDocument();
-	});
-
-	it("hides the create account link when registration is disabled", async () => {
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({
-				emailPassword: {
-					signInEnabled: true,
-					registrationEnabled: false,
-				},
-				bootstrapAvailable: false,
-				providers: [],
-			}),
-		});
-
-		const screen = await render(<LoginForm />);
-
-		await expect
-			.element(screen.getByRole("link", { name: "Create an account" }))
-			.not.toBeInTheDocument();
-	});
-
-	it("does not expose registration controls in register mode when provider status returns non-OK", async () => {
-		mockFetch.mockResolvedValueOnce({
-			ok: false,
-			json: async () => ({}),
-		});
-
-		const screen = await render(<LoginForm register />);
-
-		await expect
-			.element(screen.getByText("Email/password registration is disabled"))
-			.toBeInTheDocument();
-		await expect
-			.element(screen.getByLabelText("Email"))
-			.not.toBeInTheDocument();
-		await expect
-			.element(screen.getByRole("button", { name: "Register" }))
-			.not.toBeInTheDocument();
-	});
-
-	it("does not expose registration controls in register mode when provider status rejects", async () => {
-		mockFetch.mockRejectedValueOnce(new Error("provider status failed"));
-
-		const screen = await render(<LoginForm register />);
-
-		await expect
-			.element(screen.getByText("Email/password registration is disabled"))
-			.toBeInTheDocument();
-		await expect
-			.element(screen.getByLabelText("Email"))
-			.not.toBeInTheDocument();
-		await expect
-			.element(screen.getByRole("button", { name: "Register" }))
-			.not.toBeInTheDocument();
-	});
-
-	it("does not show create account when provider status returns non-OK", async () => {
-		mockFetch.mockResolvedValueOnce({
-			ok: false,
-			json: async () => ({}),
-		});
-
-		const screen = await render(<LoginForm />);
-
-		await expect.element(screen.getByLabelText("Email")).toBeInTheDocument();
-		await expect
-			.element(screen.getByRole("link", { name: "Create an account" }))
-			.not.toBeInTheDocument();
-	});
-
-	it("does not show create account when provider status rejects", async () => {
-		mockFetch.mockRejectedValueOnce(new Error("provider status failed"));
-
-		const screen = await render(<LoginForm />);
-
-		await expect.element(screen.getByLabelText("Email")).toBeInTheDocument();
-		await expect
-			.element(screen.getByRole("link", { name: "Create an account" }))
-			.not.toBeInTheDocument();
-	});
-
-	it("keeps OIDC provider buttons visible when email registration is disabled", async () => {
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({
-				emailPassword: {
-					signInEnabled: true,
-					registrationEnabled: false,
-				},
-				bootstrapAvailable: false,
-				providers: [
-					{
-						id: "authentik",
-						name: "Authentik",
-						type: "oidc",
-						allowAccountCreation: true,
-					},
-				],
-			}),
-		});
-
-		const screen = await render(<LoginForm register />);
-
-		await expect
-			.element(screen.getByRole("button", { name: "Continue with Authentik" }))
-			.toBeInTheDocument();
-		await expect
-			.element(screen.getByText("Email/password registration is disabled"))
-			.toBeInTheDocument();
-	});
-
-	it("shows OIDC errors when email registration controls are hidden", async () => {
-		mockFetch.mockResolvedValueOnce({
-			ok: true,
-			json: async () => ({
-				emailPassword: {
-					signInEnabled: true,
-					registrationEnabled: false,
-				},
-				bootstrapAvailable: false,
-				providers: [
-					{
-						id: "authentik",
-						name: "Authentik",
-						type: "oidc",
-						allowAccountCreation: true,
-					},
-				],
-			}),
-		});
-		mockSignInSocial.mockRejectedValueOnce(new Error("OIDC unavailable"));
-
-		const screen = await render(<LoginForm register />);
-
-		await userEvent.click(
-			screen.getByRole("button", { name: "Continue with Authentik" }),
-		);
-
-		await expect
-			.element(screen.getByText("OIDC unavailable"))
-			.toBeInTheDocument();
+		expect(mocks.signIn).not.toHaveBeenCalled();
 	});
 });

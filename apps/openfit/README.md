@@ -63,7 +63,15 @@ the first user is created. OIDC providers can still auto-provision users when
 their indexed provider config sets `OIDC_N_ALLOW_ACCOUNT_CREATION=true`.
 
 The first account created on a fresh install becomes an admin whether it is
-created through email/password, social login, or OIDC.
+created through email/password, social login, or OIDC. Registration policy is
+checked again when a user is created, including at an identity-provider callback.
+Creation from an unrecognized origin is rejected; supported direct email signup
+calls, including the seed script, retain the same policy checks.
+
+Provider status uses the same startup configuration and current bootstrap state
+as registration checks. If status cannot be loaded, the login page offers a retry
+and keeps registration unavailable while existing email/password sign-in remains
+available.
 
 OIDC providers are configured with indexed variables:
 
@@ -79,7 +87,7 @@ OIDC_1_ALLOW_ACCOUNT_CREATION=true
 Use this callback URL in the OIDC provider:
 
 ```text
-https://your-openfit-host.example.com/api/auth/oauth2/callback/<provider-id>
+https://your-openfit-host.example.com/api/auth/callback/<provider-id>
 ```
 
 ---

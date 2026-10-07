@@ -1,195 +1,40 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({
-	isEmailPasswordRegistrationAllowedForBootstrapState: vi.fn(),
-	isFirstUserBootstrapAvailable: vi.fn(),
-}));
-
+const mocks = vi.hoisted(() => ({ getProviderStatus: vi.fn() }));
 vi.mock("@/lib/auth-policy", () => ({
-	isEmailPasswordRegistrationAllowedForBootstrapState:
-		mocks.isEmailPasswordRegistrationAllowedForBootstrapState,
-	isFirstUserBootstrapAvailable: mocks.isFirstUserBootstrapAvailable,
+	registrationPolicy: { getProviderStatus: mocks.getProviderStatus },
 }));
 
 import AuthProvidersRoute from "@/routes/api/auth/providers";
 
 const handlers = AuthProvidersRoute.options.server?.handlers as {
-	GET: () => Promise<Response> | Response;
+	GET: () => Promise<Response>;
 };
 
-const explicitEnvKeys = [
-	"AUTH_GOOGLE_ID",
-	"AUTH_GOOGLE_SECRET",
-	"AUTH_GITHUB_ID",
-	"AUTH_GITHUB_SECRET",
-	"AUTH_DISCORD_ID",
-	"AUTH_DISCORD_SECRET",
-	"DISABLE_REGISTRATION",
-	"DISABLE_EMAIL_PASSWORD_REGISTRATION",
-];
-
-const oidcEnvKeyPattern = /^OIDC_\d+_/;
-const originalEnv = new Map<string, string | undefined>();
-const envKeysToRestore = new Set<string>();
-
-function getCurrentAuthEnvKeys(): string[] {
-	return [
-		...explicitEnvKeys,
-		...Object.keys(process.env).filter((key) => oidcEnvKeyPattern.test(key)),
-	];
-}
-
-beforeEach(() => {
-	vi.clearAllMocks();
-	originalEnv.clear();
-	envKeysToRestore.clear();
-
-	for (const key of getCurrentAuthEnvKeys()) {
-		envKeysToRestore.add(key);
-		originalEnv.set(key, process.env[key]);
-		delete process.env[key];
-	}
-	mocks.isEmailPasswordRegistrationAllowedForBootstrapState.mockReturnValue(
-		true,
-	);
-	mocks.isFirstUserBootstrapAvailable.mockResolvedValue(false);
-});
-
-afterEach(() => {
-	for (const key of getCurrentAuthEnvKeys()) {
-		envKeysToRestore.add(key);
-	}
-
-	for (const key of envKeysToRestore) {
-		const value = originalEnv.get(key);
-		if (value === undefined) {
-			delete process.env[key];
-		} else {
-			process.env[key] = value;
-		}
-	}
-});
-
-describe("GET /api/auth/providers", () => {
-	it("returns auth surface without secrets", async () => {
-		process.env.AUTH_GOOGLE_ID = "google_id";
-		process.env.AUTH_GOOGLE_SECRET = "google_secret";
-		process.env.AUTH_GITHUB_ID = "github_id";
-		process.env.AUTH_GITHUB_SECRET = "github_secret";
-		process.env.AUTH_DISCORD_ID = "discord_id";
-		process.env.AUTH_DISCORD_SECRET = "discord_secret";
-		process.env.DISABLE_EMAIL_PASSWORD_REGISTRATION = "true";
-		process.env.OIDC_1_PROVIDER_ID = "authentik";
-		process.env.OIDC_1_PROVIDER_NAME = "Authentik";
-		process.env.OIDC_1_CLIENT_ID = "oidc_client";
-		process.env.OIDC_1_CLIENT_SECRET = "oidc_secret";
-		process.env.OIDC_1_ISSUER = "https://issuer.example.com";
-		process.env.OIDC_1_ALLOW_ACCOUNT_CREATION = "true";
-		process.env.OIDC_2_PROVIDER_ID = "authelia";
-		process.env.OIDC_2_PROVIDER_NAME = "Authelia";
-		process.env.OIDC_2_CLIENT_ID = "oidc_client_two";
-		process.env.OIDC_2_CLIENT_SECRET = "oidc_secret_two";
-		process.env.OIDC_2_ISSUER = "https://issuer-two.example.com";
-		process.env.OIDC_2_ALLOW_ACCOUNT_CREATION = "false";
-
-		const response = await handlers.GET();
-		const bodyText = await response.clone().text();
-
-		expect(response.status).toBe(200);
-		await expect(response.json()).resolves.toEqual({
-			emailPassword: {
-				signInEnabled: true,
-				registrationEnabled: true,
-			},
-			bootstrapAvailable: false,
+describe("provider status adapter", () => {
+	it("serializes the owned provider status without recomputing policy", async () => {
+		const status = {
+			emailPassword: { signInEnabled: true, registrationEnabled: true },
+			bootstrapAvailable: true,
 			providers: [
 				{
-					id: "google",
-					name: "Google",
-					type: "social",
-				},
-				{
-					id: "github",
-					name: "GitHub",
-					type: "social",
-				},
-				{
-					id: "discord",
-					name: "Discord",
-					type: "social",
-				},
-				{
-					id: "authentik",
-					name: "Authentik",
-					type: "oidc",
-					allowAccountCreation: true,
-				},
-				{
-					id: "authelia",
-					name: "Authelia",
+					id: "company",
+					name: "Company login",
 					type: "oidc",
 					allowAccountCreation: false,
+					requestSignUp: true,
 				},
 			],
-		});
-		expect(mocks.isFirstUserBootstrapAvailable).toHaveBeenCalledTimes(1);
-		expect(
-			mocks.isEmailPasswordRegistrationAllowedForBootstrapState,
-		).toHaveBeenCalledWith(
-			expect.objectContaining({
-				registration: {
-					disableAll: false,
-					disableEmailPassword: true,
-				},
-				socialProviders: expect.objectContaining({
-					google: expect.objectContaining({ clientId: "google_id" }),
-					github: expect.objectContaining({ clientId: "github_id" }),
-					discord: expect.objectContaining({ clientId: "discord_id" }),
-				}),
-				oidcProviders: expect.arrayContaining([
-					expect.objectContaining({
-						providerId: "authentik",
-						displayName: "Authentik",
-						allowAccountCreation: true,
-					}),
-					expect.objectContaining({
-						providerId: "authelia",
-						displayName: "Authelia",
-						allowAccountCreation: false,
-					}),
-				]),
-			}),
-			false,
-		);
-		expect(bodyText).not.toContain("google_secret");
-		expect(bodyText).not.toContain("github_secret");
-		expect(bodyText).not.toContain("discord_secret");
-		expect(bodyText).not.toContain("oidc_client");
-		expect(bodyText).not.toContain("oidc_secret");
-		expect(bodyText).not.toContain("https://issuer.example.com");
-		expect(bodyText).not.toContain("oidc_client_two");
-		expect(bodyText).not.toContain("oidc_secret_two");
-		expect(bodyText).not.toContain("https://issuer-two.example.com");
-	});
-
-	it("returns registration and bootstrap status from auth policy", async () => {
-		mocks.isEmailPasswordRegistrationAllowedForBootstrapState.mockReturnValueOnce(
-			false,
-		);
-		mocks.isFirstUserBootstrapAvailable.mockResolvedValueOnce(true);
-
+		};
+		mocks.getProviderStatus.mockResolvedValue(status);
 		const response = await handlers.GET();
-
-		await expect(response.json()).resolves.toMatchObject({
-			emailPassword: {
-				signInEnabled: true,
-				registrationEnabled: false,
-			},
-			bootstrapAvailable: true,
-		});
-		expect(mocks.isFirstUserBootstrapAvailable).toHaveBeenCalledTimes(1);
-		expect(
-			mocks.isEmailPasswordRegistrationAllowedForBootstrapState,
-		).toHaveBeenCalledWith(expect.any(Object), true);
+		expect(response.status).toBe(200);
+		expect(await response.json()).toEqual(status);
+	});
+	it("does not invent registration permission when status cannot be obtained", async () => {
+		mocks.getProviderStatus.mockRejectedValueOnce(
+			new Error("Database unavailable"),
+		);
+		await expect(handlers.GET()).rejects.toThrow("Database unavailable");
 	});
 });
