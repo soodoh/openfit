@@ -1,4 +1,3 @@
-import { userEvent } from "@vitest/browser/context";
 import {
 	cloneElement,
 	createContext,
@@ -7,6 +6,7 @@ import {
 	useContext,
 } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import type { WorkoutSessionWithData } from "@/lib/types";
 import { EditNotesPopover } from "./edit-notes-popover";
@@ -118,7 +118,7 @@ describe("EditNotesPopover", () => {
 
 		await expect
 			.element(screen.getByRole("button", { name: /notes/i }))
-			.toHaveTextContent("—");
+			.toHaveTextContent("Notes—");
 	});
 
 	it("resets the textarea when the popover is reopened", async () => {

@@ -32,10 +32,19 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Check for pending changesets
+        id: changesets
+        run: |
+          bun run changeset status --output=/tmp/changeset-status.json
+          PENDING=$(node -p "JSON.parse(require('fs').readFileSync('/tmp/changeset-status.json', 'utf8')).releases.length > 0")
+          echo "pending=$PENDING" >> "$GITHUB_OUTPUT"
+
       - name: Version packages
+        if: steps.changesets.outputs.pending == 'true'
         run: bun run changeset version
 
       - name: Commit and push changes
+        if: steps.changesets.outputs.pending == 'true'
         id: commit
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then

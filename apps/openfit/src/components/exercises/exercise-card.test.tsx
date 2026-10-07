@@ -1,6 +1,6 @@
-import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { ExerciseCard } from "./exercise-card";
 
@@ -22,7 +22,7 @@ vi.mock("./exercise-detail-modal", () => ({
 	}) =>
 		open ? (
 			<div>
-				exercise detail open
+				<span>exercise detail open</span>
 				<button type="button" onClick={onClose}>
 					Close detail
 				</button>

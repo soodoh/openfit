@@ -1,5 +1,5 @@
-import { userEvent } from "@vitest/browser/context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { ExerciseTable } from "./exercise-table";
 import { LookupTable } from "./lookup-table";

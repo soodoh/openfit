@@ -1,5 +1,5 @@
-import { userEvent } from "@vitest/browser/context";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import type { RoutineWithDays } from "@/lib/types";
 import { RoutineCard } from "./routine-card";
@@ -61,7 +61,7 @@ describe("RoutineCard", () => {
 
 		await expect
 			.element(screen.getByRole("dialog"))
-			.toHaveTextContent("Routine modal body");
+			.toMatchTextContent("Routine modal body");
 		await userEvent.click(
 			screen.getByRole("button", { name: "Close routine modal" }),
 		);

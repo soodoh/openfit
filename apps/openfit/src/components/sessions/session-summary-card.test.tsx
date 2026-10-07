@@ -1,8 +1,8 @@
-import { userEvent } from "@vitest/browser/context";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { SessionSummaryCard } from "./session-summary-card";
 
@@ -115,7 +115,6 @@ describe("SessionSummaryCard", () => {
 		// Fire pointerdown only (not a full click) to test stopPropagation
 		screen
 			.getByRole("button", { name: "Edit session menu" })
-			.nth(1)
 			.element()
 			.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
 		expect(onClick).not.toHaveBeenCalled();

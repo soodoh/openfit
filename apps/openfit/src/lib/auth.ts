@@ -22,6 +22,7 @@ const authConfig = getAuthConfig(process.env);
 type AuthEndpointContext = {
 	path: string;
 	params?: Record<string, string | undefined>;
+	body?: { provider?: string };
 };
 
 function isAuthEndpointContext(
@@ -53,25 +54,30 @@ async function assertUserCreationAllowed(context: unknown): Promise<void> {
 		return;
 	}
 
-	if (context.path.startsWith("/callback")) {
+	if (
+		context.path.startsWith("/callback") ||
+		context.path === "/sign-in/social"
+	) {
+		const providerId = context.params?.id ?? context.body?.provider;
+		if (
+			providerId &&
+			authConfig.oidcProviders.some(
+				(provider) => provider.providerId === providerId,
+			)
+		) {
+			if (!(await canRequestOidcAccountCreation(authConfig, providerId))) {
+				throw registrationDisabledError(
+					"Account creation is disabled for this OIDC provider",
+				);
+			}
+			return;
+		}
 		if (!(await canRequestSocialAccountCreation(authConfig))) {
 			throw registrationDisabledError(
 				"Account creation is disabled for this provider",
 			);
 		}
 		return;
-	}
-
-	if (context.path.startsWith("/oauth2/callback")) {
-		const providerId = context.params?.providerId;
-		if (
-			!providerId ||
-			!(await canRequestOidcAccountCreation(authConfig, providerId))
-		) {
-			throw registrationDisabledError(
-				"Account creation is disabled for this OIDC provider",
-			);
-		}
 	}
 }
 

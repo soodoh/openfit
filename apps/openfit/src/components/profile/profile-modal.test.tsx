@@ -1,6 +1,6 @@
-import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import type { Gym, Units, UserProfile } from "@/lib/types";
 import { ProfileModal } from "./profile-modal";
@@ -73,7 +73,7 @@ vi.mock("@/components/gyms/delete-gym-modal", () => ({
 	}) =>
 		gym ? (
 			<div>
-				Delete modal for {gym.name}
+				<span>Delete modal for {gym.name}</span>
 				<button type="button" onClick={onClose}>
 					Close delete modal
 				</button>

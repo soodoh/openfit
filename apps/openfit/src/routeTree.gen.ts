@@ -9,84 +9,59 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WorkoutRouteImport } from './routes/workout'
-import { Route as SigninRouteImport } from './routes/signin'
-import { Route as RoutinesRouteImport } from './routes/routines'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as LogsRouteImport } from './routes/logs'
-import { Route as ExercisesRouteImport } from './routes/exercises'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiUserProfileRouteImport } from './routes/api/user-profile'
-import { Route as ApiUploadRouteImport } from './routes/api/upload'
-import { Route as ApiSetsRouteImport } from './routes/api/sets'
-import { Route as ApiSetGroupsRouteImport } from './routes/api/set-groups'
-import { Route as ApiSessionsRouteImport } from './routes/api/sessions'
-import { Route as ApiRoutinesRouteImport } from './routes/api/routines'
-import { Route as ApiRoutineDaysRouteImport } from './routes/api/routine-days'
-import { Route as ApiHealthRouteImport } from './routes/api/health'
-import { Route as ApiGymsRouteImport } from './routes/api/gyms'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as ExercisesRouteImport } from './routes/exercises'
+import { Route as LogsRouteImport } from './routes/logs'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as RoutinesRouteImport } from './routes/routines'
+import { Route as SigninRouteImport } from './routes/signin'
+import { Route as WorkoutRouteImport } from './routes/workout'
 import { Route as ApiExercisesRouteImport } from './routes/api/exercises'
-import { Route as ApiUploadsSplatRouteImport } from './routes/api/uploads.$'
-import { Route as ApiStorageSplatRouteImport } from './routes/api/storage.$'
-import { Route as ApiSetsReorderRouteImport } from './routes/api/sets/reorder'
-import { Route as ApiSetsIdRouteImport } from './routes/api/sets.$id'
-import { Route as ApiSetGroupsReorderRouteImport } from './routes/api/set-groups/reorder'
-import { Route as ApiSetGroupsIdRouteImport } from './routes/api/set-groups.$id'
-import { Route as ApiSessionsCurrentRouteImport } from './routes/api/sessions/current'
-import { Route as ApiSessionsIdRouteImport } from './routes/api/sessions.$id'
-import { Route as ApiRoutinesIdRouteImport } from './routes/api/routines.$id'
-import { Route as ApiRoutineDaysIdRouteImport } from './routes/api/routine-days.$id'
-import { Route as ApiLookupsUnitsRouteImport } from './routes/api/lookups/units'
-import { Route as ApiLookupsMuscleGroupsRouteImport } from './routes/api/lookups/muscle-groups'
-import { Route as ApiLookupsEquipmentRouteImport } from './routes/api/lookups/equipment'
-import { Route as ApiLookupsCategoriesRouteImport } from './routes/api/lookups/categories'
-import { Route as ApiGymsIdRouteImport } from './routes/api/gyms.$id'
-import { Route as ApiExercisesSimilarRouteImport } from './routes/api/exercises/similar'
-import { Route as ApiExercisesSearchRouteImport } from './routes/api/exercises/search'
-import { Route as ApiExercisesIdRouteImport } from './routes/api/exercises.$id'
-import { Route as ApiDashboardStatsRouteImport } from './routes/api/dashboard/stats'
-import { Route as ApiDashboardRecentSessionsRouteImport } from './routes/api/dashboard/recent-sessions'
-import { Route as ApiAuthProvidersRouteImport } from './routes/api/auth/providers'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
-import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
-import { Route as ApiAdminLookupsRouteImport } from './routes/api/admin/lookups'
-import { Route as ApiAdminExercisesRouteImport } from './routes/api/admin/exercises'
+import { Route as ApiGymsRouteImport } from './routes/api/gyms'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiRoutineDaysRouteImport } from './routes/api/routine-days'
+import { Route as ApiRoutinesRouteImport } from './routes/api/routines'
+import { Route as ApiSessionsRouteImport } from './routes/api/sessions'
+import { Route as ApiSetGroupsRouteImport } from './routes/api/set-groups'
+import { Route as ApiSetsRouteImport } from './routes/api/sets'
+import { Route as ApiUploadRouteImport } from './routes/api/upload'
+import { Route as ApiUserProfileRouteImport } from './routes/api/user-profile'
 import { Route as ApiAdminCheckRouteImport } from './routes/api/admin/check'
-import { Route as ApiSetGroupsIdReplaceExerciseRouteImport } from './routes/api/set-groups.$id.replace-exercise'
-import { Route as ApiSetGroupsIdBulkEditRouteImport } from './routes/api/set-groups.$id.bulk-edit'
-import { Route as ApiAdminUsersIdRouteImport } from './routes/api/admin/users.$id'
-import { Route as ApiAdminLookupsIdRouteImport } from './routes/api/admin/lookups.$id'
+import { Route as ApiAdminExercisesRouteImport } from './routes/api/admin/exercises'
+import { Route as ApiAdminLookupsRouteImport } from './routes/api/admin/lookups'
+import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
+import { Route as ApiAuthProvidersRouteImport } from './routes/api/auth/providers'
+import { Route as ApiDashboardRecentSessionsRouteImport } from './routes/api/dashboard/recent-sessions'
+import { Route as ApiDashboardStatsRouteImport } from './routes/api/dashboard/stats'
+import { Route as ApiExercisesIdRouteImport } from './routes/api/exercises.$id'
+import { Route as ApiExercisesSearchRouteImport } from './routes/api/exercises/search'
+import { Route as ApiExercisesSimilarRouteImport } from './routes/api/exercises/similar'
+import { Route as ApiGymsIdRouteImport } from './routes/api/gyms.$id'
+import { Route as ApiLookupsCategoriesRouteImport } from './routes/api/lookups/categories'
+import { Route as ApiLookupsEquipmentRouteImport } from './routes/api/lookups/equipment'
+import { Route as ApiLookupsMuscleGroupsRouteImport } from './routes/api/lookups/muscle-groups'
+import { Route as ApiLookupsUnitsRouteImport } from './routes/api/lookups/units'
+import { Route as ApiRoutineDaysIdRouteImport } from './routes/api/routine-days.$id'
+import { Route as ApiRoutinesIdRouteImport } from './routes/api/routines.$id'
+import { Route as ApiSessionsIdRouteImport } from './routes/api/sessions.$id'
+import { Route as ApiSessionsCurrentRouteImport } from './routes/api/sessions/current'
+import { Route as ApiSetGroupsIdRouteImport } from './routes/api/set-groups.$id'
+import { Route as ApiSetGroupsReorderRouteImport } from './routes/api/set-groups/reorder'
+import { Route as ApiSetsIdRouteImport } from './routes/api/sets.$id'
+import { Route as ApiSetsReorderRouteImport } from './routes/api/sets/reorder'
+import { Route as ApiStorageSplatRouteImport } from './routes/api/storage.$'
+import { Route as ApiUploadsSplatRouteImport } from './routes/api/uploads.$'
 import { Route as ApiAdminExercisesIdRouteImport } from './routes/api/admin/exercises.$id'
+import { Route as ApiAdminLookupsIdRouteImport } from './routes/api/admin/lookups.$id'
+import { Route as ApiAdminUsersIdRouteImport } from './routes/api/admin/users.$id'
+import { Route as ApiSetGroupsIdBulkEditRouteImport } from './routes/api/set-groups.$id.bulk-edit'
+import { Route as ApiSetGroupsIdReplaceExerciseRouteImport } from './routes/api/set-groups.$id.replace-exercise'
 
-const WorkoutRoute = WorkoutRouteImport.update({
-  id: '/workout',
-  path: '/workout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SigninRoute = SigninRouteImport.update({
-  id: '/signin',
-  path: '/signin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RoutinesRoute = RoutinesRouteImport.update({
-  id: '/routines',
-  path: '/routines',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LogsRoute = LogsRouteImport.update({
-  id: '/logs',
-  path: '/logs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExercisesRoute = ExercisesRouteImport.update({
-  id: '/exercises',
-  path: '/exercises',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -94,54 +69,34 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ExercisesRoute = ExercisesRouteImport.update({
+  id: '/exercises',
+  path: '/exercises',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUserProfileRoute = ApiUserProfileRouteImport.update({
-  id: '/api/user-profile',
-  path: '/api/user-profile',
+const LogsRoute = LogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUploadRoute = ApiUploadRouteImport.update({
-  id: '/api/upload',
-  path: '/api/upload',
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiSetsRoute = ApiSetsRouteImport.update({
-  id: '/api/sets',
-  path: '/api/sets',
+const RoutinesRoute = RoutinesRouteImport.update({
+  id: '/routines',
+  path: '/routines',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiSetGroupsRoute = ApiSetGroupsRouteImport.update({
-  id: '/api/set-groups',
-  path: '/api/set-groups',
+const SigninRoute = SigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiSessionsRoute = ApiSessionsRouteImport.update({
-  id: '/api/sessions',
-  path: '/api/sessions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRoutinesRoute = ApiRoutinesRouteImport.update({
-  id: '/api/routines',
-  path: '/api/routines',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRoutineDaysRoute = ApiRoutineDaysRouteImport.update({
-  id: '/api/routine-days',
-  path: '/api/routine-days',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiHealthRoute = ApiHealthRouteImport.update({
-  id: '/api/health',
-  path: '/api/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGymsRoute = ApiGymsRouteImport.update({
-  id: '/api/gyms',
-  path: '/api/gyms',
+const WorkoutRoute = WorkoutRouteImport.update({
+  id: '/workout',
+  path: '/workout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiExercisesRoute = ApiExercisesRouteImport.update({
@@ -149,99 +104,79 @@ const ApiExercisesRoute = ApiExercisesRouteImport.update({
   path: '/api/exercises',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUploadsSplatRoute = ApiUploadsSplatRouteImport.update({
-  id: '/api/uploads/$',
-  path: '/api/uploads/$',
+const ApiGymsRoute = ApiGymsRouteImport.update({
+  id: '/api/gyms',
+  path: '/api/gyms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiStorageSplatRoute = ApiStorageSplatRouteImport.update({
-  id: '/api/storage/$',
-  path: '/api/storage/$',
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiSetsReorderRoute = ApiSetsReorderRouteImport.update({
-  id: '/reorder',
-  path: '/reorder',
-  getParentRoute: () => ApiSetsRoute,
-} as any)
-const ApiSetsIdRoute = ApiSetsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiSetsRoute,
-} as any)
-const ApiSetGroupsReorderRoute = ApiSetGroupsReorderRouteImport.update({
-  id: '/reorder',
-  path: '/reorder',
-  getParentRoute: () => ApiSetGroupsRoute,
-} as any)
-const ApiSetGroupsIdRoute = ApiSetGroupsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiSetGroupsRoute,
-} as any)
-const ApiSessionsCurrentRoute = ApiSessionsCurrentRouteImport.update({
-  id: '/current',
-  path: '/current',
-  getParentRoute: () => ApiSessionsRoute,
-} as any)
-const ApiSessionsIdRoute = ApiSessionsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiSessionsRoute,
-} as any)
-const ApiRoutinesIdRoute = ApiRoutinesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiRoutinesRoute,
-} as any)
-const ApiRoutineDaysIdRoute = ApiRoutineDaysIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiRoutineDaysRoute,
-} as any)
-const ApiLookupsUnitsRoute = ApiLookupsUnitsRouteImport.update({
-  id: '/api/lookups/units',
-  path: '/api/lookups/units',
+const ApiRoutineDaysRoute = ApiRoutineDaysRouteImport.update({
+  id: '/api/routine-days',
+  path: '/api/routine-days',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiLookupsMuscleGroupsRoute = ApiLookupsMuscleGroupsRouteImport.update({
-  id: '/api/lookups/muscle-groups',
-  path: '/api/lookups/muscle-groups',
+const ApiRoutinesRoute = ApiRoutinesRouteImport.update({
+  id: '/api/routines',
+  path: '/api/routines',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiLookupsEquipmentRoute = ApiLookupsEquipmentRouteImport.update({
-  id: '/api/lookups/equipment',
-  path: '/api/lookups/equipment',
+const ApiSessionsRoute = ApiSessionsRouteImport.update({
+  id: '/api/sessions',
+  path: '/api/sessions',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiLookupsCategoriesRoute = ApiLookupsCategoriesRouteImport.update({
-  id: '/api/lookups/categories',
-  path: '/api/lookups/categories',
+const ApiSetGroupsRoute = ApiSetGroupsRouteImport.update({
+  id: '/api/set-groups',
+  path: '/api/set-groups',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGymsIdRoute = ApiGymsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiGymsRoute,
+const ApiSetsRoute = ApiSetsRouteImport.update({
+  id: '/api/sets',
+  path: '/api/sets',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ApiExercisesSimilarRoute = ApiExercisesSimilarRouteImport.update({
-  id: '/similar',
-  path: '/similar',
-  getParentRoute: () => ApiExercisesRoute,
+const ApiUploadRoute = ApiUploadRouteImport.update({
+  id: '/api/upload',
+  path: '/api/upload',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ApiExercisesSearchRoute = ApiExercisesSearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => ApiExercisesRoute,
+const ApiUserProfileRoute = ApiUserProfileRouteImport.update({
+  id: '/api/user-profile',
+  path: '/api/user-profile',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ApiExercisesIdRoute = ApiExercisesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiExercisesRoute,
+const ApiAdminCheckRoute = ApiAdminCheckRouteImport.update({
+  id: '/api/admin/check',
+  path: '/api/admin/check',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ApiDashboardStatsRoute = ApiDashboardStatsRouteImport.update({
-  id: '/api/dashboard/stats',
-  path: '/api/dashboard/stats',
+const ApiAdminExercisesRoute = ApiAdminExercisesRouteImport.update({
+  id: '/api/admin/exercises',
+  path: '/api/admin/exercises',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminLookupsRoute = ApiAdminLookupsRouteImport.update({
+  id: '/api/admin/lookups',
+  path: '/api/admin/lookups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
+  id: '/api/admin/users',
+  path: '/api/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthProvidersRoute = ApiAuthProvidersRouteImport.update({
+  id: '/api/auth/providers',
+  path: '/api/auth/providers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiDashboardRecentSessionsRoute =
@@ -250,35 +185,120 @@ const ApiDashboardRecentSessionsRoute =
     path: '/api/dashboard/recent-sessions',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiAuthProvidersRoute = ApiAuthProvidersRouteImport.update({
-  id: '/api/auth/providers',
-  path: '/api/auth/providers',
+const ApiDashboardStatsRoute = ApiDashboardStatsRouteImport.update({
+  id: '/api/dashboard/stats',
+  path: '/api/dashboard/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
+const ApiExercisesIdRoute = ApiExercisesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiExercisesRoute,
+} as any)
+const ApiExercisesSearchRoute = ApiExercisesSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => ApiExercisesRoute,
+} as any)
+const ApiExercisesSimilarRoute = ApiExercisesSimilarRouteImport.update({
+  id: '/similar',
+  path: '/similar',
+  getParentRoute: () => ApiExercisesRoute,
+} as any)
+const ApiGymsIdRoute = ApiGymsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiGymsRoute,
+} as any)
+const ApiLookupsCategoriesRoute = ApiLookupsCategoriesRouteImport.update({
+  id: '/api/lookups/categories',
+  path: '/api/lookups/categories',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
-  id: '/api/admin/users',
-  path: '/api/admin/users',
+const ApiLookupsEquipmentRoute = ApiLookupsEquipmentRouteImport.update({
+  id: '/api/lookups/equipment',
+  path: '/api/lookups/equipment',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAdminLookupsRoute = ApiAdminLookupsRouteImport.update({
-  id: '/api/admin/lookups',
-  path: '/api/admin/lookups',
+const ApiLookupsMuscleGroupsRoute = ApiLookupsMuscleGroupsRouteImport.update({
+  id: '/api/lookups/muscle-groups',
+  path: '/api/lookups/muscle-groups',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAdminExercisesRoute = ApiAdminExercisesRouteImport.update({
-  id: '/api/admin/exercises',
-  path: '/api/admin/exercises',
+const ApiLookupsUnitsRoute = ApiLookupsUnitsRouteImport.update({
+  id: '/api/lookups/units',
+  path: '/api/lookups/units',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAdminCheckRoute = ApiAdminCheckRouteImport.update({
-  id: '/api/admin/check',
-  path: '/api/admin/check',
+const ApiRoutineDaysIdRoute = ApiRoutineDaysIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiRoutineDaysRoute,
+} as any)
+const ApiRoutinesIdRoute = ApiRoutinesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiRoutinesRoute,
+} as any)
+const ApiSessionsIdRoute = ApiSessionsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiSessionsRoute,
+} as any)
+const ApiSessionsCurrentRoute = ApiSessionsCurrentRouteImport.update({
+  id: '/current',
+  path: '/current',
+  getParentRoute: () => ApiSessionsRoute,
+} as any)
+const ApiSetGroupsIdRoute = ApiSetGroupsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiSetGroupsRoute,
+} as any)
+const ApiSetGroupsReorderRoute = ApiSetGroupsReorderRouteImport.update({
+  id: '/reorder',
+  path: '/reorder',
+  getParentRoute: () => ApiSetGroupsRoute,
+} as any)
+const ApiSetsIdRoute = ApiSetsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiSetsRoute,
+} as any)
+const ApiSetsReorderRoute = ApiSetsReorderRouteImport.update({
+  id: '/reorder',
+  path: '/reorder',
+  getParentRoute: () => ApiSetsRoute,
+} as any)
+const ApiStorageSplatRoute = ApiStorageSplatRouteImport.update({
+  id: '/api/storage/$',
+  path: '/api/storage/$',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadsSplatRoute = ApiUploadsSplatRouteImport.update({
+  id: '/api/uploads/$',
+  path: '/api/uploads/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminExercisesIdRoute = ApiAdminExercisesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiAdminExercisesRoute,
+} as any)
+const ApiAdminLookupsIdRoute = ApiAdminLookupsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiAdminLookupsRoute,
+} as any)
+const ApiAdminUsersIdRoute = ApiAdminUsersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiAdminUsersRoute,
+} as any)
+const ApiSetGroupsIdBulkEditRoute = ApiSetGroupsIdBulkEditRouteImport.update({
+  id: '/bulk-edit',
+  path: '/bulk-edit',
+  getParentRoute: () => ApiSetGroupsIdRoute,
 } as any)
 const ApiSetGroupsIdReplaceExerciseRoute =
   ApiSetGroupsIdReplaceExerciseRouteImport.update({
@@ -286,26 +306,6 @@ const ApiSetGroupsIdReplaceExerciseRoute =
     path: '/replace-exercise',
     getParentRoute: () => ApiSetGroupsIdRoute,
   } as any)
-const ApiSetGroupsIdBulkEditRoute = ApiSetGroupsIdBulkEditRouteImport.update({
-  id: '/bulk-edit',
-  path: '/bulk-edit',
-  getParentRoute: () => ApiSetGroupsIdRoute,
-} as any)
-const ApiAdminUsersIdRoute = ApiAdminUsersIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiAdminUsersRoute,
-} as any)
-const ApiAdminLookupsIdRoute = ApiAdminLookupsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiAdminLookupsRoute,
-} as any)
-const ApiAdminExercisesIdRoute = ApiAdminExercisesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiAdminExercisesRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -654,46 +654,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/workout': {
-      id: '/workout'
-      path: '/workout'
-      fullPath: '/workout'
-      preLoaderRoute: typeof WorkoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signin': {
-      id: '/signin'
-      path: '/signin'
-      fullPath: '/signin'
-      preLoaderRoute: typeof SigninRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/routines': {
-      id: '/routines'
-      path: '/routines'
-      fullPath: '/routines'
-      preLoaderRoute: typeof RoutinesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/logs': {
-      id: '/logs'
-      path: '/logs'
-      fullPath: '/logs'
-      preLoaderRoute: typeof LogsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/exercises': {
-      id: '/exercises'
-      path: '/exercises'
-      fullPath: '/exercises'
-      preLoaderRoute: typeof ExercisesRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -703,74 +668,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/exercises': {
+      id: '/exercises'
+      path: '/exercises'
+      fullPath: '/exercises'
+      preLoaderRoute: typeof ExercisesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/user-profile': {
-      id: '/api/user-profile'
-      path: '/api/user-profile'
-      fullPath: '/api/user-profile'
-      preLoaderRoute: typeof ApiUserProfileRouteImport
+    '/logs': {
+      id: '/logs'
+      path: '/logs'
+      fullPath: '/logs'
+      preLoaderRoute: typeof LogsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/upload': {
-      id: '/api/upload'
-      path: '/api/upload'
-      fullPath: '/api/upload'
-      preLoaderRoute: typeof ApiUploadRouteImport
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/sets': {
-      id: '/api/sets'
-      path: '/api/sets'
-      fullPath: '/api/sets'
-      preLoaderRoute: typeof ApiSetsRouteImport
+    '/routines': {
+      id: '/routines'
+      path: '/routines'
+      fullPath: '/routines'
+      preLoaderRoute: typeof RoutinesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/set-groups': {
-      id: '/api/set-groups'
-      path: '/api/set-groups'
-      fullPath: '/api/set-groups'
-      preLoaderRoute: typeof ApiSetGroupsRouteImport
+    '/signin': {
+      id: '/signin'
+      path: '/signin'
+      fullPath: '/signin'
+      preLoaderRoute: typeof SigninRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/sessions': {
-      id: '/api/sessions'
-      path: '/api/sessions'
-      fullPath: '/api/sessions'
-      preLoaderRoute: typeof ApiSessionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/routines': {
-      id: '/api/routines'
-      path: '/api/routines'
-      fullPath: '/api/routines'
-      preLoaderRoute: typeof ApiRoutinesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/routine-days': {
-      id: '/api/routine-days'
-      path: '/api/routine-days'
-      fullPath: '/api/routine-days'
-      preLoaderRoute: typeof ApiRoutineDaysRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/health': {
-      id: '/api/health'
-      path: '/api/health'
-      fullPath: '/api/health'
-      preLoaderRoute: typeof ApiHealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/gyms': {
-      id: '/api/gyms'
-      path: '/api/gyms'
-      fullPath: '/api/gyms'
-      preLoaderRoute: typeof ApiGymsRouteImport
+    '/workout': {
+      id: '/workout'
+      path: '/workout'
+      fullPath: '/workout'
+      preLoaderRoute: typeof WorkoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/exercises': {
@@ -780,179 +717,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExercisesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/uploads/$': {
-      id: '/api/uploads/$'
-      path: '/api/uploads/$'
-      fullPath: '/api/uploads/$'
-      preLoaderRoute: typeof ApiUploadsSplatRouteImport
+    '/api/gyms': {
+      id: '/api/gyms'
+      path: '/api/gyms'
+      fullPath: '/api/gyms'
+      preLoaderRoute: typeof ApiGymsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/storage/$': {
-      id: '/api/storage/$'
-      path: '/api/storage/$'
-      fullPath: '/api/storage/$'
-      preLoaderRoute: typeof ApiStorageSplatRouteImport
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/sets/reorder': {
-      id: '/api/sets/reorder'
-      path: '/reorder'
-      fullPath: '/api/sets/reorder'
-      preLoaderRoute: typeof ApiSetsReorderRouteImport
-      parentRoute: typeof ApiSetsRoute
-    }
-    '/api/sets/$id': {
-      id: '/api/sets/$id'
-      path: '/$id'
-      fullPath: '/api/sets/$id'
-      preLoaderRoute: typeof ApiSetsIdRouteImport
-      parentRoute: typeof ApiSetsRoute
-    }
-    '/api/set-groups/reorder': {
-      id: '/api/set-groups/reorder'
-      path: '/reorder'
-      fullPath: '/api/set-groups/reorder'
-      preLoaderRoute: typeof ApiSetGroupsReorderRouteImport
-      parentRoute: typeof ApiSetGroupsRoute
-    }
-    '/api/set-groups/$id': {
-      id: '/api/set-groups/$id'
-      path: '/$id'
-      fullPath: '/api/set-groups/$id'
-      preLoaderRoute: typeof ApiSetGroupsIdRouteImport
-      parentRoute: typeof ApiSetGroupsRoute
-    }
-    '/api/sessions/current': {
-      id: '/api/sessions/current'
-      path: '/current'
-      fullPath: '/api/sessions/current'
-      preLoaderRoute: typeof ApiSessionsCurrentRouteImport
-      parentRoute: typeof ApiSessionsRoute
-    }
-    '/api/sessions/$id': {
-      id: '/api/sessions/$id'
-      path: '/$id'
-      fullPath: '/api/sessions/$id'
-      preLoaderRoute: typeof ApiSessionsIdRouteImport
-      parentRoute: typeof ApiSessionsRoute
-    }
-    '/api/routines/$id': {
-      id: '/api/routines/$id'
-      path: '/$id'
-      fullPath: '/api/routines/$id'
-      preLoaderRoute: typeof ApiRoutinesIdRouteImport
-      parentRoute: typeof ApiRoutinesRoute
-    }
-    '/api/routine-days/$id': {
-      id: '/api/routine-days/$id'
-      path: '/$id'
-      fullPath: '/api/routine-days/$id'
-      preLoaderRoute: typeof ApiRoutineDaysIdRouteImport
-      parentRoute: typeof ApiRoutineDaysRoute
-    }
-    '/api/lookups/units': {
-      id: '/api/lookups/units'
-      path: '/api/lookups/units'
-      fullPath: '/api/lookups/units'
-      preLoaderRoute: typeof ApiLookupsUnitsRouteImport
+    '/api/routine-days': {
+      id: '/api/routine-days'
+      path: '/api/routine-days'
+      fullPath: '/api/routine-days'
+      preLoaderRoute: typeof ApiRoutineDaysRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/lookups/muscle-groups': {
-      id: '/api/lookups/muscle-groups'
-      path: '/api/lookups/muscle-groups'
-      fullPath: '/api/lookups/muscle-groups'
-      preLoaderRoute: typeof ApiLookupsMuscleGroupsRouteImport
+    '/api/routines': {
+      id: '/api/routines'
+      path: '/api/routines'
+      fullPath: '/api/routines'
+      preLoaderRoute: typeof ApiRoutinesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/lookups/equipment': {
-      id: '/api/lookups/equipment'
-      path: '/api/lookups/equipment'
-      fullPath: '/api/lookups/equipment'
-      preLoaderRoute: typeof ApiLookupsEquipmentRouteImport
+    '/api/sessions': {
+      id: '/api/sessions'
+      path: '/api/sessions'
+      fullPath: '/api/sessions'
+      preLoaderRoute: typeof ApiSessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/lookups/categories': {
-      id: '/api/lookups/categories'
-      path: '/api/lookups/categories'
-      fullPath: '/api/lookups/categories'
-      preLoaderRoute: typeof ApiLookupsCategoriesRouteImport
+    '/api/set-groups': {
+      id: '/api/set-groups'
+      path: '/api/set-groups'
+      fullPath: '/api/set-groups'
+      preLoaderRoute: typeof ApiSetGroupsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/gyms/$id': {
-      id: '/api/gyms/$id'
-      path: '/$id'
-      fullPath: '/api/gyms/$id'
-      preLoaderRoute: typeof ApiGymsIdRouteImport
-      parentRoute: typeof ApiGymsRoute
-    }
-    '/api/exercises/similar': {
-      id: '/api/exercises/similar'
-      path: '/similar'
-      fullPath: '/api/exercises/similar'
-      preLoaderRoute: typeof ApiExercisesSimilarRouteImport
-      parentRoute: typeof ApiExercisesRoute
-    }
-    '/api/exercises/search': {
-      id: '/api/exercises/search'
-      path: '/search'
-      fullPath: '/api/exercises/search'
-      preLoaderRoute: typeof ApiExercisesSearchRouteImport
-      parentRoute: typeof ApiExercisesRoute
-    }
-    '/api/exercises/$id': {
-      id: '/api/exercises/$id'
-      path: '/$id'
-      fullPath: '/api/exercises/$id'
-      preLoaderRoute: typeof ApiExercisesIdRouteImport
-      parentRoute: typeof ApiExercisesRoute
-    }
-    '/api/dashboard/stats': {
-      id: '/api/dashboard/stats'
-      path: '/api/dashboard/stats'
-      fullPath: '/api/dashboard/stats'
-      preLoaderRoute: typeof ApiDashboardStatsRouteImport
+    '/api/sets': {
+      id: '/api/sets'
+      path: '/api/sets'
+      fullPath: '/api/sets'
+      preLoaderRoute: typeof ApiSetsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/dashboard/recent-sessions': {
-      id: '/api/dashboard/recent-sessions'
-      path: '/api/dashboard/recent-sessions'
-      fullPath: '/api/dashboard/recent-sessions'
-      preLoaderRoute: typeof ApiDashboardRecentSessionsRouteImport
+    '/api/upload': {
+      id: '/api/upload'
+      path: '/api/upload'
+      fullPath: '/api/upload'
+      preLoaderRoute: typeof ApiUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/auth/providers': {
-      id: '/api/auth/providers'
-      path: '/api/auth/providers'
-      fullPath: '/api/auth/providers'
-      preLoaderRoute: typeof ApiAuthProvidersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/users': {
-      id: '/api/admin/users'
-      path: '/api/admin/users'
-      fullPath: '/api/admin/users'
-      preLoaderRoute: typeof ApiAdminUsersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/lookups': {
-      id: '/api/admin/lookups'
-      path: '/api/admin/lookups'
-      fullPath: '/api/admin/lookups'
-      preLoaderRoute: typeof ApiAdminLookupsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/exercises': {
-      id: '/api/admin/exercises'
-      path: '/api/admin/exercises'
-      fullPath: '/api/admin/exercises'
-      preLoaderRoute: typeof ApiAdminExercisesRouteImport
+    '/api/user-profile': {
+      id: '/api/user-profile'
+      path: '/api/user-profile'
+      fullPath: '/api/user-profile'
+      preLoaderRoute: typeof ApiUserProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/check': {
@@ -962,26 +787,187 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/set-groups/$id/replace-exercise': {
-      id: '/api/set-groups/$id/replace-exercise'
-      path: '/replace-exercise'
-      fullPath: '/api/set-groups/$id/replace-exercise'
-      preLoaderRoute: typeof ApiSetGroupsIdReplaceExerciseRouteImport
-      parentRoute: typeof ApiSetGroupsIdRoute
+    '/api/admin/exercises': {
+      id: '/api/admin/exercises'
+      path: '/api/admin/exercises'
+      fullPath: '/api/admin/exercises'
+      preLoaderRoute: typeof ApiAdminExercisesRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/api/set-groups/$id/bulk-edit': {
-      id: '/api/set-groups/$id/bulk-edit'
-      path: '/bulk-edit'
-      fullPath: '/api/set-groups/$id/bulk-edit'
-      preLoaderRoute: typeof ApiSetGroupsIdBulkEditRouteImport
-      parentRoute: typeof ApiSetGroupsIdRoute
+    '/api/admin/lookups': {
+      id: '/api/admin/lookups'
+      path: '/api/admin/lookups'
+      fullPath: '/api/admin/lookups'
+      preLoaderRoute: typeof ApiAdminLookupsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/api/admin/users/$id': {
-      id: '/api/admin/users/$id'
+    '/api/admin/users': {
+      id: '/api/admin/users'
+      path: '/api/admin/users'
+      fullPath: '/api/admin/users'
+      preLoaderRoute: typeof ApiAdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/providers': {
+      id: '/api/auth/providers'
+      path: '/api/auth/providers'
+      fullPath: '/api/auth/providers'
+      preLoaderRoute: typeof ApiAuthProvidersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dashboard/recent-sessions': {
+      id: '/api/dashboard/recent-sessions'
+      path: '/api/dashboard/recent-sessions'
+      fullPath: '/api/dashboard/recent-sessions'
+      preLoaderRoute: typeof ApiDashboardRecentSessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dashboard/stats': {
+      id: '/api/dashboard/stats'
+      path: '/api/dashboard/stats'
+      fullPath: '/api/dashboard/stats'
+      preLoaderRoute: typeof ApiDashboardStatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/exercises/$id': {
+      id: '/api/exercises/$id'
       path: '/$id'
-      fullPath: '/api/admin/users/$id'
-      preLoaderRoute: typeof ApiAdminUsersIdRouteImport
-      parentRoute: typeof ApiAdminUsersRoute
+      fullPath: '/api/exercises/$id'
+      preLoaderRoute: typeof ApiExercisesIdRouteImport
+      parentRoute: typeof ApiExercisesRoute
+    }
+    '/api/exercises/search': {
+      id: '/api/exercises/search'
+      path: '/search'
+      fullPath: '/api/exercises/search'
+      preLoaderRoute: typeof ApiExercisesSearchRouteImport
+      parentRoute: typeof ApiExercisesRoute
+    }
+    '/api/exercises/similar': {
+      id: '/api/exercises/similar'
+      path: '/similar'
+      fullPath: '/api/exercises/similar'
+      preLoaderRoute: typeof ApiExercisesSimilarRouteImport
+      parentRoute: typeof ApiExercisesRoute
+    }
+    '/api/gyms/$id': {
+      id: '/api/gyms/$id'
+      path: '/$id'
+      fullPath: '/api/gyms/$id'
+      preLoaderRoute: typeof ApiGymsIdRouteImport
+      parentRoute: typeof ApiGymsRoute
+    }
+    '/api/lookups/categories': {
+      id: '/api/lookups/categories'
+      path: '/api/lookups/categories'
+      fullPath: '/api/lookups/categories'
+      preLoaderRoute: typeof ApiLookupsCategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/lookups/equipment': {
+      id: '/api/lookups/equipment'
+      path: '/api/lookups/equipment'
+      fullPath: '/api/lookups/equipment'
+      preLoaderRoute: typeof ApiLookupsEquipmentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/lookups/muscle-groups': {
+      id: '/api/lookups/muscle-groups'
+      path: '/api/lookups/muscle-groups'
+      fullPath: '/api/lookups/muscle-groups'
+      preLoaderRoute: typeof ApiLookupsMuscleGroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/lookups/units': {
+      id: '/api/lookups/units'
+      path: '/api/lookups/units'
+      fullPath: '/api/lookups/units'
+      preLoaderRoute: typeof ApiLookupsUnitsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/routine-days/$id': {
+      id: '/api/routine-days/$id'
+      path: '/$id'
+      fullPath: '/api/routine-days/$id'
+      preLoaderRoute: typeof ApiRoutineDaysIdRouteImport
+      parentRoute: typeof ApiRoutineDaysRoute
+    }
+    '/api/routines/$id': {
+      id: '/api/routines/$id'
+      path: '/$id'
+      fullPath: '/api/routines/$id'
+      preLoaderRoute: typeof ApiRoutinesIdRouteImport
+      parentRoute: typeof ApiRoutinesRoute
+    }
+    '/api/sessions/$id': {
+      id: '/api/sessions/$id'
+      path: '/$id'
+      fullPath: '/api/sessions/$id'
+      preLoaderRoute: typeof ApiSessionsIdRouteImport
+      parentRoute: typeof ApiSessionsRoute
+    }
+    '/api/sessions/current': {
+      id: '/api/sessions/current'
+      path: '/current'
+      fullPath: '/api/sessions/current'
+      preLoaderRoute: typeof ApiSessionsCurrentRouteImport
+      parentRoute: typeof ApiSessionsRoute
+    }
+    '/api/set-groups/$id': {
+      id: '/api/set-groups/$id'
+      path: '/$id'
+      fullPath: '/api/set-groups/$id'
+      preLoaderRoute: typeof ApiSetGroupsIdRouteImport
+      parentRoute: typeof ApiSetGroupsRoute
+    }
+    '/api/set-groups/reorder': {
+      id: '/api/set-groups/reorder'
+      path: '/reorder'
+      fullPath: '/api/set-groups/reorder'
+      preLoaderRoute: typeof ApiSetGroupsReorderRouteImport
+      parentRoute: typeof ApiSetGroupsRoute
+    }
+    '/api/sets/$id': {
+      id: '/api/sets/$id'
+      path: '/$id'
+      fullPath: '/api/sets/$id'
+      preLoaderRoute: typeof ApiSetsIdRouteImport
+      parentRoute: typeof ApiSetsRoute
+    }
+    '/api/sets/reorder': {
+      id: '/api/sets/reorder'
+      path: '/reorder'
+      fullPath: '/api/sets/reorder'
+      preLoaderRoute: typeof ApiSetsReorderRouteImport
+      parentRoute: typeof ApiSetsRoute
+    }
+    '/api/storage/$': {
+      id: '/api/storage/$'
+      path: '/api/storage/$'
+      fullPath: '/api/storage/$'
+      preLoaderRoute: typeof ApiStorageSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/uploads/$': {
+      id: '/api/uploads/$'
+      path: '/api/uploads/$'
+      fullPath: '/api/uploads/$'
+      preLoaderRoute: typeof ApiUploadsSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/exercises/$id': {
+      id: '/api/admin/exercises/$id'
+      path: '/$id'
+      fullPath: '/api/admin/exercises/$id'
+      preLoaderRoute: typeof ApiAdminExercisesIdRouteImport
+      parentRoute: typeof ApiAdminExercisesRoute
     }
     '/api/admin/lookups/$id': {
       id: '/api/admin/lookups/$id'
@@ -990,12 +976,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminLookupsIdRouteImport
       parentRoute: typeof ApiAdminLookupsRoute
     }
-    '/api/admin/exercises/$id': {
-      id: '/api/admin/exercises/$id'
+    '/api/admin/users/$id': {
+      id: '/api/admin/users/$id'
       path: '/$id'
-      fullPath: '/api/admin/exercises/$id'
-      preLoaderRoute: typeof ApiAdminExercisesIdRouteImport
-      parentRoute: typeof ApiAdminExercisesRoute
+      fullPath: '/api/admin/users/$id'
+      preLoaderRoute: typeof ApiAdminUsersIdRouteImport
+      parentRoute: typeof ApiAdminUsersRoute
+    }
+    '/api/set-groups/$id/bulk-edit': {
+      id: '/api/set-groups/$id/bulk-edit'
+      path: '/bulk-edit'
+      fullPath: '/api/set-groups/$id/bulk-edit'
+      preLoaderRoute: typeof ApiSetGroupsIdBulkEditRouteImport
+      parentRoute: typeof ApiSetGroupsIdRoute
+    }
+    '/api/set-groups/$id/replace-exercise': {
+      id: '/api/set-groups/$id/replace-exercise'
+      path: '/replace-exercise'
+      fullPath: '/api/set-groups/$id/replace-exercise'
+      preLoaderRoute: typeof ApiSetGroupsIdReplaceExerciseRouteImport
+      parentRoute: typeof ApiSetGroupsIdRoute
     }
   }
 }

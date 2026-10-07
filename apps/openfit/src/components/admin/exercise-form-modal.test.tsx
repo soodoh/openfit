@@ -1,4 +1,3 @@
-import { page, userEvent } from "@vitest/browser/context";
 import {
 	act,
 	createContext,
@@ -7,6 +6,7 @@ import {
 	useState,
 } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { page, userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { ExerciseFormModal } from "./exercise-form-modal";
 

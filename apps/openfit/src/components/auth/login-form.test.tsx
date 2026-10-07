@@ -1,13 +1,12 @@
-import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { LoginForm } from "./login-form";
 
 const mockNavigate = vi.fn();
 const mockSignInEmail = vi.fn();
 const mockSignInSocial = vi.fn();
-const mockSignInOauth2 = vi.fn();
 const mockSignUpEmail = vi.fn();
 const mockUseAuth = vi.fn();
 const mockGetSession = vi.fn();
@@ -26,7 +25,6 @@ vi.mock("@/components/providers/auth-provider", () => ({
 	signIn: {
 		email: (...args: unknown[]) => mockSignInEmail(...args),
 		social: (...args: unknown[]) => mockSignInSocial(...args),
-		oauth2: (...args: unknown[]) => mockSignInOauth2(...args),
 	},
 	signUp: {
 		email: (...args: unknown[]) => mockSignUpEmail(...args),
@@ -56,7 +54,6 @@ describe("LoginForm redirects", () => {
 		mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
 		mockSignInEmail.mockResolvedValue({ error: null });
 		mockSignInSocial.mockResolvedValue({ error: null });
-		mockSignInOauth2.mockResolvedValue({ error: null });
 		mockSignUpEmail.mockResolvedValue({ error: null });
 		mockGetSession.mockResolvedValue({
 			data: { session: { id: "session-1" } },
@@ -323,8 +320,8 @@ describe("LoginForm redirects", () => {
 			screen.getByRole("button", { name: "Continue with Authentik" }),
 		);
 
-		expect(mockSignInOauth2).toHaveBeenCalledWith({
-			providerId: "authentik",
+		expect(mockSignInSocial).toHaveBeenCalledWith({
+			provider: "authentik",
 			callbackURL: "/",
 		});
 	});
@@ -355,8 +352,8 @@ describe("LoginForm redirects", () => {
 			screen.getByRole("button", { name: "Continue with Authentik" }),
 		);
 
-		expect(mockSignInOauth2).toHaveBeenCalledWith({
-			providerId: "authentik",
+		expect(mockSignInSocial).toHaveBeenCalledWith({
+			provider: "authentik",
 			callbackURL: "/",
 			requestSignUp: true,
 		});
@@ -514,7 +511,7 @@ describe("LoginForm redirects", () => {
 				],
 			}),
 		});
-		mockSignInOauth2.mockRejectedValueOnce(new Error("OIDC unavailable"));
+		mockSignInSocial.mockRejectedValueOnce(new Error("OIDC unavailable"));
 
 		const screen = await render(<LoginForm register />);
 

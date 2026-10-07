@@ -384,30 +384,33 @@ describe("use-admin queries", () => {
 			queryKeys.admin.weightUnits(),
 			[{ id: "kg", name: "kg" }],
 		],
-	] as const)("requests the non-paginated admin %s lookup list", async (_type, hook, queryKey, items) => {
-		const response = {
-			items,
-			total: items.length,
-			page: 1,
-			pageSize: 1000,
-		} satisfies PaginatedResponse<LookupItem>;
-		const fetchMock = mockJsonSuccess(response);
-		vi.stubGlobal("fetch", fetchMock);
-		const { queryClient, wrapper } = createTestQueryWrapper();
+	] as const)(
+		"requests the non-paginated admin %s lookup list",
+		async (_type, hook, queryKey, items) => {
+			const response = {
+				items,
+				total: items.length,
+				page: 1,
+				pageSize: 1000,
+			} satisfies PaginatedResponse<LookupItem>;
+			const fetchMock = mockJsonSuccess(response);
+			vi.stubGlobal("fetch", fetchMock);
+			const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = await renderHook(() => hook(), { wrapper });
+			const { result } = await renderHook(() => hook(), { wrapper });
 
-		await vi.waitFor(() => {
-			expect(result.current.isSuccess).toBe(true);
-		});
+			await vi.waitFor(() => {
+				expect(result.current.isSuccess).toBe(true);
+			});
 
-		expect(result.current.data).toEqual(items);
-		const request = getFetchRequest(fetchMock);
-		expect(request.url.pathname).toBe("/api/admin/lookups");
-		expect(request.url.searchParams.get("type")).toBe(_type);
-		expect(request.url.searchParams.get("pageSize")).toBe("1000");
-		expect(queryClient.getQueryData(queryKey)).toEqual(items);
-	});
+			expect(result.current.data).toEqual(items);
+			const request = getFetchRequest(fetchMock);
+			expect(request.url.pathname).toBe("/api/admin/lookups");
+			expect(request.url.searchParams.get("type")).toBe(_type);
+			expect(request.url.searchParams.get("pageSize")).toBe("1000");
+			expect(queryClient.getQueryData(queryKey)).toEqual(items);
+		},
+	);
 
 	it("surfaces lookup fetch errors", async () => {
 		const fetchMock = mockJsonError("Lookup request failed", { status: 500 });

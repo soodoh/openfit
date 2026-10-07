@@ -379,7 +379,10 @@ describe("auth", () => {
 		expect(insertRunMock).toHaveBeenCalledTimes(2);
 	});
 
-	it("rechecks social account creation when Better Auth creates the user", async () => {
+	it.each([
+		{ path: "/callback/:id", params: { id: "google" } },
+		{ path: "/sign-in/social", body: { provider: "google" } },
+	])("rechecks social account creation at $path", async (context) => {
 		canRequestSocialAccountCreationMock.mockResolvedValueOnce(false);
 		await loadAuthModule({
 			nodeEnv: "development",
@@ -405,7 +408,7 @@ describe("auth", () => {
 		await expect(
 			capturedConfig.databaseHooks.user.create.before(
 				{ id: "new-user" },
-				{ path: "/callback/:id", params: { id: "google" } },
+				context,
 			),
 		).rejects.toThrow("Account creation is disabled for this provider");
 		expect(canRequestSocialAccountCreationMock).toHaveBeenCalledWith(
@@ -415,55 +418,66 @@ describe("auth", () => {
 		);
 	});
 
-	it("rechecks OIDC account creation when Better Auth creates the user", async () => {
-		canRequestOidcAccountCreationMock.mockResolvedValueOnce(false);
-		await loadAuthModule({
-			nodeEnv: "development",
-			authConfig: {
-				registration: {
-					disableAll: true,
-					disableEmailPassword: false,
-				},
-				emailPassword: {
-					enabled: true,
-				},
-				socialProviders: {},
-				oidcProviders: [
-					{
-						providerId: "authentik",
-						displayName: "Authentik",
-						clientId: "oidc-client",
-						clientSecret: "oidc-secret",
-						issuer: "https://issuer.example.com",
-						discoveryUrl:
-							"https://issuer.example.com/.well-known/openid-configuration",
-						scopes: ["openid", "email", "profile"],
-						pkce: true,
-						allowAccountCreation: false,
+	it.each([
+		[false, { path: "/callback/:id", params: { id: "authentik" } }],
+		[true, { path: "/callback/:id", params: { id: "authentik" } }],
+		[false, { path: "/sign-in/social", body: { provider: "authentik" } }],
+		[true, { path: "/sign-in/social", body: { provider: "authentik" } }],
+	])(
+		"rechecks OIDC account creation (allowed=%s) at %j",
+		async (allowed, context) => {
+			canRequestOidcAccountCreationMock.mockResolvedValueOnce(allowed);
+			await loadAuthModule({
+				nodeEnv: "development",
+				authConfig: {
+					registration: {
+						disableAll: true,
+						disableEmailPassword: false,
 					},
-				],
-			},
-		});
-
-		await expect(
-			capturedConfig.databaseHooks.user.create.before(
-				{ id: "new-user" },
-				{
-					path: "/oauth2/callback/:providerId",
-					params: { providerId: "authentik" },
+					emailPassword: {
+						enabled: true,
+					},
+					socialProviders: {},
+					oidcProviders: [
+						{
+							providerId: "authentik",
+							displayName: "Authentik",
+							clientId: "oidc-client",
+							clientSecret: "oidc-secret",
+							issuer: "https://issuer.example.com",
+							discoveryUrl:
+								"https://issuer.example.com/.well-known/openid-configuration",
+							scopes: ["openid", "email", "profile"],
+							pkce: true,
+							allowAccountCreation: false,
+						},
+					],
 				},
-			),
-		).rejects.toThrow("Account creation is disabled for this OIDC provider");
-		expect(canRequestOidcAccountCreationMock).toHaveBeenCalledWith(
-			expect.objectContaining({
-				oidcProviders: [
-					expect.objectContaining({
-						providerId: "authentik",
-						allowAccountCreation: false,
-					}),
-				],
-			}),
-			"authentik",
-		);
-	});
+			});
+
+			const creation = capturedConfig.databaseHooks.user.create.before(
+				{ id: "new-user" },
+				context,
+			);
+			if (allowed) {
+				await expect(creation).resolves.toBeUndefined();
+			} else {
+				await expect(creation).rejects.toThrow(
+					"Account creation is disabled for this OIDC provider",
+				);
+			}
+			expect(canRequestSocialAccountCreationMock).not.toHaveBeenCalled();
+			expect(canRequestOidcAccountCreationMock).toHaveBeenCalledWith(
+				expect.objectContaining({
+					oidcProviders: [
+						expect.objectContaining({
+							providerId: "authentik",
+							allowAccountCreation: false,
+						}),
+					],
+				}),
+				"authentik",
+			);
+		},
+	);
 });

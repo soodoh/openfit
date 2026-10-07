@@ -1,8 +1,8 @@
-import { page } from "@vitest/browser/context";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { page } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import type { Units, WorkoutSessionWithData } from "@/lib/types";
 import { SessionPage } from "./session-page";
@@ -115,7 +115,7 @@ describe("SessionPage", () => {
 					screen.getByText("Total Sets").element().parentElement as Element,
 				),
 			)
-			.toHaveTextContent("1");
+			.toHaveTextContent("Total Sets1");
 		await expect.element(screen.getByText("—").first()).toBeInTheDocument();
 		await expect
 			.element(screen.getByTestId("edit-session-menu"))
@@ -161,14 +161,14 @@ describe("SessionPage", () => {
 					screen.getByText("Duration").element().parentElement as Element,
 				),
 			)
-			.toHaveTextContent("—");
+			.toHaveTextContent("Duration—");
 		await expect
 			.element(
 				page.elementLocator(
 					screen.getByText("Notes").element().parentElement as Element,
 				),
 			)
-			.toHaveTextContent("—");
+			.toHaveTextContent("Notes—");
 	});
 
 	it("formats shorter sessions in minutes", async () => {

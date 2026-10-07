@@ -1,6 +1,6 @@
-import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { GymMenu } from "./gym-menu";
 
@@ -64,7 +64,7 @@ vi.mock("./delete-gym-modal", () => ({
 	}) =>
 		gym ? (
 			<div>
-				Delete modal for {gym.name}
+				<span>Delete modal for {gym.name}</span>
 				<button type="button" onClick={onClose}>
 					Close delete modal
 				</button>
@@ -76,7 +76,7 @@ vi.mock("./gym-form-modal", () => ({
 	GymFormModal: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
 		open ? (
 			<div>
-				Edit modal open
+				<span>Edit modal open</span>
 				<button type="button" onClick={onClose}>
 					Close edit modal
 				</button>

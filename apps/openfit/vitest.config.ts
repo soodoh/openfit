@@ -12,6 +12,7 @@ import { defineConfig, type Plugin } from "vitest/config";
 const ROUTER_STUB_ID = "\0virtual:tanstack-router-entry";
 const START_STUB_ID = "\0virtual:tanstack-start-entry";
 const PLUGIN_ADAPTERS_STUB_ID = "\0virtual:tanstack-start-plugin-adapters";
+const MANIFEST_STUB_ID = "\0virtual:tanstack-start-manifest";
 const tanstackVirtualEntriesStub: Plugin = {
 	name: "stub-tanstack-virtual-entries",
 	enforce: "pre",
@@ -25,6 +26,9 @@ const tanstackVirtualEntriesStub: Plugin = {
 		if (id === "#tanstack-start-plugin-adapters") {
 			return PLUGIN_ADAPTERS_STUB_ID;
 		}
+		if (id === "tanstack-start-manifest:v") {
+			return MANIFEST_STUB_ID;
+		}
 	},
 	load(id) {
 		if (id === ROUTER_STUB_ID) {
@@ -35,6 +39,9 @@ const tanstackVirtualEntriesStub: Plugin = {
 		}
 		if (id === PLUGIN_ADAPTERS_STUB_ID) {
 			return "export const hasPluginAdapters = false; export const pluginSerializationAdapters = [];";
+		}
+		if (id === MANIFEST_STUB_ID) {
+			return "export const tsrStartManifest = () => ({ routes: {} });";
 		}
 	},
 };
@@ -119,9 +126,7 @@ export default defineConfig({
 					],
 					browser: {
 						enabled: true,
-						provider: playwright({
-							launchOptions: { channel: "chrome" },
-						}),
+						provider: playwright(),
 						headless: true,
 						instances: [{ browser: "chromium" }],
 					},

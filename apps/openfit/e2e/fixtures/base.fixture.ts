@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { test as base } from "@playwright/test";
 import { DashboardPage } from "@/e2e/pages/dashboard.page";
 import { ExercisesPage } from "@/e2e/pages/exercises.page";
@@ -30,6 +31,14 @@ export type PageFixtures = {
  * ```
  */
 export const test = base.extend<PageFixtures>({
+	// Model separate clients so rapid auth tests don't share a rate-limit bucket.
+	extraHTTPHeaders: async ({ extraHTTPHeaders }, applyFixture, testInfo) => {
+		const clientId = createHash("sha256").update(testInfo.testId).digest();
+		await applyFixture({
+			...extraHTTPHeaders,
+			"x-forwarded-for": `198.18.${clientId[0]}.${clientId[1]}`,
+		});
+	},
 	loginPage: async ({ page }, applyFixture) => {
 		const loginPage = new LoginPage(page);
 		await applyFixture(loginPage);

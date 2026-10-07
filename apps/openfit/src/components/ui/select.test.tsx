@@ -1,5 +1,5 @@
-import { userEvent } from "@vitest/browser/context";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 
 import {

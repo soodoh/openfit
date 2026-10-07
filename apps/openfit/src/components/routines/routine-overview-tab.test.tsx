@@ -1,7 +1,7 @@
-import { userEvent } from "@vitest/browser/context";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import type { RoutineWithDays, WorkoutSessionWithData } from "@/lib/types";
 import { RoutineOverviewTab } from "./routine-overview-tab";

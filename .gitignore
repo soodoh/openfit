@@ -25,6 +25,7 @@
 /playwright-report
 /test-results
 /apps/openfit/coverage
+/apps/openfit/.vitest
 /apps/openfit/playwright-report
 /apps/openfit/test-results
 /apps/openfit/e2e/.auth

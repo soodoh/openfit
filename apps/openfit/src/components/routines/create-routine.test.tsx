@@ -1,6 +1,6 @@
-import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { CreateRoutine } from "./create-routine";
 
@@ -39,7 +39,7 @@ describe("CreateRoutine", () => {
 
 		await expect
 			.element(screen.getByRole("dialog"))
-			.toHaveTextContent("Edit Routine Modal");
+			.toMatchTextContent("Edit Routine Modal");
 	});
 
 	it("closes the default routine modal from its footer action", async () => {

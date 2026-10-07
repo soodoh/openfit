@@ -50,21 +50,24 @@ describe("use-lookups queries", () => {
 			"/api/lookups/categories",
 			[{ id: "category-1", name: "Chest" }],
 		],
-	] as const)("fetches and caches %s lookup data", async (_label, hook, queryKey, pathname, items) => {
-		const fetchMock = mockJsonSuccess(items);
-		vi.stubGlobal("fetch", fetchMock);
-		const { queryClient, wrapper } = createTestQueryWrapper();
+	] as const)(
+		"fetches and caches %s lookup data",
+		async (_label, hook, queryKey, pathname, items) => {
+			const fetchMock = mockJsonSuccess(items);
+			vi.stubGlobal("fetch", fetchMock);
+			const { queryClient, wrapper } = createTestQueryWrapper();
 
-		const { result } = await renderHook(() => hook(), { wrapper });
+			const { result } = await renderHook(() => hook(), { wrapper });
 
-		await vi.waitFor(() => {
-			expect(result.current.isSuccess).toBe(true);
-		});
+			await vi.waitFor(() => {
+				expect(result.current.isSuccess).toBe(true);
+			});
 
-		expect(result.current.data).toEqual(items);
-		expect(getFetchRequest(fetchMock).pathname).toBe(pathname);
-		expect(queryClient.getQueryData(queryKey)).toEqual(items);
-	});
+			expect(result.current.data).toEqual(items);
+			expect(getFetchRequest(fetchMock).pathname).toBe(pathname);
+			expect(queryClient.getQueryData(queryKey)).toEqual(items);
+		},
+	);
 
 	it("requests units from the units lookup endpoint", async () => {
 		const units = {

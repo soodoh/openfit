@@ -198,21 +198,11 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 		setOauthLoading(provider.id);
 		setAuthError(undefined);
 		try {
-			await (provider.type === "oidc"
-				? signIn.oauth2({
-						providerId: provider.id,
-						callbackURL: "/",
-						...(providerStatus.bootstrapAvailable
-							? { requestSignUp: true }
-							: {}),
-					})
-				: signIn.social({
-						provider: provider.id as "google" | "github" | "discord",
-						callbackURL: "/",
-						...(providerStatus.bootstrapAvailable
-							? { requestSignUp: true }
-							: {}),
-					}));
+			await signIn.social({
+				provider: provider.id,
+				callbackURL: "/",
+				...(providerStatus.bootstrapAvailable ? { requestSignUp: true } : {}),
+			});
 		} catch (error) {
 			const message =
 				error instanceof Error ? error.message : "OAuth sign-in failed";
@@ -238,7 +228,10 @@ export const LoginForm = ({ register }: { register?: boolean }): ReactNode => {
 						<div className="flex flex-col gap-2">
 							{oauthProviders.map((provider) => {
 								const icon = PROVIDER_ICONS[provider.id] ?? (
-									<span className="h-5 w-5 flex items-center justify-center text-xs font-bold">
+									<span
+										aria-hidden="true"
+										className="h-5 w-5 flex items-center justify-center text-xs font-bold"
+									>
 										{provider.name.charAt(0)}
 									</span>
 								);

@@ -1,6 +1,6 @@
-import { userEvent } from "@vitest/browser/context";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import type { SetGroupWithRelations, Units } from "@/lib/types";
 import { ListView, SetType } from "@/lib/types";
@@ -107,7 +107,7 @@ vi.mock("@/components/exercises/exercise-detail-modal", () => ({
 	}) =>
 		open ? (
 			<div>
-				exercise-detail-open
+				<span>exercise-detail-open</span>
 				<button type="button" onClick={onClose}>
 					Close detail
 				</button>
@@ -125,7 +125,7 @@ vi.mock("@/components/exercises/replace-exercise-modal", () => ({
 	}) =>
 		open ? (
 			<div>
-				replace-exercise-open
+				<span>replace-exercise-open</span>
 				<button type="button" onClick={onClose}>
 					Close replace
 				</button>
