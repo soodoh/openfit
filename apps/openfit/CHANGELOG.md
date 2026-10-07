@@ -1,5 +1,11 @@
 # openfit
 
+## 0.6.7
+
+### Patch Changes
+
+- 40cfe63: Concentrate registration decisions across signup requests, user creation, and provider status. Honor OIDC provider opt-in consistently, reject unknown creation origins, and keep first-user bootstrap checks fresh. Add login option loading/retry feedback and recover from returned OAuth errors without allowing overlapping attempts.
+
 ## 0.6.6
 
 ### Patch Changes
